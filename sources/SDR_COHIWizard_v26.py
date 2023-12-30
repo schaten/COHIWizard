@@ -746,6 +746,7 @@ class WizardGUI(QMainWindow):
         self.timechanged=False #TODO:future system state
         self.position = 0 #TODO:future system state URGENT !!!!!!!!!!!!!!
 
+        system_state["emergency_stop"] = False
         system_state["timescaler"] = 0
         system_state["fileopened"] = False
         system_state["rates"] = {20000:0, 50000:1, 100000:2, 250000:3, 
@@ -764,6 +765,8 @@ class WizardGUI(QMainWindow):
 
         system_state["progress"] = 0
         system_state["temp_LOerror"] = False
+        system_state["starttrim"] = False
+        system_state["stoptrim"] = False
         #sys_state.set_flags(system_state)
         self.CURTIMEINCREMENT = 5 #TODO:future system state
         self.ui = MyWizard()
@@ -784,11 +787,14 @@ class WizardGUI(QMainWindow):
         ### UI TAB RESAMPLER #################################### TODO: redefine in resampler module ?
         self.ui.timeEdit_resample_stopcut.setEnabled(False)
         self.ui.timeEdit_resample_startcut.setEnabled(False)
-        self.ui.pushButton_resample_resample.clicked.connect(self.cb_resample_new)
+        self.ui.pushButton_resample_resample.clicked.connect(self.cb_Butt_resample)
         self.ui.comboBox_resample_targetSR.currentIndexChanged.connect(lambda: v_resamp.plot_spectrum_resample(self.position)) #TODO:future system state
         self.ui.lineEdit_resample_targetLO.textChanged.connect(lambda: v_resamp.plot_spectrum_resample(self.position))
+        self.ui.radioButton_advanced_sampling.clicked.connect(lambda: v_resamp.toggle_advanced_sampling())
+
         self.ui.lineEdit_resample_targetLO.textChanged.connect(lambda: self.reformat_targetLOpalette)
         self.ui.lineEdit_resample_targetLO.textEdited.connect(lambda: self.reformat_targetLOpalette)
+        
         ### END UI TAB RESAMPLER ####################################
 
         self.ui.tabWidget.setCurrentIndex(1) #TODO: avoid magic number, unidentified
@@ -1922,8 +1928,7 @@ class WizardGUI(QMainWindow):
         if increment == 0:
             timestr = str(ndatetime.timedelta(seconds=0))
             self.curtime = 0
-            #win.ui.lineEditCurTime.setText(timestr)  #TODO: check why win.ui and not self.ui ?
-            self.ui.lineEditCurTime.setText(timestr)  #TODO: check why win.ui and not self.ui ?
+            self.ui.lineEditCurTime.setText(timestr)
 
         if self.modality == 'play' and self.pausestate is False:
             if self.curtime > 0 and increment < 0:
@@ -1948,8 +1953,7 @@ class WizardGUI(QMainWindow):
                     self.prfilehandle.seek(int(position), 0) #TODO: Anpassen an andere Fileformate
         
         #timestr = str(self.wavheader['starttime_dt'] + ndatetime.timedelta(seconds=self.curtime))
-        #win.ui.lineEditCurTime.setText(timestr) #TODO wieso win statt self ?
-        self.ui.lineEditCurTime.setText(timestr) #TODO wieso win statt self ?
+        self.ui.lineEditCurTime.setText(timestr) 
         self.ui.ScrollBar_playtime.setProperty("value", progress)
         sys_state.set_status(system_state)
         #print("leave updatecurtime")
@@ -2039,13 +2043,23 @@ class WizardGUI(QMainWindow):
         """
         self.ui.lineEdit_resample_targetLO.setStyleSheet("background-color: bisque1")
         self.ui.lineEdit_resample_Gain.setText('hit ENTER key')
-        
+
+
+    def cb_Butt_resample(self):
+        self.ui.listWidget_playlist_2.itemChanged.connect(v_resamp.reslist_update) #dummy in order to prevent exceptions in case the signal is already disconnevted
+        self.ui.listWidget_playlist_2.itemChanged.disconnect(v_resamp.reslist_update)
+        self.cb_resample_new()
+        self.ui.radioButton_advanced_sampling.setChecked(False)
+
     def cb_resample_new(self):
         """_summary_
         VIEW: cb of Tab resampler
         :return: _description_
         :rtype: _type_
         """
+        self.ui.listWidget_playlist_2.itemChanged.connect(v_resamp.reslist_update) #dummy in order to prevent exceptions in case the signal is already disconnevted
+        self.ui.listWidget_playlist_2.itemChanged.disconnect(v_resamp.reslist_update)
+
         system_state = sys_state.get_status()
         if self.soxnotexist:
             infotext = "<font size = 12> You must install sox before being able to resample; <br> Download from: <br><a href='%s'>sox version 14.2.2 </a> <br><br>Either install sox to RFCorder directory or set the system path to the sox installation directory. <br> See also RFCorder user manual; </font>" % self.soxlink
@@ -2059,11 +2073,14 @@ class WizardGUI(QMainWindow):
             sys_state.set_status(system_state)
             return False
         
-
+        if system_state["emergency_stop"]:
+            system_state["emergency_stop"] = False
+            sys_state.set_status(system_state)
+            return False
         # define references to the resampler signals and connected methods in a central general dictionary; Abonnement table
         # TODO: This definition could be shifted to the init section or anywhere else (resampler module ?) it is not 
         #related to the GUI but rather to the resampler controller. Thus it could be defined there
-
+        
         schedule_objdict = {}
         schedule_objdict["signal"] = {}
         schedule_objdict["signal"]["resample"] = resamp.SigResample
@@ -2087,7 +2104,8 @@ class WizardGUI(QMainWindow):
             return False
         system_state["target_SR"] = target_SR
         system_state["target_LO"] = target_LO
-
+        system_state["starttrim"] = False
+        system_state["stoptrim"] = False
         #ENTRY POINT LOOP f listbox: only event-triggered via signals !
         reslist_len = self.ui.listWidget_playlist_2.count()
         if reslist_len > 0:
@@ -2101,16 +2119,13 @@ class WizardGUI(QMainWindow):
                 print(f'cb_resample: file: {system_state["f1"]}')
                 self.wavheader = WAVheader_tools.get_sdruno_header(self,system_state["f1"])
                 self.showfilename()
-                #TODO: ENTRY for cutting
-                #if first listentry and cuttime start is active: set system_state["starttrim"] True and write starttime cut to system_state["starttime_cut_secs"]
-                #if last listentry:set system_state["stoptrim"] True and write stoptime cut to system_state["stoptime_cut_secs"]
-
-        # if system_state["starttrim"]:
-        #   trimextension = " trim " + str(system_state["starttime_cut_secs"]) +" " + str(system_state["duration"]) 
-        # if system_state["stoptrim"]:
-        #   trimextension = " trim " + str(system_state["stoptime_cut_secs"]) 
-        # soxstring = soxstring + trimextension
-
+                # check for cutting information
+                if system_state["reslist_ix"] == 0:
+                    system_state["starttrim"] = True
+                    _valid,errortext = v_resamp.getCuttime()
+                if system_state["reslist_ix"] == reslist_len-1:
+                    system_state["stoptrim"] = True
+                    _valid,errortext = v_resamp.getCuttime()
 
             else:
                 system_state["reslist_ix"] = 0
@@ -2119,12 +2134,14 @@ class WizardGUI(QMainWindow):
                 self.ui.listWidget_sourcelist_2.clear()
                 # schedule_objdict["signal"]["Merge2G"].connect(schedule_objdict["connect"]["Merge2G"])
                 # schedule_objdict["signal"]["Merge2G"].emit()
-                time.sleep(0.01)
-
+                time.sleep(0.1)
                 resamp.merge2G_files(system_state["list_out_files_resampled"])
                 system_state["fileopened"] = False
+                self.ui.listWidget_playlist_2.itemChanged.connect(v_resamp.reslist_update)
                 self.SigGUIReset.emit()
+                system_state["list_out_files_resampled"] = []
                 sys_state.set_status(system_state)
+                resamp.SigTerminate_Finished.disconnect(self.cb_resample_new)
                 return
         else:
             wsys.WIZ_auxiliaries.standard_errorbox("No files to be resampled have been selected; please drag items to the 'selected file' area")
@@ -2141,6 +2158,7 @@ class WizardGUI(QMainWindow):
         SDRUno_suffix = SDRUno_suffix.replace(" ","_")
         SDRUno_suffix = SDRUno_suffix.replace(":","")
         SDRUno_suffix = SDRUno_suffix.replace("-","")
+        #TODO: OBSOLETE ?:
         targetfilename = self.my_dirname + "/" + self.my_filename + "_rspli16_" + str(SDRUno_suffix) + '_' + str(int(np.round(self.wavheader["centerfreq"]/1000))) + 'kHz.dat'
 
         # frequency shifting:
@@ -2149,7 +2167,7 @@ class WizardGUI(QMainWindow):
         system_state["tSR"] = float(target_SR)*1000 # tSR #TODO: define im scheduler ??
         system_state["s_wavheader"] = self.wavheader  #TODO: define im scheduler ?
         system_state["source_fn"] = system_state["f1"] #TODO: define im scheduler ?
-        system_state["target_fn"] = targetfilename #TODO: define im scheduler ?
+        system_state["target_fn"] = targetfilename #TODO: obsolete ? define im scheduler ?
         sys_state.set_status(system_state)
 
         #TODO: Abfragen, ob genug Speicherplatz für temp und Zielfiles
@@ -2180,21 +2198,17 @@ class WizardGUI(QMainWindow):
             resamp.schedule_A()  
             print("generate schedule for simple resampling")
 
-        # start stop times for trimming files; goal: start resampling at starttime_cut and end at stoptime_cut
-        #sox: trim command: sox .... trim time1 duration
-        #time1, duration are seconds in float format, i.e. 2.3, 5.6...
-        # as sox is the last command in any schedule
-        # in tfileheader the starttime must be recalculated and stored correctly
-
-        SDRUno_suffix = str(self.wavheader['starttime_dt'])
-        SDRUno_suffix = SDRUno_suffix.replace(" ","_")
-        SDRUno_suffix = SDRUno_suffix.replace(":","")
-        SDRUno_suffix = SDRUno_suffix.replace("-","")
+        # SDRUno_suffix = str(self.wavheader['starttime_dt'])  #TODO: has already been defined, remove after tests 
+        # SDRUno_suffix = SDRUno_suffix.replace(" ","_")
+        # SDRUno_suffix = SDRUno_suffix.replace(":","")
+        # SDRUno_suffix = SDRUno_suffix.replace("-","")
+        
         out_dirname = self.my_dirname + '/out'
         if os.path.exists(out_dirname) == False:         #exist yaml file: create from yaml-editor
             os.mkdir(out_dirname)
         system_state["out_dirname"] = out_dirname
         new_name = out_dirname + '/' + self.my_filename +'_resamp_' + str(SDRUno_suffix) + '_' + str(int(system_state["tLO"]/1000)) + 'kHz.wav'
+
         system_state = sys_state.get_status()
         system_state["new_name"] = new_name
         system_state["list_out_files_resampled"].append(new_name)
@@ -2206,187 +2220,8 @@ class WizardGUI(QMainWindow):
         time.sleep(0.001)
         resamp.Sigincrscheduler.connect(resamp.res_scheduler)
         resamp.Sigincrscheduler.emit()
-        
         #TODO TODO: Lade letztes resampelte File ins generelle GUI
 
-
-    # def updateprogress_resampling(self): #wurde ins resampler-Modul verschoben
-    #     """_duringr sox-resampling the progress of sox resampling is indicated in the progressbar.
-    #     The active state is indicated by blinking of the label field label_36
-    #     this method is called via a signal from the soxwriter worker function sox_writer() repetitively every second
-    #     communication occurs only via state variables, as this function is called asynchronously on signal emission
-    #             system_state["res_blinkstate"]
-    #     :param: none
-    #     :type: none
-    #     ...
-    #     :raises
-    #     ...
-    #     :return: none
-    #     :rtype: none
-    #     """
-    #     system_state = sys_state.get_status()
-    #     #system_state = sys_state.get_flags()
-
-    #     blink_free = False
-    #     current_time = time.time()  
-    #     if current_time - system_state["last_system_time"] >= 1:
-    #         system_state["last_system_time"] = current_time
-    #         blink_free = True
-
-    #     if system_state["progress_source"].find('normal') > -1:  #TODO: solve double function in better datacommunication structure
-    #         progress = system_state["progress"]
-    #     elif system_state["progress_source"].find('sox') > -1:
-    #         #change 26_11_2023: beforechange: progress = system_state["sox_worker"].get_progress() #TODO: dazu muss aber system_state["sox_worker"] erst einmal existieren 
-    #         progress = system_state["calling_worker"].get_progress() #TODO: check wie gewährleistet (aktuell im action_method beim thread konfigurieren): dazu muss aber system_state["sox_worker"] erst einmal existieren 
-    #     else:
-    #         print("error, progress source system flag invalid")
-    #         sys_state.set_status(system_state)
-    #         return False
-
-    #     self.ui.progressBar_resample.setProperty("value", progress)
-
-    #     print(f"statusbar updater sysflags_progress_source: {progress}")
-    #     self.ui.label_36.setText(system_state["actionlabel"])
-    #     self.ui.label_36.setFont(QFont('arial',12))
-    #     print(f'statusbar updater actionlabel: {system_state["actionlabel"]}')
-    #     if blink_free:
-    #         if system_state["res_blinkstate"]:
-    #             self.ui.label_36.setStyleSheet("background-color: yellow")
-    #         else:
-    #             self.ui.label_36.setStyleSheet("background-color: orange")
-    #         system_state["res_blinkstate"] = not system_state["res_blinkstate"]
-    #     sys_state.set_status(system_state)
-
-
-    # def update_resample_GUI(self): #wurde ins resampler-Modul verschoben
-    #     """fills the control elements of the resample GUI with parameters from the wav header
-    #     RESAMPLER VIEW !!
-    #     :param [ParamName]: none
-    #     :type [ParamName]: none
-    #     ...
-    #     :raises [ErrorType]: [ErrorDescription]TODO
-    #     ...
-    #     :return: [ReturnDescription]
-    #     :rtype: [ReturnType]
-    #     """
-    #     system_state = sys_state.get_status()
-    #     self.ui.timeEdit_resample_startcut.setDateTime(self.wavheader['starttime_dt'])
-    #     self.ui.timeEdit_resample_stopcut.setDateTime(self.wavheader['stoptime_dt'])
-    #     self.ui.lineEdit_resample_targetLO.setText(str((self.wavheader['centerfreq']/1000)))
-    #     self.ui.lineEdit_resample_Gain.setText(str(1))
-    #     self.ui.comboBox_resample_targetSR.setCurrentIndex(5)
-    #     v_resamp.plot_spectrum_resample(self.position)
-    #     self.showfilename()
-    #     #print("cb_resample reached")
-    #     if not(self.wavheader['wFormatTag'] in [1,3]): #TODO:future system state
-    #         wsys.WIZ_auxiliaries.standard_errorbox("wFormatTag is neither 1 nor 3; unsupported Format, this file cannot be processed")
-    #         sys_state.set_status(system_state)
-    #         return False
-    #     signtab = list(np.sign(list(system_state["rates"].keys())-system_state["irate"]*np.ones(len(system_state["rates"]))))
-    #     #print(signtab)
-    #     try:
-    #         sugg_index = signtab.index(0.0) # index of SR == irate, if exists
-    #     except:
-    #         try:
-    #             sugg_index = signtab.index(1.0) # else index of first positive outcome = index of SR slightly above irate
-    #         except:
-    #             wsys.WIZ_auxiliaries.standard_errorbox("unsupported sampling rate in filename, this file cannot be processed")
-    #             sys_state.set_status(system_state)
-    #             return False
-    #     #set selection of SR to suggested value
-    #     self.ui.comboBox_resample_targetSR.setCurrentIndex(sugg_index)
-    #     sys_state.set_status(system_state)
-
-    # def plot_spectrum_resample(self,position): #wurde ins resampler-Modul verschoben
-    #     """assign a plot window and a toolbar to the tab 'resample' and plot data from currently loaded file at position 'position'
-    #     :param : position
-    #     :type : int
-    #     :raises [ErrorType]: [ErrorDescription]
-    #     :return: flag False or True, False on unsuccessful execution
-    #     :rtype: Boolean
-    #     """
-    #     #TODO: define: ax_res, canvas_resample
-    #     # self.ui.lineEdit_resample_targetLO.setStyleSheet("background-color: white")
-    #     # self.ui.lineEdit_resample_Gain.setText('')
-    #     system_state = sys_state.get_status()
-    #     if system_state["fileopened"] is False:
-    #         sys_state.set_status(system_state)
-    #         return(False)
-    #     else:
-    #         #print('plot spectrum resample')
-    #         #data = self.readsegment() ##TODO: position ist die des scrollbars im View spectra tab, das ist etwas unschön. Man sollte auch hier einen scrollbar haben, der mit dem anderen synchronisiert wird
-    #         pscale = self.wavheader['nBlockAlign']
-    #         position = int(np.floor(pscale*np.round(self.wavheader['data_nChunkSize']*system_state["horzscal"]/pscale/1000)))
-    #         ret = self.readsegment(position,self.DATABLOCKSIZE)  ##TODO: position ist die des scrollbars im View spectra tab, das ist etwas unschön. Man sollte auch hier einen scrollbar haben, der mit dem anderen synchronisiert wird
-    #         #NEW 08-12-2023 #######################TODO###################### tBPS not yet clear
-    #         ret = self.readsegment_new(system_state["f1"],position,self.DATABLOCKSIZE,self.wavheader["nBitsPerSample"],32,self.wavheader["wFormatTag"])
-    #         ####################################################################################
-    #         data = ret["data"]
-    #         if 2*ret["size"]/self.wavheader["nBlockAlign"] < self.DATABLOCKSIZE:
-    #             sys_state.set_status(system_state)
-    #             return False
-    #         # TODO: ####FFFFFFFFFFFFFFFFFFF replace by new invalidity condition
-    #         # if len(data) == 10:
-    #         #     if np.all(data == np.linspace(0,9,10)):
-    #         #         return False
-    #         #NEW: 
-    #         # if len(data) < self.DATABLOCKSIZE
-    #         #     return False
-    #         self.Tabref["Resample"]["ax"].clear()
-    #         realindex = np.arange(0,self.DATABLOCKSIZE,2)
-    #         imagindex = np.arange(1,self.DATABLOCKSIZE,2)
-    #         #calculate spectrum and shift/rescale appropriately
-    #         spr = np.abs(np.fft.fft((data[realindex]+1j*data[imagindex])))
-    #         N = len(spr)
-    #         spr = np.fft.fftshift(spr)
-    #         flo = self.wavheader['centerfreq'] - self.wavheader['nSamplesPerSec']/2
-    #         fup = self.wavheader['centerfreq'] + self.wavheader['nSamplesPerSec']/2
-    #         freq0 = np.linspace(0,self.wavheader['nSamplesPerSec'],N)
-    #         freq = freq0 + flo
-    #         datax = freq
-    #         datay = 20*np.log10(spr)
-    #         self.Tabref["Resample"]["ax"].plot(datax,datay, '-')
-    #         self.Tabref["Resample"]["ax"].set_xlabel('frequency (Hz)')
-    #         self.Tabref["Resample"]["ax"].set_ylabel('amplitude (dB)')       
-    #         #plot bandlimits of resampling window
-    #         target_SR = float(self.ui.comboBox_resample_targetSR.currentText())*1000
-    #         #lineEdit_resample_targetLO          
-    #         target_LO_test = self.ui.lineEdit_resample_targetLO.text()
-    #         numeraltest = True
-    #         if not target_LO_test[0].isdigit():
-    #             numeraltest = False
-    #         target_LO_test = target_LO_test.replace(".", "")
-    #         if not target_LO_test[1:].isdigit():
-    #             numeraltest = False
-    #         if numeraltest == False:
-    #             wsys.WIZ_auxiliaries.standard_errorbox("invalid characters, must be numeric float value !")
-    #             sys_state.set_status(system_state)
-    #             return False
-    #         try:
-    #             target_LO = float(self.ui.lineEdit_resample_targetLO.text())*1000
-    #         except TypeError:
-    #             print("wrong format of TARGET_LO")
-    #             wsys.WIZ_auxiliaries.standard_errorbox("invalid characters, must be numeric float value !")
-    #             #TARGET_LO = self.wavheader['centerfreq']
-    #             sys_state.set_status(system_state)
-    #             return False
-    #         except ValueError:
-    #             print("wrong format of TARGET_LO")
-    #             wsys.WIZ_auxiliaries.standard_errorbox("invalid characters, must be numeric float value !")
-    #             #TARGET_LO = self.wavheader['centerfreq']
-    #             sys_state.set_status(system_state)
-    #             return False
-    #         xlo = target_LO - target_SR/2
-    #         xup = target_LO + target_SR/2
-    #         self.Tabref["Resample"]["ax"].vlines(x=[target_LO], ymin = [min(datay)], ymax = [max(datay)], color = "C1")
-    #         self.Tabref["Resample"]["ax"].add_patch(Rectangle((xlo, min(datay)), xup-xlo, max(datay)-min(datay),edgecolor='red',
-    #             facecolor='none', fill = False,
-    #             lw=4))
-    #         self.Tabref["Resample"]["canvas"].draw()
-    #     sys_state.set_status(system_state)
-    #     return(True)
-
-        
     def reset_LO_bias(self):
 
         system_state = sys_state.get_status()
@@ -4069,7 +3904,8 @@ SR must be in the set: 20000, 50000, 100000, 250000, 500000, 1250000, 2500000"
         self.ui.listWidget_sourcelist.addItem(item)
         #preset playlist
 
-        resfilelist = []
+        reslist = []
+        resfilelist = [] #TODO: obsolete ?
         ix = 0
         for x in os.listdir(self.my_dirname):
             if x.endswith(".wav"):
@@ -4103,14 +3939,24 @@ SR must be in the set: 20000, 50000, 100000, 250000, 500000, 1250000, 2500000"
             playlist.append(system_state["f1"])
             system_state["playlist"] = playlist
 
+            item = QtWidgets.QListWidgetItem()
+            self.ui.listWidget_playlist_2.addItem(item)
+            _item2=self.ui.listWidget_playlist_2.item(0)
+            _item2.setText(self.my_filename + self.ext)
+            fnt = _item2.font()
+            fnt.setPointSize(9)
+            reslist.append(system_state["f1"])
+            system_state["reslist"] = reslist
+
+
         self.ui.listWidget_playlist.setEnabled(False)
-        self.ui.listWidget_sourcelist_2.setEnabled(True)
+        self.ui.listWidget_sourcelist_2.setEnabled(False)
         self.ui.listWidget_sourcelist.setEnabled(False)
-        self.ui.listWidget_playlist_2.setEnabled(True)
+        self.ui.listWidget_playlist_2.setEnabled(False)
 
         #self.ui.listWidget_playlist_2.model().rowsInserted.connect(v_resamp.reslist_update) #TODO transfer to resemplar view
         #self.ui.listWidget_playlist_2.model().rowsRemoved.connect(v_resamp.reslist_update) #TODO transfer to resemplar view
-        self.ui.listWidget_playlist_2.itemChanged.connect(v_resamp.reslist_update) #TODO transfer to resemplar view
+        #self.ui.listWidget_playlist_2.itemChanged.connect(v_resamp.reslist_update) #TODO transfer to resemplar view
         #self.ui.listWidget_playlist_2.itemClicked.connect(v_resamp.reslist_itemselected) #TODO transfer to resemplar view
         
 ################TODO: end method initialize listitems
@@ -4203,6 +4049,7 @@ SR must be in the set: 20000, 50000, 100000, 250000, 500000, 1250000, 2500000"
         v_resamp.update_resample_GUI()
         # TODO: check, added 09-12-2023
         system_state["playlength"] = self.wavheader['filesize']/self.wavheader['nAvgBytesPerSec']
+        system_state["list_out_files_resampled"] = []
         sys_state.set_status(system_state)
         return True
 

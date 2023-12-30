@@ -116,7 +116,7 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>../RFCorder/V1.1/Logofield/Logofield_rec2.png</normaloff>../RFCorder/V1.1/Logofield/Logofield_rec2.png</iconset>
+             <normaloff>../../RFCorder/V1.1/Logofield/Logofield_rec2.png</normaloff>../../RFCorder/V1.1/Logofield/Logofield_rec2.png</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -1178,12 +1178,12 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>play_v4.PNG</normaloff>
-             <normalon>play_v4.PNG</normalon>
-             <activeoff>play_v4.PNG</activeoff>
-             <activeon>play_v4.PNG</activeon>
-             <selectedoff>play_v4.PNG</selectedoff>
-             <selectedon>play_v4.PNG</selectedon>play_v4.PNG</iconset>
+             <normaloff>../../SDR_Postprocessor/play_v4.PNG</normaloff>
+             <normalon>../../SDR_Postprocessor/play_v4.PNG</normalon>
+             <activeoff>../../SDR_Postprocessor/play_v4.PNG</activeoff>
+             <activeon>../../SDR_Postprocessor/play_v4.PNG</activeon>
+             <selectedoff>../../SDR_Postprocessor/play_v4.PNG</selectedoff>
+             <selectedon>../../SDR_Postprocessor/play_v4.PNG</selectedon>../../SDR_Postprocessor/play_v4.PNG</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -1215,11 +1215,11 @@
            </property>
            <property name="icon">
             <iconset>
-             <normalon>ff_v4.PNG</normalon>
-             <activeoff>ff_v4.PNG</activeoff>
-             <activeon>ff_v4.PNG</activeon>
-             <selectedoff>ff_v4.PNG</selectedoff>
-             <selectedon>ff_v4.PNG</selectedon>
+             <normalon>../../SDR_Postprocessor/ff_v4.PNG</normalon>
+             <activeoff>../../SDR_Postprocessor/ff_v4.PNG</activeoff>
+             <activeon>../../SDR_Postprocessor/ff_v4.PNG</activeon>
+             <selectedoff>../../SDR_Postprocessor/ff_v4.PNG</selectedoff>
+             <selectedon>../../SDR_Postprocessor/ff_v4.PNG</selectedon>
             </iconset>
            </property>
            <property name="iconSize">
@@ -1503,12 +1503,12 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>rec_v4.PNG</normaloff>
-             <normalon>rec_v4.PNG</normalon>
-             <activeoff>rec_v4.PNG</activeoff>
-             <activeon>rec_v4.PNG</activeon>
-             <selectedoff>ff_v4.PNG</selectedoff>
-             <selectedon>ff_v4.PNG</selectedon>rec_v4.PNG</iconset>
+             <normaloff>../../SDR_Postprocessor/rec_v4.PNG</normaloff>
+             <normalon>../../SDR_Postprocessor/rec_v4.PNG</normalon>
+             <activeoff>../../SDR_Postprocessor/rec_v4.PNG</activeoff>
+             <activeon>../../SDR_Postprocessor/rec_v4.PNG</activeon>
+             <selectedoff>../../SDR_Postprocessor/ff_v4.PNG</selectedoff>
+             <selectedon>../../SDR_Postprocessor/ff_v4.PNG</selectedon>../../SDR_Postprocessor/rec_v4.PNG</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -1562,9 +1562,9 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>loop_v4.png</normaloff>
-             <activeon>loopactive_v4.png</activeon>
-             <selectedon>loopactive_v4.png</selectedon>loop_v4.png</iconset>
+             <normaloff>../../SDR_Postprocessor/loop_v4.png</normaloff>
+             <activeon>../../SDR_Postprocessor/loopactive_v4.png</activeon>
+             <selectedon>../../SDR_Postprocessor/loopactive_v4.png</selectedon>../../SDR_Postprocessor/loop_v4.png</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -2268,11 +2268,11 @@
            </property>
            <property name="icon">
             <iconset>
-             <normalon>stop_v4.PNG</normalon>
-             <activeoff>stop_v4.PNG</activeoff>
-             <activeon>stop_v4.PNG</activeon>
-             <selectedoff>stop_v4.PNG</selectedoff>
-             <selectedon>stop_v4.PNG</selectedon>
+             <normalon>../../SDR_Postprocessor/stop_v4.PNG</normalon>
+             <activeoff>../../SDR_Postprocessor/stop_v4.PNG</activeoff>
+             <activeon>../../SDR_Postprocessor/stop_v4.PNG</activeon>
+             <selectedoff>../../SDR_Postprocessor/stop_v4.PNG</selectedoff>
+             <selectedon>../../SDR_Postprocessor/stop_v4.PNG</selectedon>
             </iconset>
            </property>
            <property name="iconSize">
@@ -2309,11 +2309,11 @@
            </property>
            <property name="icon">
             <iconset>
-             <normalon>rew_v4.PNG</normalon>
-             <activeoff>rew_v4.PNG</activeoff>
-             <activeon>rew_v4.PNG</activeon>
-             <selectedoff>rew_v4.PNG</selectedoff>
-             <selectedon>play_v4.PNG</selectedon>
+             <normalon>../../SDR_Postprocessor/rew_v4.PNG</normalon>
+             <activeoff>../../SDR_Postprocessor/rew_v4.PNG</activeoff>
+             <activeon>../../SDR_Postprocessor/rew_v4.PNG</activeon>
+             <selectedoff>../../SDR_Postprocessor/rew_v4.PNG</selectedoff>
+             <selectedon>../../SDR_Postprocessor/play_v4.PNG</selectedon>
             </iconset>
            </property>
            <property name="iconSize">
@@ -2425,12 +2425,12 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>Button_Playlist_Activate.png</normaloff>
-             <normalon>Button_Playlist_Select.png</normalon>
-             <activeoff>Button_Playlist_Activate.png</activeoff>
-             <activeon>Button_Playlist_Select.png</activeon>
-             <selectedoff>Button_Playlist_Activate.png</selectedoff>
-             <selectedon>Button_Playlist_Select.png</selectedon>Button_Playlist_Activate.png</iconset>
+             <normaloff>../../SDR_Postprocessor/Button_Playlist_Activate.png</normaloff>
+             <normalon>../../SDR_Postprocessor/Button_Playlist_Select.png</normalon>
+             <activeoff>../../SDR_Postprocessor/Button_Playlist_Activate.png</activeoff>
+             <activeon>../../SDR_Postprocessor/Button_Playlist_Select.png</activeon>
+             <selectedoff>../../SDR_Postprocessor/Button_Playlist_Activate.png</selectedoff>
+             <selectedon>../../SDR_Postprocessor/Button_Playlist_Select.png</selectedon>../../SDR_Postprocessor/Button_Playlist_Activate.png</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -4659,9 +4659,9 @@
           </widget>
          </item>
          <item row="4" column="5">
-          <widget class="QPushButton" name="pushButton_2">
+          <widget class="QRadioButton" name="radioButton_advanced_sampling">
            <property name="text">
-            <string>Advanced</string>
+            <string>ADVANCED SAMPLING</string>
            </property>
           </widget>
          </item>
