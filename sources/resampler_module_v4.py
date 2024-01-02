@@ -190,7 +190,13 @@ class res_workers(QObject):
         if os.path.exists(targetfilename) == True:
             print("soxwriter: temp file has been created")
             file_stats = os.stat(targetfilename)
-            rel_finish = int(np.floor(100*file_stats.st_size/expected_filesize))
+            rf = np.floor(100*file_stats.st_size/expected_filesize)
+            if np.isnan(rf):
+                print("soxwriter ERROR ________________soxwriter progress exception, set progress zero")
+                rel_finish = int(5)
+            else:
+                rel_finish = int(rf)
+            #rel_finish = int(np.floor(100*file_stats.st_size/expected_filesize))
             progress_old = 0
             loop_ix = 0
             deltaold = 0
@@ -204,7 +210,12 @@ class res_workers(QObject):
                     #print(f"soxloop deltacount (break at 20): {loop_ix}")
                 deltaold = delta
                 file_stats = os.stat(targetfilename)
-                rel_finish = int(np.floor(100*file_stats.st_size/expected_filesize))
+                rf = np.floor(100*file_stats.st_size/expected_filesize)
+                if np.isnan(rf):
+                    print("soxwriter ERROR ________________soxwriter progress exception, set progress zero")
+                    rel_finish = int(5)
+                else:
+                    rel_finish = int(rf)
                 #print("resampling process running")
                 time.sleep(0.5)
                 print(f"soxwriter: bytes resampled: {file_stats.st_size} / {expected_filesize}")
@@ -618,7 +629,7 @@ class resampler(QObject):
         ovwrt_flag = True
         time.sleep(1)
         WAVheader_tools.write_sdruno_header(self,target_fn,tgt_wavheader,ovwrt_flag)
-        time.sleep(1)
+        time.sleep(5)
         #if new_name exists --> delete
         newname = system_state["new_name"]
         if os.path.exists(newname) == True:
@@ -626,7 +637,15 @@ class resampler(QObject):
         print(f"accomplisher: new name: {newname}")
         print(f"accomplisher: target_fn: {target_fn}")
         # Renaming the file
-        shutil.move(target_fn, system_state["new_name"]) #TODO. cannot shift last temp file to external directory (ext. harddisk)
+        #TODO: make try ! and repeat if fail until temp file is accessible
+        while True:
+            try:
+                shutil.move(target_fn, system_state["new_name"])
+                break
+            except:
+                time.sleep(2)
+                print(f"accomplish_resampling: access to {target_fn} not possible retry after 2 s")
+        #shutil.move(target_fn, system_state["new_name"]) #TODO. cannot shift last temp file to external directory (ext. harddisk)
         system_state["t_wavheader"] = tgt_wavheader
         #system_state["f1"] = system_state["new_name"]
         self.sys_state.set_status(system_state)
@@ -1000,7 +1019,10 @@ class resampler(QObject):
                 self.sys_state.set_status(system_state)
                 #self.sys_state.set_flags(system_state)
                 self.SigProgress.emit()
-                #read wavheader of current inputfile
+                time.sleep(0.1)
+                #read wavheader of current inputfile, but only the first time !!
+                if list_ix == 1:
+                    wavheader = WAVheader_tools.get_sdruno_header(self,input_file)
                 with open(input_file, 'rb') as input_file:
                     while True:
                         # Lese 1 MB Daten aus der Eingabedatei
@@ -1049,14 +1071,14 @@ class resampler(QObject):
                             current_output_file.close()
                             #insert wav header
                             duration = (current_output_file_size - 216)/wavheader["nAvgBytesPerSec"]
-                            if list_ix == 0:
+                            if list_ix == 1:
                                 print(f"merge2G: first write file reached, ix = 0")
                                 #TODO: write first starttime from cut_times
                                 stt = system_state["starttime_after_trim"]
                                 wavheader['starttime_dt'] = stt
                                 wavheader['starttime'] = [stt.year, stt.month, 0, stt.day, stt.hour, stt.minute, stt.second, int(stt.microsecond/1000)] 
-
-                            stt = wavheader["starttime_dt"]
+                            else:
+                                stt = wavheader["starttime_dt"]
                             spt = stt + ndatetime.timedelta(seconds= np.floor(duration))  + ndatetime.timedelta(milliseconds = 1000*(duration - np.floor(duration)))
                             wavheader['stoptime_dt'] = spt
                             #if int(1000*(duration - np.floor(duration))) > 0: #TODO: check, may be inconsistent, unsinn

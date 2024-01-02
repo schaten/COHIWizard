@@ -988,6 +988,8 @@ class WizardGUI(QMainWindow):
         self.activate_tabs(["View_Spectra","Annotate","Resample","YAML_editor","WAV_header","Player"])
         sys_state.set_status(system_state)
         self.plot_spectrum(self,self.position)
+        self.ui.timeEdit_resample_stopcut.setEnabled(False)
+        self.ui.timeEdit_resample_startcut.setEnabled(False)
         v_resamp.update_resample_GUI()
 
     def generate_canvas(self,dummy,gridref,gridc,gridt,Tabref):
