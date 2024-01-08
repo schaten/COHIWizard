@@ -40,6 +40,7 @@ class res_workers(QObject):
         self.sys_state = wsys.status()
         self.system_state = self.sys_state.get_status()
         gui = self.system_state["gui_reference"]
+        self.stopix = False
         self.mutex = QMutex()
  
     def set_soxstring(self,_value):
@@ -98,90 +99,13 @@ class res_workers(QObject):
     def sox_writer(self):
 
         print("#############sox_worker as sox_writer started##############")
+        self.stopix = False
         soxstring = self.get_soxstring()
-        # try:
-        #     # Run the 'sox' command and capture both stdout and stderr
-        #     #result = subprocess.run(soxstring, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        #     process = subprocess.run(soxstring, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell = True)
-        #     print("soxwriter: try to start sox")
-        #     # Check if the command was successful
-        #     print(f"soxwriter: process-returncode: {process.returncode}")
-        #     if process.returncode == 0:
-        #         print("soxstring execution Command executed successfully.")
-        #     else:
-        #         # If there was an error, write the error messages to the log file
-        #         with open("logsox.txt", 'w') as log_file:
-        #             log_file.write(f"Error executing 'sox' command:\n")
-        #             log_file.write(process.stderr.read())
-        #         print(f"Error executing 'sox' command. Details written to logsox.txt.")
-        #         print(f"error message: {process.stderr.read()}")
-        #         #self.SigSoxerror.emit("SOX failed due to unexpected error. Probably the cutting ime settings are inconsistent. Look into logsox.txt file for info")
-        #         self.SigSoxerror.emit(process.stderr.read())
-        #         time.sleep(5)
-        #         self.SigFinished.emit()
-        #     print("sox")
-        # except Exception as e:
-        #     # Handle exceptions, if any
-        #     print(f"An error occurred: {e}")
-        #     self.SigSoxerror.emit(process.stderr.read())
-        #     time.sleep(5)
-        #     self.SigFinished.emit()
-        #     try:
-        #         process.terminate()
-        #     except:
-        #         pass 
-        #     return
-
-        #ret = subprocess.Popen(soxstring + " >2 logsox.txt", shell = True)
-        ret = subprocess.Popen(soxstring, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell = True)
-#         returnCode = ret.poll()
-#         stdout, stderr = ret.communicate()
-#         #print(stdout, stderr)
-#         print(f"________________soxwriter sox ret returncode: {returnCode}")
-# #        print(f"________________soxwriter sox ret stderr: {ret.stderr()}")
-#         print(f"________________soxwriter sox ret direct stderr: {stderr}")
-
-        # self.mutex.lock()
-        # # if ret.stderr.read().find('WARN'):
-        # #     print("______________________________soxwriter WARN found")
-        # #     print(f">>>>>eeeeeeeeeee soxwriter sox ret stdout: {ret.stdout.read()}")
-        # #with open("logsox.txt", 'a') as log_file:
-        #     # log_file.write(f"Error executing 'sox' command:\n")
-        #     # log_file.write(ret.stderr.read())
-        #     # log_file.write(f"sdtout executing 'sox' command:\n")
-        #     # log_file.write(ret.stdout.read())
-        # # print(f"soxwriter sox ret returncode: {ret.returncode}")
-        # # print(f">>>>>eeeeeeeeeee soxwriter sox ret stdout: {ret.stdout.read()}")
-        # print(f">>>>>eeeeeeeeeee soxwriter stderr: {ret.stderr.read()} type: {type(ret.stderr.read())}")
-        # print(f">>>>>eeeeeeeeeee soxwriter str convert stderr: {str(ret.stderr.read())}")
-
-        # self.mutex.unlock()
-
-        # if ret.returncode == 0:
-        #     print("soxstring execution Command executed successfully.")
-        # else:
-        #     # If there was an error, write the error messages to the log file
-
-        # print(f"soxwriter stdout: {ret.stdout.read()}")
-        # print(f"soxwriter stderr: {ret.stderr.read()}")
-        
-        # with open("logsox.txt", 'a') as log_file:
-        #     log_file.write(f"Error executing 'sox' command:\n")
-        #     log_file.write(ret.stderr.read())
-        #     log_file.write(f"sdtout executing 'sox' command:\n")
-        #     log_file.write(ret.stdout.read())
-        #     print(f"Error executing 'sox' command. Details written to logsox.txt.")
-        #     print(f"error message: {ret.stderr.read()}")
-        #     #self.SigSoxerror.emit("SOX failed due to unexpected error. Probably the cutting ime settings are inconsistent. Look into logsox.txt file for info")
-        #     self.SigSoxerror.emit(ret.stderr.read())
-        #     time.sleep(5)
-        #     self.SigFinished.emit()
-        #print(f"soxwriter logfiles written")
-        #self.set_ret(process)
-        self.set_ret(ret)
+        self.ret = subprocess.Popen(soxstring, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell = True)
+        self.set_ret(self.ret)
         time.sleep(1)
         #print(f"sox return value: {process}")
-        print(f"sox return value: {ret}")
+        print(f"sox return value: {self.ret}")
         targetfilename = self.get_tfname()
         expected_filesize = self.get_expfs()
         print(f"soxwriter targetfilename: {targetfilename}, exp filesize: {expected_filesize}")
@@ -201,44 +125,66 @@ class res_workers(QObject):
             loop_ix = 0
             deltaold = 0
             #Bedingung: Delta size 
+            print(f"soxwriter: initial ret.poll output (sox acive on None ?): {self.ret.poll()}")
 
-            while (file_stats.st_size < (expected_filesize - 2000)) and loop_ix < 20:  #HACK TODO: analyze why expected filesize is by > 1000 smaller than the one produced by sox 
+            while (file_stats.st_size < (expected_filesize)) and (loop_ix < 20) and (self.stopix is False):  #HACK TODO: analyze why expected filesize is by > 1000 smaller than the one produced by sox 
                 delta = file_stats.st_size - expected_filesize
                 # if sox has finished but expected filesize is not reached, wait 20 cycles and then terminate
                 if (deltaold == delta) and file_stats.st_size >0:
                     loop_ix += 1
+                    print(f"soxwriter: ret.poll output (sox acive ?): {self.ret.poll()}")
                     #print(f"soxloop deltacount (break at 20): {loop_ix}")
                 deltaold = delta
-                file_stats = os.stat(targetfilename)
-                rf = np.floor(100*file_stats.st_size/expected_filesize)
-                if np.isnan(rf):
-                    print("soxwriter ERROR ________________soxwriter progress exception, set progress zero")
-                    rel_finish = int(5)
-                else:
-                    rel_finish = int(rf)
-                #print("resampling process running")
-                time.sleep(0.5)
-                print(f"soxwriter: bytes resampled: {file_stats.st_size} / {expected_filesize}")
-                progress = rel_finish
-                if not progress > 0:
-                    progress = 5
-                    self.set_progress(progress)
-                    self.SigPupdate.emit()
-                #print(f"relative filesize in %: {progress}")
-                if progress - progress_old > 5:
-                    #self.mutex.lock()
-                    progress_old = progress
-                    self.set_progress(progress)
-                    self.SigPupdate.emit()
-                    #print("NOW UPDATE STATUSBAR#############################################################################")
-                    #self.mutex.unlock()
+                try:
+                    file_stats = os.stat(targetfilename)
+                    rf = np.floor(100*file_stats.st_size/expected_filesize)
+                    if np.isnan(rf):
+                        print("soxwriter ERROR ________________soxwriter progress exception, set progress zero")
+                        rel_finish = int(5)
+                    else:
+                        rel_finish = int(rf)
+                    #print("resampling process running")
+                    time.sleep(0.5)
+                    print(f"soxwriter: bytes resampled: {file_stats.st_size} / {expected_filesize}, stopix: {self.stopix}, loopix: {loop_ix}")
+                    progress = rel_finish
+                    if not progress > 0:
+                        progress = 5
+                        self.set_progress(progress)
+                        self.SigPupdate.emit()
+                    #print(f"relative filesize in %: {progress}")
+                    if progress - progress_old > 5:
+                        #self.mutex.lock()
+                        progress_old = progress
+                        self.set_progress(progress)
+                        self.SigPupdate.emit()
+                        #print("NOW UPDATE STATUSBAR#############################################################################")
+                        #self.mutex.unlock()
+                except:
+                    print("soxwriter_ temp file not found, proceeding without progress update")
+                    loop_ix = 3
+                if self.stopix is True:
+                    #self.ret.terminate()
+                    while self.ret.poll() is None:
+                        print("***soxwriter>>>>>>>>>killing process")
+                        self.ret.kill()
+                        time.sleep(1)
+                    print("********_____________soxwriter: terminate sox process on cancel")
+
         else:
             print(f"ERROR: no file {targetfilename} created")
         print("soxwriter: success")
         time.sleep(0.5)
+        print("#############sox_worker wait for termination of sox")
+        if self.ret.poll() is None:
+            stdout, stderr = self.ret.communicate()
         print("#############sox_worker as sox_writer finished##############")
-        
         self.SigFinished.emit()
+
+    def soxworker_terminate(self):
+        #self.stopix = False
+        print("********************* ______________ terminate sox process now")
+        self.stopix = True
+
 
     def LO_shifter_worker(self):
         DATABLOCKSIZE = 1024*4*256
@@ -333,7 +279,9 @@ class res_workers(QObject):
                     #print(f"LOshifter worker souce: {sourcefilename} target: {targetfilename} pupdate_reference: {readsegmentfn}")
                     #print(f"LOshifter worker centershift: {centershift} readoffset: {readoffset} ")  
                     #print("LOshifter worker: NOW UPDATE STATUSBAR#############################################################################")
-                
+                if self.stopix is True:
+                    break
+        
         else:
             print("LOshift worker: target file has not been found")
             print(f"LOshift worker:ERROR: no file {targetfilename} created")
@@ -362,6 +310,7 @@ class resampler(QObject):
     SigProgress = pyqtSignal()
     Sigincrscheduler = pyqtSignal()
     SigTerminate_Finished = pyqtSignal()
+    SigCancel = pyqtSignal()
 
     #TODO: replace all gui by respective state references if appropriate
 
@@ -373,7 +322,6 @@ class resampler(QObject):
         self.set_LOvars(LOvars)
         self.sys_state = wsys.status()
         self.system_state = self.sys_state.get_status()
-        gui = self.system_state["gui_reference"]
         self.SigProgress.connect(lambda: view_resampler.updateprogress_resampling(self))#TODO: untersuchen, ob Abonnieren besser vom GUI aus geschehen soll
         self.MAX_TARGETFILE_SIZE = 2 * 1024**3 #2GB max output filesize
     def set_LOvars(self,_value):
@@ -409,6 +357,16 @@ class resampler(QObject):
         return mod_header
     
     def LOshifter_new(self):
+        """configures and starts LO shifting thread
+        :param: none
+        :type: none
+        ...
+        :raises: none
+        ...
+        :return: none 
+        :rtype: none
+        """
+        
         print("configure LOshifter _new reached")
         #sys_state = wsys.status()
         system_state = self.sys_state.get_status()
@@ -416,6 +374,8 @@ class resampler(QObject):
         schedule_objdict = system_state["schedule_objdict"]
         schedule_objdict["signal"]["LOshift"].disconnect(schedule_objdict["connect"]["LOshift"])
         gui = system_state["gui_reference"]
+        #TODO: activate cancellation, once cancel_method has been adapted: 
+        gui.ui.pushButton_resample_cancel.clicked.connect(self.cancel_resampling)
         source_fn = system_state["source_fn"]  #TODO: define im GUI_Hauptprogramm bzw. im scheduler
         target_fn = system_state["target_fn"]
         s_wavheader = system_state["s_wavheader"]
@@ -440,6 +400,9 @@ class resampler(QObject):
         self.LOsh_worker.set_readsegment(gui.readsegment_new)
         self.LOsh_worker.set_sBPS(system_state["sBPS"])
         self.LOshthread.started.connect(self.LOsh_worker.LO_shifter_worker)
+        #schedule_objdict["signal"]["cancel"].connect(lambda: self.LOsh_worker.soxworker_terminate())
+
+        #view_resampler.SigCancel.connect(self.LOsh_worker.soxworker_terminate)
         self.Sigincrscheduler.connect(self.res_scheduler)
         self.LOsh_worker.SigFinishedLOshifter.connect(lambda: self.Sigincrscheduler.emit())
         #z.B. schreibe die Referenz auf signal_state, damit sie der Scheduler dort abholen kann, schedule[n].["startsignal"] = diese Referenz
@@ -472,6 +435,28 @@ class resampler(QObject):
         system_state["progress_source"] = "normal"
         self.sys_state.set_status(system_state)
 
+    def cancel_resampling(self):
+        
+        system_state = self.sys_state.get_status()        
+        gui = system_state["gui_reference"]
+        schedule_objdict = system_state["schedule_objdict"]
+        for i in range(10):
+            print("*********______________cancel_resamp reached")
+        system_state["emergency_stop"] = True
+        self.sys_state.set_status(system_state)
+        try:
+        #if self.sox_worker.isRunning():
+            self.sox_worker.soxworker_terminate()
+        except:
+            pass
+        try:
+            self.LOsh_worker.soxworker_terminate()
+        except:
+            pass
+        #TODO: activate signalling method, but no success so far: schedule_objdict["signal"]["cancel"].emit()
+        gui.ui.pushButton_resample_cancel.clicked.disconnect(self.cancel_resampling)
+
+
     def resample(self):
         """_generate soxstring from parameters
             configurates and starts sox execution thread
@@ -497,6 +482,7 @@ class resampler(QObject):
         schedule_objdict["signal"]["resample"].disconnect(schedule_objdict["connect"]["resample"])
 
         gui = system_state["gui_reference"]
+        
         s_wavheader = system_state["s_wavheader"]  #TODO: define im GUI_Hauptprogramm bzw. im scheduler
         source_fn = system_state["source_fn"]  #TODO: define im GUI_Hauptprogramm bzw. im scheduler
         target_fn = system_state["target_fn"]  #TODO: define im GUI_Hauptprogramm bzw. im scheduler
@@ -517,7 +503,8 @@ class resampler(QObject):
             sox_filetype = 'raw'
         else:
             sox_filetype = 'wav'
-        soxstring = 'sox --norm=-3 -e ' + wFormatTag_TYPE + ' -t  ' + sox_filetype + ' -r ' + str(system_state["sSR"]) + ' -b '+ str(system_state["sBPS"]) + ' -c 2 ' + '"' + source_fn  + '"' + ' -e signed-integer -t raw -r ' + str(int(tSR)) + ' -b ' + str(system_state["tBPS"]) + ' -c 2 '  + '"' + target_fn  + '"' 
+        #soxstring = 'sox --norm=-3 -e ' + wFormatTag_TYPE + ' -t  ' + sox_filetype + ' -r ' + str(system_state["sSR"]) + ' -b '+ str(system_state["sBPS"]) + ' -c 2 ' + '"' + source_fn  + '"' + ' -e signed-integer -t raw -r ' + str(int(tSR)) + ' -b ' + str(system_state["tBPS"]) + ' -c 2 '  + '"' + target_fn  + '"' 
+        soxstring = 'sox -e ' + wFormatTag_TYPE + ' -t  ' + sox_filetype + ' -r ' + str(system_state["sSR"]) + ' -b '+ str(system_state["sBPS"]) + ' -c 2 ' + '"' + source_fn  + '"' + ' -e signed-integer -t raw -r ' + str(int(tSR)) + ' -b ' + str(system_state["tBPS"]) + ' -c 2 '  + '"' + target_fn  + '"' + ' gain ' + str(system_state["resampling_gain"])
         trimextension =""
         #include trim command if system_state["starttrim"] or system_state["stoptrim"] are True
         if system_state["starttrim"]:
@@ -538,12 +525,18 @@ class resampler(QObject):
         self.soxthread = QThread(parent = self)
         #change 26_11_2023: beforechange: self.sox_worker = soxwriter()
         self.sox_worker = res_workers()
+        gui.ui.pushButton_resample_cancel.clicked.connect(self.cancel_resampling)
+
         self.sox_worker.moveToThread(self.soxthread)
         self.sox_worker.set_soxstring(soxstring)
         self.sox_worker.set_ret("")
         self.sox_worker.set_tfname(target_fn )
         self.sox_worker.set_expfs(expected_filesize)
         self.soxthread.started.connect(self.sox_worker.sox_writer)
+        ###############################
+        #v_resamp.SigCancel.connect(self.sox_worker.soxworker_terminate)
+        schedule_objdict["signal"]["cancel"].connect(lambda: self.sox_worker.soxworker_terminate())
+
         self.Sigincrscheduler.connect(self.res_scheduler)
         self.sox_worker.SigFinished.connect(lambda: self.Sigincrscheduler.emit())
         self.sox_worker.SigSoxerror.connect(self.Soxerrorhandler)
@@ -601,6 +594,7 @@ class resampler(QObject):
         gui = system_state["gui_reference"]
         schedule_objdict = system_state["schedule_objdict"]
         schedule_objdict["signal"]["accomplish"].disconnect(schedule_objdict["connect"]["accomplish"])
+        time.sleep(0.1)
         self.Sigincrscheduler.connect(self.res_scheduler)
         if system_state["accomp_label"] == True:
             print("accomplish reached twice: return without action")
@@ -633,6 +627,7 @@ class resampler(QObject):
         #if new_name exists --> delete
         newname = system_state["new_name"]
         if os.path.exists(newname) == True:
+            print("accomplish remove newname")
             os.remove(system_state["new_name"])
         print(f"accomplisher: new name: {newname}")
         print(f"accomplisher: target_fn: {target_fn}")
@@ -640,6 +635,7 @@ class resampler(QObject):
         #TODO: make try ! and repeat if fail until temp file is accessible
         while True:
             try:
+                print ("accomplish: try shutil")
                 shutil.move(target_fn, system_state["new_name"])
                 break
             except:
@@ -662,7 +658,11 @@ class resampler(QObject):
         gui = system_state["gui_reference"]
         cnt = system_state["r_sch_counter"]
         sch = system_state["res_schedule"]
+            
         if system_state["emergency_stop"]:
+            system_state["progress"] = 0
+            system_state["progress_source"] = "normal"
+            self.SigProgress.emit()
             sch[cnt]["action"] = 'terminate'
             #TODO: besser: cnt auf length(sch) setzen
             print(f"emergency exit, length (sch) = {len(sch)}")
@@ -696,13 +696,17 @@ class resampler(QObject):
             #remove old temp file
             if os.path.exists(remfile) == True:
                 print("new accomplish: remfile: " + remfile)
-                os.remove(remfile)
+                try:
+                    os.remove(remfile)
+                except:
+                    print("cannot remove temp file on exception (maybe emergency exit)")
 
         if sch[cnt]["blinkstate"]:
             system_state["res_blinkstate"] = True
         else:
             system_state["res_blinkstate"] = False
         system_state["r_sch_counter"] += 1
+
         if sch[cnt]["action"].find('terminate') == 0:
             print("res_scheduler:  start termination")
             system_state["r_sch_counter"] = 0 #terminate schedule, reset counter
@@ -718,7 +722,18 @@ class resampler(QObject):
             time.sleep(0.01)
             #TODO TODO: check change 14-12-2023: self.SigUpdateGUI.disconnect(self.res_update_GUI) #TODO:  check gui reference
             gui.activate_tabs(["View_Spectra","Annotate","Resample","YAML_editor","WAV_header","Player"]) #TODO check if outside
+
             self.sys_state.set_status(system_state)
+            #TODO: lösche alle temp files, die evt hängengeblieben sind (garbage collection)'
+            temppath = os.getcwd()
+            for x in os.listdir(temppath):
+                if x.find("temp_") == 0:
+                    try:
+                        os.remove(x)
+                    except:
+                        print("res_scheduler terminate: file access to temp file refused")
+            if system_state["emergency_stop"]:
+                gui.GUI_reset_status() #TODO check 06-01-2024
             return
 
         system_state["last_system_time"] = time.time()    
@@ -729,6 +744,7 @@ class resampler(QObject):
             schedule_objdict["signal"]["resample"].connect(schedule_objdict["connect"]["resample"])
             schedule_objdict["signal"]["resample"].emit()
             time.sleep(0.01)
+            #schedule_objdict["signal"]["resample"].disconnect(schedule_objdict["connect"]["resample"])
             pass
         if sch[cnt]["action"].find('accomplish') == 0:
             print("res_scheduler: accomplish rechaed, emit signal accomplish")
@@ -737,6 +753,8 @@ class resampler(QObject):
             #TODO: gleicher Aufruf wie in 'resample':
             schedule_objdict["signal"]["accomplish"].connect(schedule_objdict["connect"]["accomplish"])
             schedule_objdict["signal"]["accomplish"].emit()
+            time.sleep(0.01)
+            #schedule_objdict["signal"]["accomplish"].disconnect(schedule_objdict["connect"]["accomplish"])
         if sch[cnt]["action"].find('LOshift') == 0:
             print("res_scheduler: LOshift rechaed, emit signal LOshift")
             #TODO: gleicher Aufruf wie in 'resample':
@@ -778,6 +796,9 @@ class resampler(QObject):
         sch1["tBPS"] = 16   #TODO: tBPS flexibel halten !
         sch1["sBPS"] = wavheader['nBitsPerSample']
         sch1["s_filesize"] = wavheader['filesize'] # TODO: source filesize better determine from true filesize
+        ##########TODO: remove after checking 2024-01-06
+        file_stats = os.stat(system_state["f1"])
+        sch1["s_filesize"] = (file_stats.st_size - system_state["readoffset"])
         sch1["t_filesize"] = np.ceil(sch1["s_filesize"]*sch1["tSR"]/sch1["sSR"]*sch1["tBPS"]/sch1["sBPS"])
         sch1["wFormatTag"] = wavheader['wFormatTag'] #source formattag; no previous LOshifter,thus Format of sourcefile
 
@@ -840,6 +861,9 @@ class resampler(QObject):
         sch0["tBPS"] = 32 # TODO check if this should be always so: always defined so for LOshifter
         sch0["wFormatTag"] = wavheader['wFormatTag']
         sch0["s_filesize"] = wavheader['filesize'] 
+        file_stats = os.stat(system_state["f1"])
+        sch0["s_filesize"] = (file_stats.st_size - system_state["readoffset"])
+
         sch0["t_filesize"] = int(sch0["s_filesize"]*sch0["tBPS"]/sch0["sBPS"])
         schedule.append(sch0)
 
@@ -914,7 +938,10 @@ class resampler(QObject):
         sch_m1["sBPS"] = wavheader['nBitsPerSample']
         sch_m1["tBPS"] = 32
         sch_m1["wFormatTag"] = wavheader['wFormatTag']
-        sch_m1["s_filesize"] = wavheader['filesize'] 
+        sch_m1["s_filesize"] = wavheader['filesize']
+        file_stats = os.stat(system_state["f1"])
+        sch_m1["s_filesize"] = (file_stats.st_size - system_state["readoffset"])
+
         sch_m1["t_filesize"] = np.ceil(sch_m1["s_filesize"]*sch_m1["tSR"]/sch_m1["sSR"]*sch_m1["tBPS"]/sch_m1["sBPS"])
         sch_m1["wFormatTag"] = wavheader['wFormatTag'] #source formattag; no previous LOshifter,thus Format of sourcefile
         schedule.append(sch_m1)
@@ -992,15 +1019,13 @@ class resampler(QObject):
         gui = system_state["gui_reference"]
         wavheader = system_state["t_wavheader"]
 
-        output_file_prefix = system_state["out_dirname"] + "/temp_resized_"
+        output_file_prefix = system_state["out_dirname"] + system_state["mergeprefix"]
         current_output_file_index = 1
         current_output_file_size = 0
         current_output_file_path = f"{output_file_prefix}_{current_output_file_index}.dat"
-        gui = self.system_state["gui_reference"]
-        #system_state = self.sys_state.get_flags() #obsolete
+        #gui = self.system_state["gui_reference"]
         system_state["progress_source"] = "normal"
         system_state["progress"] = 0
-        #self.sys_state.set_flags(system_flags) #obsolete
         system_state["blinkstate"] = True
         system_state["actionlabel"] = "MERGE 2G"
         self.sys_state.set_status(system_state)
@@ -1008,38 +1033,48 @@ class resampler(QObject):
         maxprogress = 100
         lenlist = len(input_file_list)
         list_ix = 0
+        time.sleep(5)
         with open(current_output_file_path, 'wb') as current_output_file:
             # Schreibe die ersten 216 Bytes mit Nullen
             print(f"merge2G: generate outputfile {current_output_file_path}")
             current_output_file.write(b'\x00' * 216)
             current_output_file_size = 216
+            firstpass = True
             for input_file in input_file_list: #TODO: rewrite with enumerate for list index
+                time.sleep(5)
                 list_ix += 1
                 system_state["progress"] = list_ix/lenlist*maxprogress
+                print(f'merge2G progress: {system_state["progress"]}')
                 self.sys_state.set_status(system_state)
-                #self.sys_state.set_flags(system_state)
                 self.SigProgress.emit()
+                #view_resampler.updateprogress_resampling(self)
                 time.sleep(0.1)
+
                 #read wavheader of current inputfile, but only the first time !!
-                if list_ix == 1:
+                #if list_ix == 1: #TODO: check ! changed 07-01-2024
+                if firstpass:
                     wavheader = WAVheader_tools.get_sdruno_header(self,input_file)
                 with open(input_file, 'rb') as input_file:
+                    print(f"next input file: {input_file} ")
                     while True:
                         # Lese 1 MB Daten aus der Eingabedatei
                         data_chunk = input_file.read(1024**2)  # 1 MB in Bytes
                         # Überprüfe, ob die Eingabedatei vollständig gelesen wurde
+                        #TODO: Stoppe weiteres Lesen, wenn Cutting Stopzeit erreicht 
                         if not data_chunk:
                             if list_ix > (lenlist-1):
                                 print(f"merge2G: last write file reached, ix = {lenlist}")
                                 #write last wavheader
                                 duration = (current_output_file_size - 216)/wavheader["nAvgBytesPerSec"]
-                                stt = wavheader["starttime_dt"] #TODO: remove after tests 28-12-2023
                                 #TODO: this is wrong except for the last file! must be the stoptime of the last output file
-                                if list_ix == 1:
+                                if firstpass:
+                                    firstpass = False
                                     stt = system_state["starttime_after_trim"]
                                     print(f"merge2G: last == first write file reached, ix = 0")
                                     wavheader['starttime_dt'] = stt
                                     wavheader['starttime'] = [stt.year, stt.month, 0, stt.day, stt.hour, stt.minute, stt.second, int(stt.microsecond/1000)] 
+                                else:
+                                    stt = wavheader["starttime_dt"] #TODO: remove after tests 28-12-2023
                                 spt = stt + ndatetime.timedelta(seconds= np.floor(duration)) + ndatetime.timedelta(milliseconds = 1000*(duration - np.floor(duration)))
                                 wavheader['stoptime_dt'] = spt
                                 wavheader['stoptime'] = [spt.year, spt.month, 0, spt.day, spt.hour, spt.minute, spt.second, int(spt.microsecond/1000)] 
@@ -1049,7 +1084,8 @@ class resampler(QObject):
                                 WAVheader_tools.write_sdruno_header(self,current_output_file.name,wavheader,True)
                                 #TODO: rename to newfile
                                 nametrunk, extension = os.path.splitext(current_output_file.name)
-                                nametrunk = f"{os.path.dirname(current_output_file_path)}/resampled_{str(current_output_file_index)}_"
+                                basename = gui.ui.lineEdit_resample_targetnameprefix.text()
+                                nametrunk = f"{os.path.dirname(current_output_file_path)}/{basename}_{str(current_output_file_index)}_"
                                 aux = str(wavheader['starttime_dt'])
                                 if aux.find('.') < 1:
                                     SDRUno_suff = aux
@@ -1061,7 +1097,6 @@ class resampler(QObject):
                                 new_name = nametrunk + str(SDRUno_suff) + '_' + str(int(np.round(wavheader["centerfreq"]/1000))) + 'kHz.wav'
                                 current_output_file.close()
                                 shutil.move(current_output_file_path, new_name)
-
                             break
 
                         # Überprüfe, ob die Ausgabedatei die maximale Größe überschreiten würde
@@ -1071,13 +1106,18 @@ class resampler(QObject):
                             current_output_file.close()
                             #insert wav header
                             duration = (current_output_file_size - 216)/wavheader["nAvgBytesPerSec"]
-                            if list_ix == 1:
+                            if firstpass:
                                 print(f"merge2G: first write file reached, ix = 0")
                                 #TODO: write first starttime from cut_times
+                                firstpass = False
                                 stt = system_state["starttime_after_trim"]
                                 wavheader['starttime_dt'] = stt
                                 wavheader['starttime'] = [stt.year, stt.month, 0, stt.day, stt.hour, stt.minute, stt.second, int(stt.microsecond/1000)] 
                             else:
+                                #TODO: 
+                                #aktuell: wenn aktuelles Ausgabefile fertig, hole Startzeit vom Header des aktuellen
+                                #Ausgabefiles, addiere Dauer und generiere daraus den nächsten wavheader
+                                #beim ersten Listeneintrag hole Startzit von starttime after trim
                                 stt = wavheader["starttime_dt"]
                             spt = stt + ndatetime.timedelta(seconds= np.floor(duration))  + ndatetime.timedelta(milliseconds = 1000*(duration - np.floor(duration)))
                             wavheader['stoptime_dt'] = spt
@@ -1087,11 +1127,12 @@ class resampler(QObject):
                             #     wavheader['stoptime'] = [spt.year, spt.month, 0, spt.day, spt.hour, spt.minute, spt.second, 0]
                             wavheader['filesize'] = current_output_file_size
                             wavheader['data_nChunkSize'] = wavheader['filesize'] - 208
-                            next_output_file = f"{output_file_prefix}_{current_output_file_index+1}.dat" #TODO: The case that this file is EXACTLY the last one (by chance) is not treated correctly here
                             #next_nametrunk, extension = os.path.splitext(os.path.basename(next_output_file))
-                            #nametrunk, extension = os.path.splitext(current_output_file.name)#TODO:obsolet
-                            nametrunk = f"{os.path.dirname(current_output_file_path)}/resampled_{str(current_output_file_index)}_"
-                            next_nametrunk = f"resampled_{str(current_output_file_index + 1)}_" 
+                            #TODO: Entrypoint für zu wählenden Ausgangsfilenamen 
+                            basename = gui.ui.lineEdit_resample_targetnameprefix.text()
+                            nametrunk = f"{os.path.dirname(current_output_file_path)}/{basename}_{str(current_output_file_index)}_"
+                            #nametrunk = f"{os.path.dirname(current_output_file_path)}/resampled_{str(current_output_file_index)}_"
+                            next_nametrunk = f"{basename}_{str(current_output_file_index + 1)}_" 
                             aux = str(wavheader['starttime_dt'])
                             if aux.find('.') < 1:
                                 SDRUno_suff = aux
@@ -1120,6 +1161,7 @@ class resampler(QObject):
                             current_output_file_size = 0
                             current_output_file_index += 1
                             current_output_file_path = f"{output_file_prefix}_{current_output_file_index}.dat"
+                            print(f"merge2G next outputfile {current_output_file_path}")
                             current_output_file = open(current_output_file_path, 'wb')
                             current_output_file.write(b'\x00' * 216)  # Schreibe die ersten 216 Bytes mit Nullen
 
@@ -1128,10 +1170,11 @@ class resampler(QObject):
                         current_output_file_size += len(data_chunk)
 
         print("merge2G: merge files done, deleting intermediate files")
-        for input_file in input_file_list:
-            print(f"remove {input_file} if exists")
-            if os.path.exists(input_file) == True:
-                os.remove(input_file)
+        if system_state["merge2G_deleteoriginal"]:
+            for input_file in input_file_list:
+                print(f"remove {input_file} if exists")
+                if os.path.exists(input_file) == True:
+                    os.remove(input_file)
 
         gui.ui.listWidget_playlist.clear() #TODO: shift to a central updater/GUI reset
         gui.ui.listWidget_sourcelist.clear() #TODO: shift to a central updater/GUI reset
@@ -1157,6 +1200,7 @@ class view_resampler(QObject):
 
     SigAny = pyqtSignal()
     SigUpdateList = pyqtSignal()
+    SigCancel = pyqtSignal()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1221,6 +1265,11 @@ class view_resampler(QObject):
         #TODO: fetch starttime of the first file and stoptime of the last file to copy the values to the starttime_cut and stoptime_cut windows of the GUI
         wavheader1 = WAVheader_tools.get_sdruno_header(self,(gui.my_dirname + '/' + system_state["reslist"][0]))
         wavheader2 = WAVheader_tools.get_sdruno_header(self,(gui.my_dirname + '/' + system_state["reslist"][-1]))
+        if not wavheader1:
+            wsys.WIZ_auxiliaries.standard_errorbox("This file does not have a known SDR wav header - cannot be loaded")
+            print("This file does not have a known SDR wav header - cannot be loaded")
+            return False
+        
         system_state["reslist_starttime1"] = wavheader1['starttime_dt']
         system_state["reslist_stoptime1"] = wavheader1['stoptime_dt']
         system_state["reslist_starttime2"] = wavheader2['starttime_dt']
@@ -1408,7 +1457,7 @@ class view_resampler(QObject):
         gui.ui.timeEdit_resample_startcut.setDateTime(gui.wavheader['starttime_dt'])
         gui.ui.timeEdit_resample_stopcut.setDateTime(gui.wavheader['stoptime_dt'])
         gui.ui.lineEdit_resample_targetLO.setText(str((gui.wavheader['centerfreq']/1000)))
-        gui.ui.lineEdit_resample_Gain.setText(str(1))
+        #gui.ui.lineEdit_resample_Gain.setText(str(0))
         gui.ui.comboBox_resample_targetSR.setCurrentIndex(5)
         self.plot_spectrum_resample(gui.position)#TODO TODO: self position ist zu verstrickt überall in gui
         gui.showfilename() # TODO: in future versions check if this should be a gui-method
@@ -1492,9 +1541,85 @@ class view_resampler(QObject):
             gui.ui.listWidget_playlist_2.clear()
             gui.ui.timeEdit_resample_stopcut.setEnabled(True)
             gui.ui.timeEdit_resample_startcut.setEnabled(True)
+            # gui.ui.lineEdit_resample_Gain.setEnabled(True)
+            # gui.ui.radioButton_resgain.setEnabled(True)
         else:
             gui.ui.listWidget_sourcelist_2.setEnabled(False)
             gui.ui.listWidget_playlist_2.setEnabled(False)
             gui.ui.timeEdit_resample_stopcut.setEnabled(False)
             gui.ui.timeEdit_resample_startcut.setEnabled(False)
+            gui.ui.lineEdit_resample_Gain.setEnabled(True)
+            # gui.ui.radioButton_resgain.setChecked(False)
+            # gui.ui.radioButton_resgain.setEnabled(False)
 
+    def toggle_gain(self):
+        """
+        :param [ParamName]: none
+        :type [ParamName]: none
+        ...
+        :raises [ErrorType]: [ErrorDescription]TODO
+        ...
+        :return: [ReturnDescription]
+        :rtype: [ReturnType]
+        """
+        system_state = self.sys_state.get_status()
+        gui = system_state["gui_reference"]
+        if gui.ui.radioButton_resgain.isChecked():
+            pass
+            #system_state["resampling_gain"] = 0
+        else:
+            system_state["resampling_gain"] = 0
+            gui.ui.lineEdit_resample_Gain.setText("0")
+            self.sys_state.set_status(system_state)
+
+    def read_gain(self):
+        system_state = self.sys_state.get_status()
+        gui = system_state["gui_reference"]
+        gain = gui.ui.lineEdit_resample_Gain.text()
+        numeraltest = True
+        #TODO: check for negative sign
+        if not gain.replace(".", "").isnumeric():
+            numeraltest = False
+        #gain = gain.replace(".", "")
+        # if not gain[1:].isdigit():
+        #     numeraltest = False
+        if numeraltest == False:
+            wsys.WIZ_auxiliaries.standard_errorbox("invalid characters, must be numeric float value !")
+            return False
+        try:
+            fgain = float(gain)
+        except TypeError:
+            print("resampling gain: wrong format of manual gain")
+            wsys.WIZ_auxiliaries.standard_errorbox("invalid characters, must be numeric float value !")
+            #TARGET_LO = gui.wavheader['centerfreq']
+            return False
+        except ValueError:
+            print("resampling gain: wrong format of manual gain")
+            wsys.WIZ_auxiliaries.standard_errorbox("invalid characters, must be numeric float value !")
+            #TARGET_LO = gui.wavheader['centerfreq']
+            return False
+        system_state["resampling_gain"] = fgain
+        self.sys_state.set_status(system_state)
+        gui.plot_spectrum(self,0)
+
+    def cb_split2G_Button(self):
+        system_state = self.sys_state.get_status()
+        gui = system_state["gui_reference"]
+        reslist_len = gui.ui.listWidget_playlist_2.count()
+        reslist = []
+        for ix in range(reslist_len):
+            lw = gui.ui.listWidget_playlist_2
+            item = lw.item(ix)
+            reslist.append(gui.my_dirname + '/' + item.text())
+        print(f"cb_split2G_Button {reslist}")
+        system_state["mergeprefix"] = "/temp_split_"
+        #TODO_create separate out directory
+        #system_state["out_dirname"] = system_state["out_dirname"] + "_split"
+        system_state["t_wavheader"] = WAVheader_tools.get_sdruno_header(self,reslist[0])
+        #TODO: trage hier die Startzeit vom Cuttingstart ein
+        system_state["starttime_after_trim"] = system_state["t_wavheader"]["starttime_dt"]
+        system_state["last_system_time"] = time.time()    
+        system_state["res_blinkstate"] = True
+        system_state["merge2G_deleteoriginal"] = False
+        self.sys_state.set_status(system_state)
+        resampler().merge2G_files(reslist)

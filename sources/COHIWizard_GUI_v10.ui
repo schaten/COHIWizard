@@ -87,7 +87,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>5</number>
+       <number>0</number>
       </property>
       <property name="iconSize">
        <size>
@@ -278,6 +278,9 @@
               </colorrole>
              </disabled>
             </palette>
+           </property>
+           <property name="toolTip">
+            <string>move slider for optimal signal level; volume indicator should be in the green area</string>
            </property>
            <property name="autoFillBackground">
             <bool>true</bool>
@@ -1542,7 +1545,7 @@
             <enum>Qt::MoveAction</enum>
            </property>
            <property name="selectionMode">
-            <enum>QAbstractItemView::MultiSelection</enum>
+            <enum>QAbstractItemView::SingleSelection</enum>
            </property>
           </widget>
          </item>
@@ -2240,6 +2243,9 @@
              <pointsize>16</pointsize>
             </font>
            </property>
+           <property name="toolTip">
+            <string>current time in the record</string>
+           </property>
            <property name="frame">
             <bool>true</bool>
            </property>
@@ -2351,7 +2357,7 @@
             <enum>Qt::MoveAction</enum>
            </property>
            <property name="selectionMode">
-            <enum>QAbstractItemView::MultiSelection</enum>
+            <enum>QAbstractItemView::SingleSelection</enum>
            </property>
           </widget>
          </item>
@@ -2420,6 +2426,9 @@
          </item>
          <item row="5" column="0" colspan="4">
           <widget class="QPushButton" name="pushButton_act_playlist">
+           <property name="toolTip">
+            <string>toggles betweensingle file and playlist, activates playlist tool</string>
+           </property>
            <property name="text">
             <string/>
            </property>
@@ -4378,34 +4387,44 @@
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_5">
-         <item row="12" column="1" colspan="4">
-          <widget class="QProgressBar" name="progressBar_resample">
-           <property name="value">
-            <number>0</number>
-           </property>
-          </widget>
-         </item>
-         <item row="12" column="0">
-          <widget class="QLabel" name="label_36">
-           <property name="text">
-            <string>RESAMPLING</string>
-           </property>
-          </widget>
-         </item>
-         <item row="11" column="1" colspan="4">
+         <item row="13" column="1" colspan="4">
           <widget class="QLabel" name="label_Filename_resample">
            <property name="text">
             <string/>
            </property>
           </widget>
          </item>
-         <item row="8" column="4">
+         <item row="14" column="0">
+          <widget class="QLabel" name="label_36">
+           <property name="text">
+            <string>RESAMPLING</string>
+           </property>
+          </widget>
+         </item>
+         <item row="14" column="1" colspan="4">
+          <widget class="QProgressBar" name="progressBar_resample">
+           <property name="value">
+            <number>0</number>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="5">
+          <widget class="QLabel" name="label_38">
+           <property name="text">
+            <string>Selected files</string>
+           </property>
+          </widget>
+         </item>
+         <item row="10" column="4">
           <widget class="QListWidget" name="listWidget_sourcelist_2">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
+           </property>
+           <property name="toolTip">
+            <string>drag files from here to the 'Selected files' list </string>
            </property>
            <property name="dragEnabled">
             <bool>false</bool>
@@ -4420,55 +4439,41 @@
             <enum>Qt::MoveAction</enum>
            </property>
            <property name="selectionMode">
-            <enum>QAbstractItemView::MultiSelection</enum>
+            <enum>QAbstractItemView::SingleSelection</enum>
            </property>
           </widget>
          </item>
-         <item row="10" column="4">
-          <widget class="QPushButton" name="pushButton_resample_resample">
-           <property name="text">
-            <string>Resample</string>
-           </property>
-          </widget>
-         </item>
-         <item row="6" column="5">
-          <widget class="QLabel" name="label_38">
-           <property name="text">
-            <string>Selected files</string>
-           </property>
-          </widget>
-         </item>
-         <item row="6" column="4">
+         <item row="8" column="4">
           <widget class="QLabel" name="label_41">
            <property name="text">
             <string>Choose file (drag to the left)</string>
            </property>
           </widget>
          </item>
-         <item row="11" column="0">
+         <item row="12" column="4">
+          <widget class="QPushButton" name="pushButton_resample_resample">
+           <property name="toolTip">
+            <string>start resampling procedure and splt reulting files in 2GB tranches</string>
+           </property>
+           <property name="text">
+            <string>Resample</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="3">
+          <widget class="QLabel" name="label_31">
+           <property name="toolTip">
+            <string>minimum SNR for auto-selection of peaks</string>
+           </property>
+           <property name="text">
+            <string>target sampling rate (kS/s)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="13" column="0">
           <widget class="QLabel" name="label_30">
            <property name="text">
             <string>Filename:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="2">
-          <widget class="QLabel" name="label_34">
-           <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="3">
-          <widget class="QLabel" name="label_32">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="toolTip">
-            <string>baseline offset from automated baseline</string>
-           </property>
-           <property name="text">
-            <string>Gain</string>
            </property>
           </widget>
          </item>
@@ -4509,18 +4514,42 @@
            </item>
            <item>
             <property name="text">
+             <string>2000</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
              <string>2500</string>
             </property>
            </item>
           </widget>
          </item>
-         <item row="2" column="3">
-          <widget class="QLabel" name="label_31">
-           <property name="toolTip">
-            <string>minimum SNR for auto-selection of peaks</string>
-           </property>
+         <item row="2" column="2">
+          <widget class="QLabel" name="label_34">
            <property name="text">
-            <string>target sampling rate (kS/s)</string>
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="10" column="5">
+          <widget class="QListWidget" name="listWidget_playlist_2">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="dragEnabled">
+            <bool>false</bool>
+           </property>
+           <property name="dragDropMode">
+            <enum>QAbstractItemView::DragDrop</enum>
+           </property>
+           <property name="defaultDropAction">
+            <enum>Qt::MoveAction</enum>
+           </property>
+           <property name="selectionMode">
+            <enum>QAbstractItemView::SingleSelection</enum>
            </property>
           </widget>
          </item>
@@ -4540,6 +4569,16 @@
            </property>
           </widget>
          </item>
+         <item row="3" column="3">
+          <widget class="QLabel" name="label_29">
+           <property name="toolTip">
+            <string>baseline offset from automated baseline</string>
+           </property>
+           <property name="text">
+            <string>target LO (kHz)</string>
+           </property>
+          </widget>
+         </item>
          <item row="3" column="4">
           <widget class="QLineEdit" name="lineEdit_resample_targetLO">
            <property name="enabled">
@@ -4551,50 +4590,11 @@
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
+           <property name="toolTip">
+            <string>LO frequency of the resampeled file in kHz</string>
+           </property>
            <property name="text">
             <string/>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="3">
-          <widget class="QLabel" name="label_29">
-           <property name="toolTip">
-            <string>baseline offset from automated baseline</string>
-           </property>
-           <property name="text">
-            <string>target LO (kHz)</string>
-           </property>
-          </widget>
-         </item>
-         <item row="8" column="5">
-          <widget class="QListWidget" name="listWidget_playlist_2">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="dragEnabled">
-            <bool>false</bool>
-           </property>
-           <property name="dragDropMode">
-            <enum>QAbstractItemView::DragDrop</enum>
-           </property>
-           <property name="defaultDropAction">
-            <enum>Qt::MoveAction</enum>
-           </property>
-           <property name="selectionMode">
-            <enum>QAbstractItemView::MultiSelection</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="6" column="0" rowspan="5" colspan="4">
-          <widget class="QGraphicsView" name="graphicsView_resample">
-           <property name="contextMenuPolicy">
-            <enum>Qt::NoContextMenu</enum>
-           </property>
-           <property name="toolTip">
-            <string>space for spectrum plot</string>
            </property>
           </widget>
          </item>
@@ -4605,6 +4605,16 @@
            </property>
            <property name="displayFormat">
             <string>dd:HH:mm:ss</string>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="0" rowspan="5" colspan="4">
+          <widget class="QGraphicsView" name="graphicsView_resample">
+           <property name="contextMenuPolicy">
+            <enum>Qt::NoContextMenu</enum>
+           </property>
+           <property name="toolTip">
+            <string>space for spectrum plot</string>
            </property>
           </widget>
          </item>
@@ -4621,30 +4631,10 @@
          <item row="2" column="0">
           <widget class="QLabel" name="label_33">
            <property name="toolTip">
-            <string>baseline offset from automated baseline</string>
+            <string>trim file contents before that time in the first file in the list</string>
            </property>
            <property name="text">
             <string>Start cut</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="0">
-          <widget class="QLabel" name="label_37">
-           <property name="toolTip">
-            <string>baseline offset from automated baseline</string>
-           </property>
-           <property name="text">
-            <string>Stop cut</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="0">
-          <widget class="QLabel" name="label_28">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="text">
-            <string>Freq corr %</string>
            </property>
           </widget>
          </item>
@@ -4658,10 +4648,267 @@
            </property>
           </widget>
          </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_37">
+           <property name="toolTip">
+            <string>cut off last file in the list at this time</string>
+           </property>
+           <property name="text">
+            <string>Stop cut</string>
+           </property>
+          </widget>
+         </item>
          <item row="4" column="5">
           <widget class="QRadioButton" name="radioButton_advanced_sampling">
+           <property name="toolTip">
+            <string>Allow for resampling of whole file lists</string>
+           </property>
            <property name="text">
             <string>ADVANCED SAMPLING</string>
+           </property>
+           <property name="autoExclusive">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_28">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>Freq corr %</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="3">
+          <widget class="QRadioButton" name="radioButton_resgain">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="toolTip">
+            <string>Gain factor by which the signal will be multiplied in dB. Please check afterwards in 'View spectra' if signal amplitude is below 1</string>
+           </property>
+           <property name="text">
+            <string>Manual Gain (dB)</string>
+           </property>
+           <property name="autoExclusive">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="12" column="5">
+          <widget class="QPushButton" name="pushButton_resample_split2G">
+           <property name="toolTip">
+            <string>Split file in the list into 2GB parts</string>
+           </property>
+           <property name="text">
+            <string>split to 2GB</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="5">
+          <widget class="QPushButton" name="pushButton_resample_cancel">
+           <property name="text">
+            <string>cancel</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="3">
+          <widget class="QLabel" name="label_resample_targetfilename">
+           <property name="text">
+            <string>Target filename prefix</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="4" colspan="2">
+          <widget class="QLineEdit" name="lineEdit_resample_targetnameprefix">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="palette">
+            <palette>
+             <active>
+              <colorrole role="Button">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>255</red>
+                 <green>254</green>
+                 <blue>210</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Light">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>255</red>
+                 <green>254</green>
+                 <blue>210</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Midlight">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>255</red>
+                 <green>254</green>
+                 <blue>210</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Base">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>255</red>
+                 <green>254</green>
+                 <blue>210</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Window">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>255</red>
+                 <green>254</green>
+                 <blue>210</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="NoRole">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>255</red>
+                 <green>254</green>
+                 <blue>210</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </active>
+             <inactive>
+              <colorrole role="Button">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>255</red>
+                 <green>254</green>
+                 <blue>210</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Light">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>255</red>
+                 <green>254</green>
+                 <blue>210</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Midlight">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>255</red>
+                 <green>254</green>
+                 <blue>210</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Base">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>255</red>
+                 <green>254</green>
+                 <blue>210</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Window">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>255</red>
+                 <green>254</green>
+                 <blue>210</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="NoRole">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>255</red>
+                 <green>254</green>
+                 <blue>210</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </inactive>
+             <disabled>
+              <colorrole role="Button">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>255</red>
+                 <green>254</green>
+                 <blue>210</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Light">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>255</red>
+                 <green>254</green>
+                 <blue>210</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Midlight">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>255</red>
+                 <green>254</green>
+                 <blue>210</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Base">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>255</red>
+                 <green>254</green>
+                 <blue>210</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Window">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>255</red>
+                 <green>254</green>
+                 <blue>210</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="NoRole">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>255</red>
+                 <green>254</green>
+                 <blue>210</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </disabled>
+            </palette>
+           </property>
+           <property name="toolTip">
+            <string>Base name of the fie; will be extended by number (optionally) and by the standard SDRUNO-postfix</string>
+           </property>
+           <property name="text">
+            <string/>
            </property>
           </widget>
          </item>

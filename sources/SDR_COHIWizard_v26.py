@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
+# Um alle print messages auf logfile umzuleiten: Aktiviere am Ende des init-Teils: sys.stdout = self.logfile
 #statt: self.menubar = File(MainWindow)
 #self.menubar = QtWidgets.QMenuBar(MainWindow)
-#pyinstaller --icon=COHIWizard_ico4.ico –F SDR_COHIWizard_v25.py
+#pyinstaller --icon=COHIWizard_ico4.ico –F SDR_COHIWizard_v26.py
 #pyuic5 -x  COHIWizard_GUI_v10.ui -o COHIWizard_GUI_v10.py
 # For reducing to RFCorder: place the following just before the line with 
         #check if sox is installed so as to throw an error message on resampling, if not
@@ -378,7 +379,11 @@ class statlst_gen_worker(QtCore.QThread):
                         else:
                             curr_tx_site = self.__slots__[1].tx_site.iloc[ix2]
 
-                        stdcheck = 'ex ' in curr_station
+                        if curr_station.find("ex ") == 0:
+                            stdcheck = True
+                        else:
+                            stdcheck = False
+
                         # für jeden index ix2 in ixf zum Peak ix prüfe ob es den String 'INACTI' in der Stationsspalte der MWTabelle gibt
                         inactcheck = 'INACTI' in curr_station
                         # logisches label falls ()'ex ' oder 'INACT') und recording-time > Stichtag der MWTabellen-Erstellung
@@ -712,7 +717,6 @@ class WizardGUI(QMainWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         print("Initializing GUI, please wait....")
-        system_state = {}
         self.TEST = True    # Test Mode Flag for testing the App, --> playloop  ##NOT USED #TODO:future system status
         self.DATA_FILEEXTENSION = ["dat","wav",'raw'] #TODO:future system state
         self.CURTIMEINCREMENT = 5 # für playloop >>, << TODO:future system state
@@ -738,7 +742,7 @@ class WizardGUI(QMainWindow):
         self.cohiradia_yamlheader_filename = 'dummy' #TODO:future system state
         self.cohiradia_yamltailer_filename = 'dummy' #TODO:future system state
         self.cohiradia_yamlfinal_filename = 'dummy' #TODO:future system state
-        self.annotationdir_prefix = 'ANN_' #TODO:future system state
+        self.annotationdir_prefix = 'z_ANN_' #TODO:future system state
         self.flag_ann_completed = False #TODO:future system state
         self.lock_playthreadstart = True #TODO:future system state
         self.playthreadActive = False #TODO:future system state
@@ -746,28 +750,31 @@ class WizardGUI(QMainWindow):
         self.timechanged=False #TODO:future system state
         self.position = 0 #TODO:future system state URGENT !!!!!!!!!!!!!!
 
-        system_state["emergency_stop"] = False
-        system_state["timescaler"] = 0
-        system_state["fileopened"] = False
-        system_state["rates"] = {20000:0, 50000:1, 100000:2, 250000:3, 
-                      500000:4, 1250000:5, 2500000:6}
-        system_state["ifreq"] = 0
-        system_state["irate"] = 0
-        system_state["icorr"] = 0
-        system_state["irates"] = ['2500', '1250', '500', '250', '100', '50', '20']
-        system_state["gui_reference"] = self
-        system_state["actionlabel"] = ""
-        system_state["LO_offset"] = 0
-        system_state["playlist_ix"] = 0
-        system_state["reslist_ix"] = 0
-        system_state["list_out_files_resampled"] = []
-        system_state["playlist_active"] = False
+        # system_state["annotation_prefix"] = 'z_ANN_'
+        # system_state["resampling_gain"] = 0
+        # system_state["emergency_stop"] = False
+        # system_state["timescaler"] = 0
+        # system_state["fileopened"] = False
+        # system_state["rates"] = {20000:0, 50000:1, 100000:2, 250000:3, 
+        #               500000:4, 1250000:5, 2500000:6}
+        # system_state["ifreq"] = 0
+        # system_state["irate"] = 0
+        # system_state["icorr"] = 0
+        # system_state["irates"] = ['2500', '1250', '500', '250', '100', '50', '20']
+        # system_state["gui_reference"] = self
+        # system_state["actionlabel"] = ""
+        # system_state["LO_offset"] = 0
+        # system_state["playlist_ix"] = 0
+        # system_state["reslist_ix"] = 0
+        # system_state["list_out_files_resampled"] = []
+        # system_state["playlist_active"] = False
 
-        system_state["progress"] = 0
-        system_state["temp_LOerror"] = False
-        system_state["starttrim"] = False
-        system_state["stoptrim"] = False
-        #sys_state.set_flags(system_state)
+        # system_state["progress"] = 0
+        # system_state["temp_LOerror"] = False
+        # system_state["starttrim"] = False
+        # system_state["stoptrim"] = False
+        self.GUI_reset_status()
+
         self.CURTIMEINCREMENT = 5 #TODO:future system state
         self.ui = MyWizard()
         self.ui.setupUi(self)
@@ -783,7 +790,7 @@ class WizardGUI(QMainWindow):
         self.ui.actionOverwrite_header.triggered.connect(self.overwrite_header)
         self.SigGUIReset.connect(self.reset_GUI)
         ### END UI MASTER ####################################
-        sys_state.set_status(system_state)
+
         ### UI TAB RESAMPLER #################################### TODO: redefine in resampler module ?
         self.ui.timeEdit_resample_stopcut.setEnabled(False)
         self.ui.timeEdit_resample_startcut.setEnabled(False)
@@ -791,15 +798,19 @@ class WizardGUI(QMainWindow):
         self.ui.comboBox_resample_targetSR.currentIndexChanged.connect(lambda: v_resamp.plot_spectrum_resample(self.position)) #TODO:future system state
         self.ui.lineEdit_resample_targetLO.textChanged.connect(lambda: v_resamp.plot_spectrum_resample(self.position))
         self.ui.radioButton_advanced_sampling.clicked.connect(lambda: v_resamp.toggle_advanced_sampling())
-
+        self.ui.radioButton_resgain.clicked.connect(lambda: v_resamp.toggle_gain())
         self.ui.lineEdit_resample_targetLO.textChanged.connect(lambda: self.reformat_targetLOpalette)
         self.ui.lineEdit_resample_targetLO.textEdited.connect(lambda: self.reformat_targetLOpalette)
-        
+        self.ui.lineEdit_resample_Gain.textChanged.connect(lambda: v_resamp.read_gain())
+        self.ui.lineEdit_resample_Gain.setText("0")
+        self.ui.lineEdit_resample_Gain.setEnabled(True)
+        self.ui.radioButton_resgain.setEnabled(True)
+        #self.ui.pushButton_resample_cancel.clicked.connect(lambda: print("cancel clicked"))
         ### END UI TAB RESAMPLER ####################################
-
+        self.ui.radioButton_resgain.setChecked(False)
         self.ui.tabWidget.setCurrentIndex(1) #TODO: avoid magic number, unidentified
         self.ui.label_8.setEnabled(False)  #Unidentified
-        sys_state.set_status(system_state)
+        #sys_state.set_status(system_state)
         ### UI TAB WAVHEADER ####################################
         self.ui.pushButton_InsertHeader.setEnabled(False)
         self.ui.pushButton_InsertHeader.clicked.connect(self.overwrite_header)
@@ -809,7 +820,7 @@ class WizardGUI(QMainWindow):
         self.ui.tableWidget_basisfields.setEnabled(False)
         self.ui.tableWidget_starttime.setEnabled(False)
         ###END UI TAB WAVHEADER ####################################
-        sys_state.set_status(system_state)
+
         ### UI TAB SPECTRUM ####################################
         self.ui.spinBoxminPeakwidth.valueChanged.connect(self.minPeakwidthupdate)
         self.ui.spinBoxminPeakDistance.valueChanged.connect(self.minPeakDistanceupdate)
@@ -836,7 +847,7 @@ class WizardGUI(QMainWindow):
         self.ui.pushButton_Writeyamlheader.setEnabled(False) # activate after completion of the annotation procedure
         self.ui.pushButton_Writeyamlheader.clicked.connect(self.yaml_header_buttonfcn)
         self.scanplotcreated = False
-        sys_state.set_status(system_state)
+        #sys_state.set_status(system_state)
         ###EUI TAB ANNOTATE####################################
         self.ui.pushButton_Scan.setEnabled(False)
         self.ui.pushButtonAnnotate.setEnabled(False)
@@ -854,7 +865,7 @@ class WizardGUI(QMainWindow):
         self.ui.Annotate_listWidget.clear()
         self.ui.progressBar_2.setProperty("value", 0)
         ###END UI TAB ANNOTATE ####################################
-        sys_state.set_status(system_state)
+        #sys_state.set_status(system_state)
         ###UI TAB PLAYER ####################################
         self.ui.pushButton_Shutdown.clicked.connect(self.shutdown)
         self.ui.pushButton_FF.clicked.connect(
@@ -914,6 +925,8 @@ class WizardGUI(QMainWindow):
         except:
             #return False
             print("cannot get metadata")
+
+        system_state = sys_state.get_status()    
         system_state["HostAddress"] = self.ui.lineEdit_IPAddress.text()
         configparams = {"ifreq":system_state["ifreq"], "irate":system_state["irate"],
                             "rates": system_state["rates"], "icorr":system_state["icorr"],
@@ -957,6 +970,10 @@ class WizardGUI(QMainWindow):
             print(ex.stdout, file=sys.stdout, end='', flush=True)
             if len(ex.stderr) > 0: 
                 self.soxnotexist = True
+        self.orig_stdout = sys.stdout
+        self.logfile = open('diagnostics.txt', 'w')
+        #TODO: implement a selection checkbox for 'write logfile' to redirect all prints to logfile
+        #sys.stdout = self.logfile
 
         #Für RFCORDER only:
         #self.ui.tabWidget.setTabVisible(3, False) versch. Indices
@@ -970,6 +987,38 @@ class WizardGUI(QMainWindow):
         #sys_state.set_status(system_state)
         
     # GENRAL GUI METHODS
+    def closeEvent(self, event):
+        sys.stdout = self.orig_stdout
+        self.logfile.close()
+        self.deleteLater() 
+
+    def GUI_reset_status(self):
+        #system_state = sys_state.get_status()
+        system_state = {}
+
+        system_state["annotation_prefix"] = 'z_ANN_'
+        system_state["resampling_gain"] = 0
+        system_state["emergency_stop"] = False
+        system_state["timescaler"] = 0
+        system_state["fileopened"] = False
+        system_state["rates"] = {20000:0, 50000:1, 100000:2, 250000:3, 
+                      500000:4, 1250000:5, 2500000:6}
+        system_state["ifreq"] = 0
+        system_state["irate"] = 0
+        system_state["icorr"] = 0
+        system_state["irates"] = ['2500', '1250', '500', '250', '100', '50', '20']
+        system_state["gui_reference"] = self
+        system_state["actionlabel"] = ""
+        system_state["LO_offset"] = 0
+        system_state["playlist_ix"] = 0
+        system_state["reslist_ix"] = 0
+        system_state["list_out_files_resampled"] = []
+        system_state["playlist_active"] = False
+        system_state["progress"] = 0
+        system_state["temp_LOerror"] = False
+        system_state["starttrim"] = False
+        system_state["stoptrim"] = False
+        sys_state.set_status(system_state)
 
     def GUI_reset_after_resamp(self): #TODO: check if all that can also be done in a more central reset method
 
@@ -977,7 +1026,7 @@ class WizardGUI(QMainWindow):
         self.showfilename()
         system_state = sys_state.get_status()
         #self.f1 = system_state["f1"]  ##OBSOLTE once self.f1 has been replaced by system_state["f1"] in general
-        self.wavheader = system_state["t_wavheader"] ##OBSOLTE once self.wavheader has been replaced by system_state["f1"] in general
+        #self.wavheader = system_state["t_wavheader"] ##OBSOLTE once self.wavheader has been replaced by system_state["f1"] in general
         system_state["ifreq"] = self.wavheader['centerfreq']
         system_state["irate"] = self.wavheader['nSamplesPerSec'] #TODO replace ?? by systemvar
         self.fill_wavtable()
@@ -1052,7 +1101,7 @@ class WizardGUI(QMainWindow):
         self.Tabref["Resample"] = {}
         self.Tabref["Resample"]["tab_reference"] = self.ui.tab_resample
         #TODO: change 10-12-2023: since GUI10: self.generate_canvas(self,self.ui.gridLayout_5,[10,0,1,5],[-1,-1,-1,-1],self.Tabref["Resample"])
-        self.generate_canvas(self,self.ui.gridLayout_5,[4,0,7,4],[-1,-1,-1,-1],self.Tabref["Resample"])
+        self.generate_canvas(self,self.ui.gridLayout_5,[6,0,6,4],[-1,-1,-1,-1],self.Tabref["Resample"])
 
     def inactivate_tabs(self,selection):
         """
@@ -2044,8 +2093,14 @@ class WizardGUI(QMainWindow):
         VIEW Element of Tab 'resample
         """
         self.ui.lineEdit_resample_targetLO.setStyleSheet("background-color: bisque1")
-        self.ui.lineEdit_resample_Gain.setText('hit ENTER key')
+        #self.ui.lineEdit_resample_Gain.setText('hit ENTER key')
 
+    # def cancel_resamp(self):
+    #     system_state = sys_state.get_status()
+    #     print("cancel_resamp reached")
+    #     system_state["emergency_stop"] = True
+    #     sys_state.set_status(system_state)
+    #     self.ui.pushButton_resample_cancel.clicked.connect(lambda: rsmp.res_workers.soxworker_terminate(self))
 
     def cb_Butt_resample(self):
         self.ui.listWidget_playlist_2.itemChanged.connect(v_resamp.reslist_update) #dummy in order to prevent exceptions in case the signal is already disconnevted
@@ -2061,8 +2116,26 @@ class WizardGUI(QMainWindow):
         """
         self.ui.listWidget_playlist_2.itemChanged.connect(v_resamp.reslist_update) #dummy in order to prevent exceptions in case the signal is already disconnevted
         self.ui.listWidget_playlist_2.itemChanged.disconnect(v_resamp.reslist_update)
+        self.ui.lineEdit_resample_targetnameprefix.setEnabled(False)
 
         system_state = sys_state.get_status()
+        if system_state["emergency_stop"] is True:
+            system_state["emergency_stop"] = False
+            print("emergency stop in cb_resample")
+            system_state["reslist_ix"] = 0
+            print("resamle list has been terminated, reset counter and exit event loop,, start 2GB file merging")
+            self.ui.listWidget_playlist_2.clear()
+            self.ui.listWidget_sourcelist_2.clear()
+            time.sleep(0.1)
+            system_state["fileopened"] = False
+            self.ui.listWidget_playlist_2.itemChanged.connect(v_resamp.reslist_update)
+
+            self.SigGUIReset.emit()
+            system_state["list_out_files_resampled"] = []
+            sys_state.set_status(system_state)
+            resamp.SigTerminate_Finished.disconnect(self.cb_resample_new)
+            return False
+
         if self.soxnotexist:
             infotext = "<font size = 12> You must install sox before being able to resample; <br> Download from: <br><a href='%s'>sox version 14.2.2 </a> <br><br>Either install sox to RFCorder directory or set the system path to the sox installation directory. <br> See also RFCorder user manual; </font>" % self.soxlink
             msg = QMessageBox()
@@ -2082,7 +2155,9 @@ class WizardGUI(QMainWindow):
         # define references to the resampler signals and connected methods in a central general dictionary; Abonnement table
         # TODO: This definition could be shifted to the init section or anywhere else (resampler module ?) it is not 
         #related to the GUI but rather to the resampler controller. Thus it could be defined there
-        
+        #self.ui.pushButton_resample_cancel.clicked.connect(lambda: self.cancel_resamp())
+
+        system_state["mergeprefix"] = "/temp_resized_"
         schedule_objdict = {}
         schedule_objdict["signal"] = {}
         schedule_objdict["signal"]["resample"] = resamp.SigResample
@@ -2094,7 +2169,7 @@ class WizardGUI(QMainWindow):
         schedule_objdict["connect"]["accomplish"] = resamp.accomplish_resampling
         schedule_objdict["connect"]["LOshift"] = resamp.LOshifter_new
         schedule_objdict["connect"]["updateGUI"] = resamp.res_update_GUI
-
+        schedule_objdict["signal"]["cancel"] = v_resamp.SigCancel
         system_state["schedule_objdict"] = schedule_objdict
         system_state["r_sch_counter"] = 0
         target_SR = self.ui.comboBox_resample_targetSR.currentText()
@@ -2117,6 +2192,9 @@ class WizardGUI(QMainWindow):
                 print("cb_resample: fetch next reslist file")
                 item = lw.item(system_state["reslist_ix"])
                 item.setBackground(QtGui.QColor("lightgreen"))
+                #TODO: entrypoint f cutstop, cutstart:
+                #(1) cut first file: copy from fseek (cutstart) to cutstop
+
                 system_state["f1"] = self.my_dirname + '/' + item.text()
                 print(f'cb_resample: file: {system_state["f1"]}')
                 self.wavheader = WAVheader_tools.get_sdruno_header(self,system_state["f1"])
@@ -2137,7 +2215,9 @@ class WizardGUI(QMainWindow):
                 # schedule_objdict["signal"]["Merge2G"].connect(schedule_objdict["connect"]["Merge2G"])
                 # schedule_objdict["signal"]["Merge2G"].emit()
                 time.sleep(0.1)
-                resamp.merge2G_files(system_state["list_out_files_resampled"])
+                if not system_state["emergency_stop"]:
+                    system_state["merge2G_deleteoriginal"] = True
+                    resamp.merge2G_files(system_state["list_out_files_resampled"])
                 system_state["fileopened"] = False
                 self.ui.listWidget_playlist_2.itemChanged.connect(v_resamp.reslist_update)
                 self.SigGUIReset.emit()
@@ -2177,7 +2257,8 @@ class WizardGUI(QMainWindow):
             print("resampling of rcvr and dat format not yet fully tested, may be problematic")
             #TODO: untersuchen, wie rcvr hier zu machen ist; an sich sollte das kein Problem sein, da ja der wavheader ohnehin bereits auf auxi umgeschrieben ist
             #return False          
-        self.inactivate_tabs(["View_Spectra","Annotate","Resample","YAML_editor","WAV_header","Player"])
+        #self.inactivate_tabs(["View_Spectra","Annotate","Resample","YAML_editor","WAV_header","Player"])
+        self.inactivate_tabs(["View_Spectra","Annotate","YAML_editor","WAV_header","Player"])
         time.sleep(0.01)
         #system_state = sys_state.get_flags()
 
@@ -2200,17 +2281,7 @@ class WizardGUI(QMainWindow):
             resamp.schedule_A()  
             print("generate schedule for simple resampling")
 
-        # SDRUno_suffix = str(self.wavheader['starttime_dt'])  #TODO: has already been defined, remove after tests 
-        # SDRUno_suffix = SDRUno_suffix.replace(" ","_")
-        # SDRUno_suffix = SDRUno_suffix.replace(":","")
-        # SDRUno_suffix = SDRUno_suffix.replace("-","")
-        
-        out_dirname = self.my_dirname + '/out'
-        if os.path.exists(out_dirname) == False:         #exist yaml file: create from yaml-editor
-            os.mkdir(out_dirname)
-        system_state["out_dirname"] = out_dirname
-        new_name = out_dirname + '/' + self.my_filename +'_resamp_' + str(SDRUno_suffix) + '_' + str(int(system_state["tLO"]/1000)) + 'kHz.wav'
-
+        new_name = system_state["out_dirname"] + '/' + self.my_filename +'_resamp_' + str(SDRUno_suffix) + '_' + str(int(system_state["tLO"]/1000)) + 'kHz.wav'
         system_state = sys_state.get_status()
         system_state["new_name"] = new_name
         system_state["list_out_files_resampled"].append(new_name)
@@ -2222,6 +2293,7 @@ class WizardGUI(QMainWindow):
         time.sleep(0.001)
         resamp.Sigincrscheduler.connect(resamp.res_scheduler)
         resamp.Sigincrscheduler.emit()
+        self.ui.lineEdit_resample_targetnameprefix.setEnabled(True)
         #TODO TODO: Lade letztes resampelte File ins generelle GUI
 
     def reset_LO_bias(self):
@@ -3118,7 +3190,7 @@ class WizardGUI(QMainWindow):
 
         """
         #self.ui.lineEdit.setEnabled(False)
-        print('Editline copy to metadata file')
+        #print('Editline copy to metadata file')
         self.ui.pushButtonENTER.setEnabled(False)
         try:
             stream = open(self.status_filename, "r")
@@ -3226,6 +3298,7 @@ class WizardGUI(QMainWindow):
                 imagindex = np.arange(1,self.DATABLOCKSIZE,2)
                 #calculate spectrum and shift/rescale appropriately
                 trace = np.abs(data[realindex]+1j*data[imagindex])
+                trace = trace * np.power(10,system_state["resampling_gain"]/20)
                 N = len(trace)
                 deltat = 1/self.wavheader['nSamplesPerSec']
                 time_ = np.linspace(0,N*deltat,N)
@@ -3238,7 +3311,7 @@ class WizardGUI(QMainWindow):
                 pdata = self.ann_spectrum(self,data)
                 #TODO: make function for plotting data , reuse in autoscan
                 datax = pdata["datax"]
-                datay = pdata["datay"]
+                datay = pdata["datay"] + system_state["resampling_gain"]
                 basel = pdata["databasel"] + self.Baselineoffset
                 peaklocs = pdata["peaklocs"]
                 peakprops = pdata["peakprops"]
@@ -3482,7 +3555,12 @@ class WizardGUI(QMainWindow):
             sys_state.set_status(system_state)
             return False
             #print("cannot get metadata")
-        
+        system_state["HostAddress"] = self.ui.lineEdit_IPAddress.text()
+        configparams = {"ifreq":system_state["ifreq"], "irate":system_state["irate"],
+                            "rates": system_state["rates"], "icorr":system_state["icorr"],
+                            "HostAddress":system_state["HostAddress"], "LO_offset":system_state["LO_offset"]}
+        system_state["sdr_configparams"] = configparams
+
         self.ui.spinBoxminSNR_ScannerTab.setProperty("value", self.PROMINENCE)
         
         if system_state["fileopened"] is True:
@@ -3511,6 +3589,14 @@ class WizardGUI(QMainWindow):
                 #print("system_state["fileopened"] called")
                 sys_state.set_status(system_state)
         sys_state.set_status(system_state)
+        temppath = os.getcwd()
+        for x in os.listdir(temppath):
+            if x.find("temp_") == 0:
+                try:
+                    os.remove(x)
+                except:
+                    print("res_scheduler terminate: file access to temp file refused")
+
     ############################## END TAB GENERAL MENUFUNCTIONS ####################################
 
     ############################## TAB WAV EDITOR ####################################
@@ -3582,7 +3668,7 @@ class WizardGUI(QMainWindow):
             SDRUno_suffix = SDRUno_suffix.replace("-","")
             usix = self.my_filename.find('lo')
             if usix == -1:
-                wsys.WIZ_auxiliaries.standard_errorbox("dat file does not meet old COHIRADIA RFCorder name convention; file will be renamed with correct suffixes")
+                wsys.WIZ_auxiliaries.standard_infobox("dat file does not meet old COHIRADIA RFCorder name convention; file will be renamed with correct suffixes")
                 usix = len(self.my_filename)+2
             bbb = self.my_filename[0:usix-2]
             new_name = self.my_dirname + '/' + bbb + '_' + str(SDRUno_suffix) + '_' + str(int(np.round(self.wavheader["centerfreq"]/1000))) + 'kHz.wav'
@@ -3859,6 +3945,7 @@ SR must be in the set: 20000, 50000, 100000, 250000, 500000, 1250000, 2500000"
         system_state = sys_state.get_status()
         self.SigGUIReset.emit()
         resamp.SigTerminate_Finished.connect(self.cb_resample_new)
+        self.ui.pushButton_resample_split2G.clicked.connect(v_resamp.cb_split2G_Button)
 
         filters = "SDR wav files (*.wav);;Raw IQ (*.dat *.raw )"
         selected_filter = "SDR wav files (*.wav)"
@@ -3886,6 +3973,8 @@ SR must be in the set: 20000, 50000, 100000, 250000, 500000, 1250000, 2500000"
         system_state["sfilesize"] = file_stats.st_size
         self.my_dirname = os.path.dirname(system_state["f1"])
         self.my_filename, self.ext = os.path.splitext(os.path.basename(system_state["f1"]))
+        #TODO: mache das konfigurierbar:
+        self.ui.lineEdit_resample_targetnameprefix.setText(self.my_filename)
         self.showfilename()
         self.setstandardpaths()
         self.annotation_deactivate()
@@ -4010,8 +4099,9 @@ SR must be in the set: 20000, 50000, 100000, 250000, 500000, 1250000, 2500000"
 
         system_state["ifreq"] = self.wavheader['centerfreq'] + system_state["LO_offset"]
         system_state["irate"] = self.wavheader['nSamplesPerSec']
-        system_state["readoffset"] = self.readoffset
+        system_state["readoffset"] = self.readoffset        
         self.fill_wavtable()
+
         #generate STM_cont_params for future passage to player_theradworkers instead of push pop strategy
         #self.STM_cont_params = {"HostAddress": system_state["HostAddress"], "ifreq": system_state["ifreq"],"rates": system_state["rates"], "irate": system_state["irate"], "icorr": system_state["icorr"]}
         # TODO: rootpath for config file ! 
@@ -4052,6 +4142,11 @@ SR must be in the set: 20000, 50000, 100000, 250000, 500000, 1250000, 2500000"
         # TODO: check, added 09-12-2023
         system_state["playlength"] = self.wavheader['filesize']/self.wavheader['nAvgBytesPerSec']
         system_state["list_out_files_resampled"] = []
+        out_dirname = self.my_dirname + '/out'
+        if os.path.exists(out_dirname) == False:         #exist yaml file: create from yaml-editor
+            os.mkdir(out_dirname)
+        system_state["out_dirname"] = out_dirname
+
         sys_state.set_status(system_state)
         return True
 
@@ -4145,6 +4240,7 @@ SR must be in the set: 20000, 50000, 100000, 250000, 500000, 1250000, 2500000"
         self.wavheader = WAVheader_tools.basic_wavheader(self,system_state["icorr"],int(system_state["irate"]),int(system_state["ifreq"]),int(bps),system_state["sfilesize"],self.file_mod)
         sys_state.set_status(system_state)
         return True
+
 
 class StemlabControl(QObject):
     """     Class for STEMLAB ssh connection, server start and stop,
@@ -4385,6 +4481,9 @@ if __name__ == '__main__':
     stemlabcontrol = StemlabControl()
     resamp = rsmp.resampler() #start resampler controller
     v_resamp = rsmp.view_resampler() #start resampler view
-
+    system_state = sys_state.get_status()
+    system_state["controller_resampler_ref"] = resamp
+    system_state["view_resampler_ref"] = v_resamp
+    sys_state.set_status(system_state)
 
     sys.exit(app.exec_())
