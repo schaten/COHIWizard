@@ -81,13 +81,13 @@
        <bool>false</bool>
       </property>
       <property name="toolTip">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Chose the wanted toolkit&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       <string>write diagnostic log to file instead of terminal</string>
       </property>
       <property name="autoFillBackground">
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>5</number>
       </property>
       <property name="iconSize">
        <size>
@@ -116,7 +116,12 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>../../RFCorder/V1.1/Logofield/Logofield_rec2.png</normaloff>../../RFCorder/V1.1/Logofield/Logofield_rec2.png</iconset>
+             <normaloff>Logofield_rec2.png</normaloff>
+             <normalon>Logofield_rec2.png</normalon>
+             <activeoff>Logofield_rec2.png</activeoff>
+             <activeon>Logofield_rec2.png</activeon>
+             <selectedoff>Logofield_rec2.png</selectedoff>
+             <selectedon>Logofield_rec2.png</selectedon>Logofield_rec2.png</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -1181,12 +1186,12 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>../../SDR_Postprocessor/play_v4.PNG</normaloff>
-             <normalon>../../SDR_Postprocessor/play_v4.PNG</normalon>
-             <activeoff>../../SDR_Postprocessor/play_v4.PNG</activeoff>
-             <activeon>../../SDR_Postprocessor/play_v4.PNG</activeon>
-             <selectedoff>../../SDR_Postprocessor/play_v4.PNG</selectedoff>
-             <selectedon>../../SDR_Postprocessor/play_v4.PNG</selectedon>../../SDR_Postprocessor/play_v4.PNG</iconset>
+             <normaloff>play_v4.PNG</normaloff>
+             <normalon>play_v4.PNG</normalon>
+             <activeoff>play_v4.PNG</activeoff>
+             <activeon>play_v4.PNG</activeon>
+             <selectedoff>play_v4.PNG</selectedoff>
+             <selectedon>play_v4.PNG</selectedon>play_v4.PNG</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -1218,11 +1223,11 @@
            </property>
            <property name="icon">
             <iconset>
-             <normalon>../../SDR_Postprocessor/ff_v4.PNG</normalon>
-             <activeoff>../../SDR_Postprocessor/ff_v4.PNG</activeoff>
-             <activeon>../../SDR_Postprocessor/ff_v4.PNG</activeon>
-             <selectedoff>../../SDR_Postprocessor/ff_v4.PNG</selectedoff>
-             <selectedon>../../SDR_Postprocessor/ff_v4.PNG</selectedon>
+             <normalon>ff_v4.PNG</normalon>
+             <activeoff>ff_v4.PNG</activeoff>
+             <activeon>ff_v4.PNG</activeon>
+             <selectedoff>ff_v4.PNG</selectedoff>
+             <selectedon>ff_v4.PNG</selectedon>
             </iconset>
            </property>
            <property name="iconSize">
@@ -1506,18 +1511,21 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>../../SDR_Postprocessor/rec_v4.PNG</normaloff>
-             <normalon>../../SDR_Postprocessor/rec_v4.PNG</normalon>
-             <activeoff>../../SDR_Postprocessor/rec_v4.PNG</activeoff>
-             <activeon>../../SDR_Postprocessor/rec_v4.PNG</activeon>
-             <selectedoff>../../SDR_Postprocessor/ff_v4.PNG</selectedoff>
-             <selectedon>../../SDR_Postprocessor/ff_v4.PNG</selectedon>../../SDR_Postprocessor/rec_v4.PNG</iconset>
+             <normaloff>rec_v4.PNG</normaloff>
+             <normalon>rec_v4.PNG</normalon>
+             <activeoff>rec_v4.PNG</activeoff>
+             <activeon>rec_v4.PNG</activeon>
+             <selectedoff>rec_v4.PNG</selectedoff>
+             <selectedon>rec_v4.PNG</selectedon>rec_v4.PNG</iconset>
            </property>
            <property name="iconSize">
             <size>
              <width>40</width>
              <height>40</height>
             </size>
+           </property>
+           <property name="autoRepeat">
+            <bool>false</bool>
            </property>
            <property name="autoDefault">
             <bool>false</bool>
@@ -1566,8 +1574,11 @@
            <property name="icon">
             <iconset>
              <normaloff>../../SDR_Postprocessor/loop_v4.png</normaloff>
-             <activeon>../../SDR_Postprocessor/loopactive_v4.png</activeon>
-             <selectedon>../../SDR_Postprocessor/loopactive_v4.png</selectedon>../../SDR_Postprocessor/loop_v4.png</iconset>
+             <normalon>loopactive_v4.png</normalon>
+             <activeoff>loop_v4.png</activeoff>
+             <activeon>loopactive_v4.png</activeon>
+             <selectedoff>loop_v4.png</selectedoff>
+             <selectedon>loopactive_v4.png</selectedon>../../SDR_Postprocessor/loop_v4.png</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -2274,12 +2285,12 @@
            </property>
            <property name="icon">
             <iconset>
-             <normalon>../../SDR_Postprocessor/stop_v4.PNG</normalon>
-             <activeoff>../../SDR_Postprocessor/stop_v4.PNG</activeoff>
-             <activeon>../../SDR_Postprocessor/stop_v4.PNG</activeon>
-             <selectedoff>../../SDR_Postprocessor/stop_v4.PNG</selectedoff>
-             <selectedon>../../SDR_Postprocessor/stop_v4.PNG</selectedon>
-            </iconset>
+             <normaloff>stop_v4.PNG</normaloff>
+             <normalon>stop_v4.PNG</normalon>
+             <activeoff>stop_v4.PNG</activeoff>
+             <activeon>stop_v4.PNG</activeon>
+             <selectedoff>stop_v4.PNG</selectedoff>
+             <selectedon>stop_v4.PNG</selectedon>stop_v4.PNG</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -2315,12 +2326,12 @@
            </property>
            <property name="icon">
             <iconset>
-             <normalon>../../SDR_Postprocessor/rew_v4.PNG</normalon>
-             <activeoff>../../SDR_Postprocessor/rew_v4.PNG</activeoff>
-             <activeon>../../SDR_Postprocessor/rew_v4.PNG</activeon>
-             <selectedoff>../../SDR_Postprocessor/rew_v4.PNG</selectedoff>
-             <selectedon>../../SDR_Postprocessor/play_v4.PNG</selectedon>
-            </iconset>
+             <normaloff>rew_v4.PNG</normaloff>
+             <normalon>rew_v4.PNG</normalon>
+             <activeoff>rew_v4.PNG</activeoff>
+             <activeon>rew_v4.PNG</activeon>
+             <selectedoff>rew_v4.PNG</selectedoff>
+             <selectedon>rew_v4.PNG</selectedon>rew_v4.PNG</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -2434,12 +2445,12 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>../../SDR_Postprocessor/Button_Playlist_Activate.png</normaloff>
-             <normalon>../../SDR_Postprocessor/Button_Playlist_Select.png</normalon>
-             <activeoff>../../SDR_Postprocessor/Button_Playlist_Activate.png</activeoff>
-             <activeon>../../SDR_Postprocessor/Button_Playlist_Select.png</activeon>
-             <selectedoff>../../SDR_Postprocessor/Button_Playlist_Activate.png</selectedoff>
-             <selectedon>../../SDR_Postprocessor/Button_Playlist_Select.png</selectedon>../../SDR_Postprocessor/Button_Playlist_Activate.png</iconset>
+             <normaloff>Button_Playlist_Activate.png</normaloff>
+             <normalon>Button_Playlist_Select.png</normalon>
+             <activeoff>Button_Playlist_Activate.png</activeoff>
+             <activeon>Button_Playlist_Select.png</activeon>
+             <selectedoff>Button_Playlist_Activate.png</selectedoff>
+             <selectedon>Button_Playlist_Select.png</selectedon>Button_Playlist_Activate.png</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -4382,11 +4393,21 @@
          <rect>
           <x>50</x>
           <y>20</y>
-          <width>1117</width>
-          <height>651</height>
+          <width>1121</width>
+          <height>691</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_5">
+         <item row="4" column="1">
+          <widget class="QLineEdit" name="lineEdit_2">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>0</string>
+           </property>
+          </widget>
+         </item>
          <item row="13" column="1" colspan="4">
           <widget class="QLabel" name="label_Filename_resample">
            <property name="text">
@@ -4408,13 +4429,6 @@
            </property>
           </widget>
          </item>
-         <item row="8" column="5">
-          <widget class="QLabel" name="label_38">
-           <property name="text">
-            <string>Selected files</string>
-           </property>
-          </widget>
-         </item>
          <item row="10" column="4">
           <widget class="QListWidget" name="listWidget_sourcelist_2">
            <property name="sizePolicy">
@@ -4422,6 +4436,11 @@
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>7</pointsize>
+            </font>
            </property>
            <property name="toolTip">
             <string>drag files from here to the 'Selected files' list </string>
@@ -4443,6 +4462,13 @@
            </property>
           </widget>
          </item>
+         <item row="8" column="5">
+          <widget class="QLabel" name="label_38">
+           <property name="text">
+            <string>Selected files</string>
+           </property>
+          </widget>
+         </item>
          <item row="8" column="4">
           <widget class="QLabel" name="label_41">
            <property name="text">
@@ -4450,13 +4476,10 @@
            </property>
           </widget>
          </item>
-         <item row="12" column="4">
-          <widget class="QPushButton" name="pushButton_resample_resample">
-           <property name="toolTip">
-            <string>start resampling procedure and splt reulting files in 2GB tranches</string>
-           </property>
+         <item row="2" column="2">
+          <widget class="QLabel" name="label_34">
            <property name="text">
-            <string>Resample</string>
+            <string/>
            </property>
           </widget>
          </item>
@@ -4467,13 +4490,6 @@
            </property>
            <property name="text">
             <string>target sampling rate (kS/s)</string>
-           </property>
-          </widget>
-         </item>
-         <item row="13" column="0">
-          <widget class="QLabel" name="label_30">
-           <property name="text">
-            <string>Filename:</string>
            </property>
           </widget>
          </item>
@@ -4524,10 +4540,10 @@
            </item>
           </widget>
          </item>
-         <item row="2" column="2">
-          <widget class="QLabel" name="label_34">
+         <item row="13" column="0">
+          <widget class="QLabel" name="label_30">
            <property name="text">
-            <string/>
+            <string>Filename:</string>
            </property>
           </widget>
          </item>
@@ -4538,6 +4554,11 @@
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>7</pointsize>
+            </font>
            </property>
            <property name="dragEnabled">
             <bool>false</bool>
@@ -4550,6 +4571,16 @@
            </property>
            <property name="selectionMode">
             <enum>QAbstractItemView::SingleSelection</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="3">
+          <widget class="QLabel" name="label_29">
+           <property name="toolTip">
+            <string>baseline offset from automated baseline</string>
+           </property>
+           <property name="text">
+            <string>target LO (kHz)</string>
            </property>
           </widget>
          </item>
@@ -4569,13 +4600,13 @@
            </property>
           </widget>
          </item>
-         <item row="3" column="3">
-          <widget class="QLabel" name="label_29">
-           <property name="toolTip">
-            <string>baseline offset from automated baseline</string>
+         <item row="2" column="1">
+          <widget class="QTimeEdit" name="timeEdit_resample_startcut">
+           <property name="enabled">
+            <bool>false</bool>
            </property>
-           <property name="text">
-            <string>target LO (kHz)</string>
+           <property name="displayFormat">
+            <string>dd:HH:mm:ss</string>
            </property>
           </widget>
          </item>
@@ -4598,13 +4629,13 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="1">
-          <widget class="QTimeEdit" name="timeEdit_resample_startcut">
-           <property name="enabled">
-            <bool>false</bool>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_33">
+           <property name="toolTip">
+            <string>trim file contents before that time in the first file in the list</string>
            </property>
-           <property name="displayFormat">
-            <string>dd:HH:mm:ss</string>
+           <property name="text">
+            <string>Start cut</string>
            </property>
           </widget>
          </item>
@@ -4628,26 +4659,6 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="label_33">
-           <property name="toolTip">
-            <string>trim file contents before that time in the first file in the list</string>
-           </property>
-           <property name="text">
-            <string>Start cut</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="1">
-          <widget class="QLineEdit" name="lineEdit_2">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="text">
-            <string>0</string>
-           </property>
-          </widget>
-         </item>
          <item row="3" column="0">
           <widget class="QLabel" name="label_37">
            <property name="toolTip">
@@ -4655,6 +4666,16 @@
            </property>
            <property name="text">
             <string>Stop cut</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_28">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>Freq corr %</string>
            </property>
           </widget>
          </item>
@@ -4671,16 +4692,6 @@
            </property>
           </widget>
          </item>
-         <item row="4" column="0">
-          <widget class="QLabel" name="label_28">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="text">
-            <string>Freq corr %</string>
-           </property>
-          </widget>
-         </item>
          <item row="4" column="3">
           <widget class="QRadioButton" name="radioButton_resgain">
            <property name="enabled">
@@ -4694,23 +4705,6 @@
            </property>
            <property name="autoExclusive">
             <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="12" column="5">
-          <widget class="QPushButton" name="pushButton_resample_split2G">
-           <property name="toolTip">
-            <string>Split file in the list into 2GB parts</string>
-           </property>
-           <property name="text">
-            <string>split to 2GB</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="5">
-          <widget class="QPushButton" name="pushButton_resample_cancel">
-           <property name="text">
-            <string>cancel</string>
            </property>
           </widget>
          </item>
@@ -4912,6 +4906,64 @@
            </property>
           </widget>
          </item>
+         <item row="2" column="5">
+          <widget class="QPushButton" name="pushButton_resample_cancel">
+           <property name="text">
+            <string>cancel</string>
+           </property>
+          </widget>
+         </item>
+         <item row="13" column="5">
+          <widget class="QPushButton" name="pushButton_resample_resample">
+           <property name="toolTip">
+            <string>Split file in the list into 2GB parts</string>
+           </property>
+           <property name="text">
+            <string>Resample</string>
+           </property>
+          </widget>
+         </item>
+         <item row="14" column="5">
+          <widget class="QPushButton" name="pushButton_resample_split2G">
+           <property name="toolTip">
+            <string>Split file in the list into 2GB parts</string>
+           </property>
+           <property name="text">
+            <string>split/merge to 2GB</string>
+           </property>
+          </widget>
+         </item>
+         <item row="15" column="5">
+          <widget class="QPushButton" name="pushButton_resample_GainOnly">
+           <property name="toolTip">
+            <string>start resampling procedure and splt reulting files in 2GB tranches</string>
+           </property>
+           <property name="text">
+            <string>Gain only</string>
+           </property>
+          </widget>
+         </item>
+         <item row="15" column="0">
+          <widget class="QCheckBox" name="checkBox_writelog">
+           <property name="text">
+            <string>Write logfile</string>
+           </property>
+          </widget>
+         </item>
+         <item row="12" column="5">
+          <widget class="QCheckBox" name="checkBox_AutoMerge2G">
+           <property name="text">
+            <string>Auto Merge 2G</string>
+           </property>
+          </widget>
+         </item>
+         <item row="12" column="4">
+          <widget class="QCheckBox" name="checkBox_merge_selectall">
+           <property name="text">
+            <string>Select all</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
       </widget>
@@ -4925,7 +4977,7 @@
      <x>0</x>
      <y>0</y>
      <width>1456</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

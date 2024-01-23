@@ -718,16 +718,16 @@ class WizardGUI(QMainWindow):
         super().__init__(*args, **kwargs)
         print("Initializing GUI, please wait....")
         self.TEST = True    # Test Mode Flag for testing the App, --> playloop  ##NOT USED #TODO:future system status
-        self.DATA_FILEEXTENSION = ["dat","wav",'raw'] #TODO:future system state
-        self.CURTIMEINCREMENT = 5 # für playloop >>, << TODO:future system state
-        self.DATABLOCKSIZE = 1024*32 # für diverse Filereader/writer TODO:future system state
-        self.DELTAF = 5000 #minimum peak distance in Hz  for peak detector #TODO:future system state
-        self.PEAKWIDTH = 10 # minimum peak width in Hz  for peak detector #TODO:future system state
-        self.PROMINENCE = 15 # minimum peak prominence in dB above baseline for peak detector #TODO:future system state
-        self.FILTERKERNEL = 2 # length of the moving median filter kernel in % of the spectral span #TODO:future system state
-        self.NUMSNAPS = 5 #number of segments evaluated for annotation #TODO:future system state
-        self.STICHTAG = datetime(2023,2,25,0,0,0) #TODO:future system state
-        self.GAINOFFSET = 40 #TODO:future system state
+        #self.DATA_FILEEXTENSION = ["dat","wav",'raw'] #TODO:Remove, seems not to be used anywhere
+        self.CURTIMEINCREMENT = 5 # für playloop >>, << TODO: shift to playrec module once it exists
+        self.DATABLOCKSIZE = 1024*32 # für diverse Filereader/writer TODO: occurs in plot spectrum and ANN_Spectrum; must be shifted to the respective modules in future
+        self.DELTAF = 5000 #minimum peak distance in Hz for peak detector #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
+        self.PEAKWIDTH = 10 # minimum peak width in Hz for peak detector #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
+        self.PROMINENCE = 15 # minimum peak prominence in dB above baseline for peak detector #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
+        self.FILTERKERNEL = 2 # length of the moving median filter kernel in % of the spectral span #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
+        self.NUMSNAPS = 5 #number of segments evaluated for annotation #TODO:occurs in ann-module; must be shifted to the respective module in future
+        self.STICHTAG = datetime(2023,2,25,0,0,0) #TODO: only used in stationsloop of statslist_gen_worker as self.host.STICHTAG, Move to module annotation
+        self.GAINOFFSET = 40 #TODO: move to player module
         self.autoscan_ix = 0 #TODO:future system state
         self.gain = 1 #TODO:future system state
         self.bps = ['8', '16', '24', '32'] #TODO:future system state
@@ -742,7 +742,7 @@ class WizardGUI(QMainWindow):
         self.cohiradia_yamlheader_filename = 'dummy' #TODO:future system state
         self.cohiradia_yamltailer_filename = 'dummy' #TODO:future system state
         self.cohiradia_yamlfinal_filename = 'dummy' #TODO:future system state
-        self.annotationdir_prefix = 'z_ANN_' #TODO:future system state
+        self.annotationdir_prefix = 'ANN_' #TODO:future system state
         self.flag_ann_completed = False #TODO:future system state
         self.lock_playthreadstart = True #TODO:future system state
         self.playthreadActive = False #TODO:future system state
@@ -750,32 +750,10 @@ class WizardGUI(QMainWindow):
         self.timechanged=False #TODO:future system state
         self.position = 0 #TODO:future system state URGENT !!!!!!!!!!!!!!
 
-        # system_state["annotation_prefix"] = 'z_ANN_'
-        # system_state["resampling_gain"] = 0
-        # system_state["emergency_stop"] = False
-        # system_state["timescaler"] = 0
-        # system_state["fileopened"] = False
-        # system_state["rates"] = {20000:0, 50000:1, 100000:2, 250000:3, 
-        #               500000:4, 1250000:5, 2500000:6}
-        # system_state["ifreq"] = 0
-        # system_state["irate"] = 0
-        # system_state["icorr"] = 0
-        # system_state["irates"] = ['2500', '1250', '500', '250', '100', '50', '20']
-        # system_state["gui_reference"] = self
-        # system_state["actionlabel"] = ""
-        # system_state["LO_offset"] = 0
-        # system_state["playlist_ix"] = 0
-        # system_state["reslist_ix"] = 0
-        # system_state["list_out_files_resampled"] = []
-        # system_state["playlist_active"] = False
-
-        # system_state["progress"] = 0
-        # system_state["temp_LOerror"] = False
-        # system_state["starttrim"] = False
-        # system_state["stoptrim"] = False
+        self_tablist = ["View_Spectra","Annotate","Player","YAML_editor","WAV_header","Resample"]
+        # create method which inactivates all tabs except the one which is passed as keyword
         self.GUI_reset_status()
-
-        self.CURTIMEINCREMENT = 5 #TODO:future system state
+        #self.CURTIMEINCREMENT = 5 #TODO:future system state
         self.ui = MyWizard()
         self.ui.setupUi(self)
         self.ui.tableWidget_basisfields.verticalHeader().setVisible(True)   
@@ -791,22 +769,9 @@ class WizardGUI(QMainWindow):
         self.SigGUIReset.connect(self.reset_GUI)
         ### END UI MASTER ####################################
 
-        ### UI TAB RESAMPLER #################################### TODO: redefine in resampler module ?
-        self.ui.timeEdit_resample_stopcut.setEnabled(False)
-        self.ui.timeEdit_resample_startcut.setEnabled(False)
-        self.ui.pushButton_resample_resample.clicked.connect(self.cb_Butt_resample)
-        self.ui.comboBox_resample_targetSR.currentIndexChanged.connect(lambda: v_resamp.plot_spectrum_resample(self.position)) #TODO:future system state
-        self.ui.lineEdit_resample_targetLO.textChanged.connect(lambda: v_resamp.plot_spectrum_resample(self.position))
-        self.ui.radioButton_advanced_sampling.clicked.connect(lambda: v_resamp.toggle_advanced_sampling())
-        self.ui.radioButton_resgain.clicked.connect(lambda: v_resamp.toggle_gain())
-        self.ui.lineEdit_resample_targetLO.textChanged.connect(lambda: self.reformat_targetLOpalette)
-        self.ui.lineEdit_resample_targetLO.textEdited.connect(lambda: self.reformat_targetLOpalette)
-        self.ui.lineEdit_resample_Gain.textChanged.connect(lambda: v_resamp.read_gain())
-        self.ui.lineEdit_resample_Gain.setText("0")
-        self.ui.lineEdit_resample_Gain.setEnabled(True)
-        self.ui.radioButton_resgain.setEnabled(True)
-        #self.ui.pushButton_resample_cancel.clicked.connect(lambda: print("cancel clicked"))
-        ### END UI TAB RESAMPLER ####################################
+
+        ### UI TAB RESAMPLER #################################### TODO: redefine in resampler module ? but then v_resamp must already be instantiated !
+        self.init_resample_Tab()
         self.ui.radioButton_resgain.setChecked(False)
         self.ui.tabWidget.setCurrentIndex(1) #TODO: avoid magic number, unidentified
         self.ui.label_8.setEnabled(False)  #Unidentified
@@ -987,6 +952,55 @@ class WizardGUI(QMainWindow):
         #sys_state.set_status(system_state)
         
     # GENRAL GUI METHODS
+        
+    def init_resample_Tab(self):
+        """
+        Resampler VIEW initialization
+        initializes all GUI elements of the Tab resampler
+        TODO: all references are still 'self', check !
+        :param: npne
+        :type: none
+        :raises: none
+        ...
+        :return: none
+        :rtype: none
+        """
+        self.ui.timeEdit_resample_stopcut.setEnabled(False)
+        self.ui.timeEdit_resample_startcut.setEnabled(False)
+        self.ui.pushButton_resample_resample.clicked.connect(self.cb_Butt_resample)
+        self.ui.comboBox_resample_targetSR.setCurrentIndex(5)
+        self.ui.comboBox_resample_targetSR.currentIndexChanged.connect(lambda: v_resamp.plot_spectrum_resample(self.position)) #TODO:future system state
+        self.ui.lineEdit_resample_targetLO.textChanged.connect(lambda: v_resamp.plot_spectrum_resample(self.position))
+        self.ui.radioButton_advanced_sampling.clicked.connect(lambda: v_resamp.toggle_advanced_sampling())
+        self.ui.radioButton_resgain.clicked.connect(lambda: v_resamp.toggle_gain())
+        self.ui.lineEdit_resample_targetLO.textChanged.connect(lambda: self.reformat_targetLOpalette)
+        self.ui.lineEdit_resample_targetLO.textEdited.connect(lambda: self.reformat_targetLOpalette)
+        self.ui.lineEdit_resample_Gain.textChanged.connect(lambda: v_resamp.read_gain())
+        self.ui.lineEdit_resample_Gain.setText("0")
+        self.ui.lineEdit_resample_Gain.setEnabled(True)
+        self.ui.radioButton_resgain.setEnabled(True)
+        self.ui.checkBox_writelog.clicked.connect(self.togglelogmodus)
+
+        
+    def togglelogmodus(self):
+        """
+        VIEW
+        set modus of stdout to either file or console
+        :param: npne
+        :type: none
+        :raises: none
+        ...
+        :return: none
+        :rtype: none
+        """
+        #TODO
+        if self.ui.checkBox_writelog.isChecked:
+            sys.stdout = self.logfile
+        else:
+            sys.stdout = self.orig_stdout
+        pass
+
+
     def closeEvent(self, event):
         sys.stdout = self.orig_stdout
         self.logfile.close()
@@ -996,7 +1010,7 @@ class WizardGUI(QMainWindow):
         #system_state = sys_state.get_status()
         system_state = {}
 
-        system_state["annotation_prefix"] = 'z_ANN_'
+        system_state["annotation_prefix"] = 'ANN_'
         system_state["resampling_gain"] = 0
         system_state["emergency_stop"] = False
         system_state["timescaler"] = 0
@@ -1204,6 +1218,7 @@ class WizardGUI(QMainWindow):
         self.ui.label_8.setEnabled(False)
         self.ui.label_36.setText('')
         self.ui.label_36.setFont(QFont('arial',12))
+        self.ui.label_36.setStyleSheet("background-color: lightgray")
         self.ui.radioButton_WAVEDIT.setChecked(False)
         self.activate_WAVEDIT() # to wav editor Tab reset
         self.Tabref["View_Spectra"]["ax"].clear() #shift to Plot spectrum Tab reset
@@ -2103,8 +2118,11 @@ class WizardGUI(QMainWindow):
     #     self.ui.pushButton_resample_cancel.clicked.connect(lambda: rsmp.res_workers.soxworker_terminate(self))
 
     def cb_Butt_resample(self):
-        self.ui.listWidget_playlist_2.itemChanged.connect(v_resamp.reslist_update) #dummy in order to prevent exceptions in case the signal is already disconnevted
-        self.ui.listWidget_playlist_2.itemChanged.disconnect(v_resamp.reslist_update)
+        #self.ui.listWidget_playlist_2.itemChanged.connect(v_resamp.reslist_update) #dummy in order to prevent exceptions in case the signal is already disconnevted
+        try:
+            self.ui.listWidget_playlist_2.itemChanged.disconnect(v_resamp.reslist_update)
+        except:
+            pass
         self.cb_resample_new()
         self.ui.radioButton_advanced_sampling.setChecked(False)
 
@@ -2114,10 +2132,22 @@ class WizardGUI(QMainWindow):
         :return: _description_
         :rtype: _type_
         """
-        self.ui.listWidget_playlist_2.itemChanged.connect(v_resamp.reslist_update) #dummy in order to prevent exceptions in case the signal is already disconnevted
-        self.ui.listWidget_playlist_2.itemChanged.disconnect(v_resamp.reslist_update)
-        self.ui.lineEdit_resample_targetnameprefix.setEnabled(False)
+        #TODO: inactivate all other tabs
+        self.inactivate_tabs(["View_Spectra","Annotate","Player","YAML_editor","WAV_header"]) # TODO: replace with signal to core view
 
+        #self.ui.listWidget_playlist_2.itemChanged.connect(v_resamp.reslist_update) #dummy in order to prevent exceptions in case the signal is already disconnevted
+        try:
+            self.ui.listWidget_playlist_2.itemChanged.disconnect(v_resamp.reslist_update)
+        except:
+            pass
+        try:
+            resamp.SigTerminate_Finished.disconnect(self.cb_resample_new)
+        except:
+            pass
+        
+        #self.ui.lineEdit_resample_targetnameprefix.setEnabled(False)
+        #self.ui.pushButton_resample_GainOnly.setEnabled(False)
+        v_resamp.enable_resamp_GUI_elemets(False)
         system_state = sys_state.get_status()
         if system_state["emergency_stop"] is True:
             system_state["emergency_stop"] = False
@@ -2129,11 +2159,10 @@ class WizardGUI(QMainWindow):
             time.sleep(0.1)
             system_state["fileopened"] = False
             self.ui.listWidget_playlist_2.itemChanged.connect(v_resamp.reslist_update)
-
             self.SigGUIReset.emit()
             system_state["list_out_files_resampled"] = []
             sys_state.set_status(system_state)
-            resamp.SigTerminate_Finished.disconnect(self.cb_resample_new)
+            #resamp.SigTerminate_Finished.disconnect(self.cb_resample_new)
             return False
 
         if self.soxnotexist:
@@ -2141,16 +2170,31 @@ class WizardGUI(QMainWindow):
             msg = QMessageBox()
             msg.information(self, 'Message', infotext, QMessageBox.Ok, QMessageBox.Ok)
             sys_state.set_status(system_state)
+            self.ui.listWidget_playlist_2.itemChanged.connect(v_resamp.reslist_update)
+            # try:
+            #     resamp.SigTerminate_Finished.disconnect(self.cb_resample_new)
+            # except:
+            #     pass
             return False
         
         if not system_state["fileopened"]:
             wsys.WIZ_auxiliaries.standard_errorbox("You must open a file before resampling")
             sys_state.set_status(system_state)
+            self.ui.listWidget_playlist_2.itemChanged.connect(v_resamp.reslist_update)
+            # try:
+            #     resamp.SigTerminate_Finished.disconnect(self.cb_resample_new)
+            # except:
+            #     pass
             return False
         
         if system_state["emergency_stop"]:
             system_state["emergency_stop"] = False
             sys_state.set_status(system_state)
+            self.ui.listWidget_playlist_2.itemChanged.connect(v_resamp.reslist_update)
+            # try:
+            #     resamp.SigTerminate_Finished.disconnect(self.cb_resample_new)
+            # except:
+            #     pass
             return False
         # define references to the resampler signals and connected methods in a central general dictionary; Abonnement table
         # TODO: This definition could be shifted to the init section or anywhere else (resampler module ?) it is not 
@@ -2168,7 +2212,7 @@ class WizardGUI(QMainWindow):
         schedule_objdict["connect"]["resample"] = resamp.resample
         schedule_objdict["connect"]["accomplish"] = resamp.accomplish_resampling
         schedule_objdict["connect"]["LOshift"] = resamp.LOshifter_new
-        schedule_objdict["connect"]["updateGUI"] = resamp.res_update_GUI
+        schedule_objdict["connect"]["updateGUI"] = v_resamp.res_update_GUI
         schedule_objdict["signal"]["cancel"] = v_resamp.SigCancel
         system_state["schedule_objdict"] = schedule_objdict
         system_state["r_sch_counter"] = 0
@@ -2191,43 +2235,53 @@ class WizardGUI(QMainWindow):
                 lw = self.ui.listWidget_playlist_2
                 print("cb_resample: fetch next reslist file")
                 item = lw.item(system_state["reslist_ix"])
-                item.setBackground(QtGui.QColor("lightgreen"))
+                item.setBackground(QtGui.QColor("lightgreen"))  #TODO: shift to resampler view
                 #TODO: entrypoint f cutstop, cutstart:
                 #(1) cut first file: copy from fseek (cutstart) to cutstop
-
                 system_state["f1"] = self.my_dirname + '/' + item.text()
                 print(f'cb_resample: file: {system_state["f1"]}')
                 self.wavheader = WAVheader_tools.get_sdruno_header(self,system_state["f1"])
                 self.showfilename()
-                # check for cutting information
+                # TODO: check for cutting information
                 if system_state["reslist_ix"] == 0:
                     system_state["starttrim"] = True
                     _valid,errortext = v_resamp.getCuttime()
                 if system_state["reslist_ix"] == reslist_len-1:
                     system_state["stoptrim"] = True
                     _valid,errortext = v_resamp.getCuttime()
-
+        #TODO: check must be done wrt complementary ime (stop, start) of the same file, in a list they are different --> wavheadr info important
             else:
                 system_state["reslist_ix"] = 0
                 print("resamle list has been terminated, reset counter and exit event loop,, start 2GB file merging")
-                self.ui.listWidget_playlist_2.clear()
-                self.ui.listWidget_sourcelist_2.clear()
+                #self.ui.listWidget_playlist_2.clear() #TODO: shift to resampler view
+                #self.ui.listWidget_sourcelist_2.clear() #TODO: shift to resampler view
                 # schedule_objdict["signal"]["Merge2G"].connect(schedule_objdict["connect"]["Merge2G"])
                 # schedule_objdict["signal"]["Merge2G"].emit()
                 time.sleep(0.1)
-                if not system_state["emergency_stop"]:
-                    system_state["merge2G_deleteoriginal"] = True
-                    resamp.merge2G_files(system_state["list_out_files_resampled"])
+                if self.ui.checkBox_AutoMerge2G.isChecked():
+                    if not system_state["emergency_stop"]:
+                        system_state["merge2G_deleteoriginal"] = True
+                        system_state["merge2G_gainenable"] = False
+                        sys_state.set_status(system_state)
+                        #resamp.merge2G_files(system_state["list_out_files_resampled"]) #TODO: remove/restore tests: 17-01-2024
+                        #TODO: check new worker based implementation
+                        resamp.merge2G_new(system_state["list_out_files_resampled"])
+                v_resamp.enable_resamp_GUI_elemets(True)
                 system_state["fileopened"] = False
                 self.ui.listWidget_playlist_2.itemChanged.connect(v_resamp.reslist_update)
                 self.SigGUIReset.emit()
                 system_state["list_out_files_resampled"] = []
                 sys_state.set_status(system_state)
-                resamp.SigTerminate_Finished.disconnect(self.cb_resample_new)
+                #resamp.SigTerminate_Finished.disconnect(self.cb_resample_new)
                 return
         else:
             wsys.WIZ_auxiliaries.standard_errorbox("No files to be resampled have been selected; please drag items to the 'selected file' area")
             sys_state.set_status(system_state)
+            self.ui.listWidget_playlist_2.itemChanged.connect(v_resamp.reslist_update)
+            # try:
+            #     resamp.SigTerminate_Finished.disconnect(self.cb_resample_new)
+            # except:
+            #     pass
             return False
         system_state["reslist_ix"] += 1
 
@@ -2258,7 +2312,8 @@ class WizardGUI(QMainWindow):
             #TODO: untersuchen, wie rcvr hier zu machen ist; an sich sollte das kein Problem sein, da ja der wavheader ohnehin bereits auf auxi umgeschrieben ist
             #return False          
         #self.inactivate_tabs(["View_Spectra","Annotate","Resample","YAML_editor","WAV_header","Player"])
-        self.inactivate_tabs(["View_Spectra","Annotate","YAML_editor","WAV_header","Player"])
+        self.inactivate_tabs(["View_Spectra","Annotate","YAML_editor","WAV_header","Player"]) # TODO: replace with signal to core view
+
         time.sleep(0.01)
         #system_state = sys_state.get_flags()
 
@@ -2287,13 +2342,18 @@ class WizardGUI(QMainWindow):
         system_state["list_out_files_resampled"].append(new_name)
         system_state["res_blinkstate"] = True
         sys_state.set_status(system_state)
-        self.ui.label_36.setText('RESAMPLING')
-        self.ui.label_36.setStyleSheet("background-color: yellow")
-        self.ui.label_36.setFont(QFont('arial',12))
+        #self.ui.label_36.setText('RESAMPLING')    #TODO: shift to resampler view
+        #self.ui.label_36.setStyleSheet("background-color: yellow") #TODO: shift to resampler view
+        #self.ui.label_36.setFont(QFont('arial',12)) #TODO: shift to resampler view
         time.sleep(0.001)
+        # try:
+        #     resamp.SigTerminate_Finished.disconnect(self.cb_resample_new)
+        # except:
+        #     pass
+
         resamp.Sigincrscheduler.connect(resamp.res_scheduler)
         resamp.Sigincrscheduler.emit()
-        self.ui.lineEdit_resample_targetnameprefix.setEnabled(True)
+        self.ui.lineEdit_resample_targetnameprefix.setEnabled(True) #TODO: shift to resampler view
         #TODO TODO: Lade letztes resampelte File ins generelle GUI
 
     def reset_LO_bias(self):
@@ -3346,6 +3406,7 @@ class WizardGUI(QMainWindow):
         VIEW
         """
         self.write_yaml_header(self)
+        #TODO: write yaml_directory on demand ?
 
     def read_yaml_header(self,dummy):
         """
@@ -3391,7 +3452,7 @@ class WizardGUI(QMainWindow):
         except:
             nofile_flag == True
             #return False
-            
+        #TODO: write yaml_directory on demand only
         if nofile_flag == True:
             self.write_yaml_header(self)
         self.ui.pushButton_Writeyamlheader.setEnabled(True)
@@ -3541,6 +3602,7 @@ class WizardGUI(QMainWindow):
         """
         system_state = sys_state.get_status()
         resamp.SigUpdateGUI.connect(self.GUI_reset_after_resamp)
+        self.ui.checkBox_merge_selectall.setChecked(False)
         if self.playthreadActive == True:
             wsys.WIZ_auxiliaries.standard_errorbox("Player is currently active, no access to data file is possible; Please stop Player before new file access")
             sys_state.set_status(system_state)
@@ -3589,7 +3651,9 @@ class WizardGUI(QMainWindow):
                 #print("system_state["fileopened"] called")
                 sys_state.set_status(system_state)
         sys_state.set_status(system_state)
-        temppath = os.getcwd()
+        #TODO: check change 12-01-2024: temporary path is set differently
+        #temppath = os.getcwd()
+        temppath = system_state["temp_directory"]
         for x in os.listdir(temppath):
             if x.find("temp_") == 0:
                 try:
@@ -3944,8 +4008,9 @@ SR must be in the set: 20000, 50000, 100000, 250000, 500000, 1250000, 2500000"
         '''
         system_state = sys_state.get_status()
         self.SigGUIReset.emit()
-        resamp.SigTerminate_Finished.connect(self.cb_resample_new)
+        #resamp.SigTerminate_Finished.connect(self.cb_resample_new)
         self.ui.pushButton_resample_split2G.clicked.connect(v_resamp.cb_split2G_Button)
+        v_resamp.enable_resamp_GUI_elemets(True)
 
         filters = "SDR wav files (*.wav);;Raw IQ (*.dat *.raw )"
         selected_filter = "SDR wav files (*.wav)"
@@ -3973,6 +4038,9 @@ SR must be in the set: 20000, 50000, 100000, 250000, 500000, 1250000, 2500000"
         system_state["sfilesize"] = file_stats.st_size
         self.my_dirname = os.path.dirname(system_state["f1"])
         self.my_filename, self.ext = os.path.splitext(os.path.basename(system_state["f1"]))
+        system_state["temp_directory"] = self.my_dirname + "/temp"
+        if os.path.exists(system_state["temp_directory"]) == False:         #exist yaml file: create from yaml-editor
+            os.mkdir( system_state["temp_directory"])
         #TODO: mache das konfigurierbar:
         self.ui.lineEdit_resample_targetnameprefix.setText(self.my_filename)
         self.showfilename()
@@ -4005,14 +4073,14 @@ SR must be in the set: 20000, 50000, 100000, 250000, 500000, 1250000, 2500000"
                     _item1=self.ui.listWidget_sourcelist_2.item(ix)
                     _item1.setText(x)
                     fnt = _item1.font()
-                    fnt.setPointSize(9)
+                    fnt.setPointSize(7)
                     #_item1.setFont(fnt)
                     item = QtWidgets.QListWidgetItem()
                     self.ui.listWidget_sourcelist_2.addItem(item)
                     _item2=self.ui.listWidget_sourcelist.item(ix)
                     _item2.setText(x)
                     fnt = _item2.font()
-                    fnt.setPointSize(9)
+                    fnt.setPointSize(7)
                     #_item2.setFont(fnt)
                     item = QtWidgets.QListWidgetItem()
                     self.ui.listWidget_sourcelist.addItem(item)
@@ -4137,6 +4205,7 @@ SR must be in the set: 20000, 50000, 100000, 250000, 500000, 1250000, 2500000"
         self.lock_playthreadstart = True
         self.plot_spectrum(self,self.position)
         self.lock_playthreadstart = False
+        #TODO: is that really necessary on each fileopen ? 
         self.read_yaml_header(self)
         v_resamp.update_resample_GUI()
         # TODO: check, added 09-12-2023
@@ -4479,11 +4548,11 @@ if __name__ == '__main__':
 #    app.aboutToQuit.connect(win.stop_worker)    #graceful thread termination on app exit
     win.show()
     stemlabcontrol = StemlabControl()
-    resamp = rsmp.resampler() #start resampler controller
-    v_resamp = rsmp.view_resampler() #start resampler view
-    system_state = sys_state.get_status()
-    system_state["controller_resampler_ref"] = resamp
-    system_state["view_resampler_ref"] = v_resamp
-    sys_state.set_status(system_state)
+    resamp = rsmp.resampler(sys_state) #start resampler controller #TEST 09-01-2024
+    v_resamp = rsmp.view_resampler(sys_state,resamp) #start resampler view
+    # system_state = sys_state.get_status()
+    # system_state["controller_resampler_ref"] = resamp
+    # system_state["view_resampler_ref"] = v_resamp
+    # sys_state.set_status(system_state)
 
     sys.exit(app.exec_())
