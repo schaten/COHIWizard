@@ -767,6 +767,7 @@ class WizardGUI(QMainWindow):
         self.ui.actionFile_open.triggered.connect(self.cb_open_file)
         self.ui.actionOverwrite_header.triggered.connect(self.overwrite_header)
         self.SigGUIReset.connect(self.reset_GUI)
+        self.ui.pushButton_resample_GainOnly.setEnabled(False)
         ### END UI MASTER ####################################
 
 
@@ -3623,8 +3624,9 @@ class WizardGUI(QMainWindow):
             stream.close()
             self.ismetadata = True
         except:
+            self.ismetadata = False
             sys_state.set_status(system_state)
-            return False
+            #return False
             #print("cannot get metadata")
         system_state["HostAddress"] = self.ui.lineEdit_IPAddress.text()
         configparams = {"ifreq":system_state["ifreq"], "irate":system_state["irate"],
