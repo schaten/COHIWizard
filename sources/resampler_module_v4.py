@@ -15,20 +15,27 @@ import system_module as wsys
 
 #TODO: define class resample_model()
 #transfer most of 'system_state'  and respective class instance gui_state to internal dictionary 
-#with the same name but only internal referenceing
+#with the name mdl
 #instead of         
 #    system_state = self.sys_state.get_status()
 #    self.sys_state.set_status(system_state)
 #
-# __init__: self.system_state
-#
-# in init of all other resampler classes: __init__(...,resamp_model)
-#
-# calling: resamp_model.system_state["xxx"] = x and yyy = resamp_model.system_state["yyy"] can be done directly without 
-# getter and setter
-# variables which must be passed from the core module may be transferred to respective fields of the from the core module, which can access all models
-# the latter can be done selectively only for all modules which are active.
+# in __init__(self, gui, model) of view and controller: self.mdl = model.mdl   
+# calling only as self.mdl
+class resample_m(QObject):
+    __slots__ = ["None"]
+    SigModelXXX = pyqtSignal()
 
+    #TODO: replace all gui by respective state references if appropriate
+    def __init__(self, gui):
+        super().__init__()
+        # Constants
+        self.CONST_SAMPLE = 0 # sample constant
+        self.mdl = {}
+        self.mdl["sample"] = 0
+        print(f"gui reference: {gui}")
+
+#TODO: TESTEN durch mal eine ausgewählte system_state Variable
 
 class res_workers(QObject):
     """ worker class for data streaming thread from PC to STEMLAB
@@ -182,7 +189,7 @@ class res_workers(QObject):
                 self.set_progress(progress)
                 print(f'merge2G progress: {progress}')
                 self.SigPupdate.emit()
-                #view_resampler.updateprogress_resampling(self)
+                #resample_v.updateprogress_resampling(self)
                 time.sleep(0.1)
                 WRITEGAP = False
                 if firstpass:
@@ -550,7 +557,7 @@ class res_workers(QObject):
 
 
 
-class resampler(QObject):
+class resample_c(QObject):
     """_methods for resampling (= resampling controller)
     this class defines a state machine for variable sequences of tasks during several different modes of resampling
     the class methods communicate via the class variables of the central data class 'status' and via signalling.
@@ -568,11 +575,10 @@ class resampler(QObject):
     SigCancel = pyqtSignal()
 
     #TODO: replace all gui by respective state references if appropriate
-    def __init__(self, gui_state):
+    def __init__(self, gui_state,resample_m):
         super().__init__()
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(*args, **kwargs)
-        # Constants
+        self.m = resample_m.mdl
+        print(f'__init__ resampler: {self.m["sample"]}')
         self.MAX_GAP = 300 # seconds allowable between two subsequent source files
         self.CHUNKSIZE = 1024**2 # data chunk size for reading/writing files
         #TODO: check condition early
@@ -582,7 +588,7 @@ class resampler(QObject):
         #self.sys_state = wsys.status()   ###TEST 09-01-2024
         self.sys_state = gui_state  ###TEST 09-01-2024
         self.system_state = self.sys_state.get_status()
-        self.SigProgress.connect(lambda: view_resampler.updateprogress_resampling(self))#TODO: untersuchen, ob Abonnieren besser vom GUI aus geschehen soll
+        self.SigProgress.connect(lambda: resample_v.updateprogress_resampling(self))#TODO: untersuchen, ob Abonnieren besser vom GUI aus geschehen soll
         self.MAX_TARGETFILE_SIZE = 2 * 1024**3 #2GB max output filesize
 
     def set_LOvars(self,_value): #TODO seems unused, remove ?
@@ -661,8 +667,8 @@ class resampler(QObject):
         #TODO: check if listempty:
         if len(input_file_list) == 0: #TODO: check, if necessary, normally the cb_split buttonfcn catches this case
             wsys.WIZ_auxiliaries.standard_errorbox("No files to be resampled have been selected; please drag items to the 'selected file' area")
-            self.SigUpdateGUI.emit("terminate")
-            gui.SigGUIReset.emit() #TODO solve with signalling to resamp-view
+            #self.SigUpdateGUI.emit("terminate")
+            #gui.SigGUIReset.emit() #TODO solve with signalling to resample_c-view
             return False
 
         output_file_prefix = system_state["out_dirname"] + system_state["mergeprefix"]
@@ -683,7 +689,7 @@ class resampler(QObject):
         self.merge2G_worker.set_ret(basename)
         self.merge2G_worker.set_sttime_atrim(system_state["starttime_after_trim"])
         self.merge2G_thread.started.connect(self.merge2G_worker.merge2G_worker)
-        self.merge2G_worker.SigPupdate.connect(lambda: view_resampler.updateprogress_resampling(self)) #TODO: check if lambda call is appropriate.
+        self.merge2G_worker.SigPupdate.connect(lambda: resample_v.updateprogress_resampling(self)) #TODO: check if lambda call is appropriate.
         self.merge2G_worker.SigFinishedmerge2G.connect(self.merge2G_thread.quit)
         self.merge2G_worker.SigFinishedmerge2G.connect(self.merge2G_worker.deleteLater)
         self.merge2G_thread.finished.connect(self.merge2G_thread.deleteLater)
@@ -814,7 +820,7 @@ class resampler(QObject):
         self.Sigincrscheduler.connect(self.res_scheduler)
         self.LOsh_worker.SigFinishedLOshifter.connect(lambda: self.Sigincrscheduler.emit())
         #z.B. schreibe die Referenz auf signal_state, damit sie der Scheduler dort abholen kann, schedule[n].["startsignal"] = diese Referenz
-        self.LOsh_worker.SigPupdate.connect(lambda: view_resampler.updateprogress_resampling(self)) #TODO: eher aus der Klasse view, könnte auch ausserhalb geschehen
+        self.LOsh_worker.SigPupdate.connect(lambda: resample_v.updateprogress_resampling(self)) #TODO: eher aus der Klasse view, könnte auch ausserhalb geschehen
         self.LOsh_worker.SigFinishedLOshifter.connect(self.LOshthread.quit)
         self.LOsh_worker.SigFinishedLOshifter.connect(self.LOsh_worker.deleteLater)
         self.LOshthread.finished.connect(self.LOshthread.deleteLater)
@@ -950,7 +956,7 @@ class resampler(QObject):
         self.sox_worker.SigFinished.connect(lambda: self.Sigincrscheduler.emit())
         self.sox_worker.SigSoxerror.connect(self.Soxerrorhandler)
         #z.B. schreibe die Referenz auf signal_state, damit sie der Scheduler dort abholen kann, schedule[n].["startsignal"] = diese Referenz
-        self.sox_worker.SigPupdate.connect(lambda: view_resampler.updateprogress_resampling(self)) #TODO: eher aus der Klasse view, könnte auch ausserhalb geschehen
+        self.sox_worker.SigPupdate.connect(lambda: resample_v.updateprogress_resampling(self)) #TODO: eher aus der Klasse view, könnte auch ausserhalb geschehen
         self.sox_worker.SigFinished.connect(self.soxthread.quit)
         self.sox_worker.SigFinished.connect(self.sox_worker.deleteLater)
         self.soxthread.finished.connect(self.soxthread.deleteLater)
@@ -978,10 +984,8 @@ class resampler(QObject):
         self.sys_state.set_status(system_state)
         self.Sigincrscheduler.emit()
         wsys.WIZ_auxiliaries.standard_errorbox("Error produced by SOX, probably due to inconsistent cutting times; process terminated")
-        #TODO: push GUI into a safe state: leave scheduler process and reset GUI, resamp GUI 
-
+        #TODO: push GUI into a safe state: leave scheduler process and reset GUI, resample_c GUI 
         
-
     def accomplish_resampling(self):
         """_after sox-resampling a wav_fileheader is inserted into the resampled dat-File.
         Afterwards  and temporary files are removed
@@ -1409,7 +1413,7 @@ class resampler(QObject):
         self.sys_state.set_status(system_state)
 
 
-class view_resampler(QObject):
+class resample_v(QObject):
     """_view methods for resampling module
     TODO: gui.wavheader --> something less general ?
     """
@@ -1418,7 +1422,7 @@ class view_resampler(QObject):
     SigAny = pyqtSignal()
     SigUpdateList = pyqtSignal()
     SigCancel = pyqtSignal()
-    def __init__(self, gui_state, resamp):
+    def __init__(self, gui_state, resample_c):
         super().__init__()
 
     # def __init__(self, *args, **kwargs): #TEST 09-01-2024
@@ -1436,8 +1440,8 @@ class view_resampler(QObject):
         self.gui.ui.checkBox_merge_selectall.setEnabled(False)
         self.sys_state.set_status(system_state)
         self.DATABLOCKSIZE = 1024*32
-        self.resamp = resamp #resamp can now be used as instance of the resampler controller for signallng
-        self.resamp.SigUpdateGUI.connect(self.res_update_GUI)
+        self.resample_c = resample_c #resample_c can now be used as instance of the resampler controller for signallng
+        self.resample_c.SigUpdateGUI.connect(self.res_update_GUI)
 
 
     def set_viewvars(self,_value):
@@ -1448,7 +1452,7 @@ class view_resampler(QObject):
 
     def res_update_GUI(self,_key): #TODO TODO: is this method still needed ? reorganize. gui-calls should be avoided, better only signalling and gui must call the routenes itself
         print(" res_updateGUI: new updateGUI in resampler module reached")
-        self.resamp.SigUpdateGUI.disconnect(self.res_update_GUI)
+        self.resample_c.SigUpdateGUI.disconnect(self.res_update_GUI)
         if _key.find("reset") == 0:
             print("resampler reset all checked elements")
             self.reset_resamp_GUI_elemets()
@@ -1457,7 +1461,7 @@ class view_resampler(QObject):
             print("termination GUI update not yet defined")
         #other key possible: "none"
         time.sleep(1)
-        self.resamp.SigUpdateGUI.connect(self.res_update_GUI)
+        self.resample_c.SigUpdateGUI.connect(self.res_update_GUI)
 
     def reslist_update(self): #TODO: list is only updated up to the just before list change dragged item,
         """
@@ -1903,7 +1907,7 @@ class view_resampler(QObject):
         self.gui.ui.radioButton_advanced_sampling.setEnabled(status)
         self.gui.ui.pushButton_resample_resample.setEnabled(status)
         self.gui.ui.pushButton_resample_split2G.setEnabled(status)
-        self.gui.ui.pushButton_resample_GainOnly.setEnabled(status)
+        #self.gui.ui.pushButton_resample_GainOnly.setEnabled(status)
         self.gui.ui.lineEdit_resample_targetnameprefix.setEnabled(status)
 
     def toggle_gain(self):
@@ -1972,8 +1976,9 @@ class view_resampler(QObject):
         #system_state["out_dirname"] = system_state["out_dirname"] + "_split"
         if len(reslist) == 0:
             wsys.WIZ_auxiliaries.standard_errorbox("No files to be resampled have been selected; please drag items to the 'selected file' area")
-            self.resamp.SigUpdateGUI.emit("reset")
-            self.gui.SigGUIReset.emit() #TODO solve with signalling to resamp-view
+            self.gui.ui.pushButton_resample_split2G.clicked.connect(self.cb_split2G_Button)
+            #self.resample_c.SigUpdateGUI.emit("reset")
+            #self.gui.SigGUIReset.emit() #TODO solve with signalling to resample_c-view
             return False
 
         system_state["t_wavheader"] = WAVheader_tools.get_sdruno_header(self,reslist[0])
@@ -1988,6 +1993,6 @@ class view_resampler(QObject):
         system_state["merge2G_deleteoriginal"] = False
         system_state["merge2G_gainenable"] = True
         self.sys_state.set_status(system_state)
-        #self.resamp.merge2G_files(reslist) #TODO: remove/restore tests: 17-01-2024
+        #self.resample_c.merge2G_files(reslist) #TODO: remove/restore tests: 17-01-2024
         #TODO: check new worker based implementation
-        self.resamp.merge2G_new(reslist)
+        self.resample_c.merge2G_new(reslist)
