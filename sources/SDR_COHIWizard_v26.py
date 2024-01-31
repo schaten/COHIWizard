@@ -1550,7 +1550,8 @@ class WizardGUI(QMainWindow):
             return False
         self.updatecurtime(0) #TODO: true datetime from record
 
-        if system_state["f1"] == "":
+        if system_state["f1"] == "": #TODO: replace by line below
+        # if resample_m.mdl["f1"] == "":
             sys_state.set_status(system_state)
             return False
         stemlabcontrol.SigError.connect(self.stemlabcontrol_errorhandler) #
@@ -1870,7 +1871,8 @@ class WizardGUI(QMainWindow):
         if (os.path.isfile(self.my_dirname + '/' + self.wavheader['nextfilename']) == True and self.wavheader['nextfilename'] != "" ):
             #TODO: new wavheader needs to be extracted
             # play next file in nextfile-list
-            system_state["f1"] = self.my_dirname + '/' + self.wavheader['nextfilename']
+            system_state["f1"] = self.my_dirname + '/' + self.wavheader['nextfilename']#TODO: replace by line below
+            resample_m.mdl["f1"]  = self.my_dirname + '/' + self.wavheader['nextfilename']
             self.wavheader = WAVheader_tools.get_sdruno_header(self,system_state["f1"])
             time.sleep(0.1)
             self.play_tstarter()
@@ -1905,7 +1907,8 @@ class WizardGUI(QMainWindow):
                 
                 while (not item_valid) and (system_state["playlist_ix"] < playlist_len):
                     item = lw.item(system_state["playlist_ix"])
-                    system_state["f1"] = self.my_dirname + '/' + item.text()
+                    system_state["f1"] = self.my_dirname + '/' + item.text() #TODO replace by line below
+                    resample_m.mdl["f1"] = self.my_dirname + '/' + item.text()
                     print(f'file: {system_state["f1"]}')
                     self.wavheader = WAVheader_tools.get_sdruno_header(self,system_state["f1"])
                     item_valid = True
@@ -2239,7 +2242,8 @@ class WizardGUI(QMainWindow):
                 item.setBackground(QtGui.QColor("lightgreen"))  #TODO: shift to resampler view
                 #TODO: entrypoint f cutstop, cutstart:
                 #(1) cut first file: copy from fseek (cutstart) to cutstop
-                system_state["f1"] = self.my_dirname + '/' + item.text()
+                system_state["f1"] = self.my_dirname + '/' + item.text()#TODO replace by line below:
+                resample_m.mdl["f1"] = self.my_dirname + '/' + item.text()
                 print(f'cb_resample: file: {system_state["f1"]}')
                 self.wavheader = WAVheader_tools.get_sdruno_header(self,system_state["f1"])
                 self.showfilename()
@@ -3749,7 +3753,8 @@ class WizardGUI(QMainWindow):
             new_name = self.my_dirname + '/' + bbb + '_' + str(SDRUno_suffix) + '_' + str(int(np.round(self.wavheader["centerfreq"]/1000))) + 'kHz.wav'
             # Renaming the file
             shutil.move(old_name, new_name)
-            system_state["f1"] = new_name
+            system_state["f1"] = new_name #TODO: replace by line below
+            resample_m.mdl["f1"] = new_name
             self.showfilename()
         self.ui.label_8.setEnabled(False)
         self.ui.pushButton_InsertHeader.setEnabled(False)
@@ -4035,13 +4040,15 @@ SR must be in the set: 20000, 50000, 100000, 250000, 500000, 1250000, 2500000"
                 filename =  QtWidgets.QFileDialog.getOpenFileName(self,
                                                                 "Open data file"
                                                                 ,self.metadata["last_path"] , filters, selected_filter)
-            system_state["f1"] = filename[0]    
+            system_state["f1"] = filename[0] #TODO: replace by line below:
+            resample_m.mdl["f1"]  = filename[0]
         else:
             pass
         
         if not system_state["f1"]:
             sys_state.set_status(system_state)
             return False
+
         file_stats = os.stat(system_state["f1"])
         ti_m = os.path.getmtime(system_state["f1"]) 
         # Converting the time in seconds to a timestamp
@@ -4052,6 +4059,48 @@ SR must be in the set: 20000, 50000, 100000, 250000, 500000, 1250000, 2500000"
         system_state["temp_directory"] = self.my_dirname + "/temp"
         if os.path.exists(system_state["temp_directory"]) == False:         #exist yaml file: create from yaml-editor
             os.mkdir( system_state["temp_directory"])
+
+
+        if self.ext == ".dat" or self.ext == ".raw":
+            self.filetype = "dat"
+            ## TODO: wavheader-Writing zum Button Insert Header connecten
+            self.ui.label_8.setEnabled(True)
+            self.ui.pushButton_InsertHeader.setEnabled(True)
+        else:
+            if self.ext == ".wav":
+                self.filetype = "wav"
+                self.ui.tab_3.setEnabled(True)  ##########TODO: replace by Tab disable function inactivate/activate_tabs(self,selection)
+                self.ui.tab_4.setEnabled(True)  ##########TODO: replace by Tab disable function inactivate/activate_tabs(self,selection)
+                self.ui.label_8.setEnabled(False)
+                self.ui.pushButton_InsertHeader.setEnabled(False)                
+            else:
+                wsys.WIZ_auxiliaries.standard_errorbox("no valid data forma, neiter wav, nor dat nor raw !")
+                sys_state.set_status(system_state)
+                return
+
+        if self.filetype == "dat": # namecheck only if dat --> makes void all wav-related operation sin filenameextract
+            if self.dat_extractinfo4wavheader() == False:
+                wsys.WIZ_auxiliaries.standard_errorbox("Unexpected error, dat_extractinfo4wavheader() == False; ")
+                sys_state.set_status(system_state)
+                return False
+                #TODO: dat_extractinfo4wavheader() automatically asks for lacking wav header info, so this exit could be replaced alrady !
+        else:
+            self.wavheader = WAVheader_tools.get_sdruno_header(self,system_state["f1"])
+            if self.wavheader != False:
+                self.next_filename = self.extract_startstoptimes_auxi(self.wavheader)
+            else:
+                wsys.WIZ_auxiliaries.standard_errorbox("File is not recognized as a valid IQ wav file (not auxi/rcvr compatible or not a RIFF file)")
+                sys_state.set_status(system_state)
+                return False
+
+        if self.wavheader['sdrtype_chckID'].find('auxi') > -1 or self.wavheader['sdrtype_chckID'].find('rcvr') > -1: #TODO: CHECK: is this obsolete because of the above quest ?
+            pass
+        else:
+            wsys.WIZ_auxiliaries.standard_errorbox("cannot process wav header, does not contain auxi or rcvr ID")
+            self.sdrtype = 'FALSE'
+            sys_state.set_status(system_state)
+            return False
+
         #TODO: mache das konfigurierbar:
         self.ui.lineEdit_resample_targetnameprefix.setText(self.my_filename)
         self.showfilename()
@@ -4112,6 +4161,7 @@ SR must be in the set: 20000, 50000, 100000, 250000, 500000, 1250000, 2500000"
             item = QtWidgets.QListWidgetItem()
             self.ui.listWidget_playlist_2.addItem(item)
             _item2=self.ui.listWidget_playlist_2.item(0)
+            #TODO: problematic when invalid wav file (music)
             _item2.setText(self.my_filename + self.ext)
             fnt = _item2.font()
             fnt.setPointSize(9)
@@ -4131,45 +4181,6 @@ SR must be in the set: 20000, 50000, 100000, 250000, 500000, 1250000, 2500000"
         
 ################TODO: end method initialize listitems
 
-        if self.ext == ".dat" or self.ext == ".raw":
-            self.filetype = "dat"
-            ## TODO: wavheader-Writing zum Button Insert Header connecten
-            self.ui.label_8.setEnabled(True)
-            self.ui.pushButton_InsertHeader.setEnabled(True)
-        else:
-            if self.ext == ".wav":
-                self.filetype = "wav"
-                self.ui.tab_3.setEnabled(True)  ##########TODO: replace by Tab disable function inactivate/activate_tabs(self,selection)
-                self.ui.tab_4.setEnabled(True)  ##########TODO: replace by Tab disable function inactivate/activate_tabs(self,selection)
-                self.ui.label_8.setEnabled(False)
-                self.ui.pushButton_InsertHeader.setEnabled(False)                
-            else:
-                wsys.WIZ_auxiliaries.standard_errorbox("no valid data forma, neiter wav, nor dat nor raw !")
-                sys_state.set_status(system_state)
-                return
-
-        if self.filetype == "dat": # namecheck only if dat --> makes void all wav-related operation sin filenameextract
-            if self.dat_extractinfo4wavheader() == False:
-                wsys.WIZ_auxiliaries.standard_errorbox("Unexpected error, dat_extractinfo4wavheader() == False; ")
-                sys_state.set_status(system_state)
-                return False
-                #TODO: dat_extractinfo4wavheader() automatically asks for lacking wav header info, so this exit could be replaced alrady !
-        else:
-            self.wavheader = WAVheader_tools.get_sdruno_header(self,system_state["f1"])
-            if self.wavheader != False:
-                self.next_filename = self.extract_startstoptimes_auxi(self.wavheader)
-            else:
-                wsys.WIZ_auxiliaries.standard_errorbox("Unexpected error, dat_extractinfo4wavheader() == False; Possible errors: wav header is not auxi/rcvr compatible or not a RIFF file")
-                sys_state.set_status(system_state)
-                return False
-
-        if self.wavheader['sdrtype_chckID'].find('auxi') > -1 or self.wavheader['sdrtype_chckID'].find('rcvr') > -1:
-            pass
-        else:
-            wsys.WIZ_auxiliaries.standard_errorbox("cannot process wav header, does not contain auxi or rcvr ID")
-            self.sdrtype = 'FALSE'
-            sys_state.set_status(system_state)
-            return False
         
         if self.wavheader['sdrtype_chckID'].find('rcvr') > -1:
             self.readoffset = 86
@@ -4561,6 +4572,6 @@ if __name__ == '__main__':
     stemlabcontrol = StemlabControl()
     resample_m = rsmp.resample_m(win.ui)
     resample_c = rsmp.resample_c(sys_state,resample_m) #TODO: replace sys_state
-    resample_v = rsmp.resample_v(sys_state,resample_c) #TODO: replace sys_state
+    resample_v = rsmp.resample_v(sys_state,resample_c, resample_m) #TODO: replace sys_state
 
     sys.exit(app.exec_())
