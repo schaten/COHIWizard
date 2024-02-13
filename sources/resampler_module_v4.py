@@ -176,6 +176,11 @@ class res_workers(QObject):
         time.sleep(5) #TODO: check if 5 s is necessary
         #TODO: Entrypoint für zu wählenden Ausgangsfilenamen über getter/setter, wie oben
         basename = self.get_ret()
+        self.set_progress(1)
+        print(f'merge2G init progress: {1}')
+        self.SigPupdate.emit()
+
+
         with open(current_output_file_path, 'wb') as current_output_file:
             # Schreibe die ersten 216 Bytes mit Nullen
             print(f"merge2G: generate outputfile {current_output_file_path}")
@@ -226,6 +231,14 @@ class res_workers(QObject):
                     print(f"next input file: {input_file} ")
                     fillchunk = bytes([0x00] * self.CHUNKSIZE)
                     while True:
+                        if self.stopix is True:
+                            print("***merge2G worker cancel merging process")
+                            input_file.close()
+                            time.sleep(1)
+                            print("***merge2G worker input file closed")
+                            self.SigFinishedmerge2G.emit()
+                            return()
+
                         if WRITEGAP: #generate a byte array with CHINKSIZE zeros until gap_bytes is fully consumed    ##########NEW AFTER GAPFIXING
                             #write CHUNKSIZE of the current gap and deduct from gap budget
                             if gap_bytes > self.CHUNKSIZE:
@@ -280,7 +293,19 @@ class res_workers(QObject):
                                 SDRUno_suff = SDRUno_suff.replace("-","")
                                 new_name = nametrunk + str(SDRUno_suff) + '_' + str(int(np.round(wavheader["centerfreq"]/1000))) + 'kHz.wav'
                                 current_output_file.close()
-                                shutil.move(current_output_file_path, new_name)
+                                time.sleep(0.01)
+                                jx = 0
+                                while jx <1:
+                                    try:
+                                        print(f"merge2Gworker try shutil {current_output_file_path} to {new_name}")
+                                        shutil.move(current_output_file_path, new_name)
+                                    except:
+                                        jx += 1
+                                        print(f"merge2Gworker renamefile trial {str(jx)}")
+                                        time.sleep(0.5)
+                                # if jx == 10:
+                                #     wsys.WIZ_auxiliaries.standard_errorbox("The output file was written, but the temp file could not be renamed for unknown reason . Please repeat the merging process")                                    
+                            print("break merget2Gworker")
                             break
 
                         # check if output file exceeds maximum size
@@ -574,6 +599,7 @@ class resample_c(QObject):
     Sigincrscheduler = pyqtSignal()
     SigTerminate_Finished = pyqtSignal()
     SigCancel = pyqtSignal()
+    SigResampGUIReset = pyqtSignal()
 
     #TODO: replace all gui by respective state references if appropriate
     def __init__(self, gui_state,resample_m):
@@ -657,6 +683,8 @@ class resample_c(QObject):
         """
         system_state = self.sys_state.get_status()
         gui = system_state["gui_reference"]
+        gui.ui.pushButton_resample_cancel.clicked.connect(self.cancel_resampling) #TODO: shift to a resample.view method
+
         #TODO: ##################################################################
         gui.ui.lineEdit_resample_targetnameprefix.setEnabled(False) #TODO: shift to view
         gui.inactivate_tabs(["View_Spectra","Annotate","Player","YAML_editor","WAV_header"]) #TODO: organiz in different manner; this class needs not know about other tabs !
@@ -739,7 +767,7 @@ class resample_c(QObject):
         system_state["progress_source"] = "normal"
         system_state["progress"] = 0
         system_state["blinkstate"] = False
-        system_state["actionlabel"] = ""
+        system_state["actionlabel"] = "JOB DONE"
         self.SigProgress.emit()
         #gui.ui.label_36.setStyleSheet("background-color: lightgray") #TODO: shift to a resample.view method
         #transferred to gui (=core) reset_GUI() test : changed 20-01-2024
@@ -752,12 +780,14 @@ class resample_c(QObject):
         system_state["fileopened"] = False
         #gui.ui.listWidget_playlist_2.itemChanged.connect(v_resamp.reslist_update)  #INSTANZ aktuell nicht von hier aus zugänglich
         gui.SigGUIReset.emit() #TODO: shift to a resample.view method
+
         system_state["list_out_files_resampled"] = []
         #system_state["Res_GUI_updatelabel"] = "reset" TODO: remove after tests 21-01-2024
         self.sys_state.set_status(system_state)
         #self.SigTerminate_Finished.disconnect(gui.cb_resample_new)
         #gui.ui.lineEdit_resample_targetnameprefix.setEnabled(True) #TODO: remove after tests 21-01-2024        
-        self.SigUpdateGUI.emit("reset") #TODO:  check gui reference
+        #self.SigUpdateGUI.emit("reset") #TODO:  check gui reference
+        self.SigResampGUIReset.emit()
 
     def LOshifter_new(self):
         """configures and starts LO shifting thread
@@ -852,7 +882,7 @@ class resample_c(QObject):
     def cancel_resampling(self):
         system_state = self.sys_state.get_status()        
         gui = system_state["gui_reference"]
-        schedule_objdict = system_state["schedule_objdict"]
+        #schedule_objdict = system_state["schedule_objdict"]
         for i in range(10):
             print("*********______________cancel_resamp reached")
         system_state["emergency_stop"] = True
@@ -864,6 +894,10 @@ class resample_c(QObject):
             pass
         try:
             self.LOsh_worker.soxworker_terminate()
+        except:
+            pass
+        try:
+            self.merge2G_worker.soxworker_terminate()
         except:
             pass
         #TODO: activate signalling method, but no success so far: schedule_objdict["signal"]["cancel"].emit()
@@ -1449,10 +1483,12 @@ class resample_v(QObject):
         self.DATABLOCKSIZE = 1024*32
         self.resample_c = resample_c #resample_c can now be used as instance of the resampler controller for signallng
         self.resample_c.SigUpdateGUI.connect(self.res_update_GUI)
+        self.resample_c.SigResampGUIReset.connect(self.reset_resamp_GUI_elemets)
         #check if sox is installed so as to throw an error message on resampling, if not
         self.soxlink = "https://sourceforge.net/projects/sox/files/sox/14.4.2/"
         self.soxlink_altern = "https://sourceforge.net/projects/sox"
         self.soxnotexist = False
+
         try:
             subproc3 = subprocess.run('sox -h', stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True, check=True)
         except subprocess.CalledProcessError as ex:
@@ -1895,7 +1931,7 @@ class resample_v(QObject):
         :return: [ReturnDescription]
         :rtype: [ReturnType]
         """
-        system_state = self.sys_state.get_status()
+        #system_state = self.sys_state.get_status()
         self.gui.ui.listWidget_sourcelist_2.clear()
         self.gui.ui.listWidget_playlist_2.clear()
         #self.gui.ui.timeEdit_resample_stopcut.setEnabled(status)
@@ -1910,6 +1946,8 @@ class resample_v(QObject):
         #self.gui.ui.pushButton_resample_resample.setEnabled(status)
         #self.gui.ui.pushButton_resample_split2G.setEnabled(status)
         #self.gui.ui.pushButton_resample_GainOnly.setEnabled(status)
+        self.enable_resamp_GUI_elemets(True)
+        self.gui.ui.lineEdit_resample_targetnameprefix.setEnabled(True)
         self.gui.ui.lineEdit_resample_targetnameprefix.setText("")
 
     def enable_resamp_GUI_elemets(self,status):
@@ -1991,6 +2029,8 @@ class resample_v(QObject):
     def cb_split2G_Button(self):
         system_state = self.sys_state.get_status()
         #gui = system_state["gui_reference"] #TODO: --> self.gui
+        self.enable_resamp_GUI_elemets(False)
+
         reslist_len = self.gui.ui.listWidget_playlist_2.count()
         self.gui.ui.pushButton_resample_split2G.clicked.disconnect(self.cb_split2G_Button) #TODO: --> self.gui
         reslist = []

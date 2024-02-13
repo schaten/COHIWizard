@@ -1217,7 +1217,7 @@ class WizardGUI(QMainWindow):
         self.ui.tab_4.setEnabled(True)
         self.ui.pushButton_InsertHeader.setEnabled(False)
         self.ui.label_8.setEnabled(False)
-        self.ui.label_36.setText('')
+        self.ui.label_36.setText('READY')
         self.ui.label_36.setFont(QFont('arial',12))
         self.ui.label_36.setStyleSheet("background-color: lightgray")
         self.ui.radioButton_WAVEDIT.setChecked(False)
@@ -2234,6 +2234,10 @@ class WizardGUI(QMainWindow):
         #ENTRY POINT LOOP f listbox: only event-triggered via signals !
         reslist_len = self.ui.listWidget_playlist_2.count()
         if reslist_len > 0:
+            #TODO: checkdiskspace(self,expected_filesize, _dir)
+            # get filesizes of all files in the list: os.stats Operationen verwenden
+            # get resampling parameters: expected filesize-calc for all: temp-files, intermediate files and final mergefiles
+            ################################################# 
             if system_state["reslist_ix"] < reslist_len:    
                 print(f"cb_resample: reslist index: {system_state['reslist_ix']}")
                 lw = self.ui.listWidget_playlist_2
@@ -2270,11 +2274,22 @@ class WizardGUI(QMainWindow):
                         sys_state.set_status(system_state)
                         #resample_c.merge2G_files(system_state["list_out_files_resampled"]) #TODO: remove/restore tests: 17-01-2024
                         #TODO: check new worker based implementation
+                        ##########TODO TRANSFER to relocated resampler
+                        system_state["f1"] = system_state["list_out_files_resampled"][0]
+                        self.wavheader = WAVheader_tools.get_sdruno_header(self,system_state["f1"])
+                        resample_v.update_resample_GUI()
+                        _valid,errortext = resample_v.getCuttime()
+                        ##########TODO TRANSFER to relocated resampler END
                         resample_c.merge2G_new(system_state["list_out_files_resampled"])
+                        #system_state["f1"] =                 
                 resample_v.enable_resamp_GUI_elemets(True)
                 system_state["fileopened"] = False
                 self.ui.listWidget_playlist_2.itemChanged.connect(resample_v.reslist_update)
-                self.SigGUIReset.emit()
+                ##########TODO TRANSFER to relocated resampler
+                resample_v.reset_resamp_GUI_elemets()
+
+                ##########TODO TRANSFER to relocated resampler END
+                #self.SigGUIReset.emit()
                 system_state["list_out_files_resampled"] = []
                 sys_state.set_status(system_state)
                 #resample_c.SigTerminate_Finished.disconnect(self.cb_resample_new)
@@ -4024,8 +4039,11 @@ SR must be in the set: 20000, 50000, 100000, 250000, 500000, 1250000, 2500000"
         '''
         system_state = sys_state.get_status()
         self.SigGUIReset.emit()
+        #TODO: call this signal only if resample_c is instantiated !
+        resample_c.SigResampGUIReset.emit()
         #resample_c.SigTerminate_Finished.connect(self.cb_resample_new)
         self.ui.pushButton_resample_split2G.clicked.connect(resample_v.cb_split2G_Button)
+        #TODO: call this function only if resample_v is instantiated !
         resample_v.enable_resamp_GUI_elemets(True)
 
         filters = "SDR wav files (*.wav);;Raw IQ (*.dat *.raw )"

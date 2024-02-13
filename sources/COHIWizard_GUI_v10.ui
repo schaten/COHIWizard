@@ -116,12 +116,12 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>Logofield_rec2.png</normaloff>
-             <normalon>Logofield_rec2.png</normalon>
-             <activeoff>Logofield_rec2.png</activeoff>
-             <activeon>Logofield_rec2.png</activeon>
-             <selectedoff>Logofield_rec2.png</selectedoff>
-             <selectedon>Logofield_rec2.png</selectedon>Logofield_rec2.png</iconset>
+             <normaloff>../../../../../../.designer/backup/Logofield_rec2.png</normaloff>
+             <normalon>../../../../../../.designer/backup/Logofield_rec2.png</normalon>
+             <activeoff>../../../../../../.designer/backup/Logofield_rec2.png</activeoff>
+             <activeon>../../../../../../.designer/backup/Logofield_rec2.png</activeon>
+             <selectedoff>../../../../../../.designer/backup/Logofield_rec2.png</selectedoff>
+             <selectedon>../../../../../../.designer/backup/Logofield_rec2.png</selectedon>../../../../../../.designer/backup/Logofield_rec2.png</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -1186,12 +1186,12 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>play_v4.PNG</normaloff>
-             <normalon>play_v4.PNG</normalon>
-             <activeoff>play_v4.PNG</activeoff>
-             <activeon>play_v4.PNG</activeon>
-             <selectedoff>play_v4.PNG</selectedoff>
-             <selectedon>play_v4.PNG</selectedon>play_v4.PNG</iconset>
+             <normaloff>../../../../../../.designer/backup/play_v4.PNG</normaloff>
+             <normalon>../../../../../../.designer/backup/play_v4.PNG</normalon>
+             <activeoff>../../../../../../.designer/backup/play_v4.PNG</activeoff>
+             <activeon>../../../../../../.designer/backup/play_v4.PNG</activeon>
+             <selectedoff>../../../../../../.designer/backup/play_v4.PNG</selectedoff>
+             <selectedon>../../../../../../.designer/backup/play_v4.PNG</selectedon>../../../../../../.designer/backup/play_v4.PNG</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -1223,11 +1223,11 @@
            </property>
            <property name="icon">
             <iconset>
-             <normalon>ff_v4.PNG</normalon>
-             <activeoff>ff_v4.PNG</activeoff>
-             <activeon>ff_v4.PNG</activeon>
-             <selectedoff>ff_v4.PNG</selectedoff>
-             <selectedon>ff_v4.PNG</selectedon>
+             <normalon>../../../../../../.designer/backup/ff_v4.PNG</normalon>
+             <activeoff>../../../../../../.designer/backup/ff_v4.PNG</activeoff>
+             <activeon>../../../../../../.designer/backup/ff_v4.PNG</activeon>
+             <selectedoff>../../../../../../.designer/backup/ff_v4.PNG</selectedoff>
+             <selectedon>../../../../../../.designer/backup/ff_v4.PNG</selectedon>
             </iconset>
            </property>
            <property name="iconSize">
@@ -1511,12 +1511,12 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>rec_v4.PNG</normaloff>
-             <normalon>rec_v4.PNG</normalon>
-             <activeoff>rec_v4.PNG</activeoff>
-             <activeon>rec_v4.PNG</activeon>
-             <selectedoff>rec_v4.PNG</selectedoff>
-             <selectedon>rec_v4.PNG</selectedon>rec_v4.PNG</iconset>
+             <normaloff>../../../../../../.designer/backup/rec_v4.PNG</normaloff>
+             <normalon>../../../../../../.designer/backup/rec_v4.PNG</normalon>
+             <activeoff>../../../../../../.designer/backup/rec_v4.PNG</activeoff>
+             <activeon>../../../../../../.designer/backup/rec_v4.PNG</activeon>
+             <selectedoff>../../../../../../.designer/backup/rec_v4.PNG</selectedoff>
+             <selectedon>../../../../../../.designer/backup/rec_v4.PNG</selectedon>../../../../../../.designer/backup/rec_v4.PNG</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -1573,12 +1573,12 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>../../SDR_Postprocessor/loop_v4.png</normaloff>
-             <normalon>loopactive_v4.png</normalon>
-             <activeoff>loop_v4.png</activeoff>
-             <activeon>loopactive_v4.png</activeon>
-             <selectedoff>loop_v4.png</selectedoff>
-             <selectedon>loopactive_v4.png</selectedon>../../SDR_Postprocessor/loop_v4.png</iconset>
+             <normaloff>../../../../../../SDR_Postprocessor/loop_v4.png</normaloff>
+             <normalon>../../../../../../.designer/backup/loopactive_v4.png</normalon>
+             <activeoff>../../../../../../.designer/backup/loop_v4.png</activeoff>
+             <activeon>../../../../../../.designer/backup/loopactive_v4.png</activeon>
+             <selectedoff>../../../../../../.designer/backup/loop_v4.png</selectedoff>
+             <selectedon>../../../../../../.designer/backup/loopactive_v4.png</selectedon>../../../../../../SDR_Postprocessor/loop_v4.png</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -2285,12 +2285,12 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>stop_v4.PNG</normaloff>
-             <normalon>stop_v4.PNG</normalon>
-             <activeoff>stop_v4.PNG</activeoff>
-             <activeon>stop_v4.PNG</activeon>
-             <selectedoff>stop_v4.PNG</selectedoff>
-             <selectedon>stop_v4.PNG</selectedon>stop_v4.PNG</iconset>
+             <normaloff>../../../../../../.designer/backup/stop_v4.PNG</normaloff>
+             <normalon>../../../../../../.designer/backup/stop_v4.PNG</normalon>
+             <activeoff>../../../../../../.designer/backup/stop_v4.PNG</activeoff>
+             <activeon>../../../../../../.designer/backup/stop_v4.PNG</activeon>
+             <selectedoff>../../../../../../.designer/backup/stop_v4.PNG</selectedoff>
+             <selectedon>../../../../../../.designer/backup/stop_v4.PNG</selectedon>../../../../../../.designer/backup/stop_v4.PNG</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -2326,12 +2326,12 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>rew_v4.PNG</normaloff>
-             <normalon>rew_v4.PNG</normalon>
-             <activeoff>rew_v4.PNG</activeoff>
-             <activeon>rew_v4.PNG</activeon>
-             <selectedoff>rew_v4.PNG</selectedoff>
-             <selectedon>rew_v4.PNG</selectedon>rew_v4.PNG</iconset>
+             <normaloff>../../../../../../.designer/backup/rew_v4.PNG</normaloff>
+             <normalon>../../../../../../.designer/backup/rew_v4.PNG</normalon>
+             <activeoff>../../../../../../.designer/backup/rew_v4.PNG</activeoff>
+             <activeon>../../../../../../.designer/backup/rew_v4.PNG</activeon>
+             <selectedoff>../../../../../../.designer/backup/rew_v4.PNG</selectedoff>
+             <selectedon>../../../../../../.designer/backup/rew_v4.PNG</selectedon>../../../../../../.designer/backup/rew_v4.PNG</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -2445,12 +2445,12 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>Button_Playlist_Activate.png</normaloff>
-             <normalon>Button_Playlist_Select.png</normalon>
-             <activeoff>Button_Playlist_Activate.png</activeoff>
-             <activeon>Button_Playlist_Select.png</activeon>
-             <selectedoff>Button_Playlist_Activate.png</selectedoff>
-             <selectedon>Button_Playlist_Select.png</selectedon>Button_Playlist_Activate.png</iconset>
+             <normaloff>../../../../../../.designer/backup/Button_Playlist_Activate.png</normaloff>
+             <normalon>../../../../../../.designer/backup/Button_Playlist_Select.png</normalon>
+             <activeoff>../../../../../../.designer/backup/Button_Playlist_Activate.png</activeoff>
+             <activeon>../../../../../../.designer/backup/Button_Playlist_Select.png</activeon>
+             <selectedoff>../../../../../../.designer/backup/Button_Playlist_Activate.png</selectedoff>
+             <selectedon>../../../../../../.designer/backup/Button_Playlist_Select.png</selectedon>../../../../../../.designer/backup/Button_Playlist_Activate.png</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -4486,7 +4486,7 @@
          <item row="2" column="3">
           <widget class="QLabel" name="label_31">
            <property name="toolTip">
-            <string>minimum SNR for auto-selection of peaks</string>
+            <string>target sampling rate in kS/s</string>
            </property>
            <property name="text">
             <string>target sampling rate (kS/s)</string>
@@ -4908,6 +4908,9 @@
          </item>
          <item row="2" column="5">
           <widget class="QPushButton" name="pushButton_resample_cancel">
+           <property name="toolTip">
+            <string>cancel operation</string>
+           </property>
            <property name="text">
             <string>cancel</string>
            </property>
@@ -4916,7 +4919,7 @@
          <item row="13" column="5">
           <widget class="QPushButton" name="pushButton_resample_resample">
            <property name="toolTip">
-            <string>Split file in the list into 2GB parts</string>
+            <string>start resampling</string>
            </property>
            <property name="text">
             <string>Resample</string>
@@ -4926,7 +4929,7 @@
          <item row="14" column="5">
           <widget class="QPushButton" name="pushButton_resample_split2G">
            <property name="toolTip">
-            <string>Split file in the list into 2GB parts</string>
+            <string>Split files in the list into 2GB parts without any resampling</string>
            </property>
            <property name="text">
             <string>split/merge to 2GB</string>
@@ -4936,7 +4939,7 @@
          <item row="15" column="5">
           <widget class="QPushButton" name="pushButton_resample_GainOnly">
            <property name="toolTip">
-            <string>start resampling procedure and splt reulting files in 2GB tranches</string>
+            <string/>
            </property>
            <property name="text">
             <string>Gain only</string>
@@ -4952,6 +4955,9 @@
          </item>
          <item row="12" column="5">
           <widget class="QCheckBox" name="checkBox_AutoMerge2G">
+           <property name="toolTip">
+            <string>automatically merge the resampled files to 2GB tranches and remove intermediate files</string>
+           </property>
            <property name="text">
             <string>Auto Merge 2G</string>
            </property>
@@ -4959,6 +4965,9 @@
          </item>
          <item row="12" column="4">
           <widget class="QCheckBox" name="checkBox_merge_selectall">
+           <property name="toolTip">
+            <string>select/unselect all files</string>
+           </property>
            <property name="text">
             <string>Select all</string>
            </property>
@@ -4977,7 +4986,7 @@
      <x>0</x>
      <y>0</y>
      <width>1456</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
