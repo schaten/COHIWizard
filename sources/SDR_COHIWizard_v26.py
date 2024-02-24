@@ -965,6 +965,7 @@ class WizardGUI(QMainWindow):
         
     def init_view_spectra_ui(self):
         ### UI TAB SPECTRUM ####################################
+        system_state = sys_state.get_status() 
         self.ui.spinBoxminPeakwidth.valueChanged.connect(self.minPeakwidthupdate)
         self.ui.spinBoxminPeakDistance.valueChanged.connect(self.minPeakDistanceupdate)
         self.ui.spinBoxminSNR_ScannerTab.valueChanged.connect(self.minSNRupdate_ScannerTab)
@@ -976,8 +977,14 @@ class WizardGUI(QMainWindow):
         self.ui.spinBoxminBaselineoffset.valueChanged.connect(self.set_baselineoffset)
         #self.ui.horizontalScrollBar_view_spectra.sliderMoved.connect(self.cb_plot_spectrum)
         #self.ui.horizontalScrollBar_view_spectra.valueChanged.connect(self.cb_plot_spectrum)
-        self.ui.horizontalScrollBar_view_spectra.sliderReleased.connect(self.cb_plot_spectrum)
+        #self.ui.horizontalScrollBar_view_spectra.sliderReleased.connect(self.cb_plot_spectrum)
+        #self.ui.horizontalScrollBar_view_spectra.sliderReleased.connect(view_spectra_v.plot_spectrum)
         #self.ui.verticalSlider_Gain.sliderReleased.connect(self.cb_setgain)
+        # if system_state["OLD"]:
+        #     self.ui.horizontalScrollBar_view_spectra.sliderReleased.connect(self.cb_plot_spectrum)
+        #     self.ui.radioButton_plotraw.clicked.connect(self.cb_plot_spectrum)
+        # else:
+        self.ui.horizontalScrollBar_view_spectra.sliderReleased.connect(self.cb_plot_spectrum)
         self.ui.radioButton_plotraw.clicked.connect(self.cb_plot_spectrum)
         #self.ui.horizontalScrollBar_view_spectra.actionTriggered.connect(self.cb_plot_spectrum)
         self.SigToolbar.connect(lambda: self.plot_spectrum(self,self.position))

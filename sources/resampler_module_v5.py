@@ -65,7 +65,7 @@ class res_workers(QObject):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.sys_state = wsys.status()
+        #self.sys_state = wsys.status()
         #self.system_state = self.sys_state.get_status()
         #gui = self.system_state["gui_reference"]
         #self.system_state["Res_GUI_updatelabel"] = "none"
@@ -476,7 +476,7 @@ class res_workers(QObject):
     def LO_shifter_worker(self):
         self.stopix = False
         DATABLOCKSIZE = 1024*4*256
-        INCREMENT = 200000
+        INCREMENT = 1000000
         print("#############LOshifter_worker started##############")
         targetfilename = self.get_tfname()
         try:
@@ -552,28 +552,15 @@ class res_workers(QObject):
                 #print("LOshifting worker process running")
                 time.sleep(0.001)
 
-                #print(f"absolute filesize: {file_stats.st_size}")
-                #print(f"relative filesize in %: {progress}")
-                #delta = progress - progress_old
-                #absolute delta for independence of refresh rate of filesize
                 delta = file_stats.st_size - fsize_old
-                #print(f"progress delta: {delta} progress: {progress} progress_old: {progress_old}")
-                #if delta > 4: #TODO: mod 5 operation einbauen
 
                 if delta > INCREMENT: 
                     progress_old = progress
                     fsize_old = file_stats.st_size
                     self.set_progress(progress)
                     self.SigPupdate.emit()
-                    #print(f"LOshifter worker sSR: {sSR} sBPS: {sBPS} expfilesz: {expected_filesize}")
-                    #print(f"LOshifter worker souce: {sourcefilename} target: {targetfilename} pupdate_reference: {readsegmentfn}")
-                    #print(f"LOshifter worker centershift: {centershift} readoffset: {readoffset} ")  
-                    #print("LOshifter worker: NOW UPDATE STATUSBAR#############################################################################")
                 if self.stopix is True:
-                    #source_fileHandle.close()    
-                    #target_fileHandle.close()
                     break
-        
         else:
             print("LOshift worker: target file has not been found")
             print(f"LOshift worker:ERROR: no file {targetfilename} created")
@@ -584,8 +571,6 @@ class res_workers(QObject):
         print("#############Loshifter_worker finished##############")
         time.sleep(1)
         self.SigFinishedLOshifter.emit()
-
-
 
 class resample_c(QObject):
     """_methods for resampling (= resampling controller)
@@ -623,7 +608,7 @@ class resample_c(QObject):
         LOvars = {}
         self.set_LOvars(LOvars)
         #self.sys_state = wsys.status()   ###TEST 09-01-2024
-        self.sys_state = gui_state  ###TEST 09-01-2024
+        #self.sys_state = gui_state  ###TEST 09-01-2024
         #self.system_state = self.sys_state.get_status()
         #self.SigProgress.connect(lambda: resample_v.updateprogress_resampling(self))#TODO: untersuchen, ob Abonnieren besser vom GUI aus geschehen soll
         self.MAX_TARGETFILE_SIZE = 2 * 1024**3 #2GB max output filesize
@@ -729,7 +714,10 @@ class resample_c(QObject):
         self.m["progress_source"] = "sox"
         self.m["progress"] = 0
         self.m["blinkstate"] = True
+        self.m["actionlabelbg"] ="cyan"
         self.m["actionlabel"] = "MERGE 2G"
+        self.m["blinking"] = False
+        self.SigUpdateGUIelements.emit()
         print("merge2G: set merge2G_ actionlabel and progress update params")
         #self.sys_state.set_status(system_state)
         time.sleep(0.0001)
@@ -753,6 +741,7 @@ class resample_c(QObject):
         """
         #system_state = self.sys_state.get_status()
         #gui = self.sys_state["gui_reference"]
+        self.SigSyncTabs.emit(["_test", "resample", "a", "_teststatus", True])
         if self.m["merge2G_deleteoriginal"]:
             for input_file in input_file_list:
                 print(f"remove {input_file} if exists")
@@ -771,7 +760,9 @@ class resample_c(QObject):
         self.m["progress"] = 0
         self.m["blinkstate"] = False
         self.m["actionlabel"] = "JOB DONE"
+        self.m["actionlabelbg"] = "lightgray"
         print("resampler merg2G_cleanup before SigProgress")
+        self.m["blinking"] = False
         self.SigProgress.emit()
         #gui.ui.label_36.setStyleSheet("background-color: lightgray") #TODO: shift to a resample.view method
         #transferred to gui (=core) reset_GUI() test : changed 20-01-2024
@@ -821,10 +812,9 @@ class resample_c(QObject):
         #system_state["actionlabel"] = "LO SHIFTING"
         self.m["progress_source"] = "sox"  #TODO: muss geändert werden ist das überhaupt nötig ?
         self.m["res_blinkstate"] = True
+        self.m["blinking"] = True
         #self.sys_state.set_status(system_state)
         expected_filesize = self.m["t_filesize"] #TODO: check: trim length if cutstart(cutend must be subtracted ??)
-
-
         #TODO: check space available on target memory for expected_filesize
         if self.checkdiskspace(expected_filesize, self.m["temp_directory"]) is False:
             return False
@@ -969,6 +959,7 @@ class resample_c(QObject):
             return False
 
         self.m["res_blinkstate"] = True
+        self.m["blinking"] = True
         self.m["progress_source"] = "sox" #TODO rename sox reference to something more general: worker ?????
         print("method resample: set flags just before soxthread")
         self.soxthread = QThread(parent = self)
@@ -1163,10 +1154,10 @@ class resample_c(QObject):
             print("res_scheduler:  start termination")
             self.m["r_sch_counter"] = 0 #terminate schedule, reset counter
             #self.sys_state.set_status(system_state)
-            # self.SigSyncTabs.emit(["resample","resample","u","label36color",'lightgray'])
+            # self.SigSyncTabs.emit(["resample","resample","u","actionlabelbg",'lightgray'])
             # self.SigSyncTabs.emit(["resample","resample","u","label36Font",'12'])
             # self.SigUpdateOtherGUIs.emit()
-            self.m["label36color"] = "lightgray"
+            self.m["actionlabelbg"] = "lightgray"
             self.m["label36Font"] = 12
             #gui.ui.label_36.setStyleSheet("background-color: lightgray") #TODO: shift to a resample.view method, treat in a different manner
             #gui.ui.label_36.setFont(QFont('arial',12)) #TODO: shift to a resample.view method, treat in a different manner
@@ -1214,7 +1205,7 @@ class resample_c(QObject):
             self.SigSyncTabs.emit(["resample","resample","u","label36text",'FINALIZE'])
 
             #gui.ui.label_36.setText('FINALIZE') #TODO: shift to a resample.view method, treat in a different manner: model variable change and then update signal
-            self.sys_state.set_status(self.m) #TODO: shift to a resample.view method, treat in a different manner: model variable change and then update signal
+            #self.sys_state.set_status(self.m) #TODO: shift to a resample.view method, treat in a different manner: model variable change and then update signal
             #TODO: gleicher Aufruf wie in 'resample':
             schedule_objdict["signal"]["accomplish"].connect(schedule_objdict["connect"]["accomplish"])
             schedule_objdict["signal"]["accomplish"].emit()
@@ -1494,16 +1485,17 @@ class resample_v(QObject):
         self.m["reslistdoubleemit_ix"] = False
         self.m["starttrim"] = False
         self.m["stoptrim"] = False
-        self.m["label36color"] = "lightgray"
-        self.m["label36Font"] = 12
-        self.m["actionlabel"] = "READY"
         self.m["actionlabelbg"] = "lightgray"
+        self.m["label36Font"] = 12
+        self.m["actionlabel"] = ""
         self.m["_ref_cb_resample"] = self.cb_resample #TODO: ckeck if really necessary
         self.m["progress"] = 0
         self.m["progress_source"] = "normal"
         self.m["my_filename"] = ""
         self.m["ext"] = ""
         self.m["res_blinkstate"] = False
+        self.m["emergency_stop"] = False
+        self.m["blinking"] = False
         self.gui = gui #gui_state["gui_reference"]#system_state["gui_reference"]
         self.gui.pushButton_resample_cancel.clicked.connect(self.resample_c.cancel_resampling) #TODO: shift to a resample.view method
         self.resample_c.SigDisconnectExternalMethods.connect(self.ext_meth_disconnect)
@@ -1546,6 +1538,7 @@ class resample_v(QObject):
         schedule_objdict["connect"]["updateGUI"] = self.update_GUI
         schedule_objdict["signal"]["cancel"] = self.SigCancel
         self.m["schedule_objdict"] = schedule_objdict
+        self.updateGUIelements()
 
     def ext_meth_disconnect(self,ctrl):
         if ctrl.find("cancel_resampling"):
@@ -1590,12 +1583,11 @@ class resample_v(QObject):
         :rtype: Boolean
         """
         print(f"resampler: updateGUIelements {self.m['progress']}")
-        self.updateprogress_resampling()
+
         self.gui.label_Filename_resample.setText(self.m["my_filename"] + self.m["ext"])
-        self.gui.label_36.setStyleSheet("background-color: " + self.m["label36color"])
+        self.gui.label_36.setStyleSheet("background-color: " + self.m["actionlabelbg"])
         self.gui.label_36.setFont(QFont('arial',self.m["label36Font"]))
         self.gui.label_36.setText(self.m["actionlabel"])
-        self.gui.label_36.setStyleSheet("background-color: " + self.m["actionlabelbg"])
         self.gui.progressBar_resample.setProperty("value", self.m["progress"])
         if self.m["emergency_stop"]:
             self.GUI_reset_status()
@@ -1610,7 +1602,7 @@ class resample_v(QObject):
             #self.gui.clear_WAVwidgets() #TODO: shift to a view method
         self.m["clearlist"] = False
         #updateprogress_resampling
-        #self.updateprogress_resampling()
+        self.updateprogress_resampling()
 
     def reset_GUI(self):
         """
@@ -1624,7 +1616,7 @@ class resample_v(QObject):
         :return: True after completion, False if status-yaml not accessible
         :rtype: boolean
         """
-        self.m["label36color"] ="lightgray"
+        self.m["actionlabelbg"] ="lightgray"
         self.m["label36Font"] = 12
         self.m["actionlabel"] = "READY"
         self.updateGUIelements()
@@ -1677,20 +1669,12 @@ class resample_v(QObject):
         print("#######!!!!!!!!!!!!!!    reslist_update !!!!!!!! ############")
         print("reslist_update: resampling list updated")  
         time.sleep(0.1)
-        #system_state = self.sys_state.get_status()
-        #gui = system_state["gui_reference"]
-        #get all items of playlist Widget and write them to system_state["playlist"]
         lw = self.gui.listWidget_playlist_2
-        # let lw haven elements in it.
         reslist = []
         for x in range(lw.count()):
             item = lw.item(x)
-            #playlist.append(lw.item(x))
             reslist.append(item.text())
         self.m["reslist"] = reslist
-        #self.sys_state.set_status(system_state)
-
-        #system_state["reslistdoubleemit_ix"] = False
         print(f"reslist_update:reslist: {reslist}")
         #system_state["f1"] = self.gui.my_dirname + '/' + reslist[0]  #TODO: replace by line below
         #self.m["f1"] = self.gui.my_dirname + '/' + reslist[0] #TODO: replace self.mydirname by status entry
@@ -1918,7 +1902,8 @@ class resample_v(QObject):
         #################################DO NOT REPLACE CURRENTLY !
         #gui = system_state["gui_reference"]  #TODO: gui cannot be easily replaced by self.gui because lambda calls from the resampler controller an dworker modules 
         # refer to 'self' as another self, unclean programming ; search for solution later !!!!!!!!!!!!!!!!!
-
+        if self.m["blinking"] is False:
+            return
         blink_free = False
         current_time = time.time()  
         if current_time - self.m["last_system_time"] >= 1:
@@ -1940,7 +1925,7 @@ class resample_v(QObject):
         #self.gui.progressBar_resample.setProperty("value", progress)
 
         #print(f"statusbar updater sysflags_progress_source: {progress}")
-        self.m["label36color"] = "lightgray"
+        self.m["actionlabelbg"] = "lightgray"
         self.m["label36Font"] = 12
         #self.gui.label_36.setText(self.m["actionlabel"])
         #self.gui.label_36.setFont(QFont('arial',12))
@@ -2106,7 +2091,7 @@ class resample_v(QObject):
         self.gui.lineEdit_resample_targetnameprefix.setText("")
         #self.gui.progressBar_resample.setProperty("value", 0)
         self.m["progress"]
-        self.m["label36color"] ="lightgray"
+        self.m["actionlabelbg"] ="lightgray"
         self.m["label36Font"] = 12
         self.m["actionlabel"] = "READY"
         self.updateGUIelements()
@@ -2249,7 +2234,7 @@ class resample_v(QObject):
         :rtype: _type_
         """
         #inactivate all tabs except own and View spectra
-        self.SigActivateOtherTabs.emit("Resample","inactivate",["View spectra"])
+        self.SigActivateOtherTabs.emit("Resample","inactivate",[])
         try:
             self.gui.listWidget_playlist_2.itemChanged.disconnect(self.reslist_update)
         except:
@@ -2258,9 +2243,10 @@ class resample_v(QObject):
             self.resample_c.SigTerminate_Finished.disconnect()
         except:
             pass
-        
+        # update GUI elements
         self.gui.pushButton_resample_GainOnly.setEnabled(False)
         self.enable_resamp_GUI_elemets(False)
+        #stop if exception (e.g. cancellation)
         if self.m["emergency_stop"] is True:
             self.m["emergency_stop"] = False
             print("emergency stop in cb_resample")
@@ -2274,29 +2260,23 @@ class resample_v(QObject):
             self.gui.SigGUIReset.emit()
             self.m["list_out_files_resampled"] = []
             return False
-
+        #check for sox as a prerequisite
         if self.soxnotexist:
             infotext = "<font size = 12> You must install sox before being able to resample; <br> Download from: <br><a href='%s'>sox version 14.2.2 </a> <br><br>Either install sox to RFCorder directory or set the system path to the sox installation directory. <br> See also RFCorder user manual; </font>" % self.soxlink
             msg = QMessageBox()
             msg.information(self, 'Message', infotext, QMessageBox.Ok, QMessageBox.Ok)
             self.gui.listWidget_playlist_2.itemChanged.connect(self.reslist_update)
             return False
-        
+        #check if filepath has been defined
         if not self.m["fileopened"]:
             auxi.standard_errorbox("You must open a file before resampling")
             self.gui.listWidget_playlist_2.itemChanged.connect(self.reslist_update)
             return False
-        
-        if self.m["emergency_stop"]:
-            self.m["emergency_stop"] = False
-            self.gui.listWidget_playlist_2.itemChanged.connect(resample_v.reslist_update)
-            return False
-        # define references to the resampler signals and connected methods in a central general dictionary; Abonnement table
-        # TODO: This definition could be shifted to the init section or anywhere else (resampler module ?) it is not 
-        #related to the GUI but rather to the resampler controller. Thus it could be defined there
-        #self.ui.pushButton_resample_cancel.clicked.connect(lambda: self.cancel_resamp())
+        #define path for temporary files
         self.m["mergeprefix"] = "/temp_resized_"
         self.m["r_sch_counter"] = 0
+        self.m["blinking"] = False
+        #define final targetfilename
         target_SR = self.gui.comboBox_resample_targetSR.currentText()
         try:
             target_LO = float(self.gui.lineEdit_resample_targetLO.text())
@@ -2308,10 +2288,10 @@ class resample_v(QObject):
         self.m["starttrim"] = False
         self.m["stoptrim"] = False
 
-        #ENTRY POINT LOOP f listbox: only event-triggered via signals !
+        #loop through file list to be resampled
         reslist_len = self.gui.listWidget_playlist_2.count()
-        if reslist_len > 0:
-            if self.m["reslist_ix"] < reslist_len:    
+        if reslist_len > 0: #file list has at least one entry
+            if self.m["reslist_ix"] < reslist_len:    #file list not yet finished
                 print(f"cb_resample: reslist index: {self.m['reslist_ix']}")
                 lw = self.gui.listWidget_playlist_2
                 print("cb_resample: fetch next reslist file")
@@ -2322,6 +2302,8 @@ class resample_v(QObject):
                 #(1) cut first file: copy from fseek (cutstart) to cutstop
                 self.m["f1"] = self.m["my_dirname"] + '/' + item.text()
                 print(f'cb_resample: file: {self.m["f1"]}')
+                self.m["wavheader"] = WAVheader_tools.get_sdruno_header(self,self.m["f1"])
+                #set filename in all other tabs: CHECK: maybe necessary in view spectra but not necessarily in others ?
                 self.SigSyncTabs.emit(["dum","resample","a","my_filename",self.m["my_filename"]])
                 self.SigSyncTabs.emit(["dum","resample","a","ext",self.m["ext"]])
                 self.SigUpdateOtherGUIs.emit()
@@ -2333,12 +2315,13 @@ class resample_v(QObject):
                 if self.m["reslist_ix"] == reslist_len-1:
                     self.m["stoptrim"] = True
                     _valid,errortext = self.getCuttime()
-        #TODO: check must be done wrt complementary ime (stop, start) of the same file, in a list they are different --> wavheadr info important
-            else:
+                #TODO: check must be done wrt complementary ime (stop, start) of the same file, in a list they are different --> wavheadr info important
+            else: #file list has been finished finished
                 self.m["reslist_ix"] = 0
                 print("resamle list has been terminated, reset counter and exit event loop")
-                #TODO: reset GUI and set bg of listelements from green away 
+                #TODO TODO TODO: reset GUI and set bg of listelements from green away 
                 time.sleep(0.1)
+                # start mege2G if checked 
                 if self.gui.checkBox_AutoMerge2G.isChecked():
                     if not self.m["emergency_stop"]:
                         self.m["merge2G_deleteoriginal"] = True
@@ -2347,39 +2330,44 @@ class resample_v(QObject):
                         self.gui.lineEdit_resample_targetnameprefix.setEnabled(False)
                         self.m["basename"] = self.gui.lineEdit_resample_targetnameprefix.text()
                         self.m["progress"] = 0
-                        self.m["label36color"] ="lightgray"
-                        self.m["actionlabel"] = "MERGE"
+                        self.m["actionlabelbg"] ="cyan"
+                        self.m["actionlabel"] = "MERGE2G"
                         self.updateGUIelements()
+                        #call resample_c method for merging
                         self.resample_c.merge2G_new(self.m["list_out_files_resampled"])
+                #regardless whether automerge or not, enable GUI, reset GUI, disable fileopened, update other GUIs
                 self.enable_resamp_GUI_elemets(True)
                 self.m["fileopened"] = False
+                self.SigSyncTabs.emit(["dum", "resample", "a", "fileopened", False])
+                self.SigUpdateOtherGUIs.emit()
                 self.gui.listWidget_playlist_2.itemChanged.connect(self.reslist_update)
-                self.reset_GUI()
+                if not self.gui.checkBox_AutoMerge2G.isChecked():
+                    self.reset_GUI()
                 self.m["list_out_files_resampled"] = []
-                #self.sys_state.set_status(system_state)
-                #resample_c.SigTerminate_Finished.disconnect(self.cb_resample_new)
+                #self.resample_c.SigTerminate_Finished.disconnect(self.cb_resample_new)
                 return
-        else:
+        else: #file list is empty
             auxi.standard_errorbox("No files to be resampled have been selected; please drag items to the 'selected file' area")
             #self.sys_state.set_status(system_state)
             self.gui.listWidget_playlist_2.itemChanged.connect(self.reslist_update)
             self.enable_resamp_GUI_elemets(True)
             return False
+
         self.m["reslist_ix"] += 1
+
+        #check for invalid File formats
         if not(self.m["wavheader"]['wFormatTag'] in [1,3]): #TODO:future system state
             auxi.standard_errorbox("wFormatTag is neither 1 nor 3; unsupported Format, this file cannot be processed")
-            #self.sys_state.set_status(system_state)
             return False
 
+        #generate SDRUno TimeDate suffix in Filename
         SDRUno_suffix = str(self.m["wavheader"]['starttime_dt'])
         SDRUno_suffix = SDRUno_suffix.replace(" ","_")
         SDRUno_suffix = SDRUno_suffix.replace(":","")
         SDRUno_suffix = SDRUno_suffix.replace("-","")
         #TODO: OBSOLETE ?:
         targetfilename = self.m["my_dirname"] + "/" + self.m["f1"] + "_rspli16_" + str(SDRUno_suffix) + '_' + str(int(np.round(self.m["wavheader"]["centerfreq"]/1000))) + 'kHz.dat'
-
-        # frequency shifting:
-
+        # get info on frequency shifting, and target parameters:
         self.m["tLO"] = target_LO*1000 #TODO: define im scheduler ??
         self.m["fshift"] = self.m["wavheader"]["centerfreq"] - self.m["tLO"]
         self.m["tSR"] = float(target_SR)*1000 # tSR #TODO: define im scheduler ??
@@ -2387,28 +2375,22 @@ class resample_v(QObject):
         self.m["source_fn"] = self.m["f1"] #TODO: define im scheduler ?
         self.m["target_fn"] = targetfilename #TODO: obsolete ? define im scheduler ?
 
-        #self.sys_state.set_status(system_state)
-
-        #TODO: Abfragen, ob genug Speicherplatz für temp und Zielfiles
+        #TODO TODO TODO: Abfragen, ob genug Speicherplatz für temp und Zielfiles
         if self.m["wavheader"]['sdrtype_chckID'].find('auxi') == -1:
             print("resampling of rcvr and dat format not yet fully tested, may be problematic")
             #TODO: untersuchen, wie rcvr hier zu machen ist; an sich sollte das kein Problem sein, da ja der wavheader ohnehin bereits auf auxi umgeschrieben ist
             #return False          
-        #self.inactivate_tabs(["View_Spectra","Annotate","Resample","YAML_editor","WAV_header","Player"])
-
-        #self.inactivate_tabs(["View_Spectra","Annotate","YAML_editor","WAV_header","Player"]) # TODO: replace with signal to core view
         self.SigActivateOtherTabs.emit("Resample","inactivate",["View spectra"]) #TODO: necessary ? has been done at the beginning already
         time.sleep(0.01)
-        #self.m = sys_state.get_flags()
 
             ####TODO CHECK !!!!!!!!!!!!!!!!!!!!! filesize wird hier falsch ermittelt, wenn rcvr files o.ä.
 
+        #Generate schedules for the scheduler event loop
         #CASE 1: normal resampling without LOshift, LOshift is ignored
-        if abs(self.m["fshift"]) > 1e-5:
+        if abs(self.m["fshift"]) > 1e-5: #LOShift wanted
             if self.m["wavheader"]['nBitsPerSample'] == 24:
                 self.resample_c.schedule_B24()
                 print("generate schedule for 24 LOshifting")
-
             else:
                 if self.m["tSR"] > self.m["wavheader"]["nSamplesPerSec"]:
                     print("generate schedule for 32/16 LOshifting with upsampling")
@@ -2416,17 +2398,18 @@ class resample_v(QObject):
                 else:
                     print("generate schedule for 32/16 LOshifting with downsampling")
                     self.resample_c.schedule_B()
-        else:
+        else: #no LOShift
             self.resample_c.schedule_A()
             print("generate schedule for simple resampling")
 
+        #generate intermediate names for the resampled files (raw size)
         new_name = self.m["out_dirname"] + '/' + self.m["my_filename"] +'_resamp_' + str(SDRUno_suffix) + '_' + str(int(self.m["tLO"]/1000)) + 'kHz.wav'
         self.m["new_name"] = new_name
         self.m["list_out_files_resampled"].append(new_name)
         self.m["res_blinkstate"] = True
         time.sleep(0.001)
- 
+        #activate and trigger scheduler
         self.resample_c.Sigincrscheduler.connect(self.resample_c.res_scheduler)
         self.resample_c.Sigincrscheduler.emit()
-        self.gui.lineEdit_resample_targetnameprefix.setEnabled(True) 
+        self.gui.lineEdit_resample_targetnameprefix.setEnabled(True) #TODO TODO: is that appropriate ?
         #TODO TODO: Lade letztes resampelte File ins generelle GUI
