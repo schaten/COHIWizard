@@ -4,6 +4,9 @@ import time
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
+from PyQt5 import QtWidgets, QtCore, QtGui
+
+
 import datetime as ndatetime
 import os 
 import subprocess
@@ -63,7 +66,7 @@ class res_workers(QObject):
         super().__init__(*args, **kwargs)
         self.sys_state = wsys.status()
         self.system_state = self.sys_state.get_status()
-        gui = self.system_state["gui_reference"]
+        #gui = self.system_state["gui_reference"]
         #self.system_state["Res_GUI_updatelabel"] = "none"
         self.stopix = False
         self.mutex = QMutex()
@@ -730,6 +733,12 @@ class resample_c(QObject):
         system_state["progress"] = 0
         system_state["blinkstate"] = True
         system_state["actionlabel"] = "MERGE 2G"
+        #TODO REPLACE line for model:
+        self.m["calling_worker"] = self.merge2G_worker 
+        self.m["progress_source"] = "sox"
+        self.m["progress"] = 0
+        self.m["blinkstate"] = True
+        self.m["actionlabel"] = "MERGE 2G"
         print("merge2G: set merge2G_ actionlabel and progress update params")
         self.sys_state.set_status(system_state)
         time.sleep(0.0001)
@@ -768,6 +777,12 @@ class resample_c(QObject):
         system_state["progress"] = 0
         system_state["blinkstate"] = False
         system_state["actionlabel"] = "JOB DONE"
+        #TODO REPLACE line for model
+        self.m["progress_source"] = "normal"
+        self.m["progress"] = 0
+        self.m["blinkstate"] = False
+        self.m["actionlabel"] = "JOB DONE"
+        
         self.SigProgress.emit()
         #gui.ui.label_36.setStyleSheet("background-color: lightgray") #TODO: shift to a resample.view method
         #transferred to gui (=core) reset_GUI() test : changed 20-01-2024
@@ -778,10 +793,16 @@ class resample_c(QObject):
 
         #TODO: check if the following sequence is useful for a defined end of the merging procedure
         system_state["fileopened"] = False
+        #TODO: REPLACE line for model
+        self.m["fileopened"] = False
+
+
         #gui.ui.listWidget_playlist_2.itemChanged.connect(v_resamp.reslist_update)  #INSTANZ aktuell nicht von hier aus zugänglich
         gui.SigGUIReset.emit() #TODO: shift to a resample.view method
 
         system_state["list_out_files_resampled"] = []
+        #TODO: REPLACE line for model
+        self.m["list_out_files_resampled"] = []
         #system_state["Res_GUI_updatelabel"] = "reset" TODO: remove after tests 21-01-2024
         self.sys_state.set_status(system_state)
         #self.SigTerminate_Finished.disconnect(gui.cb_resample_new)
@@ -816,6 +837,8 @@ class resample_c(QObject):
         s_wavheader = system_state["s_wavheader"]
         #system_state["actionlabel"] = "LO SHIFTING"
         system_state["progress_source"] = "sox"  #TODO: muss geändert werden ist das überhaupt nötig ?
+        #TODO: REPLACE line for model
+        self.m["progress_source"] = "sox"  #TODO: muss geändert werden ist das überhaupt nötig ?
         self.sys_state.set_status(system_state)
         expected_filesize = system_state["t_filesize"] #TODO: check: trim length if cutstart(cutend must be subtracted ??)
 
@@ -856,6 +879,9 @@ class resample_c(QObject):
         self.LOsh_worker.SigFinishedLOshifter.connect(self.LOsh_worker.deleteLater)
         self.LOshthread.finished.connect(self.LOshthread.deleteLater)
         system_state["calling_worker"] = self.LOsh_worker 
+        #TODO: REPLACE line for model
+        self.m["calling_worker"] = self.LOsh_worker 
+
 
         print("about to leave LOshifter actionmethod")
         self.sys_state.set_status(system_state)
@@ -877,15 +903,22 @@ class resample_c(QObject):
         #system_flags = self.sys_state.get_flags() #obsolete
         system_state["progress"] = progress
         system_state["progress_source"] = "normal"
+        #TODO: REPLACE line for model
+        self.m["progress"] = progress
+        self.m["progress_source"] = "normal"
+        #TODO delete after change to model
         self.sys_state.set_status(system_state)
 
     def cancel_resampling(self):
+        #TODO check how to handle and delete after change to model
         system_state = self.sys_state.get_status()        
         gui = system_state["gui_reference"]
         #schedule_objdict = system_state["schedule_objdict"]
         for i in range(10):
             print("*********______________cancel_resamp reached")
         system_state["emergency_stop"] = True
+        #TODO REPLACE line for model:
+        self.m["emergency_stop"] = True
         self.sys_state.set_status(system_state)
         try:
         #if self.sox_worker.isRunning():
@@ -923,20 +956,20 @@ class resample_c(QObject):
         :return: target_fn
         :rtype: string
         """
-
+        #TODO delete after change to model
         system_state = self.sys_state.get_status()        
+        gui = system_state["gui_reference"]
         schedule_objdict = system_state["schedule_objdict"]
         schedule_objdict["signal"]["resample"].disconnect(schedule_objdict["connect"]["resample"])
 
-        gui = system_state["gui_reference"]
-        
-        s_wavheader = system_state["s_wavheader"]  #TODO: define im GUI_Hauptprogramm bzw. im scheduler
+        #s_wavheader = system_state["s_wavheader"]  #TODO: define im GUI_Hauptprogramm bzw. im scheduler
         source_fn = system_state["source_fn"]  #TODO: define im GUI_Hauptprogramm bzw. im scheduler
         target_fn = system_state["target_fn"]  #TODO: define im GUI_Hauptprogramm bzw. im scheduler
         tSR = system_state["tSR"]  #TODO: define im GUI_Hauptprogramm bzw. im scheduler
-        tLO = system_state["tLO"]  #TODO: define im GUI_Hauptprogramm bzw. im scheduler
+        #tLO = system_state["tLO"]  #TODO: define im GUI_Hauptprogramm bzw. im scheduler
         system_state["progress_source"] = "sox"  #TODO: solve double function in better datacommunication structure
-
+        #TODO REPLACE line for model, if possible:
+        self.m["progress_source"] = "sox"
         if system_state['wFormatTag'] == 1:
             wFormatTag_TYPE = "signed-integer"
         elif system_state['wFormatTag']  == 3:
@@ -970,7 +1003,10 @@ class resample_c(QObject):
 
         #system_state = self.sys_state.get_flags() #obsolete
         system_state["progress_source"] = "sox" #TODO rename sox reference to something more general: worker ?????
+        #TODO REPLACE line for model, if possible:
+        self.m["progress_source"] = "sox" #TODO rename sox reference to something more general: worker ?????
         print("method resample: set flags just before soxthread")
+        #TODO REPLACE line for model, if possible:
         self.sys_state.set_status(system_state)
         self.soxthread = QThread(parent = self)
         #change 26_11_2023: beforechange: self.sox_worker = soxwriter()
@@ -998,7 +1034,8 @@ class resample_c(QObject):
 
         #change 26_11_2023: beforechange: system_state["res_blinkstate"] = True #TODO: shift to scheduler!
         system_state["calling_worker"] = self.sox_worker 
-
+        #TODO REPLACE line for model, if possible:
+        self.m["calling_worker"] = self.sox_worker 
         #system_state["sox_worker"] = self.sox_worker 
         self.sys_state.set_status(system_state)
         print("method resample:soxthread starting now ###########################")
@@ -1013,8 +1050,10 @@ class resample_c(QObject):
     def Soxerrorhandler(self,errorstring):
 
         system_state = self.sys_state.get_status()
-        gui = system_state["gui_reference"]
+        #gui = system_state["gui_reference"]
         system_state["emergency_stop"] = True
+        #TODO REPLACE line for model, if possible:
+        self.m["emergency_stop"] = True
         print(f"soxerrorhandler errorstring: {errorstring}")
         self.sys_state.set_status(system_state)
         self.Sigincrscheduler.emit()
@@ -1048,6 +1087,8 @@ class resample_c(QObject):
             print("accomplish reached twice: return without action")
             return
         system_state["accomp_label"] = True
+        #TODO REPLACE line for model:
+        self.m["accomp_label"] = True
         print("accomplish_resampling: soxstring thread finished")
         target_fn = system_state["source_fn"]  #TODO: define im GUI_Hauptprogramm bzw. im scheduler
         gui.ui.progressBar_resample.setProperty("value", 0) #TODO: shift to a resample.view method, replace by signalling ?
@@ -1091,6 +1132,8 @@ class resample_c(QObject):
                 print(f"accomplish_resampling: access to {target_fn} not possible retry after 2 s")
         #shutil.move(target_fn, system_state["new_name"]) #TODO. cannot shift last temp file to external directory (ext. harddisk)
         system_state["t_wavheader"] = tgt_wavheader
+        #TODO REPLACE line for model:
+        self.m["t_wavheader"] = tgt_wavheader
         self.sys_state.set_status(system_state)
         print("accomplish leave after signalling to scheduler")   
         self.Sigincrscheduler.emit()
@@ -1128,13 +1171,31 @@ class resample_c(QObject):
         system_state["wFormatTag"] = sch[cnt]["wFormatTag"]
         system_state["t_filesize"] = sch[cnt]["t_filesize"]
         system_state["target_fn"] = system_state["temp_directory"] + "/temp_" + str(cnt) + '.dat' #<<< NEW vs LOshifter : filename automatism
+        #TODO REPLACE line for model:
+        self.m["actionlabel"] = sch[cnt]["actionlabel"]
+        self.m["sSR"] = sch[cnt]["sSR"]
+        self.m["tSR"] = sch[cnt]["tSR"]
+        self.m["sBPS"] = sch[cnt]["sBPS"]
+        self.m["tBPS"] = sch[cnt]["tBPS"]
+        self.m["sfilesize"] = sch[cnt]["s_filesize"]
+        self.m["wFormatTag"] = sch[cnt]["wFormatTag"]
+        self.m["t_filesize"] = sch[cnt]["t_filesize"]
+        self.m["target_fn"] = self.m["temp_directory"] + "/temp_" + str(cnt) + '.dat' #<<< NEW vs LOshifter : filename automatism
+
+
+
         fid = open(self.system_state["target_fn"], 'w')
         fid.close()
         if cnt == 0:
             system_state["accomp_label"] = False
+            #TODO REPLACE line for model:
+            self.m["accomp_label"] = False
         
         if cnt > 0:
             system_state["source_fn"] = system_state["temp_directory"] + "/temp_" + str(cnt-1) + '.dat' #<<< NEW vs LOshifter : filename automatism
+            #TODO REPLACE line for model:
+            self.m["source_fn"] = self.m["temp_directory"] + "/temp_" + str(cnt-1) + '.dat' #<<< NEW vs LOshifter : filename automatism
+
         print(f'res_scheduler: targetfilename: {system_state["target_fn"]}')
         print(f'res_scheduler: sourcefilename: {system_state["source_fn"]}')
         if cnt > 1:
@@ -1149,13 +1210,21 @@ class resample_c(QObject):
 
         if sch[cnt]["blinkstate"]:
             system_state["res_blinkstate"] = True
+            #TODO REPLACE line for model:
+            self.m["res_blinkstate"] = True
         else:
             system_state["res_blinkstate"] = False
+            #TODO REPLACE line for model:
+            self.m["res_blinkstate"] = False
+            
         system_state["r_sch_counter"] += 1
-
+        #TODO REPLACE line for model:
+        self.m["r_sch_counter"] += 1
         if sch[cnt]["action"].find('terminate') == 0:
             print("res_scheduler:  start termination")
             system_state["r_sch_counter"] = 0 #terminate schedule, reset counter
+            #TODO REPLACE line for model:
+            self.m["r_sch_counter"] = 0 #terminate schedule, reset counter
             self.sys_state.set_status(system_state)
             gui.ui.label_36.setStyleSheet("background-color: lightgray") #TODO: shift to a resample.view method, treat in a different manner
             gui.ui.label_36.setFont(QFont('arial',12)) #TODO: shift to a resample.view method, treat in a different manner
@@ -1189,7 +1258,9 @@ class resample_c(QObject):
         #The inactivation of the rest should be done by core.view
             return
 
-        system_state["last_system_time"] = time.time()    
+        system_state["last_system_time"] = time.time()
+        #TODO REPLACE line for model:
+        self.m["last_system_time"] = time.time()
         self.sys_state.set_status(system_state)
 
         if sch[cnt]["action"].find('resample') == 0:
@@ -1230,6 +1301,8 @@ class resample_c(QObject):
 
         system_state = self.sys_state.get_status()
         system_state["r_sch_counter"] = 0
+        #TODO REPLACE line for model:
+        self.m["r_sch_counter"] = 0
         target_SR = system_state["target_SR"] 
         target_LO = system_state["target_LO"]
         schedule = []
@@ -1279,6 +1352,8 @@ class resample_c(QObject):
         schedule.append(sch3)
 
         system_state["res_schedule"] = schedule
+        #TODO REPLACE line for model:        
+        self.m["res_schedule"] = schedule
         self.sys_state.set_status(system_state)
 
     def schedule_B(self):
@@ -1296,6 +1371,8 @@ class resample_c(QObject):
 
         system_state = self.sys_state.get_status()
         system_state["r_sch_counter"] = 0
+        #TODO REPLACE line for model:        
+        self.m["r_sch_counter"] = 0
         target_SR = system_state["target_SR"] 
         target_LO = system_state["target_LO"]
         schedule = []
@@ -1357,6 +1434,8 @@ class resample_c(QObject):
         schedule.append(sch3)
 
         system_state["res_schedule"] = schedule
+        #TODO REPLACE line for model:        
+        self.m["res_schedule"] = schedule
         self.sys_state.set_status(system_state)
 
     def schedule_B24(self):
@@ -1374,6 +1453,8 @@ class resample_c(QObject):
 
         system_state = self.sys_state.get_status()
         system_state["r_sch_counter"] = 0
+        #TODO REPLACE line for model:        
+        self.m["r_sch_counter"] = 0
         target_SR = system_state["target_SR"] 
         target_LO = system_state["target_LO"]
         schedule = []
@@ -1449,6 +1530,8 @@ class resample_c(QObject):
         sch3["wFormatTag"] = 1 #source formattag
         schedule.append(sch3)
         system_state["res_schedule"] = schedule
+        #TODO REPLACE line for model:        
+        self.m["res_schedule"] = schedule
         self.sys_state.set_status(system_state)
 
 
@@ -1474,6 +1557,8 @@ class resample_v(QObject):
         self.sys_state = gui_state
         system_state = self.sys_state.get_status()
         system_state["reslistdoubleemit_ix"] = False
+        #TODO REPLACE line for model:        
+        self.m["reslistdoubleemit_ix"] = False
         self.gui = system_state["gui_reference"]
         self.gui.ui.listWidget_playlist_2.itemClicked.connect(self.reslist_itemselected) #TODO transfer to resemplar view
         self.gui.ui.listWidget_playlist_2.itemChanged.connect(self.reslist_update)
@@ -1549,6 +1634,8 @@ class resample_v(QObject):
             #playlist.append(lw.item(x))
             reslist.append(item.text())
         system_state["reslist"] = reslist
+        #TODO REPLACE line for model:        
+        self.m["reslist"] = reslist
         self.sys_state.set_status(system_state)
 
         #system_state["reslistdoubleemit_ix"] = False
@@ -1576,6 +1663,12 @@ class resample_v(QObject):
         system_state["reslist_stoptime1"] = wavheader1['stoptime_dt']
         system_state["reslist_starttime2"] = wavheader2['starttime_dt']
         system_state["reslist_stoptime2"] = wavheader2['stoptime_dt']
+        #TODO REPLACE line for model:        
+        self.m["reslist_starttime1"] = wavheader1['starttime_dt']
+        self.m["reslist_stoptime1"] = wavheader1['stoptime_dt']
+        self.m["reslist_starttime2"] = wavheader2['starttime_dt']
+        self.m["reslist_stoptime2"] = wavheader2['stoptime_dt']
+
 
         self.gui.ui.timeEdit_resample_startcut.setDateTime(wavheader1['starttime_dt'])
         self.gui.ui.timeEdit_resample_stopcut.setDateTime(wavheader2['stoptime_dt'])
@@ -1776,6 +1869,8 @@ class resample_v(QObject):
         current_time = time.time()  
         if current_time - system_state["last_system_time"] >= 1:
             system_state["last_system_time"] = current_time
+            #TODO REPLACE line for model:
+            self.m["last_system_time"] = current_time
             blink_free = True
 
         if system_state["progress_source"].find('normal') > -1:  #TODO: solve double function in better datacommunication structure
@@ -1800,6 +1895,8 @@ class resample_v(QObject):
             else:
                 gui.ui.label_36.setStyleSheet("background-color: orange")
             system_state["res_blinkstate"] = not system_state["res_blinkstate"]
+            #TODO REPLACE line for model:
+            self.m["res_blinkstate"] = not system_state["res_blinkstate"]
         self.sys_state.set_status(system_state)
 
     def update_resample_GUI(self): #wurde ins resampler-Modul verschoben
@@ -1866,12 +1963,18 @@ class resample_v(QObject):
         stopcut = self.gui.ui.timeEdit_resample_stopcut.dateTime().toPyDateTime()
 
         system_state["stop_trim_duration"] = (stopcut - system_state["reslist_starttime2"])
+        #TODO REPLACE line for model:
+        self.m["stop_trim_duration"] = (stopcut - self.m["reslist_starttime2"])
         if system_state["starttrim"] and system_state["stoptrim"]:
             system_state["stop_trim_reduced_duration"] = (stopcut - startcut)
+            #TODO REPLACE line for model:
+            self.m["stop_trim_reduced_duration"] = (stopcut - startcut)
             #TODO: rename, can be confuse with system_state["starttrim"]
         system_state["start_trim"] = (startcut - system_state["reslist_starttime1"])
         system_state["starttime_after_trim"] = startcut
-
+        #TODO REPLACE line for model:
+        self.m["start_trim"] = (startcut - self.m["reslist_starttime1"])
+        self.m["starttime_after_trim"] = startcut
 
         if startcut > system_state["reslist_stoptime1"]:
             return(False, f'start cut time must be less than {system_state["reslist_stoptime1"]}')
@@ -1993,6 +2096,9 @@ class resample_v(QObject):
             #system_state["resampling_gain"] = 0
         else:
             system_state["resampling_gain"] = 0
+            #TODO REPLACE line for model:
+            self.m["resampling_gain"] = 0
+
             self.gui.ui.lineEdit_resample_Gain.setText("0") #TODO: --> self.gui
             self.sys_state.set_status(system_state)
 
@@ -2023,6 +2129,8 @@ class resample_v(QObject):
             #TARGET_LO = self.gui.wavheader['centerfreq']
             return False
         system_state["resampling_gain"] = fgain
+        #TODO REPLACE line for model:
+        self.m["resampling_gain"] = fgain
         self.sys_state.set_status(system_state)
         self.gui.plot_spectrum(self,0) #TODO: --> self.gui
 
@@ -2040,6 +2148,8 @@ class resample_v(QObject):
             reslist.append(self.gui.my_dirname + '/' + item.text()) #TODO: --> self.gui
         print(f"cb_split2G_Button {reslist}")
         system_state["mergeprefix"] = "/temp_split_"
+        #TODO REPLACE line for model:
+        self.m["mergeprefix"] = "/temp_split_"
         #TODO_create separate out directory
         #system_state["out_dirname"] = system_state["out_dirname"] + "_split"
         if len(reslist) == 0:
@@ -2050,6 +2160,9 @@ class resample_v(QObject):
             return False
 
         system_state["t_wavheader"] = WAVheader_tools.get_sdruno_header(self,reslist[0])
+        #TODO REPLACE line for model:
+        self.m["t_wavheader"] = WAVheader_tools.get_sdruno_header(self,reslist[0])
+
         #TODO: trage hier die Startzeit vom Cuttingstart ein
         #TODO: beim merge only sollten aber dann die start/stoptime Felder inaktiv sein
         self.gui.ui.timeEdit_resample_stopcut.setEnabled(False)
@@ -2060,6 +2173,14 @@ class resample_v(QObject):
         system_state["res_blinkstate"] = True
         system_state["merge2G_deleteoriginal"] = False
         system_state["merge2G_gainenable"] = True
+        #TODO REPLACE line for model:
+        self.m["starttime_after_trim"] = self.m["t_wavheader"]["starttime_dt"]
+        self.m["last_system_time"] = time.time()    
+        self.m["res_blinkstate"] = True
+        self.m["merge2G_deleteoriginal"] = False
+        self.m["merge2G_gainenable"] = True
+
+
         self.sys_state.set_status(system_state)
         #self.resample_c.merge2G_files(reslist) #TODO: remove/restore tests: 17-01-2024
         #TODO: check new worker based implementation
@@ -2085,18 +2206,27 @@ class resample_v(QObject):
         self.gui.ui.pushButton_resample_GainOnly.setEnabled(False)
         self.enable_resamp_GUI_elemets(False)
         system_state = self.sys_state.get_status()
-        if system_state["emergency_stop"] is True:
-            system_state["emergency_stop"] = False
+        #TODO: intermediate solution for getting system state to local resampler_model:
+        self.m = system_state
+        if self.m["emergency_stop"] is True:
+            self.m["emergency_stop"] = False
             print("emergency stop in cb_resample")
             system_state["reslist_ix"] = 0
+            #TODO REPLACE line for model:
+            self.m["reslist_ix"] = 0
+
             print("resamle list has been terminated, reset counter and exit event loop,, start 2GB file merging")
             self.gui.ui.listWidget_playlist_2.clear()
             self.gui.ui.listWidget_sourcelist_2.clear()
             time.sleep(0.1)
             system_state["fileopened"] = False
+            #TODO REPLACE line for model:
+            self.m["fileopened"] = False
             self.gui.ui.listWidget_playlist_2.itemChanged.connect(resample_v.reslist_update)
             self.gui.SigGUIReset.emit()
             system_state["list_out_files_resampled"] = []
+            #TODO REPLACE line for model:
+            self.m["list_out_files_resampled"] = []
             self.sys_state.set_status(system_state)
             return False
 
@@ -2116,6 +2246,9 @@ class resample_v(QObject):
         
         if system_state["emergency_stop"]:
             system_state["emergency_stop"] = False
+            #TODO REPLACE line for model:
+            self.m["emergency_stop"] = False
+            
             self. sys_state.set_status(system_state)
             self.gui.ui.listWidget_playlist_2.itemChanged.connect(resample_v.reslist_update)
             return False
@@ -2125,6 +2258,8 @@ class resample_v(QObject):
         #self.ui.pushButton_resample_cancel.clicked.connect(lambda: self.cancel_resamp())
 
         system_state["mergeprefix"] = "/temp_resized_"
+        #TODO REPLACE line for model:
+        self.m["mergeprefix"] = "/temp_resized_"
         schedule_objdict = {}
         schedule_objdict["signal"] = {}
         schedule_objdict["signal"]["resample"] = resample_c.SigResample
@@ -2139,6 +2274,9 @@ class resample_v(QObject):
         schedule_objdict["signal"]["cancel"] = resample_v.SigCancel
         system_state["schedule_objdict"] = schedule_objdict
         system_state["r_sch_counter"] = 0
+        #TODO REPLACE line for model:
+        self.m["schedule_objdict"] = schedule_objdict
+        self.m["r_sch_counter"] = 0
         target_SR = self.ui.comboBox_resample_targetSR.currentText()
         try:
             target_LO = float(self.ui.lineEdit_resample_targetLO.text())
@@ -2150,6 +2288,13 @@ class resample_v(QObject):
         system_state["target_LO"] = target_LO
         system_state["starttrim"] = False
         system_state["stoptrim"] = False
+        #TODO REPLACE line for model:
+        self.m["target_SR"] = target_SR
+        self.m["target_LO"] = target_LO
+        self.m["starttrim"] = False
+        self.m["stoptrim"] = False
+
+
         #ENTRY POINT LOOP f listbox: only event-triggered via signals !
         reslist_len = self.ui.listWidget_playlist_2.count()
         if reslist_len > 0:
@@ -2161,50 +2306,65 @@ class resample_v(QObject):
                 item.setBackground(QtGui.QColor("lightgreen"))  #TODO: shift to resampler view
                 #TODO: entrypoint f cutstop, cutstart:
                 #(1) cut first file: copy from fseek (cutstart) to cutstop
-                system_state["f1"] = self.my_dirname + '/' + item.text()#TODO replace by line below:
-                resample_m.mdl["f1"] = self.my_dirname + '/' + item.text()
+                system_state["f1"] = self.my_dirname + '/' + item.text()
+                #TODO REPLACE by line below:
+                self.m["f1"] = self.my_dirname + '/' + item.text()
                 print(f'cb_resample: file: {system_state["f1"]}')
                 self.wavheader = WAVheader_tools.get_sdruno_header(self,system_state["f1"])
                 self.showfilename()
                 # TODO: check for cutting information
                 if system_state["reslist_ix"] == 0:
                     system_state["starttrim"] = True
+                    #TODO REPLACE line for model:
+                    self.m["starttrim"] = True
                     _valid,errortext = resample_v.getCuttime()
                 if system_state["reslist_ix"] == reslist_len-1:
                     system_state["stoptrim"] = True
+                    #TODO REPLACE line for model:
+                    self.m["stoptrim"] = True
                     _valid,errortext = resample_v.getCuttime()
         #TODO: check must be done wrt complementary ime (stop, start) of the same file, in a list they are different --> wavheadr info important
             else:
                 system_state["reslist_ix"] = 0
+                #TODO REPLACE line for model:
+                self.m["reslist_ix"] = 0
                 print("resamle list has been terminated, reset counter and exit event loop,, start 2GB file merging")
                 time.sleep(0.1)
                 if self.ui.checkBox_AutoMerge2G.isChecked():
                     if not system_state["emergency_stop"]:
                         system_state["merge2G_deleteoriginal"] = True
                         system_state["merge2G_gainenable"] = False
-                        sys_state.set_status(system_state)
+                        #TODO REPLACE line for model:
+                        self.m["merge2G_deleteoriginal"] = True
+                        self.m["merge2G_gainenable"] = False
+                        self.sys_state.set_status(system_state)
                         #resample_c.merge2G_files(system_state["list_out_files_resampled"]) #TODO: remove/restore tests: 17-01-2024
                         #TODO: check new worker based implementation
                         resample_c.merge2G_new(system_state["list_out_files_resampled"])
                 resample_v.enable_resamp_GUI_elemets(True)
                 system_state["fileopened"] = False
+                #TODO REPLACE line for model:
+                self.m["fileopened"] = False
                 self.ui.listWidget_playlist_2.itemChanged.connect(resample_v.reslist_update)
                 self.SigGUIReset.emit()
                 system_state["list_out_files_resampled"] = []
-                sys_state.set_status(system_state)
+                #TODO REPLACE line for model:
+                self.m["list_out_files_resampled"] = []
+                self.sys_state.set_status(system_state)
                 #resample_c.SigTerminate_Finished.disconnect(self.cb_resample_new)
                 return
         else:
             wsys.WIZ_auxiliaries.standard_errorbox("No files to be resampled have been selected; please drag items to the 'selected file' area")
-            sys_state.set_status(system_state)
+            self.sys_state.set_status(system_state)
             self.ui.listWidget_playlist_2.itemChanged.connect(resample_v.reslist_update)
             resample_v.enable_resamp_GUI_elemets(True)
             return False
         system_state["reslist_ix"] += 1
-
+        #TODO: REPLACE line for model:
+        self.m["reslist_ix"] += 1
         if not(self.wavheader['wFormatTag'] in [1,3]): #TODO:future system state
             wsys.WIZ_auxiliaries.standard_errorbox("wFormatTag is neither 1 nor 3; unsupported Format, this file cannot be processed")
-            sys_state.set_status(system_state)
+            self.sys_state.set_status(system_state)
             return False
 
         SDRUno_suffix = str(self.wavheader['starttime_dt'])
@@ -2221,7 +2381,15 @@ class resample_v(QObject):
         system_state["s_wavheader"] = self.wavheader  #TODO: define im scheduler ?
         system_state["source_fn"] = system_state["f1"] #TODO: define im scheduler ?
         system_state["target_fn"] = targetfilename #TODO: obsolete ? define im scheduler ?
-        sys_state.set_status(system_state)
+        #TODO: REPLACE line for model:
+        self.m["tLO"] = target_LO*1000 #TODO: define im scheduler ??
+        self.m["fshift"] = self.wavheader["centerfreq"] - self.m["tLO"]
+        self.m["tSR"] = float(target_SR)*1000 # tSR #TODO: define im scheduler ??
+        self.m["s_wavheader"] = self.wavheader  #TODO: define im scheduler ?
+        self.m["source_fn"] = self.m["f1"] #TODO: define im scheduler ?
+        self.m["target_fn"] = targetfilename #TODO: obsolete ? define im scheduler ?
+
+        self.sys_state.set_status(system_state)
 
         #TODO: Abfragen, ob genug Speicherplatz für temp und Zielfiles
         if self.wavheader['sdrtype_chckID'].find('auxi') == -1:
@@ -2254,11 +2422,18 @@ class resample_v(QObject):
             print("generate schedule for simple resampling")
 
         new_name = system_state["out_dirname"] + '/' + self.my_filename +'_resamp_' + str(SDRUno_suffix) + '_' + str(int(system_state["tLO"]/1000)) + 'kHz.wav'
-        system_state = sys_state.get_status()
+        system_state = self.sys_state.get_status()
         system_state["new_name"] = new_name
         system_state["list_out_files_resampled"].append(new_name)
         system_state["res_blinkstate"] = True
-        sys_state.set_status(system_state)
+        #TODO: REPLACE line for model:
+        system_state = self.sys_state.get_status()
+        self.m["new_name"] = new_name
+        self.m["list_out_files_resampled"].append(new_name)
+        self.m["res_blinkstate"] = True
+
+
+        self.sys_state.set_status(system_state)
         time.sleep(0.001)
  
         resample_c.Sigincrscheduler.connect(resample_c.res_scheduler)
