@@ -68,6 +68,7 @@ import system_module as wsys
 import resampler_module_v5 as rsmp
 #import resampler_module_v4 as rsmp
 import view_spectra as vsp
+import yaml_editor as yed
 from stemlab_control import StemlabControl
 from playrec import playrec_worker
 
@@ -78,7 +79,6 @@ class statlst_gen_worker(QtCore.QThread):
     SigFinished = pyqtSignal()
 
     def __init__(self, host_window):
-
         super(statlst_gen_worker, self).__init__()
         self.host = host_window
         self.__slots__[2] = []
@@ -228,7 +228,6 @@ class statlst_gen_worker(QtCore.QThread):
         time.sleep(0.001)
         self.SigFinished.emit()
 
-
 class autoscan_worker(QtCore.QThread):
     """[Summary] TODO
 
@@ -251,7 +250,6 @@ class autoscan_worker(QtCore.QThread):
     SigPlotdata = pyqtSignal()
 
     def __init__(self, host_window):
-
         super(autoscan_worker, self).__init__()
         self.host = host_window
         self.locs_union = []
@@ -487,7 +485,6 @@ class timer_worker(QObject):
 
 class WizardGUI(QMainWindow):
 
-    #signals
     SigToolbar = pyqtSignal()
     SigUpdateGUI = pyqtSignal()
     SigGP = pyqtSignal()
@@ -502,7 +499,6 @@ class WizardGUI(QMainWindow):
         print("Initializing GUI, please wait....")
 
         self.TEST = True    # Test Mode Flag for testing the App, --> playloop  ##NOT USED #TODO:future system status
-        #self.DATA_FILEEXTENSION = ["dat","wav",'raw'] #TODO:Remove, seems not to be used anywhere
         self.CURTIMEINCREMENT = 5 # für playloop >>, << TODO: shift to playrec module once it exists
         self.DATABLOCKSIZE = 1024*32 # für diverse Filereader/writer TODO: occurs in plot spectrum and ANN_Spectrum; must be shifted to the respective modules in future
         self.DELTAF = 5000 #minimum peak distance in Hz for peak detector #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
@@ -535,7 +531,7 @@ class WizardGUI(QMainWindow):
         self.position = 0 #TODO:future system state URGENT !!!!!!!!!!!!!!
         self.tab_dict = {}
 
-        self_tablist = ["View_Spectra","Annotate","Player","YAML_editor","WAV_header","Resample"]
+        #self_tablist = ["View_Spectra","Annotate","Player","YAML_editor","WAV_header","Resample"]
         self.GUIupdaterlist =[]
         # create method which inactivates all tabs except the one which is passed as keyword
         self.GUI_reset_status()
@@ -555,14 +551,22 @@ class WizardGUI(QMainWindow):
         self.SigGUIReset.connect(self.reset_GUI)
         self.ui.pushButton_resample_GainOnly.setEnabled(False)
         self.SigSyncTabs.connect(self.sync_tabs)
+
         ### END UI MASTER ####################################
 
 
         ### UI TAB RESAMPLER #################################### TODO: redefine in resampler module ? but then resample_v must already be instantiated !
-        self.init_resample_Tab()
+        ######## "OLD" #### REMOVE AFTER CHANGE
+        if "resampler_module_v5" in sys.modules:
+            pass
+        else:
+            self.init_resample_Tab()
         self.ui.radioButton_resgain.setChecked(False)
         self.ui.tabWidget.setCurrentIndex(1) #TODO: avoid magic number, unidentified
         self.ui.label_8.setEnabled(False)  #Unidentified
+        ############ END UI TAb RESAMPLER ##################################
+
+
         #sys_state.set_status(system_state)
         ### UI TAB WAVHEADER ####################################
         self.ui.pushButton_InsertHeader.setEnabled(False)
@@ -639,7 +643,6 @@ class WizardGUI(QMainWindow):
         self.ui.ScrollBar_playtime.setEnabled(False)
         self.ui.listWidget_playlist.model().rowsInserted.connect(lambda: self.playlist_update()) #TODO transfer to resemplar view
         self.ui.listWidget_playlist.model().rowsRemoved.connect(lambda: self.playlist_update()) #TODO transfer to resemplar view
-
 
         ###END UI TAB PLAYER ####################################
 
@@ -741,10 +744,7 @@ class WizardGUI(QMainWindow):
         #self.ui.horizontalScrollBar_view_spectra.sliderReleased.connect(self.cb_plot_spectrum)
         #self.ui.horizontalScrollBar_view_spectra.sliderReleased.connect(view_spectra_v.plot_spectrum)
         #self.ui.verticalSlider_Gain.sliderReleased.connect(self.cb_setgain)
-        # if system_state["OLD"]:
-        #     self.ui.horizontalScrollBar_view_spectra.sliderReleased.connect(self.cb_plot_spectrum)
-        #     self.ui.radioButton_plotraw.clicked.connect(self.cb_plot_spectrum)
-        # else:
+
         self.ui.horizontalScrollBar_view_spectra.sliderReleased.connect(self.cb_plot_spectrum)
         self.ui.radioButton_plotraw.clicked.connect(self.cb_plot_spectrum)
         #self.ui.horizontalScrollBar_view_spectra.actionTriggered.connect(self.cb_plot_spectrum)
@@ -754,6 +754,7 @@ class WizardGUI(QMainWindow):
         self.ui.tableWidget_3.setEnabled(False)
         ###END UI TAB SPECTRUM ####################################
 
+###########################   REMOVE ###################################
 
     def init_resample_Tab(self):
         """
@@ -772,7 +773,6 @@ class WizardGUI(QMainWindow):
         self.ui.pushButton_resample_resample.clicked.connect(self.cb_Butt_resample)
         self.ui.comboBox_resample_targetSR.setCurrentIndex(5)
         self.ui.comboBox_resample_targetSR.currentIndexChanged.connect(lambda: resample_v.plot_spectrum_resample(self.position)) #TODO:future system state
-        
         self.ui.lineEdit_resample_targetLO.textChanged.connect(lambda: resample_v.plot_spectrum_resample(self.position))
         self.ui.radioButton_advanced_sampling.clicked.connect(lambda: resample_v.toggle_advanced_sampling())
         self.ui.radioButton_resgain.clicked.connect(lambda: resample_v.toggle_gain())
@@ -780,16 +780,16 @@ class WizardGUI(QMainWindow):
         self.ui.lineEdit_resample_targetLO.textEdited.connect(lambda: self.reformat_targetLOpalette)
         self.ui.lineEdit_resample_Gain.textChanged.connect(lambda: resample_v.read_gain())
         #self.ui.lineEdit_resample_Gain.textChanged.connect(resample_v.read_gain)
-
         self.ui.lineEdit_resample_Gain.setText("0")
         self.ui.lineEdit_resample_Gain.setEnabled(True)
         self.ui.radioButton_resgain.setEnabled(True)
         self.ui.checkBox_writelog.clicked.connect(self.togglelogmodus)
 
-        
+###########################   END REMOVE ###################################
+
     def togglelogmodus(self):
         """
-        VIEW
+        ?? general core method ??
         set modus of stdout to either file or console
         :param: npne
         :type: none
@@ -805,16 +805,15 @@ class WizardGUI(QMainWindow):
             sys.stdout = self.orig_stdout
         pass
 
-
     def closeEvent(self, event):
         sys.stdout = self.orig_stdout
         self.logfile.close()
         self.deleteLater() 
 
+############## CORE VIEW METHOD #################
     def GUI_reset_status(self):
         #system_state = sys_state.get_status()
         system_state = {}
-
         system_state["annotation_prefix"] = 'ANN_' #TODO: not used anywhere
         system_state["resampling_gain"] = 0
         system_state["emergency_stop"] = False
@@ -840,6 +839,7 @@ class WizardGUI(QMainWindow):
         system_state["stoptrim"] = False
         sys_state.set_status(system_state)
 
+##############################  RESAMPLE MODULE, REMOVE ###########################
     def GUI_reset_after_resamp(self): #TODO: check if all that can also be done in a more central reset method
 
         self.reset_GUI()
@@ -864,14 +864,15 @@ class WizardGUI(QMainWindow):
             #TODO: REPLACE BY FOLLOWING:
             resp = self.sync_tabs(["view_spectra","win","u","position",self.position])
             view_spectra_v.SigUpdateGUI.emit("ext_update")
-        ###################################################
         self.ui.timeEdit_resample_stopcut.setEnabled(False)
         self.ui.timeEdit_resample_startcut.setEnabled(False)
         resample_v.update_resample_GUI()
 
+##############################  RESAMPLE MODULE, END REMOVE ###########################
+
     def generate_canvas(self,dummy,gridref,gridc,gridt,Tabref):
         """
-        VIEW
+        --> VIEW or auxiliary
         initialize central Tab management dictionary Tabref
         :param: gridref
         :type: ui.gridLayout_# object from GUI, e.g. self.ui.gridLayout_4 given by QT-designer
@@ -900,6 +901,8 @@ class WizardGUI(QMainWindow):
         Tabref["ax"].plot([], [])
         Tabref["canvas"].draw()
 
+##############################  RESAMPLE MODULE, REMOVE ###########################
+        
     def init_Tabref(self): #TODO:future system state
         """
         UNKLAR: Definition einer Referenztabelle für das Ansprechen verschiedener TABs und insb CANVAS-Zuweisung
@@ -931,6 +934,7 @@ class WizardGUI(QMainWindow):
         #TODO: change 10-12-2023: since GUI10: self.generate_canvas(self,self.ui.gridLayout_5,[10,0,1,5],[-1,-1,-1,-1],self.Tabref["Resample"])
         self.generate_canvas(self,self.ui.gridLayout_5,[6,0,6,4],[-1,-1,-1,-1],self.Tabref["Resample"])
 
+
     def inactivate_tabs(self,selection):
         """
         VIEW
@@ -960,6 +964,36 @@ class WizardGUI(QMainWindow):
             self.ui.tab_1.setEnabled(False)
         if "Resample" in selection:            
             self.ui.tab_resample.setEnabled(False)
+
+            
+    def activate_tabs(self,selection):
+        """
+        VIEW
+        TODO: zentrale self.Tabref-Struktur für die Eintragung Tab-Definitionen dieser Art verwenden und auf diese zugreifen
+        TODO. Tab-Namen anpassen
+        activates selected tabs
+        :param selection: list of strings, possible: ["Player","View_Spectra","Annotate","Resampler","YAML_editor","WAV_header"]
+        :type selection: list of strings, selection by list of strings which refer to the individual tabs
+        ...
+        :raises [ErrorType]: none
+        ...
+        :return: none
+        :rtype: none
+        """
+        if "Player" in selection:
+            self.ui.tab.setEnabled(True)
+        if "View_Spectra" in selection:
+            self.ui.tab_3.setEnabled(True)
+        if "Annotate" in selection:
+            self.ui.tab_4.setEnabled(True)
+        if "YAML_editor" in selection:
+            self.ui.tab_5.setEnabled(True)
+        if "WAV_header" in selection:            
+            self.ui.tab_1.setEnabled(True)
+        if "Resample" in selection:            
+            self.ui.tab_resample.setEnabled(True)
+
+##############################  RESAMPLE MODULE, END REMOVE ###########################
 
     def setactivity_tabs(self,caller,statuschange,exceptionlist):
         """
@@ -997,34 +1031,6 @@ class WizardGUI(QMainWindow):
         #        self.tabWidget.setCurrentIndex(i)
 
         #TODO: shift action to respective tab machine by: currix = self.ui.tabWidget.currentIndex() self.ui.tabWidget.tabText(currix)
-
-    def activate_tabs(self,selection):
-        """
-        VIEW
-        TODO: zentrale self.Tabref-Struktur für die Eintragung Tab-Definitionen dieser Art verwenden und auf diese zugreifen
-        TODO. Tab-Namen anpassen
-        activates selected tabs
-        :param selection: list of strings, possible: ["Player","View_Spectra","Annotate","Resampler","YAML_editor","WAV_header"]
-        :type selection: list of strings, selection by list of strings which refer to the individual tabs
-        ...
-        :raises [ErrorType]: none
-        ...
-        :return: none
-        :rtype: none
-        """
-        if "Player" in selection:
-            self.ui.tab.setEnabled(True)
-        if "View_Spectra" in selection:
-            self.ui.tab_3.setEnabled(True)
-        if "Annotate" in selection:
-            self.ui.tab_4.setEnabled(True)
-        if "YAML_editor" in selection:
-            self.ui.tab_5.setEnabled(True)
-        if "WAV_header" in selection:            
-            self.ui.tab_1.setEnabled(True)
-        if "Resample" in selection:            
-            self.ui.tab_resample.setEnabled(True)
-
 
     def reset_GUI(self):
         """
@@ -1672,6 +1678,8 @@ class WizardGUI(QMainWindow):
                     "}")
         sys_state.set_status(system_state)
 
+    ######################## REPLACE BY INDIVIDUAL GUI updaters #############################
+
     def showfilename(self):
         """_updates the name of currenly loaded data file in all instances of filename labels_
         :param : none if old system, args[0] = string with filename to be displayed 
@@ -1699,7 +1707,7 @@ class WizardGUI(QMainWindow):
             # each tab-view method on startup enters a reference to its own GUI update method into a list
             # TabsUpdateGui_reflist
             # on startup the core main program connects SigTabsUpdateGUIs to all references in this list
-
+######################## END REPLACE BY INDIVIDUAL GUI updaters #############################
 
     def EOF_manager(self):
         """_target of SigFinished from playloop. If signal is received, a decision is made whether 
@@ -1980,26 +1988,129 @@ class WizardGUI(QMainWindow):
         self.curtime = total_seconds
         self.timechanged = True
 
+    def reset_LO_bias(self):
+
+        system_state = sys_state.get_status()
+        self.ui.radioButton_LO_bias.setChecked(False)
+        self.ui.radioButton_LO_bias.setEnabled(True)
+        system_state["LO_offset"] = 0
+        sys_state.set_status(system_state)
+        self.ui.lineEdit_LO_bias.setText("0")
+        self.ui.lineEdit_LO_bias.setStyleSheet("background-color: white")
+
+
+    def update_LO_bias(self):
+        """ Purpose: update LO bias setting; 
+        check validity of offset value: isnumeric, integer
+        :param [ParamName]: none
+        :type [ParamName]: none
+        :raises none
+        :return: True if successful, otherwise False
+        :rtype: Boolean
+        """
+        system_state = sys_state.get_status()
+
+        if self.playthreadActive:
+            sys_state.set_status(system_state)
+            return False
+        
+        LObiasraw = self.ui.lineEdit_LO_bias.text().lstrip(" ")
+        if len(LObiasraw) < 1:
+            sys_state.set_status(system_state)
+            return False
+        LObias_sign = 1
+        if LObiasraw[0] == "-":
+            LObias_sign = -1
+            LObias_test = LObiasraw.lstrip("-")
+            if len(LObias_test)<1:
+                sys_state.set_status(system_state)
+                return False
+        else:
+            LObias_test = LObiasraw
+        if LObias_test.isnumeric() == True: 
+            i_LO_bias = LObias_sign*int(LObias_test)
+        else:
+            auxi.standard_errorbox("invalid numeral in center frequency offset field, please enter valid integer value (kHz)")
+            self.reset_LO_bias()
+            sys_state.set_status(system_state)
+            return False
+        #transfer to systemstate
+        if self.ui.radioButton_LO_bias.isChecked() is True:
+            system_state["LO_offset"] = int(i_LO_bias*1000)
+            system_state["ifreq"] = int(self.wavheader['centerfreq'] + system_state["LO_offset"])
+            sys_state.set_status(system_state)
+        sys_state.set_status(system_state)
+        return True
+    
+
+    def LO_bias_checkbounds(self):
+        """ Purpose: checks if LO bias setting is within valid bounds; 
+        :param [ParamName]: none
+        :type [ParamName]: none
+        :raises none
+        :return: True if successful, otherwise False
+        :rtype: Boolean
+        """
+
+        system_state = sys_state.get_status()
+        eff_ifreq = system_state["LO_offset"] + system_state["ifreq"]
+        if not self.update_LO_bias():
+            sys_state.set_status(system_state)
+            return False                 
+        if (eff_ifreq <= 0):
+            auxi.standard_errorbox("invalid negative center frequency offset, magnitude greater than LO frequency of the record, please correct value")
+            self.reset_LO_bias()
+            self.cb_Butt_STOP()
+            sys_state.set_status(system_state)
+            return False
+        if (eff_ifreq > 60000000):
+            auxi.standard_errorbox("invalid  center frequency offset, sum of record LO and offset must be < 60000 kHz, please correct value")
+            self.reset_LO_bias()
+            self.cb_Butt_STOP()
+            sys_state.set_status(system_state)
+            return False
+        sys_state.set_status(system_state)
+        return True
+
+    def activate_LO_bias(self):
+        """ Purpose: handle radiobutton for LO bias setting; 
+        (1) highlight LO_lineEdit window
+        (2) call update of offset value
+        :param [ParamName]: none
+        :type [ParamName]: none
+        :raises none
+        :return: none
+        :rtype: none
+        """
+
+        # if self.ui.radioButton_LO_bias.isChecked() is True:
+        #     self.ui.lineEdit_LO_bias.setEnabled(True)
+        # else:
+        #     self.ui.lineEdit_LO_bias.setEnabled(False)
+        #     self.ui.lineEdit_LO_bias.setText("0000")
+
+        #i_LO_bias = 0 ###TODO: activate ???
+        self.ui.lineEdit_LO_bias.setStyleSheet("background-color: white")
+        #TODO: ACTIVATE LObias check code
+        if self.ui.radioButton_LO_bias.isChecked() is True:
+            self.ui.lineEdit_LO_bias.setStyleSheet("background-color: yellow")
+            self.update_LO_bias()
+
+
+
  
 ############################## END TAB PLAYER ####################################
 
-############################## TAB RESAMPLER ####################################
+############################## TAB RESAMPLER, REMOVE COMPLETELY ####################################
 
     def reformat_targetLOpalette(self): #TODO: check, if this stays part of gui or should be shifted to resampler module
         """
         VIEW Element of Tab 'resample
         """
         self.ui.lineEdit_resample_targetLO.setStyleSheet("background-color: bisque1")
-        #self.ui.lineEdit_resample_Gain.setText('hit ENTER key')
-
-    # def cancel_resamp(self):
-    #     system_state = sys_state.get_status()
-    #     print("cancel_resamp reached")
-    #     system_state["emergency_stop"] = True
-    #     sys_state.set_status(system_state)
-    #     self.ui.pushButton_resample_cancel.clicked.connect(lambda: rsmp.res_workers.soxworker_terminate(self))
 
     def cb_Butt_resample(self):
+        #REMOVE AFTER CHANGE TO NEW STRUCTURE ; call 
         #self.ui.listWidget_playlist_2.itemChanged.connect(resample_v.reslist_update) #dummy in order to prevent exceptions in case the signal is already disconnevted
         system_state = sys_state.get_status()
         try:
@@ -2012,6 +2123,8 @@ class WizardGUI(QMainWindow):
         else:
             resample_v.cb_resample()
         self.ui.radioButton_advanced_sampling.setChecked(False)
+
+        ################################################## REMOVE FROM HERE ###########################
 
     def cb_resample_new(self):
         """_summary_
@@ -2272,113 +2385,7 @@ class WizardGUI(QMainWindow):
         self.ui.lineEdit_resample_targetnameprefix.setEnabled(True) #TODO: shift to resampler view
         #TODO TODO: Lade letztes resampelte File ins generelle GUI
 
-    def reset_LO_bias(self):
-
-        system_state = sys_state.get_status()
-        self.ui.radioButton_LO_bias.setChecked(False)
-        self.ui.radioButton_LO_bias.setEnabled(True)
-        system_state["LO_offset"] = 0
-        sys_state.set_status(system_state)
-        self.ui.lineEdit_LO_bias.setText("0")
-        self.ui.lineEdit_LO_bias.setStyleSheet("background-color: white")
-
-
-    def update_LO_bias(self):
-        """ Purpose: update LO bias setting; 
-        check validity of offset value: isnumeric, integer
-        :param [ParamName]: none
-        :type [ParamName]: none
-        :raises none
-        :return: True if successful, otherwise False
-        :rtype: Boolean
-        """
-        system_state = sys_state.get_status()
-
-        if self.playthreadActive:
-            sys_state.set_status(system_state)
-            return False
-        
-        LObiasraw = self.ui.lineEdit_LO_bias.text().lstrip(" ")
-        if len(LObiasraw) < 1:
-            sys_state.set_status(system_state)
-            return False
-        LObias_sign = 1
-        if LObiasraw[0] == "-":
-            LObias_sign = -1
-            LObias_test = LObiasraw.lstrip("-")
-            if len(LObias_test)<1:
-                sys_state.set_status(system_state)
-                return False
-        else:
-            LObias_test = LObiasraw
-        if LObias_test.isnumeric() == True: 
-            i_LO_bias = LObias_sign*int(LObias_test)
-        else:
-            auxi.standard_errorbox("invalid numeral in center frequency offset field, please enter valid integer value (kHz)")
-            self.reset_LO_bias()
-            sys_state.set_status(system_state)
-            return False
-        #transfer to systemstate
-        if self.ui.radioButton_LO_bias.isChecked() is True:
-            system_state["LO_offset"] = int(i_LO_bias*1000)
-            system_state["ifreq"] = int(self.wavheader['centerfreq'] + system_state["LO_offset"])
-            sys_state.set_status(system_state)
-        sys_state.set_status(system_state)
-        return True
-    
-
-    def LO_bias_checkbounds(self):
-        """ Purpose: checks if LO bias setting is within valid bounds; 
-        :param [ParamName]: none
-        :type [ParamName]: none
-        :raises none
-        :return: True if successful, otherwise False
-        :rtype: Boolean
-        """
-
-        system_state = sys_state.get_status()
-        eff_ifreq = system_state["LO_offset"] + system_state["ifreq"]
-        if not self.update_LO_bias():
-            sys_state.set_status(system_state)
-            return False                 
-        if (eff_ifreq <= 0):
-            auxi.standard_errorbox("invalid negative center frequency offset, magnitude greater than LO frequency of the record, please correct value")
-            self.reset_LO_bias()
-            self.cb_Butt_STOP()
-            sys_state.set_status(system_state)
-            return False
-        if (eff_ifreq > 60000000):
-            auxi.standard_errorbox("invalid  center frequency offset, sum of record LO and offset must be < 60000 kHz, please correct value")
-            self.reset_LO_bias()
-            self.cb_Butt_STOP()
-            sys_state.set_status(system_state)
-            return False
-        sys_state.set_status(system_state)
-        return True
-
-    def activate_LO_bias(self):
-        """ Purpose: handle radiobutton for LO bias setting; 
-        (1) highlight LO_lineEdit window
-        (2) call update of offset value
-        :param [ParamName]: none
-        :type [ParamName]: none
-        :raises none
-        :return: none
-        :rtype: none
-        """
-
-        # if self.ui.radioButton_LO_bias.isChecked() is True:
-        #     self.ui.lineEdit_LO_bias.setEnabled(True)
-        # else:
-        #     self.ui.lineEdit_LO_bias.setEnabled(False)
-        #     self.ui.lineEdit_LO_bias.setText("0000")
-
-        #i_LO_bias = 0 ###TODO: activate ???
-        self.ui.lineEdit_LO_bias.setStyleSheet("background-color: white")
-        #TODO: ACTIVATE LObias check code
-        if self.ui.radioButton_LO_bias.isChecked() is True:
-            self.ui.lineEdit_LO_bias.setStyleSheet("background-color: yellow")
-            self.update_LO_bias()
+        ################################################## REMOVE END ###########################
 
         
 ############################## END TAB RESAMPLER ####################################
@@ -3235,6 +3242,7 @@ class WizardGUI(QMainWindow):
 
 ############################## TAB SPECTRUM ####################################
 
+##################### REMOVE, s OBSOLETE ###########################
     def plot_spectrum(self,dummy,position):
         """
         VIEW
@@ -3328,7 +3336,8 @@ class WizardGUI(QMainWindow):
         sys_state.set_status(system_state)
 
         return(True)
-    
+    ##################### REMOVE, s OBSOLETE ###########################
+
     def setkernelwidth(self):               #This is a view_spectra_v method
         self.FILTERKERNEL = self.ui.spinBoxKernelwidth.value()
         self.plot_spectrum(self,self.position)
@@ -3984,6 +3993,7 @@ class WizardGUI(QMainWindow):
         CONTROLLER
         
         """
+        #TODO TODO TODO: check if the selfs must be selfs !
         self.annotationpath = self.my_dirname + '/' + self.annotationdir_prefix + self.my_filename
         self.stations_filename = self.annotationpath + '/stations_list.yaml'
         self.status_filename = self.annotationpath + '/status.yaml'
@@ -3992,6 +4002,12 @@ class WizardGUI(QMainWindow):
         self.cohiradia_yamlheader_filename = self.annotationpath + '/cohiradia_metadata_header.yaml'
         self.cohiradia_yamltailer_filename = self.annotationpath + '/cohiradia_metadata_tailer.yaml'
         self.cohiradia_yamlfinal_filename = self.annotationpath + '/COHI_YAML_FINAL.yaml'
+        system_state = sys_state.get_status()
+        if not system_state["OLD"]:
+            resp = self.sync_tabs(["yamleditor","win","u","cohiradia_yamlheader_filename",self.cohiradia_yamlheader_filename])
+            resp = self.sync_tabs(["yamleditor","win","u","cohiradia_yamltailer_filename",self.cohiradia_yamltailer_filename])
+            resp = self.sync_tabs(["yamleditor","win","u","cohiradia_yamlfinal_filename",self.cohiradia_yamlfinal_filename])
+            resp = self.sync_tabs(["yamleditor","win","u","cohiradia_metadata_filename",self.cohiradia_metadata_filename])
 
     def resread_playlist(self): #TODO: not yet used
         """
@@ -4450,21 +4466,26 @@ if __name__ == '__main__':
     #OLD = False
     system_state = sys_state.get_status()
     if system_state["OLD"]:
-        resample_m = rsmp.resample_m(win.ui)
-        resample_c = rsmp.resample_c(sys_state,resample_m) #TODO: replace sys_state
+        resample_m = rsmp.resample_m()
+        resample_c = rsmp.resample_c(resample_m) #TODO: replace sys_state
         resample_v = rsmp.resample_v(sys_state,resample_c, resample_m) #TODO: replace sys_state neu ab 16-02-2023
-        view_spectra_m = vsp.view_spectra_m(win.ui)
-        view_spectra_c = vsp.view_spectra_c(win.ui,view_spectra_m)
+        view_spectra_m = vsp.view_spectra_m()
+        view_spectra_c = vsp.view_spectra_c(view_spectra_m)
         view_spectra_v = vsp.view_spectra_v(win.ui,view_spectra_c,view_spectra_m)
     else:
         resample_m = rsmp.resample_m() #TODO: wird gui in _m jemals gebraucht ? ich denke nein !
-        resample_c = rsmp.resample_c(sys_state,resample_m) #TODO: replace sys_state
+        resample_c = rsmp.resample_c(resample_m) #TODO: replace sys_state
         resample_v = rsmp.resample_v(win.ui,resample_c, resample_m) #TODO: replace sys_state
         #resample_v.SigDisplaySpectrum.connect(win.plot_spectrum) #TODO: include in sync tabs
 
         view_spectra_m = vsp.view_spectra_m()
-        view_spectra_c = vsp.view_spectra_c(win.ui,view_spectra_m)
+        view_spectra_c = vsp.view_spectra_c(view_spectra_m)
         view_spectra_v = vsp.view_spectra_v(win.ui,view_spectra_c,view_spectra_m)
+
+        yamleditor_m = yed.yamleditor_m()
+        yamleditor_c = yed.yamleditor_c(yamleditor_m)
+        yamleditor_v = yed.yamleditor_v(win.ui,yamleditor_c,yamleditor_m)
+
 
         resample_v.SigDisplaySpectrum.connect(view_spectra_v.plot_spectrum)
         resample_v.SigSyncTabs.connect(win.sync_tabs)
@@ -4487,7 +4508,7 @@ if __name__ == '__main__':
     # tab_dict["resample"]["c"] = resample_c     
     # tab_dict["resample"]["v"] = resample_v
     #tab_list = ["resample","view_spectra"]
-    tab_dict["list"] = ["resample","view_spectra"]
+    tab_dict["list"] = ["resample","view_spectra","yamleditor"]
     for tabitem in tab_dict["list"]:     
         tab_dict[tabitem + "_m"] = eval(tabitem + "_m") #resample_m     
         tab_dict[tabitem + "_c"] = eval(tabitem + "_c") #resample_c     

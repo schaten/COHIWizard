@@ -1,9 +1,9 @@
-from PyQt5.QtCore import *
 """
 Created on Feb 24 2024
 
 #@author: scharfetter_admin
 """
+from PyQt5.QtCore import *
 #from pickle import FALSE, TRUE #intrinsic
 import time
 #from datetime import timedelta

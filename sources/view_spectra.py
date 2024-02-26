@@ -32,7 +32,7 @@ class view_spectra_c(QObject):
     SigCancel = pyqtSignal()
     #SigDisplaySpectrum = pyqtSignal(object,object)
 
-    def __init__(self, gui, view_spectra_m):
+    def __init__(self, view_spectra_m):
         super().__init__()
 
     # def __init__(self, *args, **kwargs): #TEST 09-01-2024

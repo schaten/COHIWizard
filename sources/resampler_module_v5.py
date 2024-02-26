@@ -597,7 +597,7 @@ class resample_c(QObject):
     SigConnectExternalMethods = pyqtSignal(str)
 
     #TODO: replace all gui by respective state references if appropriate
-    def __init__(self, gui_state,resample_m):
+    def __init__(self, resample_m):
         super().__init__()
         self.m = resample_m.mdl
         print(f'__init__ resampler: {self.m["sample"]}')
@@ -1496,7 +1496,13 @@ class resample_v(QObject):
         self.m["res_blinkstate"] = False
         self.m["emergency_stop"] = False
         self.m["blinking"] = False
+        self.m["position"] = 0
         self.gui = gui #gui_state["gui_reference"]#system_state["gui_reference"]
+
+        self.init_resample_Tab() #TODO TODO TODO: activate after tests
+
+        self.gui.radioButton_resgain.setChecked(False)
+        self.gui.label_8.setEnabled(False)  #TODO: maybe remove, Unidentified
         self.gui.pushButton_resample_cancel.clicked.connect(self.resample_c.cancel_resampling) #TODO: shift to a resample.view method
         self.resample_c.SigDisconnectExternalMethods.connect(self.ext_meth_disconnect)
         self.resample_c.SigConnectExternalMethods.connect(self.ext_meth_connect)
@@ -1539,6 +1545,50 @@ class resample_v(QObject):
         schedule_objdict["signal"]["cancel"] = self.SigCancel
         self.m["schedule_objdict"] = schedule_objdict
         self.updateGUIelements()
+
+    def init_resample_Tab(self):
+        """
+        Resampler VIEW initialization
+        initializes all GUI elements of the Tab resampler
+        TODO: all references are still 'self', check !
+        :param: npne
+        :type: none
+        :raises: none
+        ...
+        :return: none
+        :rtype: none
+        """
+        self.gui.timeEdit_resample_stopcut.setEnabled(False)
+        self.gui.timeEdit_resample_startcut.setEnabled(False)
+        self.gui.pushButton_resample_resample.clicked.connect(self.cb_Butt_resample)
+        self.gui.comboBox_resample_targetSR.setCurrentIndex(5)
+        self.gui.comboBox_resample_targetSR.currentIndexChanged.connect(lambda: self.plot_spectrum_resample(self.m["position"]))
+        self.gui.lineEdit_resample_targetLO.textChanged.connect(lambda: self.plot_spectrum_resample(self.m["position"]))
+        self.gui.radioButton_advanced_sampling.clicked.connect(lambda: self.toggle_advanced_sampling())
+        self.gui.radioButton_resgain.clicked.connect(lambda: self.toggle_gain())
+        self.gui.lineEdit_resample_targetLO.textChanged.connect(lambda: self.reformat_targetLOpalette)
+        self.gui.lineEdit_resample_targetLO.textEdited.connect(lambda: self.reformat_targetLOpalette)
+        self.gui.lineEdit_resample_Gain.textChanged.connect(lambda: self.read_gain())
+        #self.gui.lineEdit_resample_Gain.textChanged.connect(resample_v.read_gain)
+        self.gui.lineEdit_resample_Gain.setText("0")
+        self.gui.lineEdit_resample_Gain.setEnabled(True)
+        self.gui.radioButton_resgain.setEnabled(True)
+        #self.gui.checkBox_writelog.clicked.connect(self.togglelogmodus) #TODO TODO TODO: logfilemodus anders implementieren
+
+
+    def reformat_targetLOpalette(self): #TODO: check, if this stays part of gui or should be shifted to resampler module
+        """
+        VIEW Element of Tab 'resample
+        """
+        self.ui.lineEdit_resample_targetLO.setStyleSheet("background-color: bisque1")
+
+    def cb_Butt_resample(self):
+        try:
+            self.ui.listWidget_playlist_2.itemChanged.disconnect(self.reslist_update)
+        except:
+            pass
+        self.cb_resample()
+        self.gui.radioButton_advanced_sampling.setChecked(False)
 
     def ext_meth_disconnect(self,ctrl):
         if ctrl.find("cancel_resampling"):
