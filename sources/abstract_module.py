@@ -54,6 +54,33 @@ class abstract_module_v(QObject):
         self.DATABLOCKSIZE = 1024*32
         self.gui = gui #gui_state["gui_reference"]#system_state["gui_reference"]
 
+    def init_abstractmodule_ui(self):
+
+        #self.gui.GUIMETHOD.connect(self.related_method) #EXAMPLE
+        pass
+
+
+    def rxhandler(self,_key,_value):
+        """
+        handles remote calls from other modules via Signal SigRX(_key,_value)
+        :param : _key
+        :type : str
+        :param : _value
+        :type : object
+        :raises [ErrorType]: [ErrorDescription]
+        :return: none
+        :rtype: none
+        """
+        if _key.find("cm_abstract_module") == 0 or _key.find("cm_all_") == 0:
+            #set mdl-value
+            self.m[_value[0]] = _value[1]
+        if _key.find("cui_abstract_module") == 0:
+            _value[0](_value[1]) #STILL UNCLEAR
+        if _key.find("cexex_abstract_module") == 0:
+            #handle method
+            # if  _value[0].find("plot_spectrum") == 0: #EXAMPLE
+            #     self.plot_spectrum(0,_value[1])   #EXAMPLE
+
     def updateGUIelements(self):
         """
         updates GUI elements , usually triggered by a Signal SigTabsUpdateGUIs to which 

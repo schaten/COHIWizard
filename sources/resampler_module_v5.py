@@ -1464,11 +1464,11 @@ class resample_v(QObject):
     SigAny = pyqtSignal()
     SigUpdateList = pyqtSignal()
     SigCancel = pyqtSignal()
-    SigDisplaySpectrum = pyqtSignal(object,object)
     SigUpdateGUI = pyqtSignal(object)
     SigSyncTabs = pyqtSignal(object)
     SigActivateOtherTabs = pyqtSignal(str,str,object)
     SigUpdateOtherGUIs = pyqtSignal()
+    SigRelay = pyqtSignal(str,object)
 
     def __init__(self, gui, resample_c, resample_m):
         super().__init__()
@@ -1499,7 +1499,7 @@ class resample_v(QObject):
         self.m["position"] = 0
         self.gui = gui #gui_state["gui_reference"]#system_state["gui_reference"]
 
-        self.init_resample_Tab() #TODO TODO TODO: activate after tests
+        self.init_resample_ui() #TODO TODO TODO: activate after tests
 
         self.gui.radioButton_resgain.setChecked(False)
         self.gui.label_8.setEnabled(False)  #TODO: maybe remove, Unidentified
@@ -1546,7 +1546,7 @@ class resample_v(QObject):
         self.m["schedule_objdict"] = schedule_objdict
         self.updateGUIelements()
 
-    def init_resample_Tab(self):
+    def init_resample_ui(self):
         """
         Resampler VIEW initialization
         initializes all GUI elements of the Tab resampler
@@ -1574,6 +1574,27 @@ class resample_v(QObject):
         self.gui.lineEdit_resample_Gain.setEnabled(True)
         self.gui.radioButton_resgain.setEnabled(True)
         #self.gui.checkBox_writelog.clicked.connect(self.togglelogmodus) #TODO TODO TODO: logfilemodus anders implementieren
+
+    def rxhandler(self,_key,_value):
+        """
+        handles remote calls from other modules via Signal SigRX(_key,_value)
+        :param : _key
+        :type : str
+        :param : _value
+        :type : object
+        :raises [ErrorType]: [ErrorDescription]
+        :return: flag False or True, False on unsuccessful execution
+        :rtype: Boolean
+        """
+        if _key.find("cm_resample") == 0 or _key.find("cm_all_") == 0:
+            #set mdl-value
+            self.m[_value[0]] = _value[1]
+        if _key.find("cui_resample") == 0:
+            _value[0](_value[1])   #TODO TODO: still unclear implementation
+        if _key.find("cexex_resample") == 0:
+            # if  _value[0].find("plot_spectrum") == 0:
+            #     self.plot_spectrum(0,_value[1])
+            pass    
 
 
     def reformat_targetLOpalette(self): #TODO: check, if this stays part of gui or should be shifted to resampler module
@@ -2221,13 +2242,16 @@ class resample_v(QObject):
             #TARGET_LO = self.m["wavheader"]['centerfreq']
             return False
         self.m["resampling_gain"] = fgain
-        ctrlist = ["view_spectra", "resample", "u", "resampling_gain", fgain]
-        self.SigSyncTabs.emit(ctrlist)
+        #ctrlist = ["view_spectra", "resample", "u", "resampling_gain", fgain]
+        #self.SigSyncTabs.emit(ctrlist)
+        self.SigRelay.emit("cm_view_spectra",["resampling_gain",fgain])   ####################RELAY PATTERN############
         #self.sys_state.set_status(system_state)
         #self.gui.plot_spectrum(self,0) #TODO: --> self.gui
-        self.SigDisplaySpectrum.emit(self,0)
-        #print("emit SigDisplaySpectrum with 1 argument")
-        #self.SigDisplaySpectrum.emit(0,0)
+        #self.SigRelay.emit(self,0)
+        self.SigRelay.emit("cexex_view_spectra",["plot_spectrum",0])      ####################RELAY PATTERN############
+        
+        #print("emit SigRelay with 1 argument")
+        #self.SigRelay.emit(0,0)
 
         #TODO: Gain wird nicht nachgezogen: core Methode die Gain nachzieht !
         #TODO: alternativ: Gain wird als neuer Parameter bei plot spectrum eingeführt

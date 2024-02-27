@@ -53,6 +53,8 @@ class view_spectra_v(QObject):
     SigUpdateGUI = pyqtSignal(object)
     SigSyncGUIUpdatelist = pyqtSignal(object)
     SigUpdateOtherGUIs = pyqtSignal()
+    SigRX = pyqtSignal(str,object)
+    SigRelay = pyqtSignal(str,object)
 
     def __init__(self, gui, view_spectra_c, view_spectra_m):
         super().__init__()
@@ -69,9 +71,52 @@ class view_spectra_v(QObject):
         self.m["stoptrim"] = False
         self.gui = gui #gui_state["gui_reference"]#system_state["gui_reference"]
         self.SigUpdateGUI.connect(self.update_GUI)
+        self.SigRX.connect(self.rxhandler)
+        self.init_view_spectra_ui()
+
+    def init_view_spectra_ui(self):
+    #     ### UI TAB SPECTRUM ####################################
+    #     #system_state = sys_state.get_status() 
+    #     self.gui.spinBoxminPeakwidth.valueChanged.connect(self.minPeakwidthupdate)
+    #     self.gui.spinBoxminPeakDistance.valueChanged.connect(self.minPeakDistanceupdate)
+        self.gui.spinBoxminSNR_ScannerTab.valueChanged.connect(self.minSNRupdate_ScannerTab)
+    #     self.gui.spinBoxKernelwidth.valueChanged.connect(self.setkernelwidth)
+    #     self.gui.spinBoxKernelwidth.setEnabled(False)
+    #     self.gui.spinBoxKernelwidth.setProperty("value", 15) #TODO: avoid magic number
+    #     self.gui.spinBoxminBaselineoffset.setProperty("value", 0)
+    #     self.Baselineoffset = self.gui.spinBoxminBaselineoffset.value()
+    #     self.gui.spinBoxminBaselineoffset.valueChanged.connect(self.set_baselineoffset)
+
+    #     self.gui.horizontalScrollBar_view_spectra.sliderReleased.connect(self.cb_plot_spectrum)
+    #     self.gui.radioButton_plotraw.clicked.connect(self.cb_plot_spectrum)
+    #     #self.SigToolbar.connect(lambda: self.plot_spectrum(self,self.position))
+    #     self.gui.spinBoxNumScan.setProperty("value", 10) #TODO: avoid magic number
+    #     self.gui.spinBoxminBaselineoffset.setProperty("value", 0) #TODO: avoid magic number
+    #     self.gui.tableWidget_3.setEnabled(False)
+
 
     # def connector(self):
     #     self.SigSyncGUIUpdatelist.emit(self.updateGUIelements)
+
+    def rxhandler(self,_key,_value):
+        """
+        handles remote calls from other modules via Signal SigRX(_key,_value)
+        :param : _key
+        :type : str
+        :param : _value
+        :type : object
+        :raises [ErrorType]: [ErrorDescription]
+        :return: flag False or True, False on unsuccessful execution
+        :rtype: Boolean
+        """
+        if _key.find("cm_view_spectra") == 0 or _key.find("cm_all_") == 0:
+            #set mdl-value
+            self.m[_value[0]] = _value[1]
+        if _key.find("cui_view_spectra") == 0:
+            _value[0](_value[1])    #TODO TODO: still unclear implementation
+        if _key.find("cexex_view_spectra") == 0:
+            if  _value[0].find("plot_spectrum") == 0:
+                self.plot_spectrum(0,_value[1])        
 
     def updateGUIelements(self):
         """
@@ -103,12 +148,32 @@ class view_spectra_v(QObject):
         time.sleep(0.1)
         self.SigUpdateGUI.connect(self.update_GUI)
 
+    def minSNRupdate_ScannerTab(self):
+        self.m["prominence"] = self.gui.spinBoxminSNR_ScannerTab.value()
+        print("minSNRupdate_ScannerTab new mode")
+        #das ist ein externer Zugriff
+        self.SigRelay.emit("cui_annotate",[self.gui.spinBoxminSNR.setProperty,["value",self.m["prominence"]]]) 
+        self.gui.spinBoxminSNR.setProperty("value", self.m["prominence"]) #TODO TODO TODO: remove after relocation of annotator and activate line above
+        self.m["position"] = self.gui.horizontalScrollBar_view_spectra.value()
+        #self.plot_spectrum(self,self.position)
+        #system_state = sys_state.get_status()
+        self.SigRelay.emit("cm_all_",["horzscal", self.m["position"]])
+        self.SigRelay.emit("cm_all_",["prominence", self.m["prominence"]])
+        #resp = self.SigSyncTabs.emit(["resample", "win", "a", "horzscal", self.position])
+        #resp = self.sync_tabs(["dum","win","a","prominence",self.PROMINENCE])
+        #TODO: REPLACE BY FOLLOWING:
+        #resp = self.sync_tabs(["view_spectra","win","u","position",self.position])
+        #self.SigUpdateGUI.emit("ext_update")
+
 
     def plot_spectrum(self,dummy,position):
         """
-        assign a plot window and a toolbar to the tab 'scanner'
-        :param : none
+        plot a segment at position 'position' of the spectrum or raw data from file f1. posiion is a fraction of the filesize between 0 and 1
+        The filepath f1 must be set as self.m["f1 before in another module (typically core)
+        :param : dummy
         :type : none
+        :param : position
+        :type : float
         :raises [ErrorType]: [ErrorDescription]
         :return: flag False or True, False on unsuccessful execution
         :rtype: Boolean
