@@ -4113,7 +4113,7 @@ if __name__ == '__main__':
         #resample_v.SigRelay.connect(view_spectra_v.plot_spectrum)
         resample_v.SigRelay.connect(view_spectra_v.rxhandler)
         view_spectra_v.SigRelay.connect(view_spectra_v.rxhandler)
-        
+
         resample_v.SigSyncTabs.connect(win.sync_tabs)
         resample_c.SigSyncTabs.connect(win.sync_tabs)
         #view_spectra_v.SigUpdateGUI.connect(view_spectra_v.update_GUI)
@@ -4165,3 +4165,32 @@ if __name__ == '__main__':
     print(f"initial sync success = {resp}")
 
     sys.exit(app.exec_())
+
+
+#TODOs:
+    #
+    # * automatischer Relay-connector in core anstelle von sync_tabs: 30min
+    #
+    # * alle resp = sync_tabs- Manöver durch Relay-Mechanismus ersetzen: 50 min
+    #
+    # * alle ui-Handler im viev_spectra von core ins Modul transferieren: 1,5h
+    # 
+    # * wav-header editor Modul erstellen: 5h
+    #
+    # * yaml-Editor-Modul erstellen: 5h
+    #
+    # * Player-Modul übertragen: 10h
+    #
+    # + Player Modul um Rec ausbauen: 5h
+    #
+    # * Annotator Modul übertragen: 20 h
+    #
+    # * // \\ Problem lösen: 2h
+    #
+    # * Core-Modul umstellen: 3h
+    #
+    # * Tabs von nicht importierten Modulen deaktivieren/blinden: 30min
+    #
+    # * eval-Befehl bei Kompilation testen: 30 min
+    #
+    # * Windows Installer mit https://www.pythonguis.com/tutorials/packaging-pyside6-applications-windows-pyinstaller-installforge/ erstellen
