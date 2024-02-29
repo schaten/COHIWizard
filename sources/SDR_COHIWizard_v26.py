@@ -37,7 +37,7 @@ import datetime as ndatetime
 from datetime import datetime
 #from datetime import timedelta
 #from socket import socket, AF_INET, SOCK_STREAM
-#from struct import pack, unpack
+from struct import pack, unpack
 import numpy as np
 #from PyQt5.QtCore import QTimer
 from PyQt5 import QtWidgets, QtCore, QtGui
@@ -58,6 +58,7 @@ import shutil
 #import soundfile as sf
 #from soundfile import SEEK_SET, SEEK_CUR, SEEK_END
 import yaml
+import logging
 from COHIWizard_GUI_v10 import Ui_MainWindow as MyWizard
 #from SDR_wavheadertools_v2 import WAVheader_tools
 from auxiliaries import WAVheader_tools
@@ -211,7 +212,8 @@ class statlst_gen_worker(QtCore.QThread):
                 self.mutex.unlock()
                 time.sleep(0.001)
         except:
-            print("annotation file not yet existent")
+            #print("annotation file not yet existent")
+            logging.info("annotation file not yet existent")
             return False
 
         status = {}
@@ -481,8 +483,9 @@ class timer_worker(QObject):
     def stoptick(self):
         self.SigFinished.emit()        
 
-class WizardGUI(QMainWindow):
 
+class WizardGUI(QMainWindow):
+    #TODO: make this the core_view method
     SigToolbar = pyqtSignal()
     SigUpdateGUI = pyqtSignal()
     SigGP = pyqtSignal()
@@ -491,6 +494,7 @@ class WizardGUI(QMainWindow):
     SigEOFStart = pyqtSignal()
     SigSyncTabs = pyqtSignal(object)
     SigUpdateOtherGUIs = pyqtSignal()
+    SigRelay = pyqtSignal(str,object)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -527,6 +531,8 @@ class WizardGUI(QMainWindow):
         self.timechanged=False #TODO:future system state
         self.position = 0 #TODO:future system state URGENT !!!!!!!!!!!!!!
         self.tab_dict = {}
+
+        logging.basicConfig(filename='system_log.log', filemode='a', format='%(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
         self.GUIupdaterlist =[]
         # create method which inactivates all tabs except the one which is passed as keyword
@@ -638,6 +644,7 @@ class WizardGUI(QMainWindow):
                 self.ui.lineEdit_IPAddress.setText(self.metadata["STM_IP_address"])
         except:
             #return False
+
             print("cannot get metadata")
 
         system_state = sys_state.get_status()    
@@ -743,6 +750,8 @@ class WizardGUI(QMainWindow):
 ############## CORE VIEW METHOD #################
     def GUI_reset_status(self):
         system_state = {}
+        system_state["my_filename"] = ""
+        system_state["ext"] = ""
         system_state["annotation_prefix"] = 'ANN_' #TODO: not used anywhere
         system_state["resampling_gain"] = 0
         system_state["emergency_stop"] = False
@@ -777,7 +786,8 @@ class WizardGUI(QMainWindow):
         system_state["irate"] = self.wavheader['nSamplesPerSec'] #TODO replace ?? by systemvar
         self.fill_wavtable()
         system_state["fileopened"] = True
-        resp = self.sync_tabs(["dum","win","a","fileopened",True])
+        #resp = self.sync_tabs(["dum","win","a","fileopened",True]) #TODO: remove after tests
+        self.SigRelay.emit("cm_all_",["fileopened", True])
         self.position = self.ui.horizontalScrollBar_view_spectra.value()
         self.lock_playthreadstart = True #TODO: necessary ?
         self.lock_playthreadstart = False #TODO: necessary ?
@@ -787,8 +797,10 @@ class WizardGUI(QMainWindow):
         system_state = sys_state.get_status()
         if not system_state["OLD"]:
             #TODO: REPLACE BY FOLLOWING:
-            resp = self.sync_tabs(["view_spectra","win","u","position",self.position])
-            view_spectra_v.SigUpdateGUI.emit("ext_update")
+            # resp = self.sync_tabs(["view_spectra","win","u","position",self.position]) #TODO Remove after Tests Relay
+            # view_spectra_v.SigUpdateGUI.emit("ext_update") # TODO Remove after Tests Relay
+            self.SigRelay.emit("cm_view_spectra",["position",self.position])
+            self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
         self.ui.timeEdit_resample_stopcut.setEnabled(False)
         self.ui.timeEdit_resample_startcut.setEnabled(False)
         resample_v.update_resample_GUI()
@@ -1024,7 +1036,8 @@ class WizardGUI(QMainWindow):
             stream.close()
         except:
             #return False
-            print("cannot get metadata")
+            #print("cannot get metadata")
+            logging.error("reset_gui: cannot get metadata")
         #self.open_template_flag = False
         try:
             stream = open(self.status_filename, "r")
@@ -1067,7 +1080,8 @@ class WizardGUI(QMainWindow):
         :return: none
         :rtype: none
         """
-        print("playlist updated")  
+        #print("playlist updated")  
+        logging.info("playlist_update: playlist updated")
         time.sleep(1)
         system_state = sys_state.get_status()
         #get all items of playlist Widget and write them to system_state["playlist"]
@@ -1260,7 +1274,8 @@ class WizardGUI(QMainWindow):
             stream.close()
         except:
             auxi.standard_errorbox("Cannot open Config File")
-            print("cannot get metadata")
+            logger.error("cannot get metadata")
+            #print("cannot get metadata")
         self.metadata["STM_IP_address"] = system_state["HostAddress"]
         stream = open("config_wizard.yaml", "w")
         yaml.dump(self.metadata, stream)
@@ -1402,7 +1417,8 @@ class WizardGUI(QMainWindow):
             system_state["fileopened"] = False ###CHECK
             #resample_m.mdl["fileopened"] = False
             resp = self.sync_tabs(["dum","win","a","fileopened",False])
-            sys_state.set_status(system_state)
+            self.SigRelay.emit("cm_all_",["fileopened",False])
+            sys_state.set_status(system_state) ####Remove after core full impl
             return
         if self.playthreadActive:
             self.playrec_tworker.stop_loop()
@@ -1427,7 +1443,8 @@ class WizardGUI(QMainWindow):
         self.activate_tabs(["View_Spectra","Annotate","Resample","YAML_editor","WAV_header"])
         system_state["fileopened"] = False ###CHECK
         #resample_m.mdl["fileopened"] = False
-        resp = self.sync_tabs(["dum","win","a","fileopened",False])
+        #resp = self.sync_tabs(["dum","win","a","fileopened",False]) # REMOVE after tests Relay
+        self.SigRelay.emit("cm_all_",["fileopened",False])
         self.ui.radioButton_LO_bias.setEnabled(True)
         self.ui.lineEdit_LO_bias.setEnabled(True)
         self.ui.ScrollBar_playtime.setEnabled(False)
@@ -1597,17 +1614,26 @@ class WizardGUI(QMainWindow):
         :return: none
         :rtype: none
         """ 
-        system_state = sys_state.get_status()
-        if system_state["OLD"]:
-            self.my_dirname = os.path.dirname(system_state["f1"])
-            self.my_filename, self.ext = os.path.splitext(os.path.basename(system_state["f1"]))
-            self.ui.label_Filename_Annotate.setText(self.my_filename + self.ext)
-            self.ui.label_Filename_ViewSpectra.setText(self.my_filename + self.ext)
-            self.ui.label_Filename_WAVHeader.setText(self.my_filename + self.ext)
-            self.ui.label_Filename_Player.setText(self.my_filename + self.ext)
-            self.ui.label_Filename_resample.setText(self.my_filename + self.ext)
-        else:
-            pass
+        #self.SigRelay.emit("cm_all_",["prominence",self.PROMINENCE])
+        self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
+        #TODO TODO TODO: remofe the following after change to all new modules and Relay
+        self.my_dirname = os.path.dirname(system_state["f1"])
+        self.my_filename, self.ext = os.path.splitext(os.path.basename(system_state["f1"]))
+        self.ui.label_Filename_Annotate.setText(self.my_filename + self.ext)
+        self.ui.label_Filename_WAVHeader.setText(self.my_filename + self.ext)
+        self.ui.label_Filename_Player.setText(self.my_filename + self.ext)
+        #system_state = sys_state.get_status()
+        # if system_state["OLD"]:
+        #     self.my_dirname = os.path.dirname(system_state["f1"])
+        #     self.my_filename, self.ext = os.path.splitext(os.path.basename(system_state["f1"]))
+        #     self.ui.label_Filename_Annotate.setText(self.my_filename + self.ext)
+        #     self.ui.label_Filename_ViewSpectra.setText(self.my_filename + self.ext)
+        #     self.ui.label_Filename_WAVHeader.setText(self.my_filename + self.ext)
+        #     self.ui.label_Filename_Player.setText(self.my_filename + self.ext)
+        #     self.ui.label_Filename_resample.setText(self.my_filename + self.ext)
+            
+        # else:
+        #     pass
             #self.my_filename = system_state["my_filename"]
             #self.ext = system_state["ext"]
             # send signal SigTabsUpdateGUIs
@@ -1638,7 +1664,8 @@ class WizardGUI(QMainWindow):
         time.sleep(0.1)
         prfilehandle.close()
         system_state["fileopened"] = False
-        resp = self.sync_tabs(["dum","win","a","fileopened",False])
+        #resp = self.sync_tabs(["dum","win","a","fileopened",False]) #remove after tests Relay
+        self.SigRelay.emit("cm_all_",["fileopened",False])
         if self.stopstate == True:
             print("EOF-manager: player has been stopped")
             time.sleep(0.5)
@@ -1651,18 +1678,21 @@ class WizardGUI(QMainWindow):
             #TODO: REPLACE line for model
             #resample_m.mdl["f1"]  = self.my_dirname + '/' + self.wavheader['nextfilename']
             #resample_m.mdl["my_filename"] = self.my_filename
-            resp = self.sync_tabs(["dum","win","a","f1",self.my_dirname + '/' + self.wavheader['nextfilename']])
-            resp = self.sync_tabs(["dum","win","a","my_filename",self.my_filename])
-
+            #resp = self.sync_tabs(["dum","win","a","f1",self.my_dirname + '/' + self.wavheader['nextfilename']])#remove after tests Relay
+            #resp = self.sync_tabs(["dum","win","a","my_filename",self.my_filename])#remove after tests Relay
+            self.SigRelay.emit("cm_all_",["f1",self.my_dirname + '/' + self.wavheader['nextfilename']])
+            self.SigRelay.emit("cm_all_",["my_filename",self.my_filename])
             self.wavheader = WAVheader_tools.get_sdruno_header(self,system_state["f1"])
             time.sleep(0.1)
             self.play_tstarter()
             time.sleep(0.1)
             system_state["fileopened"] = True
             #resample_m.mdl["fileopened"] = True
-            resp = self.sync_tabs(["dum","win","a","fileopened",True])
+            #resp = self.sync_tabs(["dum","win","a","fileopened",True]) #remove after tests Relay
+            self.SigRelay.emit("cm_all_",["fileopened",True])
             #TODO: self.my_filename + self.ext müssen updated werden, übernehmen aus open file
-            self.showfilename()
+            self.showfilename() #Remove after implementing all Modules Relay
+            self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
             self.updatecurtime(0) #TODO: true datetime from record
             print("fetch nextfile")
         elif self.ui.pushButton_Loop.isChecked() == True:
@@ -1674,7 +1704,8 @@ class WizardGUI(QMainWindow):
             print(f"playthread active: {self.playthreadActive}")
             system_state["fileopened"] = True
             #resample_m.mdl["fileopened"] = True
-            resp = self.sync_tabs(["dum","win","a","fileopened",True])
+            #resp = self.sync_tabs(["dum","win","a","fileopened",True]) #remove after tests Relay
+            self.SigRelay.emit("cm_all_",["fileopened",True])
             self.updatecurtime(0) #TODO: true datetime from record
         elif self.ui.listWidget_playlist.count() > 0:
             # filecheck_loop = True
@@ -1695,9 +1726,10 @@ class WizardGUI(QMainWindow):
                     system_state["f1"] = self.my_dirname + '/' + item.text() #TODO replace by line below
                     #resample_m.mdl["f1"] = self.my_dirname + '/' + item.text()
                     #resample_m.mdl["my_filename"] = self.my_filename
-                    resp = self.sync_tabs(["dum","win","a","f1",self.my_dirname + '/' + item.text()])
-                    resp = self.sync_tabs(["dum","win","a","my_filename",self.my_filename])
-
+                    #resp = self.sync_tabs(["dum","win","a","f1",self.my_dirname + '/' + item.text()]) #remove after tests Relay
+                    #resp = self.sync_tabs(["dum","win","a","my_filename",self.my_filename]) #remove after tests Relay
+                    self.SigRelay.emit("cm_all_",["f1",self.my_dirname + '/' + item.text()])
+                    self.SigRelay.emit("cm_all_",["my_filename",self.my_filename])
                     print(f'file: {system_state["f1"]}')
                     self.wavheader = WAVheader_tools.get_sdruno_header(self,system_state["f1"])
                     item_valid = True
@@ -1735,7 +1767,8 @@ class WizardGUI(QMainWindow):
                 self.play_manager()
                 system_state["fileopened"] = True
                 #resample_m.mdl["fileopened"] = True
-                resp = self.sync_tabs(["dum","win","a","fileopened",True])
+                #resp = self.sync_tabs(["dum","win","a","fileopened",True]) #remove after tests Relay
+                self.SigRelay.emit("cm_all_",["fileopened",True])
                 time.sleep(0.5) #TODO: necessary because otherwise file may not yet have been opened by playloopworker and then updatecurtime crashes because of invalid filehandel 
                 #may be solved by updatecurtime not accessing the filehandle returned from playworker but directly from system_state["f1"]
                 self.updatecurtime(0) #TODO: true datetime from record
@@ -2017,16 +2050,13 @@ class WizardGUI(QMainWindow):
     def cb_Butt_resample(self):
         #REMOVE AFTER CHANGE TO NEW STRUCTURE ; call 
         #self.ui.listWidget_playlist_2.itemChanged.connect(resample_v.reslist_update) #dummy in order to prevent exceptions in case the signal is already disconnevted
-        system_state = sys_state.get_status()
+        #system_state = sys_state.get_status()
         try:
             self.ui.listWidget_playlist_2.itemChanged.disconnect(resample_v.reslist_update)
         except:
             pass
-        #TODO: Remove once everything has been changed to new structure with models, resample_module_v5 etc.
-        if system_state["OLD"]:
-            self.cb_resample_new()
-        else:
-            resample_v.cb_resample()
+
+        resample_v.cb_resample()
         self.ui.radioButton_advanced_sampling.setChecked(False)
 
     
@@ -2130,10 +2160,13 @@ class WizardGUI(QMainWindow):
         self.ui.lineEdit.setFont(QFont('MS Shell Dlg 2', 12))
 
     def minSNRupdate(self):
+        """_summary_
+        VIEW of Annotator Module
+        """
         self.PROMINENCE = self.ui.spinBoxminSNR.value()
         self.ui.spinBoxminSNR_ScannerTab.setProperty("value", self.PROMINENCE)
-        if not system_state["OLD"]:
-            resp = self.sync_tabs(["dum","win","a","prominence",self.PROMINENCE])
+        self.SigRelay.emit("cm_all_",["prominence",self.PROMINENCE])
+        self.SigRelay.emit("cexex_view-spectrum",["updateGUIelements",0])
 
 
         #self.cb_plot_spectrum()
@@ -2217,18 +2250,22 @@ class WizardGUI(QMainWindow):
         #TODO: in dieser Form Obsolet, ersetzen !
         self.position = self.ui.horizontalScrollBar_view_spectra.value()
         #resp = self.sync_tabs(["resample","win","u","spectrum_position",self.position])
+        
         system_state = sys_state.get_status()
-        if system_state["OLD"]:
-            self.plot_spectrum(self,self.position)
-        else:
-            resp = self.sync_tabs(["view_spectra","win","u","position",self.position])
-            self.SigUpdateOtherGUIs.emit()
 
-        if not system_state["OLD"]:
-            #TODO: REPLACE BY FOLLOWING:
-            resp = self.sync_tabs(["resample","win","u","spectrum_position",self.position])
-            resp = self.sync_tabs(["view_spectra","win","u","position",self.position])
-            view_spectra_v.SigUpdateGUI.emit("ext_update")
+        #resp = self.sync_tabs(["view_spectra","win","u","position",self.position]) remove after tests Relay
+        self.SigRelay.emit("cm_view_spectra",["position",self.position])
+        #self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
+        self.SigUpdateOtherGUIs.emit() #check if still necessary after complete Relay and all Modules transferred
+
+        #TODO: REPLACE BY FOLLOWING:
+        #resp = self.sync_tabs(["resample","win","u","spectrum_position",self.position])
+        #resp = self.sync_tabs(["view_spectra","win","u","position",self.position])
+        #view_spectra_v.SigUpdateGUI.emit("ext_update")
+        self.SigRelay.emit("cm_resample",["spectrum_position",self.position])
+        self.SigRelay.emit("cm_view_spectra",["position",self.position])
+        self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
+            
         ###################################################
 
         self.oldposition = self.position #CHECK: NECESSARY ???
@@ -2974,84 +3011,65 @@ class WizardGUI(QMainWindow):
     ##################### REMOVE, s OBSOLETE ###########################
 
     def setkernelwidth(self):               #This is a view_spectra_v method
+        #system_state = sys_state.get_status()
         self.FILTERKERNEL = self.ui.spinBoxKernelwidth.value()
-        self.plot_spectrum(self,self.position)
-        system_state = sys_state.get_status()
-        if not system_state["OLD"]:
-            #TODO: REPLACE BY FOLLOWING:
-            #resp = self.SigSyncTabs.emit(["resample", "win", "u", "horzscal", self.position])
-            resp = self.sync_tabs(["dum","win","a","filterkernel",self.FILTERKERNEL])
-            resp = self.sync_tabs(["view_spectra","win","u","fileopened",False])
-            resp = self.sync_tabs(["view_spectra","win","u","position",self.position])
-            view_spectra_v.SigUpdateGUI.emit("ext_update")
+        #self.plot_spectrum(self,self.position)
+        #system_state = sys_state.get_status()
+        # resp = self.sync_tabs(["dum","win","a","filterkernel",self.FILTERKERNEL])
+        # resp = self.sync_tabs(["view_spectra","win","u","fileopened",False])# TODO: CHECK THIS IS STRANGE !
+        # resp = self.sync_tabs(["view_spectra","win","u","position",self.position])
+        self.SigRelay.emit("cm_all_",["filterkernel",self.FILTERKERNEL])
+        self.SigRelay.emit("cm_view_spectra",["fileopened",False])# TODO: CHECK THIS IS STRANGE !
+        self.SigRelay.emit("cm_view_spectra",["position",self.position])
+        self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
+            #view_spectra_v.SigUpdateGUI.emit("ext_update")
         ###################################################
-        # else:
-        #     self.plot_spectrum(self,self.position)
-
-    #REMOVE
-    # def minSNRupdate_ScannerTab(self):
-    #     print("old minSNRupdate_ScannerTab, still core")
-    #     self.PROMINENCE = self.ui.spinBoxminSNR_ScannerTab.value()
-    #     self.ui.spinBoxminSNR.setProperty("value", self.PROMINENCE)
-    #     self.position = self.ui.horizontalScrollBar_view_spectra.value()
-    #     #self.plot_spectrum(self,self.position)
-    #     system_state = sys_state.get_status()
-    #     if not system_state["OLD"]:
-    #         resp = self.SigSyncTabs.emit(["resample", "win", "a", "horzscal", self.position])
-    #         resp = self.sync_tabs(["dum","win","a","prominence",self.PROMINENCE])
-    #         #TODO: REPLACE BY FOLLOWING:
-    #         resp = self.sync_tabs(["view_spectra","win","u","position",self.position])
-    #         view_spectra_v.SigUpdateGUI.emit("ext_update")
-    #     ###################################################
-    #     else:
-    #         self.plot_spectrum(self,self.position)    
 
     def set_baselineoffset(self):        
         self.Baselineoffset = self.ui.spinBoxminBaselineoffset.value()
         self.ui.label_6.setText("Baseline Offset:" + str(self.ui.spinBoxminBaselineoffset.value()))
         self.position = self.ui.horizontalScrollBar_view_spectra.value()
         #self.plot_spectrum(self,self.position)
-        system_state = sys_state.get_status()
-        if not system_state["OLD"]:
-            #TODO: REPLACE BY FOLLOWING:
-            resp = self.SigSyncTabs.emit(["resample", "win", "a", "horzscal", self.position])
-            resp = self.sync_tabs(["dum","win","a","baselineoffset",self.Baselineoffset])
-            resp = self.sync_tabs(["view_spectra","win","u","position",self.position])
-            view_spectra_v.SigUpdateGUI.emit("ext_update")
+        #TODO: REPLACE BY FOLLOWING:
+        # resp = self.SigSyncTabs.emit(["resample", "win", "a", "horzscal", self.position])
+        # resp = self.sync_tabs(["dum","win","a","baselineoffset",self.Baselineoffset])
+        # resp = self.sync_tabs(["view_spectra","win","u","position",self.position])
+        # view_spectra_v.SigUpdateGUI.emit("ext_update")
+        self.SigRelay.emit("cm_all_",["horzscal", self.position])
+        self.SigRelay.emit("cm_all_",["baselineoffset",self.Baselineoffset])# TODO: CHECK THIS IS STRANGE !
+        self.SigRelay.emit("cm_view_spectra",["position",self.position])
+        self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
         ###################################################
-        else:
-            self.plot_spectrum(self,self.position)
+
     def minPeakwidthupdate(self):
         self.PEAKWIDTH = self.ui.spinBoxminPeakwidth.value()
         self.position = self.ui.horizontalScrollBar_view_spectra.value()
-        system_state = sys_state.get_status()
+        #system_state = sys_state.get_status()
         #self.plot_spectrum(self,self.position)
-        if not system_state["OLD"]:
-            #TODO: REPLACE BY FOLLOWING:
-            resp = self.sync_tabs(["dum","win","a","peakwidth",self.PEAKWIDTH])
-            resp = self.sync_tabs(["dum","win","a","deltaf",self.DELTAF])
-            resp = self.sync_tabs(["view_spectra","win","u","position",self.position])
-            view_spectra_v.SigUpdateGUI.emit("ext_update")
-        ###################################################  
-        else:
-            self.plot_spectrum(self,self.position)
- 
 
+            # resp = self.sync_tabs(["dum","win","a","peakwidth",self.PEAKWIDTH])
+            # resp = self.sync_tabs(["dum","win","a","deltaf",self.DELTAF])
+            # resp = self.sync_tabs(["view_spectra","win","u","position",self.position])
+            # view_spectra_v.SigUpdateGUI.emit("ext_update")
+        self.SigRelay.emit("cm_all_",["peakwidth",self.PEAKWIDTH])
+        self.SigRelay.emit("cm_all_",["deltaf",self.DELTAF])# TODO: CHECK THIS IS STRANGE !
+        self.SigRelay.emit("cm_view_spectra",["position",self.position])
+        self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
+ 
     def minPeakDistanceupdate(self):
         self.DELTAF = self.ui.spinBoxminPeakDistance.value()
         self.position = self.ui.horizontalScrollBar_view_spectra.value()
         #self.plot_spectrum(self,self.position)
-        system_state = sys_state.get_status()
-        if not system_state["OLD"]:
-            #TODO: REPLACE BY FOLLOWING:
-            self.SigSyncTabs.emit(["resample", "win", "a", "horzscal", self.position]) #TODO nötig ?
-            resp = self.sync_tabs(["dum","win","a","deltaf",self.DELTAF])
-            resp = self.sync_tabs(["view_spectra","win","u","position",self.position])
-            view_spectra_v.SigUpdateGUI.emit("ext_update")
+        #system_state = sys_state.get_status()
+            # self.SigSyncTabs.emit(["resample", "win", "a", "horzscal", self.position]) #TODO nötig ?
+            # resp = self.sync_tabs(["dum","win","a","deltaf",self.DELTAF])
+            # resp = self.sync_tabs(["view_spectra","win","u","position",self.position])
+            # view_spectra_v.SigUpdateGUI.emit("ext_update")
         ###################################################
-        else:
-            self.plot_spectrum(self,self.position)
-
+        self.SigRelay.emit("cm_all_",["horzscal", self.position])
+        self.SigRelay.emit("cm_all_",["deltaf",self.DELTAF])# TODO: CHECK THIS IS STRANGE !
+        self.SigRelay.emit("cm_view_spectra",["position",self.position])
+        self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
 
 ############################## END TAB SPECTRUM ####################################
 
@@ -3298,25 +3316,33 @@ class WizardGUI(QMainWindow):
             if self.yesno == "&Yes":
                 #self.fileHandle.close()
                 if self.FileOpen() is False:
-                    system_state["fileopened"] = False
+                    #system_state["fileopened"] = False
                     #resample_m.mdl["fileopened"] = False
-                    resp = self.sync_tabs(["dum","win","a","fileopened",False])
-                    sys_state.set_status(system_state)
+                    #resp = self.sync_tabs(["dum","win","a","fileopened",False]) #remove after change to Relay
+                    self.SigRelay.emit("cm_all_",["fileopened", False])
+                    #sys_state.set_status(system_state)
                     return False
+
         else:
             if self.FileOpen() is False:
-                system_state["fileopened"] = False
+                system_state["fileopened"] = False #CHECK: obsolete, because self.SigRelay.emit("cm_all_",["fileopened",False]) does the job
                 #resample_m.mdl["fileopened"] = False
-                resp = self.sync_tabs(["dum","win","a","fileopened",False])
+                #resp = self.sync_tabs(["dum","win","a","fileopened",False]) #remove after check Relay
+                self.SigRelay.emit("cm_all_",["fileopened",False])
+                #self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
                 sys_state.set_status(system_state)
                 return False
             else:
-                system_state["fileopened"] = True
+                system_state["fileopened"] = True #CHECK: obsolete, because self.SigRelay.emit("cm_all_",["fileopened",False]) does the job
                 #resample_m.mdl["fileopened"] = True
-                resp = self.sync_tabs(["dum","win","a","fileopened",True])
+                #resp = self.sync_tabs(["dum","win","a","fileopened",True]) #remove after check Relay
+                self.SigRelay.emit("cm_all_",["fileopened",True])
+                #self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
                 #print("system_state["fileopened"] called")
-                sys_state.set_status(system_state)
+                #sys_state.set_status(system_state)
         sys_state.set_status(system_state)
+
+        
         #TODO: check change 12-01-2024: temporary path is set differently
         #temppath = os.getcwd()
         temppath = system_state["temp_directory"]
@@ -3407,9 +3433,12 @@ class WizardGUI(QMainWindow):
             system_state["f1"] = new_name #TODO: replace by line below
             #resample_m.mdl["f1"] = new_name
             #resample_m.mdl["my_filename"] = self.my_filename
-            resp = self.sync_tabs(["dum","win","a","f1",new_name])
-            resp = self.sync_tabs(["dum","win","a","my_filename",self.my_filename])
-            self.showfilename()
+            #resp = self.sync_tabs(["dum","win","a","f1",new_name])
+            #resp = self.sync_tabs(["dum","win","a","my_filename",self.my_filename])
+            self.SigRelay.emit("cm_all_",["f1",new_name])
+            self.SigRelay.emit("cm_all_",["my_filename",self.my_filename])
+            self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
+            self.showfilename() #remove after complete transtition to Relay
         self.ui.label_8.setEnabled(False)
         self.ui.pushButton_InsertHeader.setEnabled(False)
         self.filetype = "wav"
@@ -3641,10 +3670,17 @@ class WizardGUI(QMainWindow):
         self.cohiradia_yamlfinal_filename = self.annotationpath + '/COHI_YAML_FINAL.yaml'
         system_state = sys_state.get_status()
         if not system_state["OLD"]:
-            resp = self.sync_tabs(["yamleditor","win","u","cohiradia_yamlheader_filename",self.cohiradia_yamlheader_filename])
-            resp = self.sync_tabs(["yamleditor","win","u","cohiradia_yamltailer_filename",self.cohiradia_yamltailer_filename])
-            resp = self.sync_tabs(["yamleditor","win","u","cohiradia_yamlfinal_filename",self.cohiradia_yamlfinal_filename])
-            resp = self.sync_tabs(["yamleditor","win","u","cohiradia_metadata_filename",self.cohiradia_metadata_filename])
+            # resp = self.sync_tabs(["yamleditor","win","u","cohiradia_yamlheader_filename",self.cohiradia_yamlheader_filename]) #remove aftzer trans to relay
+            # resp = self.sync_tabs(["yamleditor","win","u","cohiradia_yamltailer_filename",self.cohiradia_yamltailer_filename])
+            # resp = self.sync_tabs(["yamleditor","win","u","cohiradia_yamlfinal_filename",self.cohiradia_yamlfinal_filename])
+            # resp = self.sync_tabs(["yamleditor","win","u","cohiradia_metadata_filename",self.cohiradia_metadata_filename])
+            self.SigRelay.emit("cm_yamleditor",["cohiradia_yamlheader_filename",self.cohiradia_yamlheader_filename])
+            self.SigRelay.emit("cm_yamleditor",["cohiradia_yamltailer_filename",self.cohiradia_yamltailer_filename])
+            self.SigRelay.emit("cm_yamleditor",["cohiradia_yamlfinal_filename",self.cohiradia_yamlfinal_filename])
+            self.SigRelay.emit("cm_yamleditor",["cohiradia_metadata_filename",self.cohiradia_metadata_filename])
+            #self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
+
+            ############################ CURRENT STATE RELAY, CONTINUE FROM HERE
 
     def resread_playlist(self): #TODO: not yet used
         """
@@ -3684,6 +3720,9 @@ class WizardGUI(QMainWindow):
         Returns: True, if successful, False otherwise
         '''
         #TODO: shift action to respective tab machine by: currix = self.ui.tabWidget.currentIndex() self.ui.tabWidget.tabText(currix)
+        
+
+
         system_state = sys_state.get_status()
         self.SigGUIReset.emit()
         #TODO: call this signal only if resample_c is instantiated !
@@ -3707,14 +3746,17 @@ class WizardGUI(QMainWindow):
                                                                 ,self.metadata["last_path"] , filters, selected_filter)
             system_state["f1"] = filename[0] #TODO: replace by line below:
             #resample_m.mdl["f1"]  = filename[0]
-            resp = self.sync_tabs(["dum","win","a","f1",filename[0]])
+            self.SigRelay.emit("cm_all_",["f1", filename[0]])
+
+            pass
+            #resp = self.sync_tabs(["dum","win","a","f1",filename[0]])
         else:
             pass
         
         if not system_state["f1"]:
             sys_state.set_status(system_state)
             return False
-
+        logging.info(f'File opened: {system_state["f1"]}')
         file_stats = os.stat(system_state["f1"])
         ti_m = os.path.getmtime(system_state["f1"]) 
         # Converting the time in seconds to a timestamp
@@ -3725,11 +3767,14 @@ class WizardGUI(QMainWindow):
         self.my_filename, self.ext = os.path.splitext(os.path.basename(system_state["f1"]))
         system_state["ext"] = self.ext
         system_state["my_filename"] = self.my_filename
-
+        
         resp = self.sync_tabs(["dum","win","a","my_dirname",self.my_dirname])
+        self.SigRelay.emit("cm_all_",["my_dirname", self.my_dirname])
         resp = self.sync_tabs(["dum","win","a","ext",self.ext])
+        self.SigRelay.emit("cm_all_",["ext",self.ext])
         resp = self.sync_tabs(["dum","win","a","my_filename",self.my_filename])
-
+        self.SigRelay.emit("cm_all_",["my_filename",self.my_filename])
+        self.SigRelay.emit("cexex_all_",["updateGUIelements", 0])
         system_state["temp_directory"] = self.my_dirname + "/temp"
         #TODO REPLACE line for model:
         #resample_m.mdl["temp_directory"] = self.my_dirname + "/temp"
@@ -4068,6 +4113,29 @@ class WizardGUI(QMainWindow):
         for item in self.GUIupdaterlist:
             item()
 
+    def rxhandler(self,_key,_value):
+        """
+        handles remote calls from other modules via Signal SigRX(_key,_value)
+        :param : _key
+        :type : str
+        :param : _value
+        :type : object
+        :raises [ErrorType]: [ErrorDescription]
+        :return: flag False or True, False on unsuccessful execution
+        :rtype: Boolean
+        """
+        system_state = sys_state.get_status()
+        if _key.find("cm_core") == 0 or _key.find("cm_all_") == 0:
+            #set mdl-value
+            system_state[_value[0]] = _value[1] 
+            #self.m[_value[0]] = _value[1]
+        if _key.find("cui_core") == 0:
+            _value[0](_value[1])    #TODO TODO: still unclear implementation
+        if _key.find("cexex_core") == 0:
+            #if  _value[0].find("plot_spectrum") == 0:
+            #    self.plot_spectrum(0,_value[1])       
+            pass
+
 if __name__ == '__main__':
     print("starting main, initializing GUI, please wait ... ")
     #initialize logging method
@@ -4111,8 +4179,8 @@ if __name__ == '__main__':
 
 
         #resample_v.SigRelay.connect(view_spectra_v.plot_spectrum)
-        resample_v.SigRelay.connect(view_spectra_v.rxhandler)
-        view_spectra_v.SigRelay.connect(view_spectra_v.rxhandler)
+        #resample_v.SigRelay.connect(view_spectra_v.rxhandler)
+        #view_spectra_v.SigRelay.connect(view_spectra_v.rxhandler)
 
         resample_v.SigSyncTabs.connect(win.sync_tabs)
         resample_c.SigSyncTabs.connect(win.sync_tabs)
@@ -4126,15 +4194,21 @@ if __name__ == '__main__':
         #resample_c.SigUpdateGUIelements.connect(resample_v.updateGUIelements)
         win.SigUpdateOtherGUIs.connect(view_spectra_v.updateGUIelements)
 
-        #directory of tab objects to be activated
-    #tab_dict ={}
-    #tab_dict["resample"] = {}
+        #directory of tab objects to be activated ####TODO: simplify to simple list
     tab_dict ={}
-    # tab_dict["resample"]["m"] = resample_m     
-    # tab_dict["resample"]["c"] = resample_c     
-    # tab_dict["resample"]["v"] = resample_v
-    #tab_list = ["resample","view_spectra"]
+
     tab_dict["list"] = ["resample","view_spectra","yamleditor"]
+
+    for tabitem1 in tab_dict["list"]:
+        for tabitem2 in tab_dict["list"]:
+            eval(tabitem1 + "_v.SigRelay.connect(" + tabitem2 + "_v.rxhandler)")
+                ########## TODO: temporary hack for core module, change after last Module change:
+            eval(tabitem1 + "_v.SigRelay.connect(win.rxhandler)" )
+            eval("win.SigRelay.connect(" + tabitem2 + "_v.rxhandler)" )
+            logging.info(f'File opened: {tabitem1 + "_v.SigRelay.connect(" + tabitem2 + "_v.rxhandler)"}')
+            #print(tabitem1 + "_v.SigRelay.connect(" + tabitem2 + "_v.rxhandler)")
+
+    #######################TODO: PREPARE FOR REMOVE #######################
     for tabitem in tab_dict["list"]:     
         tab_dict[tabitem + "_m"] = eval(tabitem + "_m") #resample_m     
         tab_dict[tabitem + "_c"] = eval(tabitem + "_c") #resample_c     
@@ -4145,6 +4219,7 @@ if __name__ == '__main__':
     system_state = sys_state.get_status()
     system_state["tab_dict"] = tab_dict
     sys_state.set_status(system_state)
+    ###################PREPARE FOR REMOVE END ###########################
 
     win.init_view_spectra_ui()
 
@@ -4166,12 +4241,12 @@ if __name__ == '__main__':
 
     sys.exit(app.exec_())
 
-
 #TODOs:
-    #
-    # * automatischer Relay-connector in core anstelle von sync_tabs: 30min
+
     #
     # * alle resp = sync_tabs- Manöver durch Relay-Mechanismus ersetzen: 50 min
+    #
+    # * remove sync_Tabs und Tab_dict afterwards
     #
     # * alle ui-Handler im viev_spectra von core ins Modul transferieren: 1,5h
     # 
@@ -4194,3 +4269,17 @@ if __name__ == '__main__':
     # * eval-Befehl bei Kompilation testen: 30 min
     #
     # * Windows Installer mit https://www.pythonguis.com/tutorials/packaging-pyside6-applications-windows-pyinstaller-installforge/ erstellen
+#
+    # * Configuration Tab with: IP address, tempdir, outdir, LT/UTC, Logging, checkboxes for Tab activation
+
+#
+    # Recorder: New impl: worker gets setter/getter structure
+    #                       
+    #                       progress-clock: SigSpecplotemit(object: data) for external spectrum plot
+    # Recorder starter routine: setup thread
+    #                           finished.connect close file and complete wav header
+    #                           SigSpecplot.connect: plot signal somewhere
+    #
+    #   zerlege plot_spectrum in einen view_spectra spezifischen Teil und einen generellen Spektralplotter, der in einen Canvas das Spektrum eines Datenstrings plottet
+    #       spectrum(canvas_ref,data,*args) in auxiliary Modul
+

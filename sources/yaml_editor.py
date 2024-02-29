@@ -197,7 +197,8 @@ class  yamleditor_v(QObject):
     SigCancel = pyqtSignal()
     SigUpdateGUI = pyqtSignal(object)
     SigSyncGUIUpdatelist = pyqtSignal(object)
-
+    SigRelay = pyqtSignal(str,object)
+    
     def __init__(self, gui,  yamleditor_c,  yamleditor_m):
         super().__init__()
 
@@ -207,6 +208,28 @@ class  yamleditor_v(QObject):
         self.DATABLOCKSIZE = 1024*32
         self.gui = gui #gui_state["gui_reference"]#system_state["gui_reference"]
         self.yamleditor_c = yamleditor_c
+
+    def rxhandler(self,_key,_value):
+        """
+        handles remote calls from other modules via Signal SigRX(_key,_value)
+        :param : _key
+        :type : str
+        :param : _value
+        :type : object
+        :raises [ErrorType]: [ErrorDescription]
+        :return: flag False or True, False on unsuccessful execution
+        :rtype: Boolean
+        """
+        if _key.find("cm_yamleditor") == 0 or _key.find("cm_all_") == 0:
+            #set mdl-value
+            self.m[_value[0]] = _value[1]
+        if _key.find("cui_yamleditor") == 0:
+            _value[0](_value[1])    #TODO TODO: still unclear implementation
+        if _key.find("cexex_yamleditor") == 0:
+            #if  _value[0].find("plot_spectrum") == 0:
+            #    self.plot_spectrum(0,_value[1])       
+            pass 
+
 
     def updateGUIelements(self):
         """

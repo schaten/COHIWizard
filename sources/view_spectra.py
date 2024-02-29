@@ -21,6 +21,8 @@ class view_spectra_m(QObject):
         self.CONST_SAMPLE = 0 # sample constant
         self.mdl = {}
         self.mdl["sample"] = 0
+        self.mdl["my_filename"] = ""
+        self.mdl["ext"] = ""
 
 class view_spectra_c(QObject):
     """_view methods for resampling module
@@ -116,7 +118,12 @@ class view_spectra_v(QObject):
             _value[0](_value[1])    #TODO TODO: still unclear implementation
         if _key.find("cexex_view_spectra") == 0:
             if  _value[0].find("plot_spectrum") == 0:
-                self.plot_spectrum(0,_value[1])        
+                self.plot_spectrum(0,_value[1])
+        if _key.find("cexex_view_spectra") == 0 or _key.find("cexex_all_") == 0:
+            if  _value[0].find("plot_spectrum") == 0:
+                self.plot_spectrum(0,_value[1])
+            if  _value[0].find("updateGUIelements") == 0:
+                self.updateGUIelements()
 
     def updateGUIelements(self):
         """

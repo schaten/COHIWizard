@@ -39,6 +39,8 @@ class resample_m(QObject):
         self.CONST_SAMPLE = 0 # sample constant
         self.mdl = {}
         self.mdl["sample"] = 0
+        self.mdl["my_filename"] = ""
+        self.mdl["ext"] = ""
 
 #TODO: TESTEN durch mal eine ausgewählte system_state Variable
 
@@ -1591,10 +1593,11 @@ class resample_v(QObject):
             self.m[_value[0]] = _value[1]
         if _key.find("cui_resample") == 0:
             _value[0](_value[1])   #TODO TODO: still unclear implementation
-        if _key.find("cexex_resample") == 0:
+        if _key.find("cexex_resample") == 0  or _key.find("cm_all_") == 0:
             # if  _value[0].find("plot_spectrum") == 0:
             #     self.plot_spectrum(0,_value[1])
-            pass    
+            if  _value[0].find("updateGUIelements") == 0:
+                self.updateGUIelements()    
 
 
     def reformat_targetLOpalette(self): #TODO: check, if this stays part of gui or should be shifted to resampler module

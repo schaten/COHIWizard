@@ -76,7 +76,9 @@ class abstract_module_v(QObject):
             self.m[_value[0]] = _value[1]
         if _key.find("cui_abstract_module") == 0:
             _value[0](_value[1]) #STILL UNCLEAR
-        if _key.find("cexex_abstract_module") == 0:
+        if _key.find("cexex_resample") == 0  or _key.find("cm_all_") == 0:
+            if  _value[0].find("updateGUIelements") == 0:
+                self.updateGUIelements()
             #handle method
             # if  _value[0].find("plot_spectrum") == 0: #EXAMPLE
             #     self.plot_spectrum(0,_value[1])   #EXAMPLE
