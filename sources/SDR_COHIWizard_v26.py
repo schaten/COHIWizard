@@ -213,7 +213,7 @@ class statlst_gen_worker(QtCore.QThread):
                 time.sleep(0.001)
         except:
             #print("annotation file not yet existent")
-            logging.info("annotation file not yet existent")
+            #logging.info("annotation file not yet existent")
             return False
 
         status = {}
@@ -500,6 +500,7 @@ class WizardGUI(QMainWindow):
         super().__init__(*args, **kwargs)
         print("Initializing GUI, please wait....")
 
+
         self.TEST = True    # Test Mode Flag for testing the App, --> playloop  ##NOT USED #TODO:future system status
         self.CURTIMEINCREMENT = 5 # für playloop >>, << TODO: shift to playrec module once it exists
         self.DATABLOCKSIZE = 1024*32 # für diverse Filereader/writer TODO: occurs in plot spectrum and ANN_Spectrum; must be shifted to the respective modules in future
@@ -532,7 +533,7 @@ class WizardGUI(QMainWindow):
         self.position = 0 #TODO:future system state URGENT !!!!!!!!!!!!!!
         self.tab_dict = {}
 
-        logging.basicConfig(filename='system_log.log', filemode='a', format='%(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+        #logging.basicConfig(filename='system_log.log', filemode='a', format='%(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
         self.GUIupdaterlist =[]
         # create method which inactivates all tabs except the one which is passed as keyword
@@ -551,7 +552,8 @@ class WizardGUI(QMainWindow):
         self.ui.actionOverwrite_header.triggered.connect(self.overwrite_header)
         self.SigGUIReset.connect(self.reset_GUI)
         self.ui.pushButton_resample_GainOnly.setEnabled(False)
-        self.SigSyncTabs.connect(self.sync_tabs)
+        #self.SigSyncTabs.connect(self.sync_tabs)
+        self.ui.checkBox_writelog.clicked.connect(self.togglelogmodus) #TODO TODO TODO: logfilemodus anders implementieren
 
         ### END UI MASTER ####################################
 
@@ -653,6 +655,7 @@ class WizardGUI(QMainWindow):
                             "rates": system_state["rates"], "icorr":system_state["icorr"],
                             "HostAddress":system_state["HostAddress"], "LO_offset":system_state["LO_offset"]}
         system_state["sdr_configparams"] = configparams
+        system_state["_log"] = False
         # TODO: define all other states and transfer to system_state; then restore system state in every method which accesses and/or modifies the state
         if "resampler_module_v5" in sys.modules:
             system_state["OLD"] = False  #Umschalter altes, neues GUI zum Umbauen, alt = v26, resampler_module_v4
@@ -682,7 +685,24 @@ class WizardGUI(QMainWindow):
         self.timethread.start()
         if self.timethread.isRunning():
             self.timethreaddActive = True #TODO:future system state
-
+        # Create a custom logger
+        # Setze den Level des Root-Loggers auf DEBUG
+        logging.getLogger().setLevel(logging.DEBUG)
+        # Erstelle einen Logger mit dem Modul- oder Skriptnamen
+        self.logger = logging.getLogger(__name__)
+        # Create handlers
+        warning_handler = logging.StreamHandler()
+        debug_handler = logging.FileHandler("system_log.log","w")
+        warning_handler.setLevel(logging.WARNING)
+        debug_handler.setLevel(logging.DEBUG)
+        # Create formatters and add it to handlers
+        warning_format = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+        debug_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        warning_handler.setFormatter(warning_format)
+        debug_handler.setFormatter(debug_format)
+        # Add handlers to the logger
+        self.logger.addHandler(warning_handler)
+        self.logger.addHandler(debug_handler)
         #check if sox is installed so as to throw an error message on resampling, if not
         self.soxlink = "https://sourceforge.net/projects/sox/files/sox/14.4.2/"
         self.soxlink_altern = "https://sourceforge.net/projects/sox"
@@ -690,15 +710,20 @@ class WizardGUI(QMainWindow):
         try:
             subproc3 = subprocess.run('sox -h', stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True, check=True)
         except subprocess.CalledProcessError as ex:
-            print("sox FAIL")
+            #print("sox FAIL")
+            self.logger.error("sox FAIL")
             print(ex.stderr, file=sys.stderr, end='', flush=True)
             print(ex.stdout, file=sys.stdout, end='', flush=True)
             if len(ex.stderr) > 0: 
                 self.soxnotexist = True
-        self.orig_stdout = sys.stdout
-        self.logfile = open('diagnostics.txt', 'w')
+        #self.orig_stdout = sys.stdout
+        #self.logfile = open('diagnostics.txt', 'w')
         #TODO: implement a selection checkbox for 'write logfile' to redirect all prints to logfile
         #sys.stdout = self.logfile
+                    #start logger
+
+
+        self.logger.info("Init logger in core reached")
 
     # GENRAL GUI METHODS
         
@@ -710,15 +735,14 @@ class WizardGUI(QMainWindow):
         #self.ui.spinBoxminSNR_ScannerTab.valueChanged.connect(self.minSNRupdate_ScannerTab)
         self.ui.spinBoxKernelwidth.valueChanged.connect(self.setkernelwidth)
         self.ui.spinBoxKernelwidth.setEnabled(False)
-        self.ui.spinBoxKernelwidth.setProperty("value", 15) #TODO: avoid magic number
-        self.ui.spinBoxminBaselineoffset.setProperty("value", 0)
+        #self.ui.spinBoxKernelwidth.setProperty("value", 15) #TODO: avoid magic number
+        #self.ui.spinBoxminBaselineoffset.setProperty("value", 0)
         self.Baselineoffset = self.ui.spinBoxminBaselineoffset.value()
         self.ui.spinBoxminBaselineoffset.valueChanged.connect(self.set_baselineoffset)
-
         self.ui.horizontalScrollBar_view_spectra.sliderReleased.connect(self.cb_plot_spectrum)
         self.ui.radioButton_plotraw.clicked.connect(self.cb_plot_spectrum)
         #self.SigToolbar.connect(lambda: self.plot_spectrum(self,self.position))
-        self.ui.spinBoxNumScan.setProperty("value", 10) #TODO: avoid magic number
+        #self.ui.spinBoxNumScan.setProperty("value", 10) #TODO: avoid magic number
         self.ui.spinBoxminBaselineoffset.setProperty("value", 0) #TODO: avoid magic number
         self.ui.tableWidget_3.setEnabled(False)
         ###END UI TAB SPECTRUM ####################################
@@ -737,10 +761,12 @@ class WizardGUI(QMainWindow):
         """
         #TODO
         if self.ui.checkBox_writelog.isChecked:
-            sys.stdout = self.logfile
+            system_state["_log"] = True
+            self.SigRelay.emit("cm_all_",["_log", True])
+
         else:
-            sys.stdout = self.orig_stdout
-        pass
+            system_state["_log"] = False
+            self.SigRelay.emit("cm_all_",["_log", False])
 
     def closeEvent(self, event):
         sys.stdout = self.orig_stdout
@@ -1037,7 +1063,8 @@ class WizardGUI(QMainWindow):
         except:
             #return False
             #print("cannot get metadata")
-            logging.error("reset_gui: cannot get metadata")
+            #logging.error("reset_gui: cannot get metadata")
+            self.logger.error("reset_gui: cannot get metadata")
         #self.open_template_flag = False
         try:
             stream = open(self.status_filename, "r")
@@ -1081,7 +1108,8 @@ class WizardGUI(QMainWindow):
         :rtype: none
         """
         #print("playlist updated")  
-        logging.info("playlist_update: playlist updated")
+        self.logger.info("playlist_update: playlist updated")
+        
         time.sleep(1)
         system_state = sys_state.get_status()
         #get all items of playlist Widget and write them to system_state["playlist"]
@@ -1274,7 +1302,7 @@ class WizardGUI(QMainWindow):
             stream.close()
         except:
             auxi.standard_errorbox("Cannot open Config File")
-            logger.error("cannot get metadata")
+            self.logger.error("cannot get metadata")
             #print("cannot get metadata")
         self.metadata["STM_IP_address"] = system_state["HostAddress"]
         stream = open("config_wizard.yaml", "w")
@@ -1339,7 +1367,9 @@ class WizardGUI(QMainWindow):
         """        
         system_state = sys_state.get_status()
         if self.playthreadActive is True:
-            print("playthread is active, no action")
+            #print("playthread is active, no action")
+
+            self.logger.debug("playthread is active, no action")
             sys_state.set_status(system_state)
             return False
         self.updatecurtime(0) #TODO: true datetime from record
@@ -1360,11 +1390,14 @@ class WizardGUI(QMainWindow):
             system_state["sdr_configparams"] = configparams
             stemlabcontrol.sdrserverstart(system_state["sdr_configparams"])
             stemlabcontrol.set_play() #wozu ? war ja schon oben !
-            print(f'play_manager configparams: {configparams}')
+            #print(f'play_manager configparams: {configparams}')
+
+            self.logger.info(f'play_manager configparams: {configparams}')
 
             sys_state.set_status(system_state)
             if stemlabcontrol.config_socket(configparams):
-                print("playthread now activated in play_manager")
+                #print("playthread now activated in play_manager")
+                self.logger.info("playthread now activated in play_manager")
                 self.play_tstarter()
             else:
                 sys_state.set_status(system_state)
@@ -1378,7 +1411,8 @@ class WizardGUI(QMainWindow):
         #TODO: activateself.ui.label_RECORDING.setText("PLAY")
         #TODO: activateself.ui.indicator_Stop.setStyleSheet('background-color: rgb(234,234,234)')
         #TODO: activate.ui.pushButton_Rec.setEnabled(False)
-            print("stemlabcontrols activated")
+            #print("stemlabcontrols activated")
+            self.logger.info("stemlabcontrols activated")
         sys_state.set_status(system_state)
         return True
     
@@ -1416,7 +1450,7 @@ class WizardGUI(QMainWindow):
         if self.playthreadActive is False:
             system_state["fileopened"] = False ###CHECK
             #resample_m.mdl["fileopened"] = False
-            resp = self.sync_tabs(["dum","win","a","fileopened",False])
+            #resp = self.sync_tabs(["dum","win","a","fileopened",False])
             self.SigRelay.emit("cm_all_",["fileopened",False])
             sys_state.set_status(system_state) ####Remove after core full impl
             return
@@ -1515,7 +1549,8 @@ class WizardGUI(QMainWindow):
         if self.playthread.isRunning():
             self.playthreadActive = True
             self.inactivate_tabs(["View_Spectra","Annotate","Resample","YAML_editor","WAV_header"])
-            print("playthread started in playthread_threadstarter = play_tstarter() (threadstarter)")
+            #print("playthread started in playthread_threadstarter = play_tstarter() (threadstarter)")
+            self.logger.info("playthread started in playthread_threadstarter = play_tstarter() (threadstarter)")
             # TODO replace playthreadflag by not self.playthread.isFinished()
             sys_state.set_status(system_state)
             return True
@@ -1560,7 +1595,8 @@ class WizardGUI(QMainWindow):
             time.sleep(1)
             data[nan_ix] = np.zeros(len(nan_ix))
             #ff = median_filter(data,30, mode = 'constant')
-            print(f"showRFdata: NaN found in data, length: {len(nan_ix)} , maxval: {np.max(data)}, avg: {np.median(data)}")
+            #print(f"showRFdata: NaN found in data, length: {len(nan_ix)} , maxval: {np.max(data)}, avg: {np.median(data)}")
+            self.logger.error("show RFdata: NaN found in data, length: %i ,maxval: %f , avg: %f" , len(nan_ix),  np.max(data), np.median(data))
             sys_state.set_status(system_state)
             return(False)
         cv = (data[0:s-1:2].astype(np.float32) + 1j * data[1:s:2].astype(np.float32))*gain
@@ -1667,7 +1703,9 @@ class WizardGUI(QMainWindow):
         #resp = self.sync_tabs(["dum","win","a","fileopened",False]) #remove after tests Relay
         self.SigRelay.emit("cm_all_",["fileopened",False])
         if self.stopstate == True:
-            print("EOF-manager: player has been stopped")
+            #print("EOF-manager: player has been stopped")
+            self.logger.info("EOF-manager: player has been stopped")
+
             time.sleep(0.5)
             sys_state.set_status(system_state)
             return
@@ -1694,14 +1732,18 @@ class WizardGUI(QMainWindow):
             self.showfilename() #Remove after implementing all Modules Relay
             self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
             self.updatecurtime(0) #TODO: true datetime from record
-            print("fetch nextfile")
+            #print("fetch nextfile")
+            self.logger.info("fetch nextfile")
+
         elif self.ui.pushButton_Loop.isChecked() == True:
             time.sleep(0.1)
-            print("restart same file in endless loop")
+            #("restart same file in endless loop")
+            self.logger.debug("restart same file in endless loop")
             #no next file, but endless mode active, replay current system_state["f1"]
             self.play_tstarter()
             time.sleep(0.1)
-            print(f"playthread active: {self.playthreadActive}")
+            #print(f"playthread active: {self.playthreadActive}")
+            self.logger.info("playthread active: %s", self.playthreadActive)
             system_state["fileopened"] = True
             #resample_m.mdl["fileopened"] = True
             #resp = self.sync_tabs(["dum","win","a","fileopened",True]) #remove after tests Relay
@@ -1715,10 +1757,12 @@ class WizardGUI(QMainWindow):
             playlist_len = self.ui.listWidget_playlist.count()
             if system_state["playlist_ix"] < playlist_len: #TODO check if indexing is correct
                 self.playthreadActive = False
-                print(f"EOF manager: playlist index: {system_state['playlist_ix']}")
+                #print(f"EOF manager: playlist index: {system_state['playlist_ix']}")
+                self.logger.debug("EOF manager: playlist index: %i", system_state['playlist_ix'])
                 lw = self.ui.listWidget_playlist
                 # let lw haven elements in it.
-                print("fetch next list file")
+                #print("fetch next list file")
+                self.logger.info("fetch next list file")
                 item_valid = False
                 
                 while (not item_valid) and (system_state["playlist_ix"] < playlist_len):
@@ -1730,18 +1774,21 @@ class WizardGUI(QMainWindow):
                     #resp = self.sync_tabs(["dum","win","a","my_filename",self.my_filename]) #remove after tests Relay
                     self.SigRelay.emit("cm_all_",["f1",self.my_dirname + '/' + item.text()])
                     self.SigRelay.emit("cm_all_",["my_filename",self.my_filename])
-                    print(f'file: {system_state["f1"]}')
+                    #print(f'file: {system_state["f1"]}')
+                    self.logger.info("EOF manager file: %s", system_state["f1"])
                     self.wavheader = WAVheader_tools.get_sdruno_header(self,system_state["f1"])
                     item_valid = True
                     if not self.wavheader:
-                        print("EOF_manager: wrong wav file, skip to next listentry")
+                        #print("EOF_manager: wrong wav file, skip to next listentry")
+                        self.logger.warning("EOF_manager: wrong wav file, skip to next listentry")
                         system_state["playlist_ix"] += 1
                         item_valid = False
 
                 if not (system_state["playlist_ix"] < playlist_len):
                     system_state["playlist_ix"] = 0
                     sys_state.set_status(system_state)
-                    print("EOF_manager: end of list, stop player")
+                    #print("EOF_manager: end of list, stop player")
+                    self.logger.info("EOF_manager: end of list, stop player")
                     time.sleep(0.5)
                     self.updatecurtime(0)
                     self.cb_Butt_STOP()
@@ -1756,14 +1803,16 @@ class WizardGUI(QMainWindow):
                 system_state["icorr"] = 0
                 system_state["readoffset"] = self.readoffset
                 system_state["timescaler"] = self.wavheader['nSamplesPerSec']*self.wavheader['nBlockAlign']
-                print(f'EOF manager new wavheader: {self.wavheader["nSamplesPerSec"]}')
+                #print(f'EOF manager new wavheader: {self.wavheader["nSamplesPerSec"]}')
+                self.logger.debug("EOF manager new wavheader: %i", self.wavheader["nSamplesPerSec"])
                 #TODO: write new header to wav edior
                 sys_state.set_status(system_state)
                 time.sleep(0.1)
                 self.showfilename()
                 if not self.TEST:
                     stemlabcontrol.sdrserverstop()
-                    print("EOF manager start play_manager")
+                    #print("EOF manager start play_manager")
+                    self.logger.info("EOF manager start play_manager")
                 self.play_manager()
                 system_state["fileopened"] = True
                 #resample_m.mdl["fileopened"] = True
@@ -1772,12 +1821,13 @@ class WizardGUI(QMainWindow):
                 time.sleep(0.5) #TODO: necessary because otherwise file may not yet have been opened by playloopworker and then updatecurtime crashes because of invalid filehandel 
                 #may be solved by updatecurtime not accessing the filehandle returned from playworker but directly from system_state["f1"]
                 self.updatecurtime(0) #TODO: true datetime from record
-                print(f'listplay updatecurtime passed nex playlist_ix: {system_state["playlist_ix"]}')
+                #print(f'listplay updatecurtime passed nex playlist_ix: {system_state["playlist_ix"]}')
             else:
                 #reset playlist_ix
                 system_state["playlist_ix"] = 0
                 sys_state.set_status(system_state)
-                print("EOF_manager: stop player")
+                #print("EOF_manager: stop player")
+                self.logger.info("EOF_manager: stop player")
                 time.sleep(0.5)
                 self.updatecurtime(0)
                 self.cb_Butt_STOP()
@@ -1785,7 +1835,8 @@ class WizardGUI(QMainWindow):
                 self.ui.listWidget_sourcelist.clear()
         else:
             #no next file,no endless loop --> stop player
-            print("stop player")
+            #print("stop player")
+            self.logger.info("EOF_manager: stop player 2")
             time.sleep(0.5)
             self.cb_Butt_STOP()
             ##TODO: introduce separate stop_manager
@@ -1871,7 +1922,8 @@ class WizardGUI(QMainWindow):
         :rtype: bool
         """ 
         system_state = sys_state.get_status()
-        print("tracking: jump 1 byte")
+        #print("tracking: jump 1 byte")
+        self.logger.debug("tracking: jump 1 byte")
         if self.modality == 'play' and self.pausestate is False:
             if system_state["fileopened"] is True:
                 self.prfilehandle = self.playrec_tworker.get_4()
@@ -1892,7 +1944,8 @@ class WizardGUI(QMainWindow):
         :return: none
         :rtype: none
         """ 
-        print("jumptoposition reached")
+        #print("jumptoposition reached")
+        self.logger.debug("jumptoposition reached")
         system_state = sys_state.get_status()
         sbposition = self.ui.ScrollBar_playtime.value() #TODO: already in updatecurtime(...)
         self.curtime = int(np.floor(sbposition/1000*system_state["playlength"]))  # seconds
@@ -1905,8 +1958,10 @@ class WizardGUI(QMainWindow):
         position = min(max(216, position_raw-position_raw % self.wavheader['nBlockAlign']),
                             self.wavheader['data_nChunkSize']+216) # guarantee reading from integer multiples of 4 bytes, TODO: change '4', '216' to any wav format ! 
         if system_state["fileopened"] is True:
-            print("Jump to next position")
-            print(f'system_state["fileopened"]: {system_state["fileopened"]}')
+            #print("Jump to next position")
+            self.logger.debug("jumptoposition reached")
+            #print(f'system_state["fileopened"]: {system_state["fileopened"]}')
+            self.logger.debug("system_state['fileopened']: %s",system_state["fileopened"])
             self.prfilehandle = self.playrec_tworker.get_4()
             self.prfilehandle.seek(int(position), 0) #TODO: Anpassen an andere Fileformate
         #calculate corresponding position in the record file; value = 216 : 1000
@@ -2131,7 +2186,8 @@ class WizardGUI(QMainWindow):
             yaml.dump(status, stream)
             stream.close()
         except:
-            print("cannot get/put status")
+            #print("cannot get/put status")
+            self.logger.error("scan_completed: cannot get/put status")
 
     def scan_activate(self):
         """_summary_
@@ -2269,7 +2325,7 @@ class WizardGUI(QMainWindow):
         ###################################################
 
         self.oldposition = self.position #CHECK: NECESSARY ???
-        print(f"test output from startcut_timeEdit: {self.ui.timeEdit_resample_startcut.time()}")
+        #print(f"test output from startcut_timeEdit: {self.ui.timeEdit_resample_startcut.time()}")
 
                 #TODO: in future replace by:
                 #remove readsegment in this class !
@@ -2576,7 +2632,8 @@ class WizardGUI(QMainWindow):
         CONTROL
         _summary_
         """
-        print("autoscan reached")
+        #print("autoscan reached")
+        self.logger.debug("autoscan reached")
         system_state = sys_state.get_status()
         
         #check if annotation path exists and create if not
@@ -2937,8 +2994,10 @@ class WizardGUI(QMainWindow):
         else:
             #print('plot spectrum')
             system_state["horzscal"] = position
-            syncdict = ["resample", "win", "a", "horzscal", position]
-            self.SigSyncTabs.emit(syncdict)
+            # syncdict = ["resample", "win", "a", "horzscal", position]
+            # self.SigSyncTabs.emit(syncdict)
+            self.SigRelay.emit("cm_all_",["horzscal", position])
+
             #print(f"scrollbar value:{system_state["horzscal"]}")
             
             # read datablock corresponding to current sliderposition
@@ -3026,6 +3085,7 @@ class WizardGUI(QMainWindow):
         ###################################################
 
     def set_baselineoffset(self):        
+        print("-----------BASELINEOFFSET")
         self.Baselineoffset = self.ui.spinBoxminBaselineoffset.value()
         self.ui.label_6.setText("Baseline Offset:" + str(self.ui.spinBoxminBaselineoffset.value()))
         self.position = self.ui.horizontalScrollBar_view_spectra.value()
@@ -3351,7 +3411,8 @@ class WizardGUI(QMainWindow):
                 try:
                     os.remove(x)
                 except:
-                    print("res_scheduler terminate: file access to temp file refused")
+                    self.logger.debug("res_scheduler terminate: file access to temp file refused")
+                    #print("res_scheduler terminate: file access to temp file refused")
 
     ############################## END TAB GENERAL MENUFUNCTIONS ####################################
 
@@ -3594,7 +3655,8 @@ class WizardGUI(QMainWindow):
                 if wavheader['nextfilename'].find('.wav') != -1: ### take next filename from wav header
                     true_nextfilename, next_ext = os.path.splitext(os.path.basename(nextfilename_purged))
                 else: ### synthetize next filename because wav header string for nextfile longer 92 chars
-                    print("nextfile entry in wavheader invalid, please edit wav header")
+                    #print("nextfile entry in wavheader invalid, please edit wav header")
+                    self.logger.debug("nextfile entry in wavheader invalid, please edit wav header")
                     true_nextfilename = ''
                     return true_nextfilename
                 self.loopalive = True
@@ -3705,7 +3767,8 @@ class WizardGUI(QMainWindow):
                     self.ui.listWidget_sourcelist.addItem(item)
                     ix += 1
                 else:
-                    print(f"automat remove from selectlist: {(self.my_filename + self.ext)}")
+                    self.logger.debug("resread_playlist: automat remove from selectlist: %s", self.my_filename + self.ext)
+                    #print(f"automat remove from selectlist: {(self.my_filename + self.ext)}")
         #TODO: erzeuge einen Einag in Playlist    listWidget_playlist
 
     #@njit
@@ -3750,13 +3813,14 @@ class WizardGUI(QMainWindow):
 
             pass
             #resp = self.sync_tabs(["dum","win","a","f1",filename[0]])
+            self.SigRelay.emit("cm_all_",["f1", filename[0]])
         else:
             pass
         
         if not system_state["f1"]:
             sys_state.set_status(system_state)
             return False
-        logging.info(f'File opened: {system_state["f1"]}')
+        self.logger.info(f'File opened: {system_state["f1"]}')
         file_stats = os.stat(system_state["f1"])
         ti_m = os.path.getmtime(system_state["f1"]) 
         # Converting the time in seconds to a timestamp
@@ -3768,17 +3832,20 @@ class WizardGUI(QMainWindow):
         system_state["ext"] = self.ext
         system_state["my_filename"] = self.my_filename
         
-        resp = self.sync_tabs(["dum","win","a","my_dirname",self.my_dirname])
+        #resp = self.sync_tabs(["dum","win","a","my_dirname",self.my_dirname])
         self.SigRelay.emit("cm_all_",["my_dirname", self.my_dirname])
-        resp = self.sync_tabs(["dum","win","a","ext",self.ext])
+        #resp = self.sync_tabs(["dum","win","a","ext",self.ext])
         self.SigRelay.emit("cm_all_",["ext",self.ext])
-        resp = self.sync_tabs(["dum","win","a","my_filename",self.my_filename])
+        #resp = self.sync_tabs(["dum","win","a","my_filename",self.my_filename])
         self.SigRelay.emit("cm_all_",["my_filename",self.my_filename])
         self.SigRelay.emit("cexex_all_",["updateGUIelements", 0])
         system_state["temp_directory"] = self.my_dirname + "/temp"
         #TODO REPLACE line for model:
         #resample_m.mdl["temp_directory"] = self.my_dirname + "/temp"
-        resp = self.sync_tabs(["dum","win","a","temp_directory",self.my_dirname + "/temp"])
+        #resp = self.sync_tabs(["dum","win","a","temp_directory",self.my_dirname + "/temp"])
+        self.SigRelay.emit("cm_all_",["temp_directory",self.my_dirname + "/temp"])
+
+
         if os.path.exists(system_state["temp_directory"]) == False:         #exist yaml file: create from yaml-editor
             os.mkdir( system_state["temp_directory"])
 
@@ -3869,6 +3936,7 @@ class WizardGUI(QMainWindow):
                     ix += 1
                 else:
                     print(f"automat remove from selectlist: {(self.my_filename + self.ext)}")
+
         #TODO: erzeuge einen Eintrag in Playlist listWidget_playlist
         if system_state["f1"].endswith(".wav"):
             item = QtWidgets.QListWidgetItem()
@@ -3912,7 +3980,8 @@ class WizardGUI(QMainWindow):
         system_state["ifreq"] = self.wavheader['centerfreq'] + system_state["LO_offset"]
         system_state["irate"] = self.wavheader['nSamplesPerSec']
         system_state["readoffset"] = self.readoffset   
-        resp = win.sync_tabs(["resample","win","u","readoffset",system_state["readoffset"]])     
+        #resp = win.sync_tabs(["resample","win","u","readoffset",system_state["readoffset"]])     
+        self.SigRelay.emit("cm_resample",["readoffset",system_state["readoffset"]])
         self.fill_wavtable()
 
         #generate STM_cont_params for future passage to player_theradworkers instead of push pop strategy
@@ -3945,25 +4014,26 @@ class WizardGUI(QMainWindow):
             self.scan_activate()
         system_state["fileopened"] = True
         #resample_m.mdl["fileopened"] = True
-        resp = self.sync_tabs(["dum","win","a","fileopened",True])
+        #resp = self.sync_tabs(["dum","win","a","fileopened",True])
+        self.SigRelay.emit("cm_all_",["fileopened",True])
+
         self.ui.spinBoxKernelwidth.setEnabled(True)
         self.ui.label_6.setText("Baseline Offset:" + str(self.ui.spinBoxminBaselineoffset.value()))
         self.position = self.ui.horizontalScrollBar_view_spectra.value()
         self.lock_playthreadstart = True
         
-        system_state = sys_state.get_status()
-        if not system_state["OLD"]:
-            #TODO: REPLACE BY FOLLOWING:
-            system_state["horzscal"] = self.position
-            #syncdict = ["resample", "win", "u", "horzscal", self.position]
-            self.SigSyncTabs.emit(["resample", "win", "a", "horzscal", self.position])
-            resp = self.sync_tabs(["view_spectra","win","u","position",self.position])
-            resp = self.sync_tabs(["dum","win","a","wavheader",self.wavheader])
+        system_state = sys_state.get_status()#TODO: check: obsolete ! because of Relay !
+        system_state["horzscal"] = self.position #TODO: check: obsolete ! because of Relay !
+        #syncdict = ["resample", "win", "u", "horzscal", self.position]
+        #self.SigSyncTabs.emit(["resample", "win", "a", "horzscal", self.position])
+        #resp = self.sync_tabs(["view_spectra","win","u","position",self.position])
+        #resp = self.sync_tabs(["dum","win","a","wavheader",self.wavheader])
+        self.SigRelay.emit("cm_all_",["horzscal", self.position])
+        self.SigRelay.emit("cm_view_spectra",["position",self.position])
+        self.SigRelay.emit("cm_all_",["wavheader",self.wavheader])
+        self.SigRelay.emit("cexex_view_spectra",["updateGUIelements", 0])
 
-            view_spectra_v.SigUpdateGUI.emit("ext_update")
-        ###################################################
-        else:
-            self.plot_spectrum(self,self.position)
+        #view_spectra_v.SigUpdateGUI.emit("ext_update")
 
         self.lock_playthreadstart = False
         #TODO: is that really necessary on each fileopen ? 
@@ -3972,14 +4042,17 @@ class WizardGUI(QMainWindow):
         # TODO: check, added 09-12-2023
         system_state["playlength"] = self.wavheader['filesize']/self.wavheader['nAvgBytesPerSec']
         system_state["list_out_files_resampled"] = []
-        resp = self.sync_tabs(["resample","win","u","list_out_files_resampled",system_state["list_out_files_resampled"]])
-
+        #resp = self.sync_tabs(["resample","win","u","list_out_files_resampled",system_state["list_out_files_resampled"]])
+        self.SigRelay.emit("cm_resample",["list_out_files_resampled",system_state["list_out_files_resampled"]])
+        
         out_dirname = self.my_dirname + '/out'
         if os.path.exists(out_dirname) == False:         #exist yaml file: create from yaml-editor
             os.mkdir(out_dirname)
  
         #system_state["out_dirname"] = out_dirname #TODO: Removed because already done by sync_tabs
-        resp = self.sync_tabs(["dum","win","a","out_dirname",out_dirname])
+        #resp = self.sync_tabs(["dum","win","a","out_dirname",out_dirname])
+        self.SigRelay.emit("cm_all_",["out_dirname",out_dirname])
+
         sys_state.set_status(system_state)
         return True
 
@@ -4064,40 +4137,40 @@ class WizardGUI(QMainWindow):
         sys_state.set_status(system_state)
         return True
 
-    def sync_tabs(self,ctrlist):
-        """ 
-        Core CONTROLLER
-        synchronize information between tabs and core; 
-        identification of requesting and receiving tab list [rx,tx,action,item,value]
-        action transfers action to be set, item represents model variable of target, value is the value to be set:
-        'u': update, core system state 'item' is copied to model of 'rx'
-        'a': all, core system state 'item' is copied to all models of modules listed in tab_dict["list"]
-        :param [ctrlist]: control list
-        :type [ctrlist]: list
-        :raises : 
-        :return: success string, "done" = success, any other string = errormessage
-        :rtype: str
-        """
-        system_state = sys_state.get_status()
-        #print(f"core sync_tabs system state: {system_state}")
-        #TODO: REMOVE OLD switch after changing o new system
-        #if system_state["OLD"]:
-        #    return
-        tab_dict = self.tab_dict
-        #tab_dict = system_state["tab_dict"]
-        if ctrlist[2] == "u":
-            #TODO: check if tab object exists in dictionary, if not do nothing
-            tab_dict[ctrlist[0] +"_m"].mdl[ctrlist[3]] = ctrlist[4]
-            return("done")
-        if ctrlist[2] == "a":
-            for tabitem in tab_dict["list"]:
-                #TODO: check if tab object exists in dictionary, if not do nothing
-                tab_dict[tabitem +"_m"].mdl[ctrlist[3]] = ctrlist[4]
-            system_state[ctrlist[3]] = ctrlist[4] #TODO: necessary ?
-            sys_state.set_status(system_state)
-            return("done")
-        else:
-            return("action code not existent")
+    # def sync_tabs(self,ctrlist):
+    #     """ 
+    #     Core CONTROLLER
+    #     synchronize information between tabs and core; 
+    #     identification of requesting and receiving tab list [rx,tx,action,item,value]
+    #     action transfers action to be set, item represents model variable of target, value is the value to be set:
+    #     'u': update, core system state 'item' is copied to model of 'rx'
+    #     'a': all, core system state 'item' is copied to all models of modules listed in tab_dict["list"]
+    #     :param [ctrlist]: control list
+    #     :type [ctrlist]: list
+    #     :raises : 
+    #     :return: success string, "done" = success, any other string = errormessage
+    #     :rtype: str
+    #     """
+    #     system_state = sys_state.get_status()
+    #     #print(f"core sync_tabs system state: {system_state}")
+    #     #TODO: REMOVE OLD switch after changing o new system
+    #     #if system_state["OLD"]:
+    #     #    return
+    #     tab_dict = self.tab_dict
+    #     #tab_dict = system_state["tab_dict"]
+    #     if ctrlist[2] == "u":
+    #         #TODO: check if tab object exists in dictionary, if not do nothing
+    #         tab_dict[ctrlist[0] +"_m"].mdl[ctrlist[3]] = ctrlist[4]
+    #         return("done")
+    #     if ctrlist[2] == "a":
+    #         for tabitem in tab_dict["list"]:
+    #             #TODO: check if tab object exists in dictionary, if not do nothing
+    #             tab_dict[tabitem +"_m"].mdl[ctrlist[3]] = ctrlist[4]
+    #         system_state[ctrlist[3]] = ctrlist[4] #TODO: necessary ?
+    #         sys_state.set_status(system_state)
+    #         return("done")
+    #     else:
+    #         return("action code not existent")
 
     def generate_GUIupdaterlist(self,item):
         self.GUIupdaterlist.append(item)
@@ -4182,8 +4255,8 @@ if __name__ == '__main__':
         #resample_v.SigRelay.connect(view_spectra_v.rxhandler)
         #view_spectra_v.SigRelay.connect(view_spectra_v.rxhandler)
 
-        resample_v.SigSyncTabs.connect(win.sync_tabs)
-        resample_c.SigSyncTabs.connect(win.sync_tabs)
+        #resample_v.SigSyncTabs.connect(win.sync_tabs)
+        #resample_c.SigSyncTabs.connect(win.sync_tabs)
         #view_spectra_v.SigUpdateGUI.connect(view_spectra_v.update_GUI)
         resample_v.SigActivateOtherTabs.connect(win.setactivity_tabs)
         resample_c.SigActivateOtherTabs.connect(win.setactivity_tabs)
@@ -4205,10 +4278,10 @@ if __name__ == '__main__':
                 ########## TODO: temporary hack for core module, change after last Module change:
             eval(tabitem1 + "_v.SigRelay.connect(win.rxhandler)" )
             eval("win.SigRelay.connect(" + tabitem2 + "_v.rxhandler)" )
-            logging.info(f'File opened: {tabitem1 + "_v.SigRelay.connect(" + tabitem2 + "_v.rxhandler)"}')
+            win.logger.debug(f'File opened: {tabitem1 + "_v.SigRelay.connect(" + tabitem2 + "_v.rxhandler)"}')
             #print(tabitem1 + "_v.SigRelay.connect(" + tabitem2 + "_v.rxhandler)")
 
-    #######################TODO: PREPARE FOR REMOVE #######################
+    #######################TODO: CHECK IF STILL NECESSARY #######################
     for tabitem in tab_dict["list"]:     
         tab_dict[tabitem + "_m"] = eval(tabitem + "_m") #resample_m     
         tab_dict[tabitem + "_c"] = eval(tabitem + "_c") #resample_c     
@@ -4219,36 +4292,39 @@ if __name__ == '__main__':
     system_state = sys_state.get_status()
     system_state["tab_dict"] = tab_dict
     sys_state.set_status(system_state)
-    ###################PREPARE FOR REMOVE END ###########################
+    ###################CHECK IF STILL NECESSARY END ###########################
 
     win.init_view_spectra_ui()
 
     #syncing tabs
-    resp = win.sync_tabs(["view_spectra","win","u","resampling_gain",0]) #TODO: initialization elsewhere ?
-    resp = win.sync_tabs(["view_spectra","win","u","deltaf",win.DELTAF])
-    resp = win.sync_tabs(["view_spectra","win","u","prominence",win.PROMINENCE])
-    resp = win.sync_tabs(["view_spectra","win","u","peakwidth",win.PEAKWIDTH])
-    resp = win.sync_tabs(["view_spectra","win","u","baselineoffset",win.Baselineoffset])
+    #resp = win.sync_tabs(["view_spectra","win","u","resampling_gain",0]) #TODO: initialization elsewhere ?
+    # resp = win.sync_tabs(["view_spectra","win","u","deltaf",win.DELTAF])
+    # resp = win.sync_tabs(["view_spectra","win","u","prominence",win.PROMINENCE])
+    # resp = win.sync_tabs(["view_spectra","win","u","peakwidth",win.PEAKWIDTH])
+    # resp = win.sync_tabs(["view_spectra","win","u","baselineoffset",win.Baselineoffset])
     
-    resp = win.sync_tabs(["resample","win","u","emergency_stop",False])
-    resp = win.sync_tabs(["resample","win","a","fileopened",False])
-    resp = win.sync_tabs(["resample","win","a","Tabref",win.Tabref])
-    resp = win.sync_tabs(["resample","win","u","rates",system_state["rates"]])
-    resp = win.sync_tabs(["resample","win","u","irate",system_state["irate"]])
-    resp = win.sync_tabs(["resample","win","u","reslist_ix",system_state["reslist_ix"]])
+    #resp = win.sync_tabs(["resample","win","u","emergency_stop",False])
+    win.SigRelay.emit("cm_all_",["emergency_stop",False])
+    #resp = win.sync_tabs(["resample","win","a","fileopened",False])
+    win.SigRelay.emit("cm_all_",["fileopened",False])
+    #resp = win.sync_tabs(["resample","win","a","Tabref",win.Tabref])
+    win.SigRelay.emit("cm_all_",["Tabref",win.Tabref])
+    #resp = win.sync_tabs(["resample","win","u","rates",system_state["rates"]])
+    win.SigRelay.emit("cm_resample",["rates",system_state["rates"]])
+    #resp = win.sync_tabs(["resample","win","u","irate",system_state["irate"]])
+    win.SigRelay.emit("cm_resample",["irate",system_state["irate"]])
+    #resp = win.sync_tabs(["resample","win","u","reslist_ix",system_state["reslist_ix"]])
+    win.SigRelay.emit("cm_resample",["reslist_ix",system_state["reslist_ix"]]) #TODO check: maybe local in future !
 
-    print(f"initial sync success = {resp}")
+    #print(f"initial sync success = {resp}")
 
     sys.exit(app.exec_())
 
 #TODOs:
 
+
     #
-    # * alle resp = sync_tabs- Manöver durch Relay-Mechanismus ersetzen: 50 min
-    #
-    # * remove sync_Tabs und Tab_dict afterwards
-    #
-    # * alle ui-Handler im viev_spectra von core ins Modul transferieren: 1,5h
+    # * alle ui-Handler im viev_spectra von core ins Modul transferieren: 3h
     # 
     # * wav-header editor Modul erstellen: 5h
     #

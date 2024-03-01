@@ -10,21 +10,10 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 import yaml
+import logging
 from auxiliaries import WAVheader_tools
 from auxiliaries import auxiliaries as auxi
 import system_module as wsys
-
-class yamleditor_m(QObject):
-    __slots__ = ["None"]
-    SigModelXXX = pyqtSignal()
-
-    #TODO: replace all gui by respective state references if appropriate
-    def __init__(self):
-        super().__init__()
-        # Constants
-        self.CONST_SAMPLE = 0 # sample constant
-        self.mdl = {}
-        self.mdl["sample"] = 0
 
 
 class  yamleditor_m(QObject):
@@ -38,6 +27,29 @@ class  yamleditor_m(QObject):
         self.CONST_SAMPLE = 0 # sample constant
         self.mdl = {}
         self.mdl["sample"] = 0
+        self.mdl["_log"] = False
+                # Create a custom logger
+        logging.getLogger().setLevel(logging.DEBUG)
+        # Erstelle einen Logger mit dem Modul- oder Skriptnamen
+        self.logger = logging.getLogger(__name__)
+        # Create handlers
+        # Create handlers
+        warning_handler = logging.StreamHandler()
+        debug_handler = logging.FileHandler("system_log.log")
+        warning_handler.setLevel(logging.WARNING)
+        debug_handler.setLevel(logging.DEBUG)
+
+        # Create formatters and add it to handlers
+        warning_format = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+        debug_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        warning_handler.setFormatter(warning_format)
+        debug_handler.setFormatter(debug_format)
+
+        # Add handlers to the logger
+        self.logger.addHandler(warning_handler)
+        self.logger.addHandler(debug_handler)
+
+        self.logger.debug('Init logger in abstract method reached')
 
 class  yamleditor_c(QObject):
     """_view method
@@ -54,6 +66,7 @@ class  yamleditor_c(QObject):
         viewvars = {}
         #self.set_viewvars(viewvars)
         self.m =  yamleditor_m.mdl
+        self.logger = yamleditor_m.logger
 
 
     def  write_yaml_header(self,dummy):
@@ -69,13 +82,13 @@ class  yamleditor_c(QObject):
         # treat yaml header
         #if self.flag_ann_completed == False:  #TODO: check if this should only be available if annotation is completed or already before
         #    return
-        system_state = sys_state.get_status()
+        #system_state = sys_state.get_status()
         if len(self.cohiradia_yamlheader_filename) >=256:
             auxi.standard_errorbox("file path/name is longer than 256 characters, cannot proceed with yaml headers. This may cause significant problems when using the annotator. Please use less deeply nested paths for your files")
             #system_state["f1"] =""
             self.reset_GUI()
             #TODO: close file reset GU totally
-            sys_state.set_status(system_state)
+            #sys_state.set_status(system_state)
             return False
 
         if os.path.exists(self.cohiradia_yamlheader_filename) == True:
@@ -88,7 +101,7 @@ class  yamleditor_c(QObject):
             msg.buttonClicked.connect(self.popup)
             msg.exec_()
             if self.yesno == "&No":
-                sys_state.set_status(system_state)
+                #sys_state.set_status(system_state)
                 return False
 
         if os.path.exists(self.cohiradia_yamlheader_filename) == False:         #exist yaml file: create from yaml-editor
@@ -152,7 +165,7 @@ class  yamleditor_c(QObject):
             RXlatitude = 'location-latitude: "{}"\n'.format(RXlatitudestr)
             if "\"" in RXlatitudestr or "\"" in RXlongitudestr:
                 auxi.standard_errorbox("\' \" \' is not allowed in the yaml file. Please replace by two single quotes, i.e.:  \'\'")
-                sys_state.set_status(system_state)
+                #sys_state.set_status(system_state)
                 return
             RXQTHstr = self.gui.tableWidget_YAMLHEADER.item(9, 0).text()
             RXQTH = 'location-qth: "{}"\n'.format(RXQTHstr)
@@ -208,6 +221,7 @@ class  yamleditor_v(QObject):
         self.DATABLOCKSIZE = 1024*32
         self.gui = gui #gui_state["gui_reference"]#system_state["gui_reference"]
         self.yamleditor_c = yamleditor_c
+        self.logger = yamleditor_m.logger
 
     def rxhandler(self,_key,_value):
         """
@@ -241,7 +255,8 @@ class  yamleditor_v(QObject):
         :return: flag False or True, False on unsuccessful execution
         :rtype: Boolean
         """
-        print(" yamleditor: updateGUIelements")
+        #print(" yamleditor: updateGUIelements")
+        self.logger.debug(" yamleditor: updateGUIelements")
         #self.gui.DOSOMETHING
 
     def yaml_header_buttonfcn(self):

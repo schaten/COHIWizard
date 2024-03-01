@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5 import QtGui
+import logging
 from auxiliaries import auxiliaries as auxi
 
 class abstract_module_m(QObject):
@@ -16,6 +17,30 @@ class abstract_module_m(QObject):
         self.CONST_SAMPLE = 0 # sample constant
         self.mdl = {}
         self.mdl["sample"] = 0
+        self.mdl["_log"] = False
+        # Create a custom logger
+        logging.getLogger().setLevel(logging.DEBUG)
+        # Erstelle einen Logger mit dem Modul- oder Skriptnamen
+        self.logger = logging.getLogger(__name__)
+        # Create handlers
+        # Create handlers
+        warning_handler = logging.StreamHandler()
+        debug_handler = logging.FileHandler("system_log.log")
+        warning_handler.setLevel(logging.WARNING)
+        debug_handler.setLevel(logging.DEBUG)
+
+        # Create formatters and add it to handlers
+        warning_format = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+        debug_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        warning_handler.setFormatter(warning_format)
+        debug_handler.setFormatter(debug_format)
+
+        # Add handlers to the logger
+        self.logger.addHandler(warning_handler)
+        self.logger.addHandler(debug_handler)
+
+        self.logger.debug('Init logger in abstract method reached')
+
 
 class abstract_module_c(QObject):
     """_view method
@@ -32,6 +57,7 @@ class abstract_module_c(QObject):
         viewvars = {}
         #self.set_viewvars(viewvars)
         self.m = abstract_module_m.mdl
+        self.logger = abstract_module_m.logger
         
 
 class abstract_module_v(QObject):
@@ -53,6 +79,7 @@ class abstract_module_v(QObject):
         self.m = abstract_module_m.mdl
         self.DATABLOCKSIZE = 1024*32
         self.gui = gui #gui_state["gui_reference"]#system_state["gui_reference"]
+        self.logger = abstract_module_m.logger
 
     def init_abstractmodule_ui(self):
 

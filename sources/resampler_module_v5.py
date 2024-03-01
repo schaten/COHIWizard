@@ -6,6 +6,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5 import QtGui
 import datetime as ndatetime
+import logging
 import os 
 import subprocess
 import shutil
@@ -38,9 +39,33 @@ class resample_m(QObject):
         # Constants
         self.CONST_SAMPLE = 0 # sample constant
         self.mdl = {}
+        self.mdl["_log"] = False
         self.mdl["sample"] = 0
         self.mdl["my_filename"] = ""
         self.mdl["ext"] = ""
+        # Create a custom logger
+        logging.getLogger().setLevel(logging.DEBUG)
+        # Erstelle einen Logger mit dem Modul- oder Skriptnamen
+        self.logger = logging.getLogger(__name__)
+        # Create handlers
+        # Create handlers
+        warning_handler = logging.StreamHandler()
+        debug_handler = logging.FileHandler("system_log.log")
+        warning_handler.setLevel(logging.WARNING)
+        debug_handler.setLevel(logging.DEBUG)
+
+        # Create formatters and add it to handlers
+        warning_format = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+        debug_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        warning_handler.setFormatter(warning_format)
+        debug_handler.setFormatter(debug_format)
+
+        # Add handlers to the logger
+        self.logger.addHandler(warning_handler)
+        self.logger.addHandler(debug_handler)
+
+        self.logger.debug('Init logger in resampler reached')
+
 
 #TODO: TESTEN durch mal eine ausgewählte system_state Variable
 
@@ -176,6 +201,8 @@ class res_workers(QObject):
         MAX_GAP = self.get_maxgap()
         input_file_list = self.get_inputfilelist()
         print("merge2G: start merging files")
+        #self.logger.debug("merge2G: start merging files")
+
         maxprogress = 100
         lenlist = len(input_file_list)
         list_ix = 0
@@ -184,6 +211,7 @@ class res_workers(QObject):
         basename = self.get_ret()
         self.set_progress(1)
         print(f'merge2G init progress: {1}')
+        #self.logger.debug("merge2G init progress: 1")
         self.SigPupdate.emit()
 
 
@@ -592,11 +620,12 @@ class resample_c(QObject):
     SigCancel = pyqtSignal()
     SigResampGUIReset = pyqtSignal()
     SigActivateOtherTabs = pyqtSignal(str,str,object)
-    SigSyncTabs = pyqtSignal(object)
+    #SigSyncTabs = pyqtSignal(object)
     SigUpdateGUI = pyqtSignal()
     SigUpdateGUIelements = pyqtSignal()
     SigDisconnectExternalMethods = pyqtSignal(str)
     SigConnectExternalMethods = pyqtSignal(str)
+    SigRelay = pyqtSignal(str,object)
 
     #TODO: replace all gui by respective state references if appropriate
     def __init__(self, resample_m):
@@ -617,6 +646,7 @@ class resample_c(QObject):
         self.m["resampling_gain"] = 0
         self.m["last_system_time"] = time.time()
         self.m["clearlist"] = False
+        self.logger = resample_m.logger
 
     def set_LOvars(self,_value): #TODO seems unused, remove ?
         self.__slots__[0] = _value
@@ -743,14 +773,16 @@ class resample_c(QObject):
         """
         #system_state = self.sys_state.get_status()
         #gui = self.sys_state["gui_reference"]
-        self.SigSyncTabs.emit(["_test", "resample", "a", "_teststatus", True])
+        #self.SigSyncTabs.emit(["_test", "resample", "a", "_teststatus", True])
+        #self.SigRelay.emit("cm_all_",["wavheader",self.wavheader])
         if self.m["merge2G_deleteoriginal"]:
             for input_file in input_file_list:
                 print(f"remove {input_file} if exists")
                 if os.path.exists(input_file) == True:
                     os.remove(input_file)
         self.m["clearlist"] = True
-        print("resampler merg2G_cleanup before SigUpdateGUIelements")
+        #print("resampler merg2G_cleanup before SigUpdateGUIelements")
+        self.logger.debug("resampler merg2G_cleanup before SigUpdateGUIelements")
         self.SigUpdateGUIelements.emit()
         # gui.ui.listWidget_playlist_2.clear() #TODO: shift to a resample.view method
         # gui.ui.listWidget_sourcelist_2.clear() #TODO: shift to a resample.view method
@@ -763,7 +795,8 @@ class resample_c(QObject):
         self.m["blinkstate"] = False
         self.m["actionlabel"] = "JOB DONE"
         self.m["actionlabelbg"] = "lightgray"
-        print("resampler merg2G_cleanup before SigProgress")
+        #print("resampler merg2G_cleanup before SigProgress")
+        self.logger.debug("resampler merg2G_cleanup before SigProgress")
         self.m["blinking"] = False
         self.SigProgress.emit()
         #gui.ui.label_36.setStyleSheet("background-color: lightgray") #TODO: shift to a resample.view method
@@ -775,7 +808,9 @@ class resample_c(QObject):
         #The inactivation of the rest should be done by core.view
         self.m["fileopened"] = False
         print("resampler merg2G_cleanup before SigSyncTabs")
-        self.SigSyncTabs.emit(["test","resample","a","fileopened",False])
+        self.logger.debug("resampler merg2G_cleanup before SigSyncTabs")
+        #self.SigSyncTabs.emit(["test","resample","a","fileopened",False])
+        self.SigRelay.emit("cm_all_",["fileopened",False])
         #gui.ui.listWidget_playlist_2.itemChanged.connect(v_resamp.reslist_update)  #INSTANZ aktuell nicht von hier aus zugänglich
         #gui.SigGUIReset.emit() #TODO: shift to a resample.view method
         self.m["list_out_files_resampled"] = []
@@ -1203,8 +1238,8 @@ class resample_c(QObject):
             #schedule_objdict["signal"]["resample"].disconnect(schedule_objdict["connect"]["resample"])
             pass
         if sch[cnt]["action"].find('accomplish') == 0:
-            print("res_scheduler: accomplish rechaed, emit signal accomplish")
-            self.SigSyncTabs.emit(["resample","resample","u","label36text",'FINALIZE'])
+            #print("res_scheduler: accomplish rechaed, emit signal accomplish")
+            #self.SigSyncTabs.emit(["resample","resample","u","label36text",'FINALIZE'])
 
             #gui.ui.label_36.setText('FINALIZE') #TODO: shift to a resample.view method, treat in a different manner: model variable change and then update signal
             #self.sys_state.set_status(self.m) #TODO: shift to a resample.view method, treat in a different manner: model variable change and then update signal
@@ -1467,7 +1502,7 @@ class resample_v(QObject):
     SigUpdateList = pyqtSignal()
     SigCancel = pyqtSignal()
     SigUpdateGUI = pyqtSignal(object)
-    SigSyncTabs = pyqtSignal(object)
+    #SigSyncTabs = pyqtSignal(object)
     SigActivateOtherTabs = pyqtSignal(str,str,object)
     SigUpdateOtherGUIs = pyqtSignal()
     SigRelay = pyqtSignal(str,object)
@@ -1499,6 +1534,8 @@ class resample_v(QObject):
         self.m["emergency_stop"] = False
         self.m["blinking"] = False
         self.m["position"] = 0
+        self.logger = resample_m.logger
+        resample_c.SigRelay.connect(self.rxhandler)
         self.gui = gui #gui_state["gui_reference"]#system_state["gui_reference"]
 
         self.init_resample_ui() #TODO TODO TODO: activate after tests
@@ -1527,7 +1564,8 @@ class resample_v(QObject):
         try:
             subproc3 = subprocess.run('sox -h', stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True, check=True)
         except subprocess.CalledProcessError as ex:
-            print("sox FAIL")
+            #print("sox FAIL")
+            self.logger.error("sox FAIL")
             print(ex.stderr, file=sys.stderr, end='', flush=True)
             print(ex.stdout, file=sys.stdout, end='', flush=True)
             if len(ex.stderr) > 0: 
@@ -1618,20 +1656,23 @@ class resample_v(QObject):
         if ctrl.find("cancel_resampling"):
             self.gui.pushButton_resample_cancel.clicked.disconnect(self.resample_c.cancel_resampling)
         else:
-            print("error in resample_v, ext_meth_disconnect ")
+            #print("error in resample_v, ext_meth_disconnect ")
+            self.logger.error("error in resample_v, ext_meth_disconnect ")
 
     def ext_meth_connect(self,ctrl):
         if ctrl.find("cancel_resampling"):
             self.gui.pushButton_resample_cancel.clicked.connect(self.resample_c.cancel_resampling)
         else:
             print("error in resample_v, ext_meth_connect ")
+            self.logger.error("error in resample_v, ext_meth_connect ")
 
     def GUI_reset_status(self):
         self.m["resampling_gain"] = 0
         self.m["emergency_stop"] = False
         self.m["timescaler"] = 0
         self.m["fileopened"] = False
-        self.SigSyncTabs(["dum","resample","a","fileopened",False])
+        #self.SigSyncTabs(["dum","resample","a","fileopened",False])
+        self.SigRelay.emit("cm_all_",["fileopened",False])
         self.m["ifreq"] = 0
         self.m["irate"] = 0
         self.m["icorr"] = 0
@@ -1656,8 +1697,8 @@ class resample_v(QObject):
         :return: flag False or True, False on unsuccessful execution
         :rtype: Boolean
         """
-        print(f"resampler: updateGUIelements {self.m['progress']}")
-
+        #print(f"resampler: updateGUIelements {self.m['progress']}")
+        self.logger.debug("resampler: updateGUIelements progress: %f", self.m['progress'] )
         self.gui.label_Filename_resample.setText(self.m["my_filename"] + self.m["ext"])
         self.gui.label_36.setStyleSheet("background-color: " + self.m["actionlabelbg"])
         self.gui.label_36.setFont(QFont('arial',self.m["label36Font"]))
@@ -1707,14 +1748,17 @@ class resample_v(QObject):
 
 
     def update_GUI(self,_key): #TODO TODO: is this method still needed ? reorganize. gui-calls should be avoided, better only signalling and gui must call the routenes itself
-        print(" res_updateGUI: new updateGUI in resampler module reached")
+        #print(" res_updateGUI: new updateGUI in resampler module reached")
+        self.logger.debug(" res_updateGUI: new updateGUI in resampler module reached")
         self.SigUpdateGUI.disconnect(self.update_GUI)
         if _key.find("reset") == 0:
-            print("resampler reset all checked elements")
+            #print("resampler reset all checked elements")
+            self.logger.debug("resampler reset all checked elements")
             self.reset_resamp_GUI_elemets()
             self.gui.lineEdit_resample_targetnameprefix.setEnabled(True) #TODO: shift to a resample.view method        
         if _key.find("terminate") == 0:
-            print("termination GUI update not yet defined")
+            #print("termination GUI update not yet defined")
+            self.logger.debug("termination GUI update not yet defined")
         if _key.find("ext_update") == 0:
             #update resampler gui with all elements
             #TODO: fetch model values and re-fill all tab fields
@@ -1740,8 +1784,9 @@ class resample_v(QObject):
         :return: none
         :rtype: none
         """
-        print("#######!!!!!!!!!!!!!!    reslist_update !!!!!!!! ############")
-        print("reslist_update: resampling list updated")  
+        #print("#######!!!!!!!!!!!!!!    reslist_update !!!!!!!! ############")
+        #print("reslist_update: resampling list updated")  
+        self.logger.debug("reslist_update: resampling list updated")
         time.sleep(0.1)
         lw = self.gui.listWidget_playlist_2
         reslist = []
@@ -1749,12 +1794,14 @@ class resample_v(QObject):
             item = lw.item(x)
             reslist.append(item.text())
         self.m["reslist"] = reslist
-        print(f"reslist_update:reslist: {reslist}")
+        #print(f"reslist_update:reslist: {reslist}")
+        self.logger.debug("reslist_update:reslist: %s", reslist)
         #system_state["f1"] = self.gui.my_dirname + '/' + reslist[0]  #TODO: replace by line below
         #self.m["f1"] = self.gui.my_dirname + '/' + reslist[0] #TODO: replace self.mydirname by status entry
         self.m["f1"] = self.m["my_dirname"] + '/' + reslist[0]
         #print(f'reslist_update:cb_resample: file: {system_state["f1"]}') #TODO: replace by line below
-        print(f'reslist_update:cb_resample: file: {self.m["f1"]}')
+        #print(f'reslist_update:cb_resample: file: {self.m["f1"]}')
+        self.logger.debug("reslist_update:cb_resample: file:  %s", self.m["f1"] )
 
         #self.m["wavheader"] = WAVheader_tools.get_sdruno_header(self,system_state["f1"]) #TODO: replace by line below
         ####################PROBLEM ??????????????????????????? wavheader in core aktivieren ?
@@ -1772,7 +1819,8 @@ class resample_v(QObject):
         wavheader2 = WAVheader_tools.get_sdruno_header(self,(self.m["my_dirname"] + '/' + self.m["reslist"][-1]))
         if not wavheader1:
             auxi.standard_errorbox("This file does not have a known SDR wav header - cannot be loaded")
-            print("This file does not have a known SDR wav header - cannot be loaded")
+            #print("This file does not have a known SDR wav header - cannot be loaded")
+            self.logger.warning("This file does not have a known SDR wav header - cannot be loaded")
             return(False)
               
         self.m["reslist_starttime1"] = wavheader1['starttime_dt']
@@ -1788,7 +1836,8 @@ class resample_v(QObject):
             auxi.standard_errorbox(errortext)
             #self.sys_state.set_status(system_state)
             return(False)
-        print("reslist_update:resampler view reslist terminated")
+        #print("reslist_update:resampler view reslist terminated")
+        self.logger.debug("reslist_update:resampler view reslist terminated")
         #self.sys_state.set_status(system_state)
 
 
@@ -1940,12 +1989,14 @@ class resample_v(QObject):
             try:
                 target_LO = float(self.gui.lineEdit_resample_targetLO.text())*1000
             except TypeError:
-                print("plot_res_spectrum: wrong format of TARGET_LO")
+                #print("plot_res_spectrum: wrong format of TARGET_LO")
+                self.logger.error("plot_res_spectrum: wrong format of TARGET_LO")
                 auxi.standard_errorbox("invalid characters, must be numeric float value !")
                 #TARGET_LO = self.m["wavheader"]['centerfreq']
                 return False
             except ValueError:
-                print("plot_res_spectrum: wrong format of TARGET_LO")
+                #print("plot_res_spectrum: wrong format of TARGET_LO")
+                self.logger.error("plot_res_spectrum: wrong format of TARGET_LO")
                 auxi.standard_errorbox("invalid characters, must be numeric float value !")
                 #TARGET_LO = self.m["wavheader"]['centerfreq']
                 return False
@@ -1990,7 +2041,8 @@ class resample_v(QObject):
             #change 26_11_2023: beforechange: progress = system_state["sox_worker"].get_progress() #TODO: dazu muss aber system_state["sox_worker"] erst einmal existieren 
             progress = self.m["calling_worker"].get_progress() #TODO: check wie gewährleistet (aktuell im action_method beim thread konfigurieren): dazu muss aber system_state["sox_worker"] erst einmal existieren 
         else:
-            print("update_progress_resamping: error, progress source system flag invalid")
+            #print("update_progress_resamping: error, progress source system flag invalid")
+            self.logger.error("update_progress_resamping: error, progress source system flag invalid")
             #self.sys_state.set_status(self.m)
             return False
         #self.SigUpdateGUIelements.emit()
@@ -2064,7 +2116,8 @@ class resample_v(QObject):
         #set selection of SR to suggested value
         #self.gui.comboBox_resample_targetSR.setCurrentIndex(sugg_index)
         #self.sys_state.set_status(system_state)
-        print("#######!!!!!!!!!!!!!!    update resample GUI !!!!!!!! ############")
+        #print("#######!!!!!!!!!!!!!!    update resample GUI !!!!!!!! ############")
+        self.logger.debug("#######!!!!!!!!!!!!!!    update resample GUI !!!!!!!! ############")
 
     def getCuttime(self):
         """calculate trimming values for trimming self.m["stop_trim"] from the beginning of the first reslist file 
@@ -2103,7 +2156,8 @@ class resample_v(QObject):
             return(False, f'stop cut time must be less than {self.m["reslist_stoptime2"]}')
         if stopcut < self.m["reslist_starttime2"]:
             return(False, f'stop cut time must be greater than or equal to {self.m["reslist_starttime2"]}')   
-        print(f"get Cuttime: cutstart datetime: {startcut} cutstop datetime: {stopcut}")
+        #print(f"get Cuttime: cutstart datetime: {startcut} cutstop datetime: {stopcut}")
+        self.logger.debug("get Cuttime: cutstart datetime: %s cutstop datetime: %s", startcut, stopcut)
         #self.sys_state.set_status(system_state)
         return(True,"")
 
@@ -2235,12 +2289,14 @@ class resample_v(QObject):
         try:
             fgain = float(gain)
         except TypeError:
-            print("resampling gain: wrong format of manual gain")
+            #print("resampling gain: wrong format of manual gain")
+            self.logger.error("resampling gain: wrong format of manual gain")
             auxi.standard_errorbox("invalid characters, must be numeric float value !")
             #TARGET_LO = self.m["wavheader"]['centerfreq']
             return False
         except ValueError:
-            print("resampling gain: wrong format of manual gain")
+            #print("resampling gain: wrong format of manual gain")
+            self.logger.error("resampling gain: wrong format of manual gain")
             auxi.standard_errorbox("invalid characters, must be numeric float value !")
             #TARGET_LO = self.m["wavheader"]['centerfreq']
             return False
@@ -2272,7 +2328,8 @@ class resample_v(QObject):
             lw = self.gui.listWidget_playlist_2 #TODO: --> self.gui
             item = lw.item(ix)
             reslist.append(self.m["my_dirname"] + '/' + item.text()) #TODO: --> self.gui
-        print(f"cb_split2G_Button {reslist}")
+        #print(f"cb_split2G_Button {reslist}")
+        self.logger.debug("cb_split2G_Button %s ", reslist)
         self.m["mergeprefix"] = "/temp_split_"
         #TODO_create separate out directory
         #self.m["out_dirname"] = self.m["out_dirname"] + "_split"
@@ -2326,7 +2383,8 @@ class resample_v(QObject):
         #stop if exception (e.g. cancellation)
         if self.m["emergency_stop"] is True:
             self.m["emergency_stop"] = False
-            print("emergency stop in cb_resample")
+            #print("emergency stop in cb_resample")
+            self.logger.warning("emergency stop in cb_resample")
             self.m["reslist_ix"] = 0
             print("resamle list has been terminated, reset counter and exit event loop")
             self.gui.listWidget_playlist_2.clear()
@@ -2381,8 +2439,11 @@ class resample_v(QObject):
                 print(f'cb_resample: file: {self.m["f1"]}')
                 self.m["wavheader"] = WAVheader_tools.get_sdruno_header(self,self.m["f1"])
                 #set filename in all other tabs: CHECK: maybe necessary in view spectra but not necessarily in others ?
-                self.SigSyncTabs.emit(["dum","resample","a","my_filename",self.m["my_filename"]])
-                self.SigSyncTabs.emit(["dum","resample","a","ext",self.m["ext"]])
+                #self.SigSyncTabs.emit(["dum","resample","a","my_filename",self.m["my_filename"]])
+                #self.SigSyncTabs.emit(["dum","resample","a","ext",self.m["ext"]])
+                self.SigRelay.emit("cm_all_",["my_filename",self.m["my_filename"]])
+                self.SigRelay.emit("cm_all_",["ext",self.m["ext"]])
+                
                 self.SigUpdateOtherGUIs.emit()
 
                 # TODO: check for cutting information
@@ -2415,7 +2476,8 @@ class resample_v(QObject):
                 #regardless whether automerge or not, enable GUI, reset GUI, disable fileopened, update other GUIs
                 self.enable_resamp_GUI_elemets(True)
                 self.m["fileopened"] = False
-                self.SigSyncTabs.emit(["dum", "resample", "a", "fileopened", False])
+                #self.SigSyncTabs.emit(["dum", "resample", "a", "fileopened", False])
+                self.SigRelay.emit("cm_all_",["fileopened", self.m["fileopened"]])
                 self.SigUpdateOtherGUIs.emit()
                 self.gui.listWidget_playlist_2.itemChanged.connect(self.reslist_update)
                 if not self.gui.checkBox_AutoMerge2G.isChecked():

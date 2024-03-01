@@ -9,6 +9,7 @@ from scipy.ndimage.filters import median_filter
 from auxiliaries import WAVheader_tools
 import time
 from auxiliaries import auxiliaries as auxi
+import logging
 
 class view_spectra_m(QObject):
     __slots__ = ["None"]
@@ -20,9 +21,40 @@ class view_spectra_m(QObject):
         # Constants
         self.CONST_SAMPLE = 0 # sample constant
         self.mdl = {}
+        self.mdl["_log"] = False
         self.mdl["sample"] = 0
+        self.mdl["resampling_gain"] = 0
         self.mdl["my_filename"] = ""
         self.mdl["ext"] = ""
+        self.mdl["deltaf"] = 5000 #minimum peak distance in Hz for peak detector #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
+        self.mdl["peakwidth"] = 10 # minimum peak width in Hz for peak detector #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
+        self.mdl["prominence"] = 15 # minimum peak prominence in dB above baseline for peak detector #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
+        #self.mdl["FILTERKERNEL"] =15 # length of the moving median filter kernel in % of the spectral span #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
+        self.mdl["filterkernel"] = 15
+        self.mdl["baselineoffset"] = 0
+
+        # Create a custom logger
+        logging.getLogger().setLevel(logging.DEBUG)
+        # Erstelle einen Logger mit dem Modul- oder Skriptnamen
+        self.logger = logging.getLogger(__name__)
+        # Create handlers
+        # Create handlers
+        warning_handler = logging.StreamHandler()
+        debug_handler = logging.FileHandler("system_log.log")
+        warning_handler.setLevel(logging.WARNING)
+        debug_handler.setLevel(logging.DEBUG)
+
+        # Create formatters and add it to handlers
+        warning_format = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+        debug_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        warning_handler.setFormatter(warning_format)
+        debug_handler.setFormatter(debug_format)
+
+        # Add handlers to the logger
+        self.logger.addHandler(warning_handler)
+        #self.logger.addHandler(debug_handler)
+
+        self.logger.debug('Init logger in view_spectra reached')
 
 class view_spectra_c(QObject):
     """_view methods for resampling module
@@ -42,7 +74,7 @@ class view_spectra_c(QObject):
         viewvars = {}
         #self.set_viewvars(viewvars)
         self.m = view_spectra_m.mdl
-        
+        self.logger = view_spectra_m.logger
 
 class view_spectra_v(QObject):
     """_view methods for resampling module
@@ -64,6 +96,7 @@ class view_spectra_v(QObject):
         #viewvars = {}
         #self.set_viewvars(viewvars)
         self.m = view_spectra_m.mdl
+        self.logger = view_spectra_m.logger
         self.DATABLOCKSIZE = 1024*32
         #self.sys_state = wsys.status() #TEST: commented out 09-01-2024
         #self.sys_state = gui_state
@@ -84,16 +117,16 @@ class view_spectra_v(QObject):
         self.gui.spinBoxminSNR_ScannerTab.valueChanged.connect(self.minSNRupdate_ScannerTab)
     #     self.gui.spinBoxKernelwidth.valueChanged.connect(self.setkernelwidth)
     #     self.gui.spinBoxKernelwidth.setEnabled(False)
-    #     self.gui.spinBoxKernelwidth.setProperty("value", 15) #TODO: avoid magic number
+        self.gui.spinBoxKernelwidth.setProperty("value", self.m["filterkernel"])
+        self.gui.spinBoxminBaselineoffset.setProperty("value", 0)
     #     self.gui.spinBoxminBaselineoffset.setProperty("value", 0)
-    #     self.Baselineoffset = self.gui.spinBoxminBaselineoffset.value()
+        #self.gui.spinBoxminBaselineoffset.value(0) #TODO: avoid magic number
     #     self.gui.spinBoxminBaselineoffset.valueChanged.connect(self.set_baselineoffset)
 
     #     self.gui.horizontalScrollBar_view_spectra.sliderReleased.connect(self.cb_plot_spectrum)
     #     self.gui.radioButton_plotraw.clicked.connect(self.cb_plot_spectrum)
     #     #self.SigToolbar.connect(lambda: self.plot_spectrum(self,self.position))
-    #     self.gui.spinBoxNumScan.setProperty("value", 10) #TODO: avoid magic number
-    #     self.gui.spinBoxminBaselineoffset.setProperty("value", 0) #TODO: avoid magic number
+        self.gui.spinBoxNumScan.setProperty("value", 10) #TODO: avoid magic number
     #     self.gui.tableWidget_3.setEnabled(False)
 
 
@@ -135,14 +168,17 @@ class view_spectra_v(QObject):
         :return: flag False or True, False on unsuccessful execution
         :rtype: Boolean
         """
-        print("view spectra: updateGUIelements")
+        #print("view spectra: updateGUIelements")
+
+        self.logger.debug("view spectra: updateGUIelements")
         self.gui.label_Filename_ViewSpectra.setText(self.m["my_filename"] + self.m["ext"])
         dummy = 0
         self.plot_spectrum(dummy,self.m["position"])
 
-
     def update_GUI(self,_key): #TODO TODO: is this method still needed ? reorganize. gui-calls should be avoided, better only signalling and gui must call the routenes itself
-        print(" view spectra updateGUI: new updateGUI in view spectra module reached")
+        #print(" view spectra updateGUI: new updateGUI in view spectra module reached")
+
+        self.logger.debug(" view spectra updateGUI: new updateGUI in view spectra module reached")
         self.SigUpdateGUI.disconnect(self.update_GUI)
         if _key.find("ext_update") == 0:
             #update resampler gui with all elements
@@ -157,7 +193,7 @@ class view_spectra_v(QObject):
 
     def minSNRupdate_ScannerTab(self):
         self.m["prominence"] = self.gui.spinBoxminSNR_ScannerTab.value()
-        print("minSNRupdate_ScannerTab new mode")
+        #print("minSNRupdate_ScannerTab new mode")
         #das ist ein externer Zugriff
         self.SigRelay.emit("cui_annotate",[self.gui.spinBoxminSNR.setProperty,["value",self.m["prominence"]]]) 
         self.gui.spinBoxminSNR.setProperty("value", self.m["prominence"]) #TODO TODO TODO: remove after relocation of annotator and activate line above
@@ -190,7 +226,8 @@ class view_spectra_v(QObject):
         #testirate = system_state["irate"]
         #print(f"TEST TEST TEST: plot_spectrum testirate:{testirate}")
         #sys_state.set_status(system_state)
-        print("view_spectra plot_spectum reached")
+        #print("view_spectra plot_spectum reached")
+        self.logger.debug("view_spectra plot_spectum reached")
         if self.m["fileopened"] is False:
             #sys_state.set_status(system_state)
             return(False)
@@ -236,7 +273,7 @@ class view_spectra_v(QObject):
 
             self.m["Tabref"]["View_Spectra"]["ax"].clear()
             #print("datalen > 10")
-            print(f"view_spectra plot_spectum, gain: {self.m['resampling_gain']}")
+            #print(f"view_spectra plot_spectum, gain: {self.m['resampling_gain']}")
             if self.gui.radioButton_plotraw.isChecked() is True:
                 realindex = np.arange(0,self.DATABLOCKSIZE,2)
                 imagindex = np.arange(1,self.DATABLOCKSIZE,2)

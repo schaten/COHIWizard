@@ -37,7 +37,7 @@ class auxiliaries():
         :return: ret = dictionary with fields: ret["data"], ret["size]; size is either the number of bytes read or -1 in case of invalid file formats
         :rtype: dictionary; type of field "data": np.float32 array of size self.DATABLOCKSIZE ; type of field "size": int
         """
-        #print(f"read segment reached, position: {position}")
+        ##print(f"read segment reached, position: {position}")
         #data = np.empty(DATABLOCKSIZE, dtype=np.int16) #TODO: DATABLOCKSIZE dynamisch anpassen !
         fid = open(filepath, 'rb')
         if wFormatTag == 1:
@@ -258,7 +258,7 @@ class WAVheader_tools():
         else:
             if wavheader['sdrtype_chckID'].find('rcvr') > -1:
 
-                print('rcvr reached in wavheader reader')
+                ##print('rcvr reached in wavheader reader')
 
                 wavheader['centerfreq'] = int.from_bytes(self.fileHandle.read(4), byteorder='little')
                 wavheader['SamplingRateIdx'] = int.from_bytes(self.fileHandle.read(4), byteorder='little')
@@ -305,7 +305,7 @@ class WAVheader_tools():
                 wavheader['nextfilename'] = ('')    
             else:
                 #TODO: implement raw format if wanted
-                print('unrecognized SDR')
+                ##print('unrecognized SDR')
                 return False
 
 
@@ -331,11 +331,11 @@ class WAVheader_tools():
         :return: 
         :rtype: 
         """
-        #print("wavheader writer reached")
+        ###print("wavheader writer reached")
         if wavheader['filesize'] > 2147483647:
             wavheader['filesize'] = int(2147483647)
             wavheader['data_nChunkSize'] = int(wavheader['filesize'] - 208)
-            print(wavheader['fmt_nChunkSize'])
+            #print(wavheader['fmt_nChunkSize'])
         if ovwrt_flag == True:
             fid = open(wavfilename, 'r+b')
             fid.seek(0)
