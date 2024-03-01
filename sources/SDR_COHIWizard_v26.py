@@ -4323,6 +4323,7 @@ if __name__ == '__main__':
 #TODOs:
 
 
+    # * check too frequent calls to plot spectrum in GUI updates in view_spectrum
     #
     # * alle ui-Handler im viev_spectra von core ins Modul transferieren: 3h
     # 
