@@ -10,7 +10,6 @@ class abstract_module_m(QObject):
     __slots__ = ["None"]
     SigModelXXX = pyqtSignal()
 
-    #TODO: replace all gui by respective state references if appropriate
     def __init__(self):
         super().__init__()
         # Constants
@@ -70,7 +69,8 @@ class abstract_module_v(QObject):
     SigCancel = pyqtSignal()
     SigUpdateGUI = pyqtSignal(object)
     SigSyncGUIUpdatelist = pyqtSignal(object)
-
+    SigRelay = pyqtSignal(str,object)
+    
     def __init__(self, gui, abstract_module_c, abstract_module_m):
         super().__init__()
 
@@ -103,7 +103,7 @@ class abstract_module_v(QObject):
             self.m[_value[0]] = _value[1]
         if _key.find("cui_abstract_module") == 0:
             _value[0](_value[1]) #STILL UNCLEAR
-        if _key.find("cexex_resample") == 0  or _key.find("cm_all_") == 0:
+        if _key.find("cexex_abstract_module") == 0  or _key.find("cexex_all_") == 0:
             if  _value[0].find("updateGUIelements") == 0:
                 self.updateGUIelements()
             #handle method

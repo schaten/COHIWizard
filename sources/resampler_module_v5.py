@@ -749,7 +749,7 @@ class resample_c(QObject):
         self.m["actionlabelbg"] ="cyan"
         self.m["actionlabel"] = "MERGE 2G"
         self.m["blinking"] = False
-        self.SigUpdateGUIelements.emit()
+        self.SigUpdateGUIelements.emit() #TODO: replace by Relay method ?
         print("merge2G: set merge2G_ actionlabel and progress update params")
         #self.sys_state.set_status(system_state)
         time.sleep(0.0001)
@@ -1036,7 +1036,7 @@ class resample_c(QObject):
         progress = self.m["calling_worker"].get_progress()
         self.m["progress"] = progress
         self.m["progress_source"] = "normal"
-        self.SigUpdateGUIelements.emit()
+        self.SigUpdateGUIelements.emit() #TODO replace by Relay method ?
 
     def Soxerrorhandler(self,errorstring):
 
@@ -1080,7 +1080,7 @@ class resample_c(QObject):
         print("accomplish_resampling: soxstring thread finished")
         target_fn = self.m["source_fn"]  #TODO: define im GUI_Hauptprogramm bzw. im scheduler
         self.m["progress"] = 0
-        self.SigUpdateGUIelements.emit()
+        self.SigUpdateGUIelements.emit() #TODO replace by Relay method ?
         #gui.ui.progressBar_resample.setProperty("value", 0) #TODO: shift to a resample.view method, replace by signalling ?
         #self.soxthreadActive = False  #TODO: check is obsolete
         print(f"accomplish reached, target_fn: {target_fn}")
@@ -1858,14 +1858,26 @@ class resample_v(QObject):
         #print(f"reslist: item clicked, itemtext: {item.text()}")        
         #system_state["f1"] = self.gui.my_dirname + '/' + item.text() #TODO: replace by line below
         self.m["f1"] = self.m["my_dirname"] + '/' + item.text() #TODO: replace self.mydirname by status entry
+        self.m["my_filename"], self.m["ext"] = os.path.splitext(item.text())
         #print(f'cb_resample: file: {system_state["f1"]}')
         #self.m["wavheader"] = WAVheader_tools.get_sdruno_header(self,system_state["f1"]) #TODO: replace by line below
         self.m["wavheader"] = WAVheader_tools.get_sdruno_header(self,self.m["f1"])
-        self.gui.showfilename()
-        self.gui.fill_wavtable()
-        self.plot_spectrum_resample(0)
-        #self.sys_state.set_status(system_state)
 
+        #self.gui.showfilename()
+
+        #################TODO: implement next line newly with Relay after tarnsfer of wavedit module 
+        #self.gui.fill_wavtable()
+        self.update_resample_GUI()
+        #TODO: update also spectra view
+        self.SigRelay.emit("cm_all_",["my_filename",self.m["my_filename"]])
+        self.SigRelay.emit("cm_all_",["ext",self.m["ext"]])
+        self.SigRelay.emit("cm_all_",["f1",self.m["f1"]])
+        self.SigRelay.emit("cm_all_",["wavheader",self.m["wavheader"]])
+        self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])      ####################RELAY PATTERN############
+
+        #self.plot_spectrum_resample(0)
+
+        
     def toggle_mergeselectall(self):
         """
         gets checkstatus of button for selecting all items of reslist and calls the respective handler
