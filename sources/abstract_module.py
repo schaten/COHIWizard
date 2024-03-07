@@ -70,7 +70,7 @@ class abstract_module_v(QObject):
     SigUpdateGUI = pyqtSignal(object)
     SigSyncGUIUpdatelist = pyqtSignal(object)
     SigRelay = pyqtSignal(str,object)
-    
+
     def __init__(self, gui, abstract_module_c, abstract_module_m):
         super().__init__()
 
@@ -135,3 +135,6 @@ class abstract_module_v(QObject):
         #DO SOMETHING
         self.SigUpdateGUI.connect(self.update_GUI)
 
+
+    def reset_GUI(self):
+        pass

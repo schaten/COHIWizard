@@ -15,6 +15,8 @@ from PyQt5.QtCore import *
 from scipy import signal as sig
 from auxiliaries import auxiliaries as auxi
 from auxiliaries import WAVheader_tools
+from datetime import datetime
+import datetime as ndatetime
 #from stemlab_control import StemlabControl
 
 
@@ -268,7 +270,9 @@ class playrec_m(QObject):
         # Constants
         self.CONST_SAMPLE = 0 # sample constant
         self.mdl = {}
+        self.mdl["playlist_active"] == False
         self.mdl["sample"] = 0
+        self.mdl["LO_offset"] = 0
 
 class playrec_c(QObject):
     """_view method
@@ -277,13 +281,13 @@ class playrec_c(QObject):
 
     SigAny = pyqtSignal()
 
-    def __init__(self, abstract_module_m): #TODO: remove gui
+    def __init__(self, playrec_m): #TODO: remove gui
         super().__init__()
 
     # def __init__(self, *args, **kwargs): #TEST 09-01-2024
     #     super().__init__(*args, **kwargs)
         viewvars = {}
-        self.m = abstract_module_m.mdl
+        self.m = playrec_m.mdl
         
 class playrec_v(QObject):
     """_view methods for resampling module
@@ -296,12 +300,14 @@ class playrec_v(QObject):
     SigUpdateGUI = pyqtSignal(object)
     SigSyncGUIUpdatelist = pyqtSignal(object)
 
-    def __init__(self, gui, abstract_module_c, abstract_module_m):
+    def __init__(self, gui, playrec_c, playrec_m):
         super().__init__()
 
-        self.m = abstract_module_m.mdl
+        self.m = playrec_m.mdl
         self.DATABLOCKSIZE = 1024*32
+        self.GAINOFFSET = 40
         self.gui = gui
+        self.playrec_c = playrec_c
 
     def updateGUIelements(self):
         """
@@ -327,3 +333,200 @@ class playrec_v(QObject):
         #other key possible: "none"
         #DO SOMETHING
         self.SigUpdateGUI.connect(self.update_GUI)
+
+    def cb_Butt_toggle_playlist(self):
+        #system_state = sys_state.get_status()
+        if self.m["playlist_active"] == False:
+            self.gui.pushButton_act_playlist.setChecked(True)
+            self.gui.listWidget_sourcelist.setEnabled(True)
+            self.gui.listWidget_playlist.setEnabled(True)
+            self.m["playlist_active"] = True
+        else:
+            self.gui.pushButton_act_playlist.setChecked(False)
+            self.gui.listWidget_sourcelist.setEnabled(False)
+            self.gui.listWidget_playlist.setEnabled(False)
+            self.m["playlist_active"] = False
+
+    def playlist_update(self): #TODO: list is only updated up to the just before list change dragged item,
+        """
+        VIEW
+        updates playlist whenever the playlist Widget is changed
+        :param: none
+        :type: none
+        ...
+        :raises: none
+        ...
+        :return: none
+        :rtype: none
+        """
+        #print("playlist updated")  
+        self.logger.info("playlist_update: playlist updated")
+        
+        time.sleep(1)
+        #system_state = sys_state.get_status()
+        #get all items of playlist Widget and write them to system_state["playlist"]
+        lw = self.gui.listWidget_playlist
+        # let lw haven elements in it.
+        self.m["playlist"] = []
+        for x in range(lw.count()-1):
+            item = lw.item(x)
+            #playlist.append(lw.item(x))
+            self.m["playlist"].append(item.text())
+        self.playrec_c.m["playlist"] = self.m["playlist"]
+        #self.SigRelay.emit("cm_playrec",["playlist",self.m["playlist"]])
+
+    def cb_setgain(self):
+        '''
+        Descr
+        #TODO
+        '''
+        if self.m["playthreadActive"] is False:
+            return False
+        self.gain = 10**((self.gui.verticalSlider_Gain.value() - self.GAINOFFSET)/20)
+        #print(f"self.gain in cb:  {self.gain}")
+        self.playrec_tworker.set_6(self.gain)   #############TODO TODO TODO
+        #print(self.gain)
+        #TODO: display gain value somewhere
+
+
+    def updatetimer(self):
+        """
+        VIEW: cb of Tab player
+        updates timer functions
+        shows date and time
+        changes between UTC and local time
+        manages recording timer
+        :param: none
+        :type: none
+        ...
+        :raises: none
+        ...
+        :return: none
+        :rtype: none
+        """
+        if self.gui.checkBox_UTC.isChecked():
+            self.UTC = True #TODO:future system state
+        else:
+            self.UTC = False
+        if self.gui.checkBox_TESTMODE.isChecked():
+            self.TEST = True #TODO:future system state
+        else:
+            self.TEST = False
+
+        if self.UTC:
+            dt_now = datetime.now(ndatetime.timezone.utc)
+            self.gui.label_showdate.setText(
+                dt_now.strftime('%Y-%m-%d'))
+            self.gui.label_showtime.setText(
+                dt_now.strftime('%H:%M:%S'))
+        else:
+            dt_now = datetime.now()
+            self.gui.label_showdate.setText(
+                dt_now.strftime('%Y-%m-%d'))
+            self.gui.label_showtime.setText(
+                dt_now.strftime('%H:%M:%S'))
+
+    
+    def cb_Butt_toggleplay(self):
+        """ 
+        toggles the play button between play and pause states
+        TODO
+        :param: none
+        :type: none
+        ...
+        :raises: none
+        ...
+        :return: none
+        :rtype: none
+        """
+        if self.gui.pushButton_Play.isChecked() == True:
+            self.m["ifreq"] = self.m["wavheader"]['centerfreq'] + self.m["LO_offset"]
+            self.m["irate"] = self.m["wavheader"]['nSamplesPerSec']
+            if not self.m["fileopened"]:
+                if self.gui.radioButton_LO_bias.isChecked() is True:
+                    msg = QMessageBox()
+                    msg.setIcon(QMessageBox.Question)
+                    msg.setText("Apply LO offset")
+                    msg.setInformativeText("center frequency offset is activated, the LO will be shifted by "
+                        + str(int(self.m["LO_offset"]/1000)) + " kHz. Do you want to proceed ? If no, please inactivate center frequency offset")
+                    msg.setWindowTitle("Apply LO offset")
+                    msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+                    msg.buttonClicked.connect(self.popup)
+                    msg.exec_()
+                    if self.yesno == "&No":
+                        ###RESET playgroup
+                        self.reset_playerbuttongroup()
+                        self.reset_LO_bias()
+                        #sys_state.set_status(system_state)
+                        return False
+
+                self.gui.radioButton_LO_bias.setEnabled(False)
+                #TODO TODO TODO. HOW TO CALL A CORE FUNCTION ?
+                if self.cb_open_file() is False:
+                    self.reset_playerbuttongroup()
+                    #sys_state.set_status(system_state)
+                    return False
+                if not self.LO_bias_checkbounds():
+                    self.reset_playerbuttongroup()
+                    return False
+                self.gui.lineEdit_LO_bias.setEnabled(False)
+                ######Setze linedit f LO_Bias inaktiv
+            if not self.checkSTEMLABrates():
+                self.reset_playerbuttongroup()
+                return False
+            self.gui.pushButton_Play.setIcon(QIcon("pause_v4.PNG"))
+            if self.playthreadActive == True:
+                self.playrec_tworker.pausestate = False
+            self.play_manager()
+            self.pausestate = False
+            self.stopstate = False
+            self.gui.ScrollBar_playtime.setEnabled(True)
+            self.gui.pushButton_adv1byte.setEnabled(True)
+        else:
+            self.gui.pushButton_Play.setIcon(QIcon("play_v4.PNG"))
+            self.pausestate = True ##TODO CHECK: necessary ? es gibt ja self.playrec_tworker.pausestate
+            if self.m["playthreadActive"] == True:
+                self.playrec_tworker.pausestate = True
+
+    def checkSTEMLABrates(self):        # TODO: this is ratrer a controller method than a GUI method. Transfer to other module
+        """
+        CONTROLLER
+        _checks if the items ifreq, irate and icorr in system_state have the proper values acc. to RFCorder filename convention
+        checks if system_state["irate"] has a value out of the values defined for the STEMLAB in system_state["rates"] 
+        :param: none
+        :type: none
+        ...
+        :raises TODO [popup error message]: corresponding to different format errors
+        ...
+        :return: True/False acc to success of the check
+        :rtype: bool
+        """
+        #system_state = sys_state.get_status()
+        errorf = False
+        #check: has been done on 13-12-2023 TODO: replace ifreq by system_state["ifreq"]
+        if self.m["ifreq"] < 0 or self.m["ifreq"] > 62500000:
+            errorf = True
+            errortxt = "center frequency not in range (0 - 62500000) \
+                      after _lo\n Probably not a COHIRADIA File"
+
+        if self.m["irate"] not in self.m["rates"]:
+            errorf = True
+            errortxt = "The sample rate of this file is inappropriate for the STEMLAB!\n\
+            Probably it is not a COHIRADIA File. \n \n \
+            PLEASE USE THE 'Resample' TAB TO CREATE A PLAYABLE FILE ! \n\n \
+            SR must be in the set: 20000, 50000, 100000, 250000, 500000, 1250000, 2500000"
+            
+        if self.m["icorr"] < -100 or self.m["icorr"] > 100:
+            errorf = True
+            errortxt = "frequency correction min ppm must be in \
+                      the interval (-100 - 100) after _c \n \
+                      Probably not a COHIRADIA File "
+
+        if errorf:
+            auxi.standard_errorbox(errortxt)
+            
+            return False
+        else:
+            return True
+
+

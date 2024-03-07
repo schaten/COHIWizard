@@ -1867,6 +1867,8 @@ class resample_v(QObject):
 
         #################TODO: implement next line newly with Relay after tarnsfer of wavedit module 
         #self.gui.fill_wavtable()
+        self.SigRelay.emit("cexex_waveditor",["updateGUIelements",0])
+        ##################DONE
         self.update_resample_GUI()
         #TODO: update also spectra view
         self.SigRelay.emit("cm_all_",["my_filename",self.m["my_filename"]])
@@ -1874,6 +1876,7 @@ class resample_v(QObject):
         self.SigRelay.emit("cm_all_",["f1",self.m["f1"]])
         self.SigRelay.emit("cm_all_",["wavheader",self.m["wavheader"]])
         self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])      ####################RELAY PATTERN############
+
 
         #self.plot_spectrum_resample(0)
 

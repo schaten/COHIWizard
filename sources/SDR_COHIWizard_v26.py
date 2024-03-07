@@ -22,6 +22,7 @@
         # self.ui.lineEdit_resample_targetLO.textEdited.disconnect()
         # self.ui.lineEdit_resample_targetLO.setEnabled(False)
         # self.ui.actionOverwrite_header.setVisible(False)
+# Start-Tab setzen:self.ui.tabWidget.setCurrentIndex(1) #TODO: avoid magic number, unidentified
 
 """
 Created on Sa Dec 08 2023
@@ -46,21 +47,13 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg,  NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
-#from matplotlib.patches import Rectangle
 import matplotlib.pyplot as plt
 from scipy import signal as sig
 from scipy.ndimage.filters import median_filter
-#import scipy
-#from numba import njit
-#import paramiko
 import pandas as pd  #TODO: check, not installed under this name
-import shutil
-#import soundfile as sf
-#from soundfile import SEEK_SET, SEEK_CUR, SEEK_END
 import yaml
 import logging
 from COHIWizard_GUI_v10 import Ui_MainWindow as MyWizard
-#from SDR_wavheadertools_v2 import WAVheader_tools
 from auxiliaries import WAVheader_tools
 from auxiliaries import auxiliaries as auxi
 from PyQt5.QtCore import QObject, QThread, pyqtSignal, QMutex       #TODO: OBSOLETE
@@ -68,6 +61,7 @@ import system_module as wsys
 import resampler_module_v5 as rsmp
 import view_spectra as vsp
 import yaml_editor as yed
+import waveditor as waved
 from stemlab_control import StemlabControl
 from playrec import playrec_worker
 
@@ -639,29 +633,14 @@ class WizardGUI(QMainWindow):
 
         ### UI MASTER ####################################
         self.ui.actionFile_open.triggered.connect(self.cb_open_file)
-        self.ui.actionOverwrite_header.triggered.connect(self.overwrite_header)
+        #self.ui.actionOverwrite_header.triggered.connect(self.overwrite_header)
         self.SigGUIReset.connect(self.reset_GUI)
         self.ui.pushButton_resample_GainOnly.setEnabled(False)
-        #self.SigSyncTabs.connect(self.sync_tabs)
+    
         self.ui.checkBox_writelog.clicked.connect(self.togglelogmodus) #TODO TODO TODO: logfilemodus anders implementieren
+        self.ui.tabWidget.setCurrentIndex(1) #TODO: avoid magic number, unidentified
 
         ### END UI MASTER ####################################
-
-        ### UI TAB WAVHEADER ####################################
-        self.ui.pushButton_InsertHeader.setEnabled(False)
-        self.ui.pushButton_InsertHeader.clicked.connect(self.overwrite_header)
-        self.ui.radioButton_WAVEDIT.setEnabled(True)
-        self.ui.radioButton_WAVEDIT.setChecked(False)
-        self.ui.radioButton_WAVEDIT.clicked.connect(self.activate_WAVEDIT)
-        self.ui.tableWidget_basisfields.setEnabled(False)
-        self.ui.tableWidget_starttime.setEnabled(False)
-        self.ui.tableWidget_3.setEnabled(False)
-        ###END UI TAB WAVHEADER ####################################
-
-        # elements of yaml header generator tab
-        self.ui.pushButton_Writeyamlheader.setEnabled(False) # activate after completion of the annotation procedure
-        self.ui.pushButton_Writeyamlheader.clicked.connect(self.yaml_header_buttonfcn)
-        self.scanplotcreated = False
 
         ###EUI TAB ANNOTATE####################################
         self.ui.pushButton_Scan.setEnabled(False)
@@ -927,64 +906,6 @@ class WizardGUI(QMainWindow):
         #TODO: change 10-12-2023: since GUI10: self.generate_canvas(self,self.ui.gridLayout_5,[10,0,1,5],[-1,-1,-1,-1],self.Tabref["Resample"])
         self.generate_canvas(self,self.ui.gridLayout_5,[6,0,6,4],[-1,-1,-1,-1],self.Tabref["Resample"])
 
-    # def inactivate_tabs(self,selection):
-    #     """
-    #     VIEW
-    #     TODO: zentrale self.Tabref-Struktur für die Eintragung Tab-Definitionen dieser Art verwenden und auf diese zugreifen
-    #     TODO. Tab-Namen anpassen
-    #     inactivates selected tabs, selection by list of strings which refer to the individual tabs
-    #     :param selection: list of strings, possible: ["Player","View_Spectra","Annotate","Resampler","YAML_editor","WAV_header"]
-    #     :type selection: list of strings
-    #     ...
-    #     :raises [ErrorType]: none
-    #     ...
-    #     :return: none
-    #     :rtype: none
-    #     """
-    #     if "Player" in selection:
-    #         self.ui.tab.setEnabled(False)
-    #     if "View_Spectra" in selection:
-    #         self.ui.tab_3.setEnabled(False)
-    #         #self.ui.tab_3.setVisible(False)
-    #     if "Annotate" in selection:
-    #         self.ui.tab_4.setEnabled(False)
-    #     #if "Resampler" in selection:
-    #         #self.ui.tab_2.setEnabled(False)
-    #     if "YAML_editor" in selection:
-    #         self.ui.tab_5.setEnabled(False)
-    #     if "WAV_header" in selection:            
-    #         self.ui.tab_1.setEnabled(False)
-    #     if "Resample" in selection:            
-    #         self.ui.tab_resample.setEnabled(False)
-
-            
-    def activate_tabs(self,selection):
-        """
-        VIEW
-        TODO: zentrale self.Tabref-Struktur für die Eintragung Tab-Definitionen dieser Art verwenden und auf diese zugreifen
-        TODO. Tab-Namen anpassen
-        activates selected tabs
-        :param selection: list of strings, possible: ["Player","View_Spectra","Annotate","Resampler","YAML_editor","WAV_header"]
-        :type selection: list of strings, selection by list of strings which refer to the individual tabs
-        ...
-        :raises [ErrorType]: none
-        ...
-        :return: none
-        :rtype: none
-        """
-        if "Player" in selection:
-            self.ui.tab.setEnabled(True)
-        if "View_Spectra" in selection:
-            self.ui.tab_3.setEnabled(True)
-        if "Annotate" in selection:
-            self.ui.tab_4.setEnabled(True)
-        if "YAML_editor" in selection:
-            self.ui.tab_5.setEnabled(True)
-        if "WAV_header" in selection:            
-            self.ui.tab_1.setEnabled(True)
-        if "Resample" in selection:            
-            self.ui.tab_resample.setEnabled(True)
-
 ##############################  RESAMPLE MODULE, END REMOVE ###########################
 
     def setactivity_tabs(self,caller,statuschange,exceptionlist):
@@ -1063,13 +984,14 @@ class WizardGUI(QMainWindow):
         #self.ui.tab_2.setEnabled(True)
         self.ui.tab_3.setEnabled(True)
         self.ui.tab_4.setEnabled(True)
-        self.ui.pushButton_InsertHeader.setEnabled(False)
+        #self.ui.pushButton_InsertHeader.setEnabled(False)   #####TODO shift to WAV editor or send Relay for inactivation via WAV 
         self.ui.label_8.setEnabled(False)
         self.ui.label_36.setText('READY')
         self.ui.label_36.setFont(QFont('arial',12))
         self.ui.label_36.setStyleSheet("background-color: lightgray")
         self.ui.radioButton_WAVEDIT.setChecked(False)
-        self.activate_WAVEDIT() # to wav editor Tab reset
+        #self.activate_WAVEDIT() # to wav editor Tab reset
+        self.SigRelay.emit("cexex_waveditor",["activate_WAVEDIT",0])
         self.Tabref["View_Spectra"]["ax"].clear() #shift to Plot spectrum Tab reset
         self.Tabref["View_Spectra"]["canvas"].draw() #shift to Plot spectrum Tab reset
         self.Tabref["Resample"]["ax"].clear() #shift to Resampler Tab reset
@@ -1081,7 +1003,7 @@ class WizardGUI(QMainWindow):
         self.ui.label_Filename_resample.setText('') #shift to resampler Tab reset
         self.ui.listWidget_playlist.clear() #TODO: shift to Player Tab reset
         self.ui.listWidget_sourcelist.clear() #TODO: shift to Player Tab reset
-        self.clear_WAVwidgets() #TODO: shift to to a WAVeditor reset
+        #self.clear_WAVwidgets() #TODO: shift to to a WAVeditor reset
 
         try:
             stream = open("config_wizard.yaml", "r")
@@ -1203,6 +1125,8 @@ class WizardGUI(QMainWindow):
                 dt_now.strftime('%Y-%m-%d'))
             self.ui.label_showtime.setText(
                 dt_now.strftime('%H:%M:%S'))
+
+###############################################CURRENT STATE OF TRANSFER
             
         #TODO: reimplement recorder
 
@@ -1344,7 +1268,6 @@ class WizardGUI(QMainWindow):
         self.ui.pushButton_IP.adjustSize()
         sys_state.set_status(system_state)
 
-
     def shutdown(self):
         '''
         VIEW
@@ -1478,8 +1401,6 @@ class WizardGUI(QMainWindow):
 ####STRUCT TODO: das könnte ein eigener stop_manager sein :
         if self.playthreadActive is False:
             system_state["fileopened"] = False ###CHECK
-            #resample_m.mdl["fileopened"] = False
-            #resp = self.sync_tabs(["dum","win","a","fileopened",False])
             self.SigRelay.emit("cm_all_",["fileopened",False])
             sys_state.set_status(system_state) ####Remove after core full impl
             return
@@ -1503,10 +1424,9 @@ class WizardGUI(QMainWindow):
         self.ui.pushButton_Play.setChecked(False)
         self.ui.pushButton_Loop.setChecked(False)
         self.playthreadActive = False
-        self.activate_tabs(["View_Spectra","Annotate","Resample","YAML_editor","WAV_header"])
+        #self.activate_tabs(["View_Spectra","Annotate","Resample","YAML_editor","WAV_header"])
+        self.setactivity_tabs("Player","activate",[])
         system_state["fileopened"] = False ###CHECK
-        #resample_m.mdl["fileopened"] = False
-        #resp = self.sync_tabs(["dum","win","a","fileopened",False]) # REMOVE after tests Relay
         self.SigRelay.emit("cm_all_",["fileopened",False])
         self.ui.radioButton_LO_bias.setEnabled(True)
         self.ui.lineEdit_LO_bias.setEnabled(True)
@@ -1681,30 +1601,13 @@ class WizardGUI(QMainWindow):
         """ 
         #self.SigRelay.emit("cm_all_",["prominence",self.PROMINENCE])
         self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
-        #TODO TODO TODO: remofe the following after change to all new modules and Relay
+        #TODO TODO TODO: remove the following after change to all new modules and Relay
         self.my_dirname = os.path.dirname(system_state["f1"])
         self.my_filename, self.ext = os.path.splitext(os.path.basename(system_state["f1"]))
         self.ui.label_Filename_Annotate.setText(self.my_filename + self.ext)
         self.ui.label_Filename_WAVHeader.setText(self.my_filename + self.ext)
         self.ui.label_Filename_Player.setText(self.my_filename + self.ext)
         #system_state = sys_state.get_status()
-        # if system_state["OLD"]:
-        #     self.my_dirname = os.path.dirname(system_state["f1"])
-        #     self.my_filename, self.ext = os.path.splitext(os.path.basename(system_state["f1"]))
-        #     self.ui.label_Filename_Annotate.setText(self.my_filename + self.ext)
-        #     self.ui.label_Filename_ViewSpectra.setText(self.my_filename + self.ext)
-        #     self.ui.label_Filename_WAVHeader.setText(self.my_filename + self.ext)
-        #     self.ui.label_Filename_Player.setText(self.my_filename + self.ext)
-        #     self.ui.label_Filename_resample.setText(self.my_filename + self.ext)
-            
-        # else:
-        #     pass
-            #self.my_filename = system_state["my_filename"]
-            #self.ext = system_state["ext"]
-            # send signal SigTabsUpdateGUIs
-            # each tab-view method on startup enters a reference to its own GUI update method into a list
-            # TabsUpdateGui_reflist
-            # on startup the core main program connects SigTabsUpdateGUIs to all references in this list
 ######################## END REPLACE BY INDIVIDUAL GUI updaters #############################
 
     def EOF_manager(self):
@@ -1729,12 +1632,10 @@ class WizardGUI(QMainWindow):
         time.sleep(0.1)
         prfilehandle.close()
         system_state["fileopened"] = False
-        #resp = self.sync_tabs(["dum","win","a","fileopened",False]) #remove after tests Relay
         self.SigRelay.emit("cm_all_",["fileopened",False])
         if self.stopstate == True:
             #print("EOF-manager: player has been stopped")
             self.logger.info("EOF-manager: player has been stopped")
-
             time.sleep(0.5)
             sys_state.set_status(system_state)
             return
@@ -1742,11 +1643,6 @@ class WizardGUI(QMainWindow):
             #TODO: new wavheader needs to be extracted
             # play next file in nextfile-list
             system_state["f1"] = self.my_dirname + '/' + self.wavheader['nextfilename']
-            #TODO: REPLACE line for model
-            #resample_m.mdl["f1"]  = self.my_dirname + '/' + self.wavheader['nextfilename']
-            #resample_m.mdl["my_filename"] = self.my_filename
-            #resp = self.sync_tabs(["dum","win","a","f1",self.my_dirname + '/' + self.wavheader['nextfilename']])#remove after tests Relay
-            #resp = self.sync_tabs(["dum","win","a","my_filename",self.my_filename])#remove after tests Relay
             self.SigRelay.emit("cm_all_",["f1",self.my_dirname + '/' + self.wavheader['nextfilename']])
             self.SigRelay.emit("cm_all_",["my_filename",self.my_filename])
             self.wavheader = WAVheader_tools.get_sdruno_header(self,system_state["f1"])
@@ -1754,14 +1650,11 @@ class WizardGUI(QMainWindow):
             self.play_tstarter()
             time.sleep(0.1)
             system_state["fileopened"] = True
-            #resample_m.mdl["fileopened"] = True
-            #resp = self.sync_tabs(["dum","win","a","fileopened",True]) #remove after tests Relay
             self.SigRelay.emit("cm_all_",["fileopened",True])
             #TODO: self.my_filename + self.ext müssen updated werden, übernehmen aus open file
             self.showfilename() #Remove after implementing all Modules Relay
             self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
             self.updatecurtime(0) #TODO: true datetime from record
-            #print("fetch nextfile")
             self.logger.info("fetch nextfile")
 
         elif self.ui.pushButton_Loop.isChecked() == True:
@@ -1771,11 +1664,8 @@ class WizardGUI(QMainWindow):
             #no next file, but endless mode active, replay current system_state["f1"]
             self.play_tstarter()
             time.sleep(0.1)
-            #print(f"playthread active: {self.playthreadActive}")
             self.logger.info("playthread active: %s", self.playthreadActive)
             system_state["fileopened"] = True
-            #resample_m.mdl["fileopened"] = True
-            #resp = self.sync_tabs(["dum","win","a","fileopened",True]) #remove after tests Relay
             self.SigRelay.emit("cm_all_",["fileopened",True])
             self.updatecurtime(0) #TODO: true datetime from record
         elif self.ui.listWidget_playlist.count() > 0:
@@ -1789,26 +1679,19 @@ class WizardGUI(QMainWindow):
                 #print(f"EOF manager: playlist index: {system_state['playlist_ix']}")
                 self.logger.debug("EOF manager: playlist index: %i", system_state['playlist_ix'])
                 lw = self.ui.listWidget_playlist
-                # let lw haven elements in it.
-                #print("fetch next list file")
+
                 self.logger.info("fetch next list file")
                 item_valid = False
                 
                 while (not item_valid) and (system_state["playlist_ix"] < playlist_len):
                     item = lw.item(system_state["playlist_ix"])
                     system_state["f1"] = self.my_dirname + '/' + item.text() #TODO replace by line below
-                    #resample_m.mdl["f1"] = self.my_dirname + '/' + item.text()
-                    #resample_m.mdl["my_filename"] = self.my_filename
-                    #resp = self.sync_tabs(["dum","win","a","f1",self.my_dirname + '/' + item.text()]) #remove after tests Relay
-                    #resp = self.sync_tabs(["dum","win","a","my_filename",self.my_filename]) #remove after tests Relay
                     self.SigRelay.emit("cm_all_",["f1",self.my_dirname + '/' + item.text()])
                     self.SigRelay.emit("cm_all_",["my_filename",self.my_filename])
-                    #print(f'file: {system_state["f1"]}')
                     self.logger.info("EOF manager file: %s", system_state["f1"])
                     self.wavheader = WAVheader_tools.get_sdruno_header(self,system_state["f1"])
                     item_valid = True
                     if not self.wavheader:
-                        #print("EOF_manager: wrong wav file, skip to next listentry")
                         self.logger.warning("EOF_manager: wrong wav file, skip to next listentry")
                         system_state["playlist_ix"] += 1
                         item_valid = False
@@ -1816,7 +1699,6 @@ class WizardGUI(QMainWindow):
                 if not (system_state["playlist_ix"] < playlist_len):
                     system_state["playlist_ix"] = 0
                     sys_state.set_status(system_state)
-                    #print("EOF_manager: end of list, stop player")
                     self.logger.info("EOF_manager: end of list, stop player")
                     time.sleep(0.5)
                     self.updatecurtime(0)
@@ -1840,22 +1722,17 @@ class WizardGUI(QMainWindow):
                 self.showfilename()
                 if not self.TEST:
                     stemlabcontrol.sdrserverstop()
-                    #print("EOF manager start play_manager")
                     self.logger.info("EOF manager start play_manager")
                 self.play_manager()
                 system_state["fileopened"] = True
-                #resample_m.mdl["fileopened"] = True
-                #resp = self.sync_tabs(["dum","win","a","fileopened",True]) #remove after tests Relay
                 self.SigRelay.emit("cm_all_",["fileopened",True])
                 time.sleep(0.5) #TODO: necessary because otherwise file may not yet have been opened by playloopworker and then updatecurtime crashes because of invalid filehandel 
                 #may be solved by updatecurtime not accessing the filehandle returned from playworker but directly from system_state["f1"]
                 self.updatecurtime(0) #TODO: true datetime from record
-                #print(f'listplay updatecurtime passed nex playlist_ix: {system_state["playlist_ix"]}')
             else:
                 #reset playlist_ix
                 system_state["playlist_ix"] = 0
                 sys_state.set_status(system_state)
-                #print("EOF_manager: stop player")
                 self.logger.info("EOF_manager: stop player")
                 time.sleep(0.5)
                 self.updatecurtime(0)
@@ -2125,23 +2002,23 @@ class WizardGUI(QMainWindow):
 
 ############################## TAB RESAMPLER, REMOVE COMPLETELY ####################################
 
-    def reformat_targetLOpalette(self): #TODO: check, if this stays part of gui or should be shifted to resampler module
-        """
-        VIEW Element of Tab 'resample
-        """
-        self.ui.lineEdit_resample_targetLO.setStyleSheet("background-color: bisque1")
+    # def reformat_targetLOpalette(self): #TODO: check, if this stays part of gui or should be shifted to resampler module
+    #     """
+    #     VIEW Element of Tab 'resample
+    #     """
+    #     self.ui.lineEdit_resample_targetLO.setStyleSheet("background-color: bisque1")
 
-    def cb_Butt_resample(self):
-        #REMOVE AFTER CHANGE TO NEW STRUCTURE ; call 
-        #self.ui.listWidget_playlist_2.itemChanged.connect(resample_v.reslist_update) #dummy in order to prevent exceptions in case the signal is already disconnevted
-        #system_state = sys_state.get_status()
-        try:
-            self.ui.listWidget_playlist_2.itemChanged.disconnect(resample_v.reslist_update)
-        except:
-            pass
+    # def cb_Butt_resample(self):
+    #     #REMOVE AFTER CHANGE TO NEW STRUCTURE ; call 
+    #     #self.ui.listWidget_playlist_2.itemChanged.connect(resample_v.reslist_update) #dummy in order to prevent exceptions in case the signal is already disconnevted
+    #     #system_state = sys_state.get_status()
+    #     try:
+    #         self.ui.listWidget_playlist_2.itemChanged.disconnect(resample_v.reslist_update)
+    #     except:
+    #         pass
 
-        resample_v.cb_resample()
-        self.ui.radioButton_advanced_sampling.setChecked(False)
+    #     resample_v.cb_resample()
+    #     self.ui.radioButton_advanced_sampling.setChecked(False)
 
     
 ############################## TAB ANNOTATE ####################################
@@ -2681,6 +2558,7 @@ class WizardGUI(QMainWindow):
         :return: flag False on unsuccessful execution if stations list or status file non-existent
         :rtype: Boolean
         """
+        system_state = sys_state.get_status()
 
         self.stations_filename = self.annotationpath + '/stations_list.yaml'
         if os.path.exists(self.stations_filename) == False:
@@ -2741,6 +2619,11 @@ class WizardGUI(QMainWindow):
             #self.write_yaml_header()            #write header part of the cohiradia yaml
 
             #start generation of stations list as a separate thread
+            starttime = self.wavheader['starttime']
+            stoptime = self.wavheader['stoptime']
+            self.rectime = datetime(starttime[0],starttime[1],starttime[3],starttime[4],starttime[5],starttime[6])
+            self.recstop = datetime(stoptime[0],stoptime[1],stoptime[3],stoptime[4],stoptime[5],stoptime[6]) #TODO: seems to be unused
+
             self.statlst_genthread = QThread()
             self.statlst_geninst = statlst_gen_worker(self)
             self.statlst_geninst.moveToThread(self.statlst_genthread)
@@ -2962,216 +2845,7 @@ class WizardGUI(QMainWindow):
         self.ui.progressBar_2.setProperty("value", (freq_ix + 1)/len(self.stations)*100)
         return False
 
-
 ############################## END TAB ANNOTATE ####################################
- 
-    def minPeakDistanceupdate(self):
-        self.DELTAF = self.ui.spinBoxminPeakDistance.value()
-        self.position = self.ui.horizontalScrollBar_view_spectra.value()
-        #self.plot_spectrum(self,self.position)
-        #system_state = sys_state.get_status()
-            # self.SigSyncTabs.emit(["resample", "win", "a", "horzscal", self.position]) #TODO nötig ?
-            # resp = self.sync_tabs(["dum","win","a","deltaf",self.DELTAF])
-            # resp = self.sync_tabs(["view_spectra","win","u","position",self.position])
-            # view_spectra_v.SigUpdateGUI.emit("ext_update")
-        ###################################################
-        self.SigRelay.emit("cm_all_",["horzscal", self.position])
-        self.SigRelay.emit("cm_all_",["deltaf",self.DELTAF])# TODO: CHECK THIS IS STRANGE !
-        self.SigRelay.emit("cm_view_spectra",["position",self.position])
-        self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
-
-############################## END TAB SPECTRUM ####################################
-
-############################## TAB YAMLEDITOR ####################################
-
-    def yaml_header_buttonfcn(self):
-        """
-        VIEW
-        """
-        self.write_yaml_header(self)
-        #TODO: write yaml_directory on demand ?
-
-    def read_yaml_header(self,dummy):
-        """
-        CONTROLLER
-        ###DESCRIPTION
-        :param : dummy
-        :type : none
-        :raises [ErrorType]: [ErrorDescription]
-        :return: none
-        :rtype: none
-        """
-
-        # if self.flag_ann_completed == False:
-        #     return
-        nofile_flag = False
-        #print('read info from existing yaml-headerfile to editor table')
-        try:
-            stream = open(self.cohiradia_yamlheader_filename, "r", encoding="utf8")
-            self.yamlheader_ = yaml.safe_load(stream)
-            stream.close()
-            self.ui.tableWidget_YAMLHEADER.item(0, 0).setText(str(self.yamlheader_['content']))
-            self.ui.tableWidget_YAMLHEADER.item(1, 0).setText(str(self.yamlheader_['remark']))
-            self.ui.tableWidget_YAMLHEADER.item(2, 0).setText(str(self.yamlheader_['band']))
-            self.ui.tableWidget_YAMLHEADER.item(3, 0).setText(str(self.yamlheader_['antenna']))
-            self.ui.tableWidget_YAMLHEADER.item(4, 0).setText(str(self.yamlheader_['recording-type']))
-            prefix = self.yamlheader_['uri'].split('/')[0]
-            self.ui.tableWidget_YAMLHEADER.item(12, 0).setText(str(prefix))
-        except:
-            nofile_flag = True
-            #return False        
-        try:
-            stream = open(self.cohiradia_yamltailer_filename, "r", encoding="utf8")
-            self.yamltailer_ = yaml.safe_load(stream)
-            stream.close()
-            self.ui.tableWidget_YAMLHEADER.item(5, 0).setText(str(self.yamltailer_['filters']))
-            self.ui.tableWidget_YAMLHEADER.item(6, 0).setText(str(self.yamltailer_['preamp-settings']))
-            self.ui.tableWidget_YAMLHEADER.item(7, 0).setText(str(self.yamltailer_['location-longitude']))
-            self.ui.tableWidget_YAMLHEADER.item(8, 0).setText(str(self.yamltailer_['location-latitude']))
-            self.ui.tableWidget_YAMLHEADER.item(9, 0).setText(str(self.yamltailer_['location-qth']))  ## location-qth ist das noch nie verwendete Keyword
-            self.ui.tableWidget_YAMLHEADER.item(10, 0).setText(str(self.yamltailer_['location-country']))                
-            self.ui.tableWidget_YAMLHEADER.item(11, 0).setText(str(self.yamltailer_['location-city']))
-            self.ui.tableWidget_YAMLHEADER.item(12, 0).setText(str(self.yamltailer_['upload-user-fk']))
-        except:
-            nofile_flag == True
-            #return False
-        #TODO: write yaml_directory on demand only
-        if nofile_flag == True: #TODO remove if unnecessary after tests 23-02-2024; no unnecessary creation of ANN_folders
-            pass
-            #self.write_yaml_header(self)
-        self.ui.pushButton_Writeyamlheader.setEnabled(True)
-
-    def  write_yaml_header(self,dummy):
-        """
-        CONTROLLER
-        ###DESCRIPTION
-        :param : dummy
-        :type : none
-        :raises [ErrorType]: [ErrorDescription]
-        :return: True/False on successful/unsuccesful operation
-        :rtype: Boolean
-        """
-        # treat yaml header
-        #if self.flag_ann_completed == False:  #TODO: check if this should only be available if annotation is completed or already before
-        #    return
-        system_state = sys_state.get_status()
-        if len(self.cohiradia_yamlheader_filename) >=256:
-            auxi.standard_errorbox("file path/name is longer than 256 characters, cannot proceed with yaml headers. This may cause significant problems when using the annotator. Please use less deeply nested paths for your files")
-            #system_state["f1"] =""
-            self.reset_GUI()
-            #TODO: close file reset GU totally
-            sys_state.set_status(system_state)
-            return False
-
-        if os.path.exists(self.cohiradia_yamlheader_filename) == True:
-            msg = QMessageBox()
-            msg.setIcon(QMessageBox.Question)
-            msg.setText("overwrite file")
-            msg.setInformativeText("you are about to overwrite the existing yaml header file. Do you want to proceed")
-            msg.setWindowTitle("FILE OPEN")
-            msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-            msg.buttonClicked.connect(self.popup)
-            msg.exec_()
-            if self.yesno == "&No":
-                sys_state.set_status(system_state)
-                return False
-
-        if os.path.exists(self.cohiradia_yamlheader_filename) == False:         #exist yaml file: create from yaml-editor
-            self.cohiradia_yamlheader_dirname = self.my_dirname + '/' + self.annotationdir_prefix + self.my_filename
-            if os.path.exists(self.cohiradia_yamlheader_dirname) == False:
-                os.mkdir(self.cohiradia_yamlheader_dirname)
-
-            
-        with open(self.cohiradia_yamlheader_filename, 'w', encoding='utf-8') as f:
-            #prefix = '###/' #TODO: remove
-            prefix = self.ui.tableWidget_YAMLHEADER.item(13, 0).text()
-            uri_string = 'uri: "{}"\n'.format(prefix + '/' + self.my_filename + '.wav')
-            dt_now = self.wavheader['starttime_dt']
-            recdatestr = str(dt_now.strftime('%Y-%m-%d')) + 'T'  + str(dt_now.strftime('%H:%M:%S')) + '+###UTC OFFSET###'  #TODO: automatci UTC offset ?
-            #
-            recdate = 'recording-date: "{}"\n'.format(recdatestr) ###TODO take from wav-header
-            duration = np.round(self.wavheader['data_nChunkSize']/self.wavheader['nAvgBytesPerSec'])
-            flow = np.round((self.wavheader["centerfreq"] - self.wavheader["nSamplesPerSec"]/2)/1000,decimals = 2)
-            fhigh = np.round((self.wavheader["centerfreq"] + self.wavheader["nSamplesPerSec"]/2)/1000,decimals = 2)
-            bandstr = self.ui.tableWidget_YAMLHEADER.item(2, 0).text()
-            band = 'band: "{}"\n'.format(bandstr)
-            frequnit = 'frequency-unit: "{}"\n'.format('kHz')
-            enc = 'encoding: "{}"\n'.format('ci16')
-            cfreq = np.round(self.wavheader["centerfreq"]/1000,decimals = 2)
-            bw = self.wavheader["nSamplesPerSec"]/1000
-            antennastr = self.ui.tableWidget_YAMLHEADER.item(3, 0).text()
-            antenna = 'antenna: "{}"\n'.format(antennastr)         
-            rectypestr = self.ui.tableWidget_YAMLHEADER.item(4, 0).text()
-            rectype = 'recording-type: "{}"\n'.format(rectypestr)
-            remarkstr = self.ui.tableWidget_YAMLHEADER.item(1, 0).text()
-            remark = 'remark: "{}"\n'.format(remarkstr)
-            contentstr = self.ui.tableWidget_YAMLHEADER.item(0, 0).text()
-            content = 'content: "{}"\n'.format(contentstr)
-
-            f.write('---\n')
-            f.write('id: \n')
-            f.write(uri_string)
-            f.write(recdate)
-            f.write('duration: ' + str(duration) + '\n')
-            f.write(band)
-            f.write(frequnit)
-            f.write('frequency-low: ' + str(flow) + '\n')
-            f.write('frequency-high: ' + str(fhigh) + '\n')
-            f.write('frequency-correction: 0.0' + '\n')
-            f.write(enc)
-            f.write('center-frequency: ' + str(cfreq) + '\n')
-            f.write('bandwidth: ' + str(bw) + '\n')
-            f.write(antenna)
-            f.write(rectype)
-            f.write(remark)
-            f.write(content)
-            f.write('radio-stations:\n')
-            f.close()
-
-        # treat yaml tailer
-        #if os.path.exists(self.cohiradia_yamltailer_filename) == False:         #if not exist yaml file: create from yaml-editor
-        with open(self.cohiradia_yamltailer_filename, 'w', encoding='utf-8') as f:
-            RXlongitudestr = self.ui.tableWidget_YAMLHEADER.item(7, 0).text()
-            RXlongitude = 'location-longitude: "{}"\n'.format(RXlongitudestr)     
-            RXlatitudestr = self.ui.tableWidget_YAMLHEADER.item(8, 0).text()
-            RXlatitude = 'location-latitude: "{}"\n'.format(RXlatitudestr)
-            if "\"" in RXlatitudestr or "\"" in RXlongitudestr:
-                auxi.standard_errorbox("\' \" \' is not allowed in the yaml file. Please replace by two single quotes, i.e.:  \'\'")
-                sys_state.set_status(system_state)
-                return
-            RXQTHstr = self.ui.tableWidget_YAMLHEADER.item(9, 0).text()
-            RXQTH = 'location-qth: "{}"\n'.format(RXQTHstr)
-            RXcountrystr = self.ui.tableWidget_YAMLHEADER.item(10, 0).text()
-            RXcountry = 'location-country: "{}"\n'.format(RXcountrystr)
-            RXcitystr = self.ui.tableWidget_YAMLHEADER.item(11, 0).text()
-            RXcity = 'location-city: "{}"\n'.format(RXcitystr)
-            memberstr = self.ui.tableWidget_YAMLHEADER.item(12, 0).text()
-            member_ = 'upload-user-fk: "{}"\n'.format(memberstr)
-            filtersstr = self.ui.tableWidget_YAMLHEADER.item(5, 0).text()
-            filters = 'filters: "{}"\n'.format(filtersstr)
-            preampsetstr = self.ui.tableWidget_YAMLHEADER.item(6, 0).text()
-            preampset = 'preamp-settings: "{}"\n'.format(preampsetstr)                
-            f.write(RXlongitude)
-            f.write(RXlatitude)
-            f.write(RXQTH)
-            f.write(RXcountry)
-            f.write(RXcity)
-            f.write(member_)
-            f.write(filters)
-            f.write(preampset)
-            f.close()
-
-        if os.path.exists(self.cohiradia_metadata_filename) == True:
-        #TODO: alternative, more strict only after completion of annotation if self.flag_ann_completed = True
-            #concatenate files
-            filenames = [self.cohiradia_yamlheader_filename, self.cohiradia_metadata_filename , self.cohiradia_yamltailer_filename]
-            with open(self.cohiradia_yamlfinal_filename, 'w', encoding='utf-8') as outfile:   
-                for fname in filenames:
-                    with open(fname, 'r', encoding='utf-8') as infile:
-                        for line in infile:
-                            outfile.write(line)
-
-############################## END TAB YAMLEDITOR ####################################
 
 ############################## GENERAL MENU FUNCTIONS  ####################################
 
@@ -3185,7 +2859,8 @@ class WizardGUI(QMainWindow):
         returns: True if successful, False if condition not met.        
         """
         system_state = sys_state.get_status()
-        self.activate_tabs(["View_Spectra","Annotate","Player","YAML_editor","WAV_header","Resample"])
+        #self.activate_tabs(["View_Spectra","Annotate","Player","YAML_editor","WAV_header","Resample"])
+        self.setactivity_tabs("all","activate",[])
 
         #resample_c.SigUpdateGUI.connect(self.GUI_reset_after_resamp) ###TODO: check, seems not to be active any more
         self.ui.checkBox_merge_selectall.setChecked(False)
@@ -3223,37 +2898,25 @@ class WizardGUI(QMainWindow):
             msg.exec_()
 
             if self.yesno == "&Yes":
-                #self.fileHandle.close()
                 if self.FileOpen() is False:
-                    #system_state["fileopened"] = False
-                    #resample_m.mdl["fileopened"] = False
-                    #resp = self.sync_tabs(["dum","win","a","fileopened",False]) #remove after change to Relay
                     self.SigRelay.emit("cm_all_",["fileopened", False])
-                    #sys_state.set_status(system_state)
                     return False
 
         else:
             if self.FileOpen() is False:
                 system_state["fileopened"] = False #CHECK: obsolete, because self.SigRelay.emit("cm_all_",["fileopened",False]) does the job
-                #resample_m.mdl["fileopened"] = False
-                #resp = self.sync_tabs(["dum","win","a","fileopened",False]) #remove after check Relay
                 self.SigRelay.emit("cm_all_",["fileopened",False])
                 #self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
                 sys_state.set_status(system_state)
                 return False
             else:
                 system_state["fileopened"] = True #CHECK: obsolete, because self.SigRelay.emit("cm_all_",["fileopened",False]) does the job
-                #resample_m.mdl["fileopened"] = True
-                #resp = self.sync_tabs(["dum","win","a","fileopened",True]) #remove after check Relay
                 self.SigRelay.emit("cm_all_",["fileopened",True])
                 #self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
-                #print("system_state["fileopened"] called")
-                #sys_state.set_status(system_state)
         sys_state.set_status(system_state)
 
         
         #TODO: check change 12-01-2024: temporary path is set differently
-        #temppath = os.getcwd()
         temppath = system_state["temp_directory"]
         for x in os.listdir(temppath):
             if x.find("temp_") == 0:
@@ -3261,260 +2924,10 @@ class WizardGUI(QMainWindow):
                     os.remove(x)
                 except:
                     self.logger.debug("res_scheduler terminate: file access to temp file refused")
-                    #print("res_scheduler terminate: file access to temp file refused")
 
     ############################## END TAB GENERAL MENUFUNCTIONS ####################################
 
-    ############################## TAB WAV EDITOR ####################################
-        
-    def clear_WAVwidgets(self):
-        """_VIEW: clear the tabwidgets of the wav-editor tab
-        :param : none
-        :type : none
-        :raises [ErrorType]: [ErrorDescription]
-        :return: none
-        :rtype: none
-        """
-        #self.ui.tableWidget_basisfields.clear()
-        #self.ui.tableWidget_starttime.clear()
-        #self.ui.tableWidget_3.clear()
-        for ix in range(0,14):
-            self.ui.tableWidget_basisfields.item(ix, 0).setData(0,0)
-        for ix in range(0,8):
-            self.ui.tableWidget_starttime.item(ix, 0).setData(0,0)
-            self.ui.tableWidget_starttime.item(ix, 1).setData(0,0)
-
-        # write other info to table 3 (strings)                    
-        self.ui.tableWidget_3.item(2, 0).setText("")
-        self.ui.tableWidget_3.item(1, 0).setText("")
-        self.ui.tableWidget_3.item(0, 0).setText("")
-        self.ui.tableWidget_3.item(3, 0).setText("")
-
-
-    def overwrite_header(self):
-        """
-        VIEW or CONTROLLER ??
-        
-        """
-        """_VIEW: clear the tabwidgets of the wav-editor tab
-        :param : none
-        :type : none
-        :raises [ErrorType]: [ErrorDescription]
-        :return: none
-        :rtype: none
-        """
-        #print("overwrite header")
-        system_state = sys_state.get_status()
-        if system_state["fileopened"] is False:
-            sys_state.set_status(system_state)
-            return False
-        msg = QMessageBox()
-        msg.setIcon(QMessageBox.Question)
-        msg.setText("overwrite wav header")
-        msg.setInformativeText("you are about to overwrite the header of the current wav file with the values in the tables of Tab 'WAV Header'. Do you really want to proceed ?")
-        msg.setWindowTitle("overwrite")
-        msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-        msg.buttonClicked.connect(self.popup)
-        msg.exec_()
-
-        if self.yesno == "&Yes":
-            self.ovwrt_flag = True
-            self.write_edited_wavheader()
-        else:
-            sys_state.set_status(system_state)
-            return False
-
-        #TODO: write backup dump header
-        #TODO: rename file to SDRUno name convention if filetype = .dat
-        if self.filetype == "dat":
-            old_name = system_state["f1"]
-            SDRUno_suffix = str(self.wavheader['starttime_dt'])
-            SDRUno_suffix = SDRUno_suffix.replace(" ","_")
-            SDRUno_suffix = SDRUno_suffix.replace(":","")
-            SDRUno_suffix = SDRUno_suffix.replace("-","")
-            usix = self.my_filename.find('lo')
-            if usix == -1:
-                auxi.standard_infobox("dat file does not meet old COHIRADIA RFCorder name convention; file will be renamed with correct suffixes")
-                usix = len(self.my_filename)+2
-            bbb = self.my_filename[0:usix-2]
-            new_name = self.my_dirname + '/' + bbb + '_' + str(SDRUno_suffix) + '_' + str(int(np.round(self.wavheader["centerfreq"]/1000))) + 'kHz.wav'
-            # Renaming the file
-            shutil.move(old_name, new_name)
-            system_state["f1"] = new_name #TODO: replace by line below
-            #resample_m.mdl["f1"] = new_name
-            #resample_m.mdl["my_filename"] = self.my_filename
-            #resp = self.sync_tabs(["dum","win","a","f1",new_name])
-            #resp = self.sync_tabs(["dum","win","a","my_filename",self.my_filename])
-            self.SigRelay.emit("cm_all_",["f1",new_name])
-            self.SigRelay.emit("cm_all_",["my_filename",self.my_filename])
-            self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
-            self.showfilename() #remove after complete transtition to Relay
-        self.ui.label_8.setEnabled(False)
-        self.ui.pushButton_InsertHeader.setEnabled(False)
-        self.filetype = "wav"
-        sys_state.set_status(system_state)
-
-
-    def fill_wavtable(self):
-        """
-        VIEW
-        fill tables on TAB wavedit with the respective values from the vaw header
-        """
-        starttime = self.wavheader['starttime']
-        stoptime = self.wavheader['stoptime']
-
-        #check TODO OBSOLET : diese Info müsste ja nun in  wavheader['starttime_dt'],  wavheader['stoptime_dt'] drin sein !   OBSOLET !
-        # wird aber noch in stationsloop in auto_closedlabel = (stdcheck or inactcheck) and (self.host.rectime >= self.host.STICHTAG)
-        #verwendet
-        self.rectime = datetime(starttime[0],starttime[1],starttime[3],starttime[4],starttime[5],starttime[6])
-        self.recstop = datetime(stoptime[0],stoptime[1],stoptime[3],stoptime[4],stoptime[5],stoptime[6])
-        start_str = str(self.wavheader['starttime_dt'])
-
-        ###Einträge der Tabelle 1 nur Integers
-        metastring1 = [self.wavheader['filesize'], self.wavheader['sdr_nChunkSize']]
-        metastring1.append(self.wavheader['wFormatTag'])
-        metastring1.append(self.wavheader['nChannels'])
-        metastring1.append(self.wavheader['nSamplesPerSec'])
-        metastring1.append(self.wavheader['nAvgBytesPerSec'])
-        metastring1.append(self.wavheader['nBlockAlign'])
-        metastring1.append(self.wavheader['nBitsPerSample'])
-        metastring1.append(self.wavheader['centerfreq'])
-        metastring1.append(self.wavheader['data_nChunkSize'])
-        metastring1.append(self.wavheader['ADFrequency'])
-        metastring1.append(self.wavheader['IFFrequency'])
-        metastring1.append(self.wavheader['Bandwidth'])
-        metastring1.append(self.wavheader['IQOffset'])               
-        for ix in range(0,14):
-            self.ui.tableWidget_basisfields.item(ix, 0).setData(0,metastring1[ix])
-        for ix in range(0,8):
-            self.ui.tableWidget_starttime.item(ix, 0).setData(0,starttime[ix])
-            self.ui.tableWidget_starttime.item(ix, 1).setData(0,stoptime[ix])
-
-        # write other info to table 3 (strings)                    
-        self.ui.tableWidget_3.item(2, 0).setText(start_str)
-        self.ui.tableWidget_3.item(1, 0).setText(str(self.wavheader['sdrtype_chckID']))
-        self.ui.tableWidget_3.item(0, 0).setText(str(self.wavheader['nextfilename']))
-        self.ui.tableWidget_3.item(3, 0).setText(str(self.wavheader['data_ckID']))
-
-    def check_consistency(self,item,dtype,label):
-        typetab = {"long": [-2147483648, 2147483647], "ulong": [0, 4294967295], 
-                    "short": [-32768, 32767]  , "ushort": [0, 65535],
-                    "float": [-3.4E38, 3.4E38]}
-
-        if item < typetab[dtype][0] or item > typetab[dtype][1]:
-            auxi.standard_errorbox(label + "must be of type " + dtype + ", i.e. in range " + str(typetab[dtype]) + "\n Please correct !")
-            return False
-        else:
-            return True
-        
-    def write_edited_wavheader(self):  #TODO move to controller module wavheader
-        """
-        CONTROLLER
-        
-        """
-        system_state = sys_state.get_status()
-        crit1 = False
-        #TODO : ?Sonderzeichencheck ??
-        self.wavheader['nextfilename'] = self.ui.tableWidget_3.item(0, 0).text()
-        preview = {}
-        for ix in range(0,8):
-            preview[ix] = int(self.ui.tableWidget_starttime.item(ix, 0).text())
-        try:
-            a = datetime(preview[0],preview[1],preview[3],preview[4],preview[5],preview[6])
-        except ValueError:
-            auxi.standard_errorbox("start date or time entry is out of valid range, please check and retry")
-            sys_state.set_status(system_state)
-            return False
-        if preview[6] > 999:
-            crit1 = True
-
-        for ix in range(0,8):
-            preview[ix] = int(self.ui.tableWidget_starttime.item(ix, 1).text())
-        try:
-            a = datetime(preview[0],preview[1],preview[3],preview[4],preview[5],preview[6])
-        except ValueError:
-            auxi.standard_errorbox("stop date or time entry is out of valid range, please check and retry")
-            sys_state.set_status(system_state)
-            return False
-        if preview[6] > 999 or crit1 == True:
-            auxi.standard_errorbox("ms value in start or stoptime must not be > 999, please check and retry")
-            sys_state.set_status(system_state)
-            return False      
-           
-        for ix in range(0,8):
-            self.wavheader['starttime'][ix] = int(self.ui.tableWidget_starttime.item(ix, 0).text())
-            self.wavheader['stoptime'][ix] = int(self.ui.tableWidget_starttime.item(ix, 1).text())
-
-        # ck1 = np.array([])
-        # ck1 = self.wavheader['starttime']
-        # if 
-        # ckref1 = np.array([65536,13,65000,31,25,60,60,1000])
-        checklist = ['filesize','sdr_nChunkSize','wFormatTag','nChannels', 'nSamplesPerSec',
-            'nAvgBytesPerSec', 'nBlockAlign','nBitsPerSample','centerfreq','data_nChunkSize',
-            'ADFrequency','IFFrequency','Bandwidth','IQOffset']
-        typelist = ['ulong', 'long', 'short', 'short', 'long', 
-                    'long', 'short', 'short', 'long', 'ulong',
-                     'long',  'long',  'long',  'long']
-        for ix2 in range(len(checklist)):
-            self.wavheader[checklist[ix2]] = int(self.ui.tableWidget_basisfields.item(ix2, 0).text())
-            chk = False
-            chk = self.check_consistency(self.wavheader[checklist[ix2]],typelist[ix2],checklist[ix2])
-            if chk == False:
-                sys_state.set_status(system_state)
-                return False
-                #self.wavheader[checklist[ix2]] = int(self.ui.tableWidget.item(ix2, 0).text())
-
-        if system_state["fileopened"] is True:
-            if self.ovwrt_flag == False: #TODO: wird nie mehr erreicht, oder ?
-                wav_filename = self.my_dirname + '/templatewavheader.wav'
-                auxi.standard_errorbox("Template wavheader File is being written, useful ?")
-            else: 
-                wav_filename = system_state["f1"]
-            
-            WAVheader_tools.write_sdruno_header(self,wav_filename,self.wavheader,self.ovwrt_flag)
-        sys_state.set_status(system_state)
-
-    def extract_startstoptimes_auxi(self, wavheader): #TODO: move to controller module edit wavheader
-        """_synthetize next filename in the playlist in case the latter cannot be extracted
-        from auxi SDR-wav-header because it is longar than 96 chars_
-        can only be used for SDRUno and RFCorder header
-        CONTROLLER
-        :param : wavheader [dictionary]
-        :type : dictionary
-        :raises [ErrorType]: [ErrorDescription]
-        :return: next_filename
-        :rtype: str
-        """
-        ###TODO error handling
-        ###TODO: check if the following fixes for binary representations are necessary when using UNICODE
-        wavheader['nextfilename'] = (wavheader['nextfilename']).replace('x00','')
-        wavheader['nextfilename'] = (wavheader['nextfilename']).replace("'","")
-        wavheader['nextfilename'] = (wavheader['nextfilename']).replace('b''','')
-        wavheader['nextfilename'] = wavheader['nextfilename'].rstrip(' ')
-        wavheader['nextfilename'] = wavheader['nextfilename'].rstrip('\\')
-        nextfilename = wavheader['nextfilename']
-        nextfilename_purged = nextfilename.replace('/','\\')
-        nextfile_dirname = os.path.dirname(nextfilename_purged)
-        #TODO: nextfilename dirname is frequently 0 --> quest is invalid
-        if len(nextfile_dirname) > 3:
-            if (wavheader['nextfilename'][0:2] == "'\\") is False:
-                self.loopalive = False   ### stop playlist loop  #######################  loop must be handled inside this method !
-                true_nextfilename = ''
-            else:
-                if wavheader['nextfilename'].find('.wav') != -1: ### take next filename from wav header
-                    true_nextfilename, next_ext = os.path.splitext(os.path.basename(nextfilename_purged))
-                else: ### synthetize next filename because wav header string for nextfile longer 92 chars
-                    #print("nextfile entry in wavheader invalid, please edit wav header")
-                    self.logger.debug("nextfile entry in wavheader invalid, please edit wav header")
-                    true_nextfilename = ''
-                    return true_nextfilename
-                self.loopalive = True
-            return true_nextfilename
-        
-
-    ############################## END TAB WAV EDITOR ####################################
-
-    ############################## GENERAL FUNCTIONS ####################################
+  
 
     def checkSTEMLABrates(self):        # TODO: this is ratrer a controller method than a GUI method. Transfer to other module
         """
@@ -3579,16 +2992,10 @@ class WizardGUI(QMainWindow):
         self.cohiradia_yamlheader_filename = self.annotationpath + '/cohiradia_metadata_header.yaml'
         self.cohiradia_yamltailer_filename = self.annotationpath + '/cohiradia_metadata_tailer.yaml'
         self.cohiradia_yamlfinal_filename = self.annotationpath + '/COHI_YAML_FINAL.yaml'
-        system_state = sys_state.get_status()
-        if not system_state["OLD"]:
-            # resp = self.sync_tabs(["yamleditor","win","u","cohiradia_yamlheader_filename",self.cohiradia_yamlheader_filename]) #remove aftzer trans to relay
-            # resp = self.sync_tabs(["yamleditor","win","u","cohiradia_yamltailer_filename",self.cohiradia_yamltailer_filename])
-            # resp = self.sync_tabs(["yamleditor","win","u","cohiradia_yamlfinal_filename",self.cohiradia_yamlfinal_filename])
-            # resp = self.sync_tabs(["yamleditor","win","u","cohiradia_metadata_filename",self.cohiradia_metadata_filename])
-            self.SigRelay.emit("cm_yamleditor",["cohiradia_yamlheader_filename",self.cohiradia_yamlheader_filename])
-            self.SigRelay.emit("cm_yamleditor",["cohiradia_yamltailer_filename",self.cohiradia_yamltailer_filename])
-            self.SigRelay.emit("cm_yamleditor",["cohiradia_yamlfinal_filename",self.cohiradia_yamlfinal_filename])
-            self.SigRelay.emit("cm_yamleditor",["cohiradia_metadata_filename",self.cohiradia_metadata_filename])
+        self.SigRelay.emit("cm_yamleditor",["cohiradia_yamlheader_filename",self.cohiradia_yamlheader_filename])
+        self.SigRelay.emit("cm_yamleditor",["cohiradia_yamltailer_filename",self.cohiradia_yamltailer_filename])
+        self.SigRelay.emit("cm_yamleditor",["cohiradia_yamlfinal_filename",self.cohiradia_yamlfinal_filename])
+        self.SigRelay.emit("cm_yamleditor",["cohiradia_metadata_filename",self.cohiradia_metadata_filename])
             #self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
 
             ############################ CURRENT STATE RELAY, CONTINUE FROM HERE
@@ -3617,7 +3024,6 @@ class WizardGUI(QMainWindow):
                     ix += 1
                 else:
                     self.logger.debug("resread_playlist: automat remove from selectlist: %s", self.my_filename + self.ext)
-                    #print(f"automat remove from selectlist: {(self.my_filename + self.ext)}")
         #TODO: erzeuge einen Einag in Playlist    listWidget_playlist
 
     #@njit
@@ -3632,16 +3038,13 @@ class WizardGUI(QMainWindow):
         Returns: True, if successful, False otherwise
         '''
         #TODO: shift action to respective tab machine by: currix = self.ui.tabWidget.currentIndex() self.ui.tabWidget.tabText(currix)
-        
-
-
         system_state = sys_state.get_status()
         self.SigGUIReset.emit()
-        #TODO: call this signal only if resample_c is instantiated !
+        #TODO: replace by RELAY; call this signal only if resample_c is instantiated !
         resample_c.SigResampGUIReset.emit()
         #resample_c.SigTerminate_Finished.connect(self.cb_resample_new)
         self.ui.pushButton_resample_split2G.clicked.connect(resample_v.cb_split2G_Button)
-        #TODO: call this function only if resample_v is instantiated !
+        #TODO:  replace by RELAY; call this function only if resample_v is instantiated !
         resample_v.enable_resamp_GUI_elemets(True)
 
         filters = "SDR wav files (*.wav);;Raw IQ (*.dat *.raw )"
@@ -3652,16 +3055,11 @@ class WizardGUI(QMainWindow):
                                                                 "Open data file"
                                                                 , self.standardpath, filters, selected_filter)
             else:
-                #print('open file with last path')
                 filename =  QtWidgets.QFileDialog.getOpenFileName(self,
                                                                 "Open data file"
                                                                 ,self.metadata["last_path"] , filters, selected_filter)
             system_state["f1"] = filename[0] #TODO: replace by line below:
-            #resample_m.mdl["f1"]  = filename[0]
             self.SigRelay.emit("cm_all_",["f1", filename[0]])
-
-            #resp = self.sync_tabs(["dum","win","a","f1",filename[0]])
-            #self.SigRelay.emit("cm_all_",["f1", filename[0]])
         else:
             pass
         
@@ -3680,36 +3078,28 @@ class WizardGUI(QMainWindow):
         system_state["ext"] = self.ext
         system_state["my_filename"] = self.my_filename
         
-        #resp = self.sync_tabs(["dum","win","a","my_dirname",self.my_dirname])
         self.SigRelay.emit("cm_all_",["my_dirname", self.my_dirname])
-        #resp = self.sync_tabs(["dum","win","a","ext",self.ext])
         self.SigRelay.emit("cm_all_",["ext",self.ext])
-        #resp = self.sync_tabs(["dum","win","a","my_filename",self.my_filename])
         self.SigRelay.emit("cm_all_",["my_filename",self.my_filename])
-        self.SigRelay.emit("cexex_all_",["updateGUIelements", 0])
-        system_state["temp_directory"] = self.my_dirname + "/temp"
-        #TODO REPLACE line for model:
-        #resample_m.mdl["temp_directory"] = self.my_dirname + "/temp"
-        #resp = self.sync_tabs(["dum","win","a","temp_directory",self.my_dirname + "/temp"])
-        self.SigRelay.emit("cm_all_",["temp_directory",self.my_dirname + "/temp"])
 
+        system_state["temp_directory"] = self.my_dirname + "/temp"
+        self.SigRelay.emit("cm_all_",["temp_directory",self.my_dirname + "/temp"])
 
         if os.path.exists(system_state["temp_directory"]) == False:         #exist yaml file: create from yaml-editor
             os.mkdir( system_state["temp_directory"])
-
 
         if self.ext == ".dat" or self.ext == ".raw":
             self.filetype = "dat"
             ## TODO: wavheader-Writing zum Button Insert Header connecten
             self.ui.label_8.setEnabled(True)
-            self.ui.pushButton_InsertHeader.setEnabled(True)
+            self.ui.pushButton_InsertHeader.setEnabled(True)   #####TODO shift to WAV editor or send Relay for inactivation via WAV 
         else:
             if self.ext == ".wav":
                 self.filetype = "wav"
                 self.ui.tab_3.setEnabled(True)  ##########TODO: replace by Tab disable function inactivate/activate_tabs(self,selection)
                 self.ui.tab_4.setEnabled(True)  ##########TODO: replace by Tab disable function inactivate/activate_tabs(self,selection)
                 self.ui.label_8.setEnabled(False)
-                self.ui.pushButton_InsertHeader.setEnabled(False)                
+                self.ui.pushButton_InsertHeader.setEnabled(False)                 #####TODO shift to WAV editor or send Relay for inactivation via WAV 
             else:
                 auxi.standard_errorbox("no valid data forma, neiter wav, nor dat nor raw !")
                 sys_state.set_status(system_state)
@@ -3724,7 +3114,8 @@ class WizardGUI(QMainWindow):
         else:
             self.wavheader = WAVheader_tools.get_sdruno_header(self,system_state["f1"])
             if self.wavheader != False:
-                self.next_filename = self.extract_startstoptimes_auxi(self.wavheader)
+                #self.next_filename = self.extract_startstoptimes_auxi(self.wavheader)
+                self.next_filename = waveditor_c.extract_startstoptimes_auxi(self.wavheader)
             else:
                 auxi.standard_errorbox("File is not recognized as a valid IQ wav file (not auxi/rcvr compatible or not a RIFF file)")
                 sys_state.set_status(system_state)
@@ -3737,11 +3128,13 @@ class WizardGUI(QMainWindow):
             self.sdrtype = 'FALSE'
             sys_state.set_status(system_state)
             return False
-
+        self.SigRelay.emit("cm_waveditor",["filetype",self.filetype])
         #TODO: mache das konfigurierbar:
         self.ui.lineEdit_resample_targetnameprefix.setText(self.my_filename)
-        self.showfilename()
         self.setstandardpaths()
+        self.SigRelay.emit("cm_all_",["wavheader",self.wavheader])
+        self.showfilename()
+        #self.SigRelay.emit("cexex_all_",["updateGUIelements", 0])
         self.annotation_deactivate()
         self.scan_deactivate()
         self.ui.pushButtonDiscard.setEnabled(False)
@@ -3816,19 +3209,18 @@ class WizardGUI(QMainWindow):
         #self.ui.listWidget_playlist_2.itemClicked.connect(resample_v.reslist_itemselected) #TODO transfer to resemplar view
         
 ################TODO: end method initialize listitems
-
         
         if self.wavheader['sdrtype_chckID'].find('rcvr') > -1:
             self.readoffset = 86
         else:
             self.readoffset = 216
 
-        system_state["ifreq"] = self.wavheader['centerfreq'] + system_state["LO_offset"]
-        system_state["irate"] = self.wavheader['nSamplesPerSec']
+        system_state["ifreq"] = self.wavheader['centerfreq'] + system_state["LO_offset"] #ONLY used in player, so shift
+        system_state["irate"] = self.wavheader['nSamplesPerSec'] #ONLY used in palyer, so shift
         system_state["readoffset"] = self.readoffset   
-        #resp = win.sync_tabs(["resample","win","u","readoffset",system_state["readoffset"]])     
         self.SigRelay.emit("cm_resample",["readoffset",system_state["readoffset"]])
-        self.fill_wavtable()
+        #self.SigRelay.emit("cm_resample",["readoffset",system_state["readoffset"]])
+        #self.fill_wavtable()
 
         #generate STM_cont_params for future passage to player_theradworkers instead of push pop strategy
         #self.STM_cont_params = {"HostAddress": system_state["HostAddress"], "ifreq": system_state["ifreq"],"rates": system_state["rates"], "irate": system_state["irate"], "icorr": system_state["icorr"]}
@@ -3859,8 +3251,6 @@ class WizardGUI(QMainWindow):
         else:
             self.scan_activate()
         system_state["fileopened"] = True
-        #resample_m.mdl["fileopened"] = True
-        #resp = self.sync_tabs(["dum","win","a","fileopened",True])
         self.SigRelay.emit("cm_all_",["fileopened",True])
 
         self.ui.spinBoxKernelwidth.setEnabled(True)
@@ -3870,20 +3260,14 @@ class WizardGUI(QMainWindow):
         
         system_state = sys_state.get_status()#TODO: check: obsolete ! because of Relay !
         system_state["horzscal"] = self.position #TODO: check: obsolete ! because of Relay !
-        #syncdict = ["resample", "win", "u", "horzscal", self.position]
-        #self.SigSyncTabs.emit(["resample", "win", "a", "horzscal", self.position])
-        #resp = self.sync_tabs(["view_spectra","win","u","position",self.position])
-        #resp = self.sync_tabs(["dum","win","a","wavheader",self.wavheader])
         self.SigRelay.emit("cm_all_",["horzscal", self.position])
         self.SigRelay.emit("cm_view_spectra",["position",self.position])
-        self.SigRelay.emit("cm_all_",["wavheader",self.wavheader])
-        self.SigRelay.emit("cexex_view_spectra",["updateGUIelements", 0]) 
-        #TODO TODO TODO: track multiple calls of plot_spectrum
-        #view_spectra_v.SigUpdateGUI.emit("ext_update")
 
+        #self.SigRelay.emit("cexex_all_",["updateGUIelements", 0]) 
+        #TODO TODO TODO: track multiple calls of plot_spectrum
         self.lock_playthreadstart = False
         #TODO: is that really necessary on each fileopen ? 
-        self.read_yaml_header(self)
+        #self.read_yaml_header(self)
         resample_v.update_resample_GUI()
         # TODO: check, added 09-12-2023
         system_state["playlength"] = self.wavheader['filesize']/self.wavheader['nAvgBytesPerSec']
@@ -3894,11 +3278,7 @@ class WizardGUI(QMainWindow):
         out_dirname = self.my_dirname + '/out'
         if os.path.exists(out_dirname) == False:         #exist yaml file: create from yaml-editor
             os.mkdir(out_dirname)
- 
-        #system_state["out_dirname"] = out_dirname #TODO: Removed because already done by sync_tabs
-        #resp = self.sync_tabs(["dum","win","a","out_dirname",out_dirname])
         self.SigRelay.emit("cm_all_",["out_dirname",out_dirname])
-
         sys_state.set_status(system_state)
         return True
 
@@ -3945,7 +3325,6 @@ class WizardGUI(QMainWindow):
         #     else:
         #         auxi.standard_errorbox("invalid numeral in center frequency offset field, please enter valid integer value (kHz)")
         #         return False
-
 
         if rateix == -1 or cix == -1 or loix == -1:
             icheck = False
@@ -4054,6 +3433,10 @@ if __name__ == '__main__':
     xcore_c = core_c(xcore_m)
     xcore_v = core_v(win.ui,xcore_c,xcore_m)
 
+    waveditor_m = waved.waveditor_m()
+    waveditor_c = waved.waveditor_c(waveditor_m)
+    waveditor_v = waved.waveditor_v(win.ui,waveditor_c,waveditor_m)
+
     resample_v.SigActivateOtherTabs.connect(win.setactivity_tabs)
     resample_c.SigActivateOtherTabs.connect(win.setactivity_tabs)
     #resample_v.SigUpdateOtherGUIs.connect(win.showfilename)
@@ -4066,7 +3449,7 @@ if __name__ == '__main__':
     #directory of tab objects to be activated ####TODO: simplify to simple list
     
     tab_dict ={}
-    tab_dict["list"] = ["resample","view_spectra","yamleditor","xcore"]
+    tab_dict["list"] = ["resample","view_spectra","yamleditor","xcore","waveditor"]
     #tab_dict["list"] = ["view_spectra","view_spectra"]
     
     for tabitem1 in tab_dict["list"]:
@@ -4104,11 +3487,8 @@ if __name__ == '__main__':
 
     # fix error with SNR calculation: there seems to be no reactio to baselineshifts when calculating the SNR for praks and identifying those above threshold
     #
-    # * wav-header editor Modul erstellen: 5h
-        #################TODO ind reample module: implement next line newly with Relay after tarnsfer of wavedit module 
-        #self.gui.fill_wavtable()
-    #
-    # * yaml-Editor-Modul erstellen: 5h
+        #################TODO TEST in resample module: implement next line newly with Relay after tarnsfer of wavedit module 
+        #self.gui.fill_wavtable() has already been replaced by Relay
     #
     # * Player-Modul übertragen: 10h
     #
@@ -4116,7 +3496,7 @@ if __name__ == '__main__':
     #
     # * Annotator Modul übertragen: 20 h
     #
-    # * // \\ Problem lösen: 2h
+    # * // \\ Problem lösen: 2h: in aktuellem Core, Annotator UND waveditor !!!!
     #
     # * Core-Modul umstellen: 3h
     #
@@ -4138,4 +3518,317 @@ if __name__ == '__main__':
     #
     #   zerlege plot_spectrum in einen view_spectra spezifischen Teil und einen generellen Spektralplotter, der in einen Canvas das Spektrum eines Datenstrings plottet
     #       spectrum(canvas_ref,data,*args) in auxiliary Modul
+
+
+
+
+
+
+
+  # ############################## TAB WAV EDITOR ####################################
+        
+    # def clear_WAVwidgets(self):
+    #     """_VIEW: clear the tabwidgets of the wav-editor tab
+    #     :param : none
+    #     :type : none
+    #     :raises [ErrorType]: [ErrorDescription]
+    #     :return: none
+    #     :rtype: none
+    #     """
+    #     for ix in range(0,14):
+    #         self.ui.tableWidget_basisfields.item(ix, 0).setData(0,0)
+    #     for ix in range(0,8):
+    #         self.ui.tableWidget_starttime.item(ix, 0).setData(0,0)
+    #         self.ui.tableWidget_starttime.item(ix, 1).setData(0,0)
+
+    #     # write other info to table 3 (strings)                    
+    #     self.ui.tableWidget_3.item(2, 0).setText("")
+    #     self.ui.tableWidget_3.item(1, 0).setText("")
+    #     self.ui.tableWidget_3.item(0, 0).setText("")
+    #     self.ui.tableWidget_3.item(3, 0).setText("")
+
+
+    # def overwrite_header(self):
+    #     """
+    #     VIEW or CONTROLLER ??
+        
+    #     """
+    #     """_VIEW: clear the tabwidgets of the wav-editor tab
+    #     :param : none
+    #     :type : none
+    #     :raises [ErrorType]: [ErrorDescription]
+    #     :return: none
+    #     :rtype: none
+    #     """
+    #     system_state = sys_state.get_status()
+    #     if system_state["fileopened"] is False:
+    #         sys_state.set_status(system_state)
+    #         return False
+    #     msg = QMessageBox()
+    #     msg.setIcon(QMessageBox.Question)
+    #     msg.setText("overwrite wav header")
+    #     msg.setInformativeText("you are about to overwrite the header of the current wav file with the values in the tables of Tab 'WAV Header'. Do you really want to proceed ?")
+    #     msg.setWindowTitle("overwrite")
+    #     msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+    #     msg.buttonClicked.connect(self.popup)
+    #     msg.exec_()
+
+    #     if self.yesno == "&Yes":
+    #         self.ovwrt_flag = True
+    #         self.write_edited_wavheader()
+    #     else:
+    #         sys_state.set_status(system_state)
+    #         return False
+
+    #     #TODO: write backup dump header
+    #     #TODO: rename file to SDRUno name convention if filetype = .dat
+    #     if self.filetype == "dat":
+    #         old_name = system_state["f1"]
+    #         SDRUno_suffix = str(self.wavheader['starttime_dt'])
+    #         SDRUno_suffix = SDRUno_suffix.replace(" ","_")
+    #         SDRUno_suffix = SDRUno_suffix.replace(":","")
+    #         SDRUno_suffix = SDRUno_suffix.replace("-","")
+    #         usix = self.my_filename.find('lo')
+    #         if usix == -1:
+    #             auxi.standard_infobox("dat file does not meet old COHIRADIA RFCorder name convention; file will be renamed with correct suffixes")
+    #             usix = len(self.my_filename)+2
+    #         bbb = self.my_filename[0:usix-2]
+    #         new_name = self.my_dirname + '/' + bbb + '_' + str(SDRUno_suffix) + '_' + str(int(np.round(self.wavheader["centerfreq"]/1000))) + 'kHz.wav'
+    #         shutil.move(old_name, new_name)
+    #         system_state["f1"] = new_name #TODO: replace by line below
+    #         self.SigRelay.emit("cm_all_",["f1",new_name])
+    #         self.SigRelay.emit("cm_all_",["my_filename",self.my_filename])
+    #         self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
+    #         self.showfilename() #remove after complete transtition to Relay
+    #     self.ui.label_8.setEnabled(False)
+    #     self.ui.pushButton_InsertHeader.setEnabled(False)
+    #     self.filetype = "wav"
+    #     sys_state.set_status(system_state)
+
+    # def fill_wavtable(self):
+    #     """
+    #     VIEW
+    #     fill tables on TAB wavedit with the respective values from the vaw header
+    #     """
+    #     starttime = self.wavheader['starttime']
+    #     stoptime = self.wavheader['stoptime']
+
+    #     #check TODO OBSOLET : diese Info müsste ja nun in  wavheader['starttime_dt'],  wavheader['stoptime_dt'] drin sein !   OBSOLET !
+    #     # wird aber noch in stationsloop in auto_closedlabel = (stdcheck or inactcheck) and (self.host.rectime >= self.host.STICHTAG)
+    #     #verwendet
+    #     self.rectime = datetime(starttime[0],starttime[1],starttime[3],starttime[4],starttime[5],starttime[6])
+    #     self.recstop = datetime(stoptime[0],stoptime[1],stoptime[3],stoptime[4],stoptime[5],stoptime[6])
+    #     start_str = str(self.wavheader['starttime_dt'])
+
+    #     ###Einträge der Tabelle 1 nur Integers
+    #     metastring1 = [self.wavheader['filesize'], self.wavheader['sdr_nChunkSize']]
+    #     metastring1.append(self.wavheader['wFormatTag'])
+    #     metastring1.append(self.wavheader['nChannels'])
+    #     metastring1.append(self.wavheader['nSamplesPerSec'])
+    #     metastring1.append(self.wavheader['nAvgBytesPerSec'])
+    #     metastring1.append(self.wavheader['nBlockAlign'])
+    #     metastring1.append(self.wavheader['nBitsPerSample'])
+    #     metastring1.append(self.wavheader['centerfreq'])
+    #     metastring1.append(self.wavheader['data_nChunkSize'])
+    #     metastring1.append(self.wavheader['ADFrequency'])
+    #     metastring1.append(self.wavheader['IFFrequency'])
+    #     metastring1.append(self.wavheader['Bandwidth'])
+    #     metastring1.append(self.wavheader['IQOffset'])               
+    #     for ix in range(0,14):
+    #         self.ui.tableWidget_basisfields.item(ix, 0).setData(0,metastring1[ix])
+    #     for ix in range(0,8):
+    #         self.ui.tableWidget_starttime.item(ix, 0).setData(0,starttime[ix])
+    #         self.ui.tableWidget_starttime.item(ix, 1).setData(0,stoptime[ix])
+
+    #     # write other info to table 3 (strings)                    
+    #     self.ui.tableWidget_3.item(2, 0).setText(start_str)
+    #     self.ui.tableWidget_3.item(1, 0).setText(str(self.wavheader['sdrtype_chckID']))
+    #     self.ui.tableWidget_3.item(0, 0).setText(str(self.wavheader['nextfilename']))
+    #     self.ui.tableWidget_3.item(3, 0).setText(str(self.wavheader['data_ckID']))
+
+    # def check_consistency(self,item,dtype,label):
+    #     typetab = {"long": [-2147483648, 2147483647], "ulong": [0, 4294967295], 
+    #                 "short": [-32768, 32767]  , "ushort": [0, 65535],
+    #                 "float": [-3.4E38, 3.4E38]}
+
+    #     if item < typetab[dtype][0] or item > typetab[dtype][1]:
+    #         auxi.standard_errorbox(label + "must be of type " + dtype + ", i.e. in range " + str(typetab[dtype]) + "\n Please correct !")
+    #         return False
+    #     else:
+    #         return True
+        
+    # def write_edited_wavheader(self):  #TODO move to controller module wavheader
+    #     """
+    #     CONTROLLER        
+    #     """
+    #     system_state = sys_state.get_status()
+    #     crit1 = False
+    #     #TODO : ?Sonderzeichencheck ??
+    #     self.wavheader['nextfilename'] = self.ui.tableWidget_3.item(0, 0).text()
+    #     preview = {}
+    #     for ix in range(0,8):
+    #         preview[ix] = int(self.ui.tableWidget_starttime.item(ix, 0).text())
+    #     try:
+    #         a = datetime(preview[0],preview[1],preview[3],preview[4],preview[5],preview[6])
+    #     except ValueError:
+    #         auxi.standard_errorbox("start date or time entry is out of valid range, please check and retry")
+    #         sys_state.set_status(system_state)
+    #         return False
+    #     if preview[6] > 999:
+    #         crit1 = True
+
+    #     for ix in range(0,8):
+    #         preview[ix] = int(self.ui.tableWidget_starttime.item(ix, 1).text())
+    #     try:
+    #         a = datetime(preview[0],preview[1],preview[3],preview[4],preview[5],preview[6])
+    #     except ValueError:
+    #         auxi.standard_errorbox("stop date or time entry is out of valid range, please check and retry")
+    #         sys_state.set_status(system_state)
+    #         return False
+    #     if preview[6] > 999 or crit1 == True:
+    #         auxi.standard_errorbox("ms value in start or stoptime must not be > 999, please check and retry")
+    #         sys_state.set_status(system_state)
+    #         return False      
+           
+    #     for ix in range(0,8):
+    #         self.wavheader['starttime'][ix] = int(self.ui.tableWidget_starttime.item(ix, 0).text())
+    #         self.wavheader['stoptime'][ix] = int(self.ui.tableWidget_starttime.item(ix, 1).text())
+
+    #     checklist = ['filesize','sdr_nChunkSize','wFormatTag','nChannels', 'nSamplesPerSec',
+    #         'nAvgBytesPerSec', 'nBlockAlign','nBitsPerSample','centerfreq','data_nChunkSize',
+    #         'ADFrequency','IFFrequency','Bandwidth','IQOffset']
+    #     typelist = ['ulong', 'long', 'short', 'short', 'long', 
+    #                 'long', 'short', 'short', 'long', 'ulong',
+    #                  'long',  'long',  'long',  'long']
+    #     for ix2 in range(len(checklist)):
+    #         self.wavheader[checklist[ix2]] = int(self.ui.tableWidget_basisfields.item(ix2, 0).text())
+    #         chk = False
+    #         chk = self.check_consistency(self.wavheader[checklist[ix2]],typelist[ix2],checklist[ix2])
+    #         if chk == False:
+    #             sys_state.set_status(system_state)
+    #             return False
+    #             #self.wavheader[checklist[ix2]] = int(self.ui.tableWidget.item(ix2, 0).text())
+
+    #     if system_state["fileopened"] is True:
+    #         if self.ovwrt_flag == False: #TODO: wird nie mehr erreicht, oder ?
+    #             wav_filename = self.my_dirname + '/templatewavheader.wav'
+    #             auxi.standard_errorbox("Template wavheader File is being written, useful ?")
+    #         else: 
+    #             wav_filename = system_state["f1"]            
+    #         WAVheader_tools.write_sdruno_header(self,wav_filename,self.wavheader,self.ovwrt_flag)
+    #     sys_state.set_status(system_state)
+
+    # def extract_startstoptimes_auxi(self, wavheader): #TODO: move to controller module edit wavheader
+    #     """_synthetize next filename in the playlist in case the latter cannot be extracted
+    #     from auxi SDR-wav-header because it is longar than 96 chars_
+    #     can only be used for SDRUno and RFCorder header
+    #     CONTROLLER
+    #     :param : wavheader [dictionary]
+    #     :type : dictionary
+    #     :raises [ErrorType]: [ErrorDescription]
+    #     :return: next_filename
+    #     :rtype: str
+    #     """
+    #     ###TODO error handling
+    #     ###TODO: check if the following fixes for binary representations are necessary when using UNICODE
+    #     wavheader['nextfilename'] = (wavheader['nextfilename']).replace('x00','')
+    #     wavheader['nextfilename'] = (wavheader['nextfilename']).replace("'","")
+    #     wavheader['nextfilename'] = (wavheader['nextfilename']).replace('b''','')
+    #     wavheader['nextfilename'] = wavheader['nextfilename'].rstrip(' ')
+    #     wavheader['nextfilename'] = wavheader['nextfilename'].rstrip('\\')
+    #     nextfilename = wavheader['nextfilename']
+    #     nextfilename_purged = nextfilename.replace('/','\\')
+    #     nextfile_dirname = os.path.dirname(nextfilename_purged)
+    #     #TODO: nextfilename dirname is frequently 0 --> quest is invalid
+    #     if len(nextfile_dirname) > 3:
+    #         if (wavheader['nextfilename'][0:2] == "'\\") is False:
+    #             self.loopalive = False   ### stop playlist loop  #######################  loop must be handled inside this method !
+    #             true_nextfilename = ''
+    #         else:
+    #             if wavheader['nextfilename'].find('.wav') != -1: ### take next filename from wav header
+    #                 true_nextfilename, next_ext = os.path.splitext(os.path.basename(nextfilename_purged))
+    #             else: ### synthetize next filename because wav header string for nextfile longer 92 chars
+    #                 self.logger.debug("nextfile entry in wavheader invalid, please edit wav header")
+    #                 true_nextfilename = ''
+    #                 return true_nextfilename
+    #             self.loopalive = True
+    #         return true_nextfilename
+    ############################## END TAB WAV EDITOR ####################################
+
+    ############################## GENERAL FUNCTIONS ####################################
+
+
+            # ### UI TAB WAVHEADER ####################################
+        # self.ui.pushButton_InsertHeader.setEnabled(False)
+        # self.ui.pushButton_InsertHeader.clicked.connect(self.overwrite_header)
+        # self.ui.radioButton_WAVEDIT.setEnabled(True)
+        # self.ui.radioButton_WAVEDIT.setChecked(False)
+        # self.ui.radioButton_WAVEDIT.clicked.connect(self.activate_WAVEDIT)
+        # self.ui.tableWidget_basisfields.setEnabled(False)
+        # self.ui.tableWidget_starttime.setEnabled(False)
+        # self.ui.tableWidget_3.setEnabled(False)
+        # ###END UI TAB WAVHEADER ####################################
+
+        # elements of yaml header generator tab
+        #self.ui.pushButton_Writeyamlheader.setEnabled(False) # activate after completion of the annotation procedure
+        #self.ui.pushButton_Writeyamlheader.clicked.connect(self.yaml_header_buttonfcn)
+        #self.scanplotcreated = False
+    # def inactivate_tabs(self,selection):
+    #     """
+    #     VIEW
+    #     TODO: zentrale self.Tabref-Struktur für die Eintragung Tab-Definitionen dieser Art verwenden und auf diese zugreifen
+    #     TODO. Tab-Namen anpassen
+    #     inactivates selected tabs, selection by list of strings which refer to the individual tabs
+    #     :param selection: list of strings, possible: ["Player","View_Spectra","Annotate","Resampler","YAML_editor","WAV_header"]
+    #     :type selection: list of strings
+    #     ...
+    #     :raises [ErrorType]: none
+    #     ...
+    #     :return: none
+    #     :rtype: none
+    #     """
+    #     if "Player" in selection:
+    #         self.ui.tab.setEnabled(False)
+    #     if "View_Spectra" in selection:
+    #         self.ui.tab_3.setEnabled(False)
+    #         #self.ui.tab_3.setVisible(False)
+    #     if "Annotate" in selection:
+    #         self.ui.tab_4.setEnabled(False)
+    #     #if "Resampler" in selection:
+    #         #self.ui.tab_2.setEnabled(False)
+    #     if "YAML_editor" in selection:
+    #         self.ui.tab_5.setEnabled(False)
+    #     if "WAV_header" in selection:            
+    #         self.ui.tab_1.setEnabled(False)
+    #     if "Resample" in selection:            
+    #         self.ui.tab_resample.setEnabled(False)
+
+            
+    # def activate_tabs(self,selection):
+    #     """
+    #     VIEW
+    #     TODO: zentrale self.Tabref-Struktur für die Eintragung Tab-Definitionen dieser Art verwenden und auf diese zugreifen
+    #     TODO. Tab-Namen anpassen
+    #     activates selected tabs
+    #     :param selection: list of strings, possible: ["Player","View_Spectra","Annotate","Resampler","YAML_editor","WAV_header"]
+    #     :type selection: list of strings, selection by list of strings which refer to the individual tabs
+    #     ...
+    #     :raises [ErrorType]: none
+    #     ...
+    #     :return: none
+    #     :rtype: none
+    #     """
+    #     if "Player" in selection:
+    #         self.ui.tab.setEnabled(True)
+    #     if "View_Spectra" in selection:
+    #         self.ui.tab_3.setEnabled(True)
+    #     if "Annotate" in selection:
+    #         self.ui.tab_4.setEnabled(True)
+    #     if "YAML_editor" in selection:
+    #         self.ui.tab_5.setEnabled(True)
+    #     if "WAV_header" in selection:            
+    #         self.ui.tab_1.setEnabled(True)
+    #     if "Resample" in selection:            
+    #         self.ui.tab_resample.setEnabled(True)
+
 

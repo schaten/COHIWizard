@@ -11,10 +11,8 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 import yaml
 import logging
-from auxiliaries import WAVheader_tools
+#from auxiliaries import WAVheader_tools
 from auxiliaries import auxiliaries as auxi
-import system_module as wsys
-
 
 class  yamleditor_m(QObject):
     __slots__ = ["None"]
@@ -48,7 +46,6 @@ class  yamleditor_m(QObject):
         # Add handlers to the logger
         self.logger.addHandler(warning_handler)
         self.logger.addHandler(debug_handler)
-
         self.logger.debug('Init logger in abstract method reached')
 
 class  yamleditor_c(QObject):
@@ -60,18 +57,169 @@ class  yamleditor_c(QObject):
 
     def __init__(self, yamleditor_m): #TODO: remove gui
         super().__init__()
-
-    # def __init__(self, *args, **kwargs): #TEST 09-01-2024
-    #     super().__init__(*args, **kwargs)
+        self.cohiradia_yamlheader_filename = 'dummy' #TODO:future system state
+        self.cohiradia_yamltailer_filename = 'dummy' #TODO:future system state
+        self.cohiradia_yamlfinal_filename = 'dummy' #TODO:future system state
         viewvars = {}
         #self.set_viewvars(viewvars)
         self.m =  yamleditor_m.mdl
         self.logger = yamleditor_m.logger
 
+class  yamleditor_v(QObject):
+    """_view methods for resampling module
+    TODO: gui.wavheader --> something less general ?
+    """
+    __slots__ = ["viewvars"]
 
-    def  write_yaml_header(self,dummy):
+    SigAny = pyqtSignal()
+    SigUpdateGUI = pyqtSignal(object)
+    SigSyncGUIUpdatelist = pyqtSignal(object)
+    SigRelay = pyqtSignal(str,object)
+    
+    def __init__(self, gui,  yamleditor_c,  yamleditor_m):
+        super().__init__()
+
+        self.m =  yamleditor_m.mdl
+        self.DATABLOCKSIZE = 1024*32
+        self.gui = gui #gui_state["gui_reference"]#system_state["gui_reference"]
+        self.yamleditor_c = yamleditor_c
+        self.logger = yamleditor_m.logger
+        self.gui.pushButton_Writeyamlheader.setEnabled(False) # activate after completion of the annotation procedure
+        self.gui.pushButton_Writeyamlheader.clicked.connect(self.yaml_header_buttonfcn)
+
+    def rxhandler(self,_key,_value):
         """
-        CONTROLLER
+        handles remote calls from other modules via Signal SigRX(_key,_value)
+        :param : _key
+        :type : str
+        :param : _value
+        :type : object
+        :raises [ErrorType]: [ErrorDescription]
+        :return: flag False or True, False on unsuccessful execution
+        :rtype: Boolean
+        """
+        if _key.find("cm_yamleditor") == 0 or _key.find("cm_all_") == 0:
+            #set mdl-value
+            self.m[_value[0]] = _value[1]
+        if _key.find("cui_yamleditor") == 0:
+            _value[0](_value[1])    #TODO TODO: still unclear implementation
+        if _key.find("cexex_yamleditor") == 0 or _key.find("cexex_all_") == 0:   
+            if  _value[0].find("updateGUIelements") == 0:
+                self.updateGUIelements()
+                self.logger.debug("call updateGUIelements")
+
+    def updateGUIelements(self):
+        """
+        updates GUI elements , usually triggered by a Signal SigTabsUpdateGUIs to which 
+        this method is connected in the __main__ of the core module
+        :param : none
+        :type : none
+        :raises [ErrorType]: [ErrorDescription]
+        :return: flag False or True, False on unsuccessful execution
+        :rtype: Boolean
+        """
+        self.logger.debug(" yamleditor: updateGUIelements")
+        self.read_yaml_header()
+        
+
+    def yaml_header_buttonfcn(self):
+        """
+        VIEW
+        """
+        self.write_yaml_header()
+        #TODO: write yaml_directory on demand ?
+
+    def read_yaml_header(self):
+        """
+        VIEW
+        ###DESCRIPTION
+        :param : dummy
+        :type : none
+        :raises [ErrorType]: [ErrorDescription]
+        :return: none
+        :rtype: none
+        """
+
+        # if self.flag_ann_completed == False:
+        #     return
+        nofile_flag = False
+        #print('read info from existing yaml-headerfile to editor table')
+        self.logger.debug("yamlheader path: %s", self.m["cohiradia_yamlheader_filename"])
+        self.gui.pushButton_Writeyamlheader.setEnabled(True)
+        try:
+            stream = open(self.m["cohiradia_yamlheader_filename"], "r", encoding="utf8")
+            self.yamlheader_ = yaml.safe_load(stream)
+            stream.close()
+            self.gui.tableWidget_YAMLHEADER.item(0, 0).setText(str(self.yamlheader_['content']))
+            self.gui.tableWidget_YAMLHEADER.item(1, 0).setText(str(self.yamlheader_['remark']))
+            self.gui.tableWidget_YAMLHEADER.item(2, 0).setText(str(self.yamlheader_['band']))
+            self.gui.tableWidget_YAMLHEADER.item(3, 0).setText(str(self.yamlheader_['antenna']))
+            self.gui.tableWidget_YAMLHEADER.item(4, 0).setText(str(self.yamlheader_['recording-type']))
+            prefix = self.yamlheader_['uri'].split('/')[0]
+            self.gui.tableWidget_YAMLHEADER.item(12, 0).setText(str(prefix))
+        except:
+            self.reset_GUI()
+            #return False        
+        try:
+            stream = open(self.m["cohiradia_yamltailer_filename"], "r", encoding="utf8")
+            self.yamltailer_ = yaml.safe_load(stream)
+            stream.close()
+            self.gui.tableWidget_YAMLHEADER.item(5, 0).setText(str(self.yamltailer_['filters']))
+            self.gui.tableWidget_YAMLHEADER.item(6, 0).setText(str(self.yamltailer_['preamp-settings']))
+            self.gui.tableWidget_YAMLHEADER.item(7, 0).setText(str(self.yamltailer_['location-longitude']))
+            self.gui.tableWidget_YAMLHEADER.item(8, 0).setText(str(self.yamltailer_['location-latitude']))
+            self.gui.tableWidget_YAMLHEADER.item(9, 0).setText(str(self.yamltailer_['location-qth']))  ## location-qth ist das noch nie verwendete Keyword
+            self.gui.tableWidget_YAMLHEADER.item(10, 0).setText(str(self.yamltailer_['location-country']))                
+            self.gui.tableWidget_YAMLHEADER.item(11, 0).setText(str(self.yamltailer_['location-city']))
+            self.gui.tableWidget_YAMLHEADER.item(12, 0).setText(str(self.yamltailer_['upload-user-fk']))
+        except:
+            self.reset_GUI()
+        #TODO: write yaml_directory on demand only
+
+
+
+    def reset_GUI(self):
+        self.gui.pushButton_Writeyamlheader.setEnabled(True)
+        item = self.gui.tableWidget_YAMLHEADER.item(0, 0)
+        item.setText("### Title of the recording as it appears in the COHIRADIA list")
+        item = self.gui.tableWidget_YAMLHEADER.item(1, 0)
+        item.setText("### Notable details in the spectrum ")
+        item = self.gui.tableWidget_YAMLHEADER.item(2, 0)
+        item.setText("### LW - MW - SW - others")
+        item = self.gui.tableWidget_YAMLHEADER.item(3, 0)
+        item.setText("### brand/type of antenna")
+        item = self.gui.tableWidget_YAMLHEADER.item(4, 0)
+        item.setText("### SDR type or other devices")
+        item = self.gui.tableWidget_YAMLHEADER.item(5, 0)
+        item.setText("### used filters between antenna and recorder")
+        item = self.gui.tableWidget_YAMLHEADER.item(6, 0)
+        item.setText("### preamplifiers: type and settings")
+        item = self.gui.tableWidget_YAMLHEADER.item(7, 0)
+        item.setText("### RX coordinate")
+        item = self.gui.tableWidget_YAMLHEADER.item(8, 0)
+        item.setText("## RX coordinate")
+        item = self.gui.tableWidget_YAMLHEADER.item(9, 0)
+        item.setText("### alternative to RX coordinates")
+        item = self.gui.tableWidget_YAMLHEADER.item(10, 0)
+        item.setText("### RX Country")
+        item = self.gui.tableWidget_YAMLHEADER.item(11, 0)
+        item.setText("### RX CITY")
+        item = self.gui.tableWidget_YAMLHEADER.item(12, 0)
+        item.setText("### RM ID if any")
+        item = self.gui.tableWidget_YAMLHEADER.item(13, 0)
+        item.setText("### Folder name in data directory of COHIRADIA server")
+        self.gui.pushButton_Writeyamlheader.setEnabled(False)
+
+
+    def popup(self,i):
+        """
+        VIEW or CONTROLLER ??
+        
+        """
+        self.yesno = i.text()
+
+    def  write_yaml_header(self):
+        """
         ###DESCRIPTION
         :param : dummy
         :type : none
@@ -82,16 +230,14 @@ class  yamleditor_c(QObject):
         # treat yaml header
         #if self.flag_ann_completed == False:  #TODO: check if this should only be available if annotation is completed or already before
         #    return
-        #system_state = sys_state.get_status()
-        if len(self.cohiradia_yamlheader_filename) >=256:
+        if len(self.m["cohiradia_yamlheader_filename"]) >=256:
             auxi.standard_errorbox("file path/name is longer than 256 characters, cannot proceed with yaml headers. This may cause significant problems when using the annotator. Please use less deeply nested paths for your files")
-            #system_state["f1"] =""
-            self.reset_GUI()
+            self.reset_GUI() # not essentially necessary 
             #TODO: close file reset GU totally
-            #sys_state.set_status(system_state)
+            #Relay to others ?
             return False
 
-        if os.path.exists(self.cohiradia_yamlheader_filename) == True:
+        if os.path.exists(self.m["cohiradia_yamlheader_filename"]) == True:
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Question)
             msg.setText("overwrite file")
@@ -104,29 +250,27 @@ class  yamleditor_c(QObject):
                 #sys_state.set_status(system_state)
                 return False
 
-        if os.path.exists(self.cohiradia_yamlheader_filename) == False:         #exist yaml file: create from yaml-editor
-            self.cohiradia_yamlheader_dirname = self.my_dirname + '/' + self.annotationdir_prefix + self.my_filename
+        if os.path.exists(self.m["cohiradia_yamlheader_filename"]) == False:         #exist yaml file: create from yaml-editor
+            self.cohiradia_yamlheader_dirname = self.m["my_dirname"] + '/' + self.m["annotationdir_prefix"] + self.m["my_filename"]
             if os.path.exists(self.cohiradia_yamlheader_dirname) == False:
                 os.mkdir(self.cohiradia_yamlheader_dirname)
 
             
-        with open(self.cohiradia_yamlheader_filename, 'w', encoding='utf-8') as f:
-            #prefix = '###/' #TODO: remove
+        with open(self.m["cohiradia_yamlheader_filename"], 'w', encoding='utf-8') as f:
             prefix = self.gui.tableWidget_YAMLHEADER.item(13, 0).text()
-            uri_string = 'uri: "{}"\n'.format(prefix + '/' + self.my_filename + '.wav')
-            dt_now = self.wavheader['starttime_dt']
+            uri_string = 'uri: "{}"\n'.format(prefix + '/' + self.m["my_filename"] + '.wav')
+            dt_now = self.m["wavheader"]['starttime_dt']
             recdatestr = str(dt_now.strftime('%Y-%m-%d')) + 'T'  + str(dt_now.strftime('%H:%M:%S')) + '+###UTC OFFSET###'  #TODO: automatci UTC offset ?
-            #
             recdate = 'recording-date: "{}"\n'.format(recdatestr) ###TODO take from wav-header
-            duration = np.round(self.wavheader['data_nChunkSize']/self.wavheader['nAvgBytesPerSec'])
-            flow = np.round((self.wavheader["centerfreq"] - self.wavheader["nSamplesPerSec"]/2)/1000,decimals = 2)
-            fhigh = np.round((self.wavheader["centerfreq"] + self.wavheader["nSamplesPerSec"]/2)/1000,decimals = 2)
+            duration = np.round(self.m["wavheader"]['data_nChunkSize']/self.m["wavheader"]['nAvgBytesPerSec'])
+            flow = np.round((self.m["wavheader"]["centerfreq"] - self.m["wavheader"]["nSamplesPerSec"]/2)/1000,decimals = 2)
+            fhigh = np.round((self.m["wavheader"]["centerfreq"] + self.m["wavheader"]["nSamplesPerSec"]/2)/1000,decimals = 2)
             bandstr = self.gui.tableWidget_YAMLHEADER.item(2, 0).text()
             band = 'band: "{}"\n'.format(bandstr)
             frequnit = 'frequency-unit: "{}"\n'.format('kHz')
             enc = 'encoding: "{}"\n'.format('ci16')
-            cfreq = np.round(self.wavheader["centerfreq"]/1000,decimals = 2)
-            bw = self.wavheader["nSamplesPerSec"]/1000
+            cfreq = np.round(self.m["wavheader"]["centerfreq"]/1000,decimals = 2)
+            bw = self.m["wavheader"]["nSamplesPerSec"]/1000
             antennastr = self.gui.tableWidget_YAMLHEADER.item(3, 0).text()
             antenna = 'antenna: "{}"\n'.format(antennastr)         
             rectypestr = self.gui.tableWidget_YAMLHEADER.item(4, 0).text()
@@ -158,7 +302,7 @@ class  yamleditor_c(QObject):
 
         # treat yaml tailer
         #if os.path.exists(self.cohiradia_yamltailer_filename) == False:         #if not exist yaml file: create from yaml-editor
-        with open(self.cohiradia_yamltailer_filename, 'w', encoding='utf-8') as f:
+        with open(self.m["cohiradia_yamltailer_filename"], 'w', encoding='utf-8') as f:
             RXlongitudestr = self.gui.tableWidget_YAMLHEADER.item(7, 0).text()
             RXlongitude = 'location-longitude: "{}"\n'.format(RXlongitudestr)     
             RXlatitudestr = self.gui.tableWidget_YAMLHEADER.item(8, 0).text()
@@ -189,129 +333,12 @@ class  yamleditor_c(QObject):
             f.write(preampset)
             f.close()
 
-        if os.path.exists(self.cohiradia_metadata_filename) == True:
+        if os.path.exists(self.m["cohiradia_metadata_filename"]) == True:
         #TODO: alternative, more strict only after completion of annotation if self.flag_ann_completed = True
             #concatenate files
-            filenames = [self.cohiradia_yamlheader_filename, self.cohiradia_metadata_filename , self.cohiradia_yamltailer_filename]
-            with open(self.cohiradia_yamlfinal_filename, 'w', encoding='utf-8') as outfile:   
+            filenames = [self.m["cohiradia_yamlheader_filename"], self.m["cohiradia_metadata_filename"] , self.m["cohiradia_yamltailer_filename"]]
+            with open(self.m["cohiradia_yamlfinal_filename"], 'w', encoding='utf-8') as outfile:   
                 for fname in filenames:
                     with open(fname, 'r', encoding='utf-8') as infile:
                         for line in infile:
                             outfile.write(line)
-
-
-class  yamleditor_v(QObject):
-    """_view methods for resampling module
-    TODO: gui.wavheader --> something less general ?
-    """
-    __slots__ = ["viewvars"]
-
-    SigAny = pyqtSignal()
-    SigCancel = pyqtSignal()
-    SigUpdateGUI = pyqtSignal(object)
-    SigSyncGUIUpdatelist = pyqtSignal(object)
-    SigRelay = pyqtSignal(str,object)
-    
-    def __init__(self, gui,  yamleditor_c,  yamleditor_m):
-        super().__init__()
-
-        #viewvars = {}
-        #self.set_viewvars(viewvars)
-        self.m =  yamleditor_m.mdl
-        self.DATABLOCKSIZE = 1024*32
-        self.gui = gui #gui_state["gui_reference"]#system_state["gui_reference"]
-        self.yamleditor_c = yamleditor_c
-        self.logger = yamleditor_m.logger
-
-    def rxhandler(self,_key,_value):
-        """
-        handles remote calls from other modules via Signal SigRX(_key,_value)
-        :param : _key
-        :type : str
-        :param : _value
-        :type : object
-        :raises [ErrorType]: [ErrorDescription]
-        :return: flag False or True, False on unsuccessful execution
-        :rtype: Boolean
-        """
-        if _key.find("cm_yamleditor") == 0 or _key.find("cm_all_") == 0:
-            #set mdl-value
-            self.m[_value[0]] = _value[1]
-        if _key.find("cui_yamleditor") == 0:
-            _value[0](_value[1])    #TODO TODO: still unclear implementation
-        if _key.find("cexex_yamleditor") == 0:
-            #if  _value[0].find("plot_spectrum") == 0:
-            #    self.plot_spectrum(0,_value[1])       
-            pass 
-
-
-    def updateGUIelements(self):
-        """
-        updates GUI elements , usually triggered by a Signal SigTabsUpdateGUIs to which 
-        this method is connected in the __main__ of the core module
-        :param : none
-        :type : none
-        :raises [ErrorType]: [ErrorDescription]
-        :return: flag False or True, False on unsuccessful execution
-        :rtype: Boolean
-        """
-        #print(" yamleditor: updateGUIelements")
-        self.logger.debug(" yamleditor: updateGUIelements")
-        #self.gui.DOSOMETHING
-
-    def yaml_header_buttonfcn(self):
-        """
-        VIEW
-        """
-        self.yamleditor_c.write_yaml_header(self)
-        #TODO: write yaml_directory on demand ?
-
-    def read_yaml_header(self,dummy):
-        """
-        VIEW
-        ###DESCRIPTION
-        :param : dummy
-        :type : none
-        :raises [ErrorType]: [ErrorDescription]
-        :return: none
-        :rtype: none
-        """
-
-        # if self.flag_ann_completed == False:
-        #     return
-        nofile_flag = False
-        #print('read info from existing yaml-headerfile to editor table')
-        try:
-            stream = open(self.cohiradia_yamlheader_filename, "r", encoding="utf8")
-            self.yamlheader_ = yaml.safe_load(stream)
-            stream.close()
-            self.gui.tableWidget_YAMLHEADER.item(0, 0).setText(str(self.yamlheader_['content']))
-            self.gui.tableWidget_YAMLHEADER.item(1, 0).setText(str(self.yamlheader_['remark']))
-            self.gui.tableWidget_YAMLHEADER.item(2, 0).setText(str(self.yamlheader_['band']))
-            self.gui.tableWidget_YAMLHEADER.item(3, 0).setText(str(self.yamlheader_['antenna']))
-            self.gui.tableWidget_YAMLHEADER.item(4, 0).setText(str(self.yamlheader_['recording-type']))
-            prefix = self.yamlheader_['uri'].split('/')[0]
-            self.gui.tableWidget_YAMLHEADER.item(12, 0).setText(str(prefix))
-        except:
-            nofile_flag = True
-            #return False        
-        try:
-            stream = open(self.cohiradia_yamltailer_filename, "r", encoding="utf8")
-            self.yamltailer_ = yaml.safe_load(stream)
-            stream.close()
-            self.gui.tableWidget_YAMLHEADER.item(5, 0).setText(str(self.yamltailer_['filters']))
-            self.gui.tableWidget_YAMLHEADER.item(6, 0).setText(str(self.yamltailer_['preamp-settings']))
-            self.gui.tableWidget_YAMLHEADER.item(7, 0).setText(str(self.yamltailer_['location-longitude']))
-            self.gui.tableWidget_YAMLHEADER.item(8, 0).setText(str(self.yamltailer_['location-latitude']))
-            self.gui.tableWidget_YAMLHEADER.item(9, 0).setText(str(self.yamltailer_['location-qth']))  ## location-qth ist das noch nie verwendete Keyword
-            self.gui.tableWidget_YAMLHEADER.item(10, 0).setText(str(self.yamltailer_['location-country']))                
-            self.gui.tableWidget_YAMLHEADER.item(11, 0).setText(str(self.yamltailer_['location-city']))
-            self.gui.tableWidget_YAMLHEADER.item(12, 0).setText(str(self.yamltailer_['upload-user-fk']))
-        except:
-            nofile_flag == True
-            #return False
-        #TODO: write yaml_directory on demand only
-        if nofile_flag == True: #TODO remove if unnecessary after tests 23-02-2024; no unnecessary creation of ANN_folders
-            pass
-            #self.write_yaml_header(self)
-        self.gui.pushButton_Writeyamlheader.setEnabled(True)
