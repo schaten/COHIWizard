@@ -1125,8 +1125,6 @@ class WizardGUI(QMainWindow):
                 dt_now.strftime('%Y-%m-%d'))
             self.ui.label_showtime.setText(
                 dt_now.strftime('%H:%M:%S'))
-
-###############################################CURRENT STATE OF TRANSFER
             
         #TODO: reimplement recorder
 
@@ -1216,7 +1214,7 @@ class WizardGUI(QMainWindow):
                 self.playrec_tworker.pausestate = True
 
 
-    def editHostAddress(self):     #TODO Check if this is necessary, rename to cb_.... !
+    def editHostAddress(self):     #TODO Check if this is necessary, rename to cb_.... ! shift to config Menu
         ''' 
         VIEW, cb of player, not marked as cb, RENAME !
         TODO
@@ -1231,7 +1229,7 @@ class WizardGUI(QMainWindow):
         self.ui.pushButton_IP.adjustSize()
         self.IP_address_set = False
 
-    def set_IP(self):
+    def set_IP(self): #TODO TODO TODO: shift to config tab
         """ 
         CONTROLLER
         set IP Address and save to config yaml
@@ -1278,8 +1276,9 @@ class WizardGUI(QMainWindow):
         self.cb_Butt_STOP()
         self.timertick.stoptick()
         stemlabcontrol.RPShutdown(system_state["sdr_configparams"])
+
         
-    def stemlabcontrol_errorhandler(self,errorstring):
+    def stemlabcontrol_errorhandler(self,errorstring): #TODO: is not being used anywhere !
         """handler for error signals from stemlabcontrol class
             display error in standard errormessagebox
             reset playerbuttongroup and GUI
@@ -1294,6 +1293,8 @@ class WizardGUI(QMainWindow):
         stemlabcontrol.SigError.connect(self.reset_playerbuttongroup) #TODO: wird bis dato nicht emittiert
         stemlabcontrol.SigError.connect(self.reset_GUI) #TODO: wird bis dato nicht emittiert
 
+###############################################CURRENT STATE OF TRANSFER
+        
     def display_status(self,messagestring):
         """handler for message signals from stemlabcontrol class
             display message in GUI status field, if exists
@@ -2859,8 +2860,10 @@ class WizardGUI(QMainWindow):
         returns: True if successful, False if condition not met.        
         """
         system_state = sys_state.get_status()
+        #self.SigRelay.emit("cm_playrec",["cbopenfile",self.m["baselineoffset"]])
         #self.activate_tabs(["View_Spectra","Annotate","Player","YAML_editor","WAV_header","Resample"])
         self.setactivity_tabs("all","activate",[])
+        self.SigRelay.emit("cm_playrec",["sdr_configparams",system_state["sdr_configparams"]])
 
         #resample_c.SigUpdateGUI.connect(self.GUI_reset_after_resamp) ###TODO: check, seems not to be active any more
         self.ui.checkBox_merge_selectall.setChecked(False)
@@ -3480,7 +3483,7 @@ if __name__ == '__main__':
     win.SigRelay.emit("cm_resample",["rates",system_state["rates"]])
     win.SigRelay.emit("cm_resample",["irate",system_state["irate"]])
     win.SigRelay.emit("cm_resample",["reslist_ix",system_state["reslist_ix"]]) #TODO check: maybe local in future !
-
+    win.SigRelay.emit("cm_playrec",["Obj_stemlabcontrol",stemlabcontrol])
     sys.exit(app.exec_())
 
 #TODOs:

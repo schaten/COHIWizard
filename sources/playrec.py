@@ -462,7 +462,9 @@ class playrec_v(QObject):
 
                 self.gui.radioButton_LO_bias.setEnabled(False)
                 #TODO TODO TODO. HOW TO CALL A CORE FUNCTION ?
-                if self.cb_open_file() is False:
+                #if self.cb_open_file() is False: #TODO TODO: check if works equally as before, 
+                # now the quest is for fileopened and not, if open file returned True
+                if self.m["fileopened"] is False:
                     self.reset_playerbuttongroup()
                     #sys_state.set_status(system_state)
                     return False
@@ -528,5 +530,33 @@ class playrec_v(QObject):
             return False
         else:
             return True
+
+    def shutdown(self):
+        '''
+        VIEW
+        TODO: rew spinx Purpose: Callback for SHUTDOWN Button
+        Returns: nothing
+        '''
+        #system_state = sys_state.get_status()
+        self.cb_Butt_STOP()
+        self.timertick.stoptick()
+        self.m["Objstemlabcontrol"].RPShutdown(self.m["sdr_configparams"])
+        #TODO TODO TODO: check if it would also be fine to instantiate the stemlabcontrol object only here in the player
+        #it is certainly not used in other modules
+        
+    def stemlabcontrol_errorhandler(self,errorstring):
+        """handler for error signals from stemlabcontrol class
+            display error in standard errormessagebox
+            NOT YET IMPLEMENTED: reset playerbuttongroup and GUI
+        VIEW
+        :param: errorstring
+        :type: str
+        :raises [none]: [none]
+        :return: none
+        :rtype: none
+        """     
+        auxi.standard_errorbox(errorstring)
+        #stemlabcontrol.SigError.connect(self.reset_playerbuttongroup) #TODO TODO TODO: wird bis dato nicht emittiert
+        #stemlabcontrol.SigError.connect(self.reset_GUI) #TODO: wird bis dato nicht emittiert
 
 
