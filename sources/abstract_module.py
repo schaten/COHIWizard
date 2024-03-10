@@ -47,6 +47,7 @@ class abstract_module_c(QObject):
     __slots__ = ["contvars"]
 
     SigAny = pyqtSignal()
+    SigRelay = pyqtSignal(str,object)
 
     def __init__(self, abstract_module_m): #TODO: remove gui
         super().__init__()

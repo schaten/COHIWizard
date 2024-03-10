@@ -87,7 +87,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>6</number>
+       <number>1</number>
       </property>
       <property name="iconSize">
        <size>
@@ -95,7 +95,7 @@
         <height>20</height>
        </size>
       </property>
-      <widget class="QWidget" name="tab">
+      <widget class="QWidget" name="tab_playrec">
        <attribute name="title">
         <string>Player</string>
        </attribute>
@@ -1573,12 +1573,12 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>../../SDR_Postprocessor/loop_v4.png</normaloff>
+             <normaloff>../../../../../../SDR_Postprocessor/loop_v4.png</normaloff>
              <normalon>loopactive_v4.png</normalon>
              <activeoff>loop_v4.png</activeoff>
              <activeon>loopactive_v4.png</activeon>
              <selectedoff>loop_v4.png</selectedoff>
-             <selectedon>loopactive_v4.png</selectedon>../../SDR_Postprocessor/loop_v4.png</iconset>
+             <selectedon>loopactive_v4.png</selectedon>../../../../../../SDR_Postprocessor/loop_v4.png</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -2327,11 +2327,7 @@
            <property name="icon">
             <iconset>
              <normaloff>rew_v4.PNG</normaloff>
-             <normalon>rew_v4.PNG</normalon>
-             <activeoff>rew_v4.PNG</activeoff>
-             <activeon>rew_v4.PNG</activeon>
-             <selectedoff>rew_v4.PNG</selectedoff>
-             <selectedon>rew_v4.PNG</selectedon>rew_v4.PNG</iconset>
+             <normalon>rew_v4.PNG</normalon>rew_v4.PNG</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -2499,7 +2495,7 @@
         <zorder>pushButton_act_playlist</zorder>
        </widget>
       </widget>
-      <widget class="QWidget" name="tab_3">
+      <widget class="QWidget" name="tab_view_spectra">
        <attribute name="title">
         <string>View spectra</string>
        </attribute>
@@ -2889,7 +2885,7 @@
         </layout>
        </widget>
       </widget>
-      <widget class="QWidget" name="tab_4">
+      <widget class="QWidget" name="tab_annotate">
        <attribute name="title">
         <string>Annotate</string>
        </attribute>
@@ -3296,7 +3292,7 @@
         </layout>
        </widget>
       </widget>
-      <widget class="QWidget" name="tab_5">
+      <widget class="QWidget" name="tab_yamleditor">
        <attribute name="title">
         <string>YAML editor</string>
        </attribute>
@@ -3615,7 +3611,7 @@
         </layout>
        </widget>
       </widget>
-      <widget class="QWidget" name="tab_1">
+      <widget class="QWidget" name="tab_waveditor">
        <attribute name="title">
         <string>WAV Header</string>
        </attribute>
@@ -4985,7 +4981,7 @@
         </layout>
        </widget>
       </widget>
-      <widget class="QWidget" name="tab_2">
+      <widget class="QWidget" name="tab_configuration">
        <attribute name="title">
         <string>Configuration</string>
        </attribute>
@@ -4995,10 +4991,42 @@
           <x>50</x>
           <y>60</y>
           <width>390</width>
-          <height>80</height>
+          <height>521</height>
          </rect>
         </property>
-        <layout class="QGridLayout" name="gridLayout_7">
+        <layout class="QGridLayout" name="gridLayout_config">
+         <item row="0" column="0">
+          <widget class="QPushButton" name="Conf_pushButton_IP">
+           <property name="font">
+            <font>
+             <pointsize>9</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="cursor">
+            <cursorShape>ArrowCursor</cursorShape>
+           </property>
+           <property name="focusPolicy">
+            <enum>Qt::StrongFocus</enum>
+           </property>
+           <property name="acceptDrops">
+            <bool>false</bool>
+           </property>
+           <property name="toolTip">
+            <string>allow definition of STEMLAB IP address</string>
+           </property>
+           <property name="autoFillBackground">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>Set STEMLAB IP Address</string>
+           </property>
+           <property name="autoDefault">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
          <item row="0" column="1">
           <widget class="QLineEdit" name="Conf_lineEdit_IPAddress">
            <property name="enabled">
@@ -5062,35 +5090,149 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="0">
-          <widget class="QPushButton" name="Conf_pushButton_IP">
-           <property name="font">
-            <font>
-             <pointsize>9</pointsize>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
+         <item row="1" column="1">
+          <widget class="QFrame" name="frame">
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
            </property>
-           <property name="cursor">
-            <cursorShape>ArrowCursor</cursorShape>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
            </property>
-           <property name="focusPolicy">
-            <enum>Qt::StrongFocus</enum>
+           <widget class="QFrame" name="frame_2">
+            <property name="geometry">
+             <rect>
+              <x>50</x>
+              <y>30</y>
+              <width>120</width>
+              <height>80</height>
+             </rect>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::StyledPanel</enum>
+            </property>
+            <property name="frameShadow">
+             <enum>QFrame::Raised</enum>
+            </property>
+           </widget>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QFrame" name="frame_4">
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
            </property>
-           <property name="acceptDrops">
-            <bool>false</bool>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
            </property>
-           <property name="toolTip">
-            <string>allow definition of STEMLAB IP address</string>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QFrame" name="frame_5">
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
            </property>
-           <property name="autoFillBackground">
-            <bool>false</bool>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
            </property>
-           <property name="text">
-            <string>Set STEMLAB IP Address</string>
+          </widget>
+         </item>
+         <item row="5" column="1">
+          <widget class="QFrame" name="frame_3">
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
            </property>
-           <property name="autoDefault">
-            <bool>true</bool>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="1">
+          <widget class="QFrame" name="frame_6">
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="1">
+          <widget class="QFrame" name="frame_7">
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="1">
+          <widget class="QFrame" name="frame_8">
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="1">
+          <widget class="QFrame" name="frame_9">
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="10" column="1">
+          <widget class="QFrame" name="frame_10">
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="11" column="1">
+          <widget class="QFrame" name="frame_11">
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="12" column="1">
+          <widget class="QFrame" name="frame_12">
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="13" column="1">
+          <widget class="QFrame" name="frame_13">
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QFrame" name="frame_14">
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
            </property>
           </widget>
          </item>

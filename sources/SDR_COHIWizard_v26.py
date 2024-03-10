@@ -64,6 +64,7 @@ import yaml_editor as yed
 import waveditor as waved
 from stemlab_control import StemlabControl
 from playrec import playrec_worker
+#import configuration as conf
 
 class statlst_gen_worker(QtCore.QThread):
     __slots__ = ["status_position","T","freq","closed"]
@@ -544,6 +545,7 @@ class core_v(QObject):
         if _key.find("cexex_xcore") == 0  or _key.find("cexex_all_") == 0:
             if  _value[0].find("updateGUIelements") == 0:
                 self.updateGUIelements()
+
             #handle method
             # if  _value[0].find("plot_spectrum") == 0: #EXAMPLE
             #     self.plot_spectrum(0,_value[1])   #EXAMPLE
@@ -684,21 +686,22 @@ class WizardGUI(QMainWindow):
         self.ui.pushButton_REC.clicked.connect(self.cb_Butt_REC)        
         self.ui.pushButton_act_playlist.clicked.connect(self.cb_Butt_toggle_playlist)
 
-        self.ui.lineEdit_IPAddress.returnPressed.connect(self.set_IP)
-        self.ui.lineEdit_IPAddress.setInputMask('000.000.000.000')
-        self.ui.lineEdit_IPAddress.setText("000.000.000.000")
-        self.ui.lineEdit_IPAddress.setEnabled(False)
-        self.ui.lineEdit_IPAddress.setReadOnly(True)
+        self.ui.lineEdit_IPAddress.returnPressed.connect(self.set_IP)#TODO: Remove after transfer of playrec
+        self.ui.lineEdit_IPAddress.setInputMask('000.000.000.000')#TODO: Remove after transfer of playrec
+        self.ui.lineEdit_IPAddress.setText("000.000.000.000")#TODO: Remove after transfer of playrec
+        self.ui.lineEdit_IPAddress.setEnabled(False)#TODO: Remove after transfer of playrec
+        self.ui.lineEdit_IPAddress.setReadOnly(True)#TODO: Remove after transfer of playrec
         #####INFO: IP address validator from Trimmal Software    rx = QRegExp('^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])|rp-[0-9A-Fa-f]{6}\.local$')
         #                                                          self.addrValue.setValidator(QRegExpValidator(rx, self.addrValue))
         #pushButton->setIcon(QIcon(":/on.png"));
-        self.ui.pushButton_IP.clicked.connect(self.editHostAddress)
-        self.ui.lineEdit_IPAddress.returnPressed.connect(self.set_IP)
+        self.ui.pushButton_IP.clicked.connect(self.editHostAddress) #TODO: Remove after transfer
+        self.ui.lineEdit_IPAddress.returnPressed.connect(self.set_IP) #TODO: Remove after transfer
         self.ui.listWidget_playlist.setEnabled(False)
         self.ui.listWidget_sourcelist_2.setEnabled(False)
         self.ui.listWidget_sourcelist.setEnabled(False)
         self.ui.listWidget_playlist_2.setEnabled(False)
         self.ui.ScrollBar_playtime.setEnabled(False)
+        ##############transfer done for next 2 lines:
         self.ui.listWidget_playlist.model().rowsInserted.connect(lambda: self.playlist_update()) #TODO transfer to resemplar view
         self.ui.listWidget_playlist.model().rowsRemoved.connect(lambda: self.playlist_update()) #TODO transfer to resemplar view
 
@@ -714,14 +717,15 @@ class WizardGUI(QMainWindow):
             stream.close()
             self.ismetadata = True
             if 'STM_IP_address' in self.metadata.keys():
-                self.ui.lineEdit_IPAddress.setText(self.metadata["STM_IP_address"])
+                self.ui.lineEdit_IPAddress.setText(self.metadata["STM_IP_address"]) #TODO: Remove after transfer of playrec
+                self.ui.Conf_lineEdit_IPAddress.setText(self.metadata["STM_IP_address"]) #TODO TODO TODO: reorganize and shift to config module
         except:
             #return False
 
             print("cannot get metadata")
 
         system_state = sys_state.get_status()    
-        system_state["HostAddress"] = self.ui.lineEdit_IPAddress.text()
+        system_state["HostAddress"] = self.ui.lineEdit_IPAddress.text() #TODO: Remove after transfer of playrec
         configparams = {"ifreq":system_state["ifreq"], "irate":system_state["irate"],
                             "rates": system_state["rates"], "icorr":system_state["icorr"],
                             "HostAddress":system_state["HostAddress"], "LO_offset":system_state["LO_offset"]}
@@ -892,10 +896,10 @@ class WizardGUI(QMainWindow):
         # Bei Erweiterungen: für jeden neuen Tab einen neuen Tabref Eintrag generieren, generate_canvas nur wenn man dort einen Canvas will
         #TODO:future system state
         self.Tabref["Player"] = {}
-        self.Tabref["Player"]["tab_reference"] = self.ui.tab
+        self.Tabref["Player"]["tab_reference"] = self.ui.tab_playrec
         #Tab View spectra
         self.Tabref["View_Spectra"] = {}
-        self.Tabref["View_Spectra"]["tab_reference"] = self.ui.tab_3
+        self.Tabref["View_Spectra"]["tab_reference"] = self.ui.tab_view_spectra
         self.generate_canvas(self,self.ui.gridLayout_4,[4,0,1,5],[2,2,2,1],self.Tabref["View_Spectra"])
         #generiert einen Canvas auf den man mit self.Tabref["View_Spectra"]["canvas"] und
         #self.Tabref["View_Spectra"]["ax"] als normale ax und canvas Objekte zugreifen kann
@@ -995,6 +999,8 @@ class WizardGUI(QMainWindow):
         self.Tabref["View_Spectra"]["ax"].clear() #shift to Plot spectrum Tab reset
         self.Tabref["View_Spectra"]["canvas"].draw() #shift to Plot spectrum Tab reset
         self.Tabref["Resample"]["ax"].clear() #shift to Resampler Tab reset
+        self.gui.listWidget_sourcelist.clear() # shift to resampler Tab
+
         self.Tabref["Resample"]["canvas"].draw() #shift to Resampler Tab reset
         self.ui.label_Filename_Player.setText('')  #shift to Player Tab reset
         self.ui.label_Filename_ViewSpectra.setText('') #shift to Plot spectrum Tab reset
@@ -1009,7 +1015,7 @@ class WizardGUI(QMainWindow):
             stream = open("config_wizard.yaml", "r")
             self.metadata = yaml.safe_load(stream)
             if 'STM_IP_address' in self.metadata.keys():
-                self.ui.lineEdit_IPAddress.setText(self.metadata["STM_IP_address"])
+                self.ui.lineEdit_IPAddress.setText(self.metadata["STM_IP_address"]) #TODO: Remove after transfer of playrec
             stream.close()
         except:
             #return False
@@ -1072,6 +1078,7 @@ class WizardGUI(QMainWindow):
             #playlist.append(lw.item(x))
             playlist.append(item.text())
         system_state["playlist"] = playlist
+        self.SigRelay.emit("cm_playrec",["playlist",playlist])
         sys_state.set_status(system_state)
 
                     # _item2.setText(x)
@@ -1104,6 +1111,7 @@ class WizardGUI(QMainWindow):
         :return: none
         :rtype: none
         """
+
         if self.ui.checkBox_UTC.isChecked():
             self.UTC = True #TODO:future system state
         else:
@@ -1245,7 +1253,7 @@ class WizardGUI(QMainWindow):
         """
         system_state = sys_state.get_status()
         #self.HostAddress = self.ui.lineEdit_IPAddress.text()
-        system_state["HostAddress"] = self.ui.lineEdit_IPAddress.text()
+        system_state["HostAddress"] = self.ui.lineEdit_IPAddress.text() #TODO: Remove after transfer of playrec
         #print("IP address read")
         try:
             stream = open("config_wizard.yaml", "r")
@@ -1259,11 +1267,11 @@ class WizardGUI(QMainWindow):
         stream = open("config_wizard.yaml", "w")
         yaml.dump(self.metadata, stream)
 
-        self.ui.lineEdit_IPAddress.setReadOnly(True)
-        self.ui.lineEdit_IPAddress.setEnabled(False)
-        self.ui.pushButton_IP.clicked.connect(self.editHostAddress)
-        self.ui.pushButton_IP.setText("Set IP Address")
-        self.ui.pushButton_IP.adjustSize()
+        self.ui.lineEdit_IPAddress.setReadOnly(True)#TODO: Remove after transfer of playrec
+        self.ui.lineEdit_IPAddress.setEnabled(False)#TODO: Remove after transfer of playrec
+        self.ui.pushButton_IP.clicked.connect(self.editHostAddress)#TODO: Remove after transfer of playrec
+        self.ui.pushButton_IP.setText("Set IP Address")#TODO: Remove after transfer of playrec
+        self.ui.pushButton_IP.adjustSize()#TODO: Remove after transfer of playrec
         sys_state.set_status(system_state)
 
     def shutdown(self):
@@ -1293,7 +1301,6 @@ class WizardGUI(QMainWindow):
         stemlabcontrol.SigError.connect(self.reset_playerbuttongroup) #TODO: wird bis dato nicht emittiert
         stemlabcontrol.SigError.connect(self.reset_GUI) #TODO: wird bis dato nicht emittiert
 
-###############################################CURRENT STATE OF TRANSFER
         
     def display_status(self,messagestring):
         """handler for message signals from stemlabcontrol class
@@ -1415,6 +1422,7 @@ class WizardGUI(QMainWindow):
         #self.reset_GUI()
         self.SigGUIReset.emit()
 
+
     def reset_playerbuttongroup(self):
         """
         VIEW
@@ -1434,6 +1442,7 @@ class WizardGUI(QMainWindow):
         self.ui.ScrollBar_playtime.setEnabled(False)
         self.ui.pushButton_adv1byte.setEnabled(False)
         sys_state.set_status(system_state)
+
 
     def play_tstarter(self):  # TODO: Argument (self, modality), modality= "recording", "play", move to module cplayrec controller
         """_start playback via data stream to STEMLAB sdr server
@@ -1589,6 +1598,9 @@ class WizardGUI(QMainWindow):
         sys_state.set_status(system_state)
 
     ######################## REPLACE BY INDIVIDUAL GUI updaters #############################
+
+
+    ###############################################CURRENT STATE OF TRANSFER
 
     def showfilename(self):
         """_updates the name of currenly loaded data file in all instances of filename labels_
@@ -2882,7 +2894,7 @@ class WizardGUI(QMainWindow):
             sys_state.set_status(system_state)
             #return False
             #print("cannot get metadata")
-        system_state["HostAddress"] = self.ui.lineEdit_IPAddress.text()
+        system_state["HostAddress"] = self.ui.lineEdit_IPAddress.text()   ### TODO TODO TODO check if still necesary after transfer to modules playrec and config
         configparams = {"ifreq":system_state["ifreq"], "irate":system_state["irate"],
                             "rates": system_state["rates"], "icorr":system_state["icorr"],
                             "HostAddress":system_state["HostAddress"], "LO_offset":system_state["LO_offset"]}
@@ -3398,8 +3410,8 @@ class WizardGUI(QMainWindow):
         if _key.find("cui_core") == 0:
             _value[0](_value[1])    #TODO TODO: still unclear implementation
         if _key.find("cexex_core") == 0:
-            #if  _value[0].find("plot_spectrum") == 0:
-            #    self.plot_spectrum(0,_value[1])       
+            if  _value[0].find("GUIreset") == 0:
+                self.SigGUIReset.emit()
             pass
 
 if __name__ == '__main__':
@@ -3416,32 +3428,77 @@ if __name__ == '__main__':
     #win.setupUi(MyWizard)
 #    app.aboutToQuit.connect(win.stop_worker)    #graceful thread termination on app exit
     win.show()
-    stemlabcontrol = StemlabControl()
+    stemlabcontrol = StemlabControl() #TODO TODO TODO: remover after transfer of player
 
     system_state = sys_state.get_status()
 
-    resample_m = rsmp.resample_m() #TODO: wird gui in _m jemals gebraucht ? ich denke nein !
-    resample_c = rsmp.resample_c(resample_m) #TODO: replace sys_state
-    resample_v = rsmp.resample_v(win.ui,resample_c, resample_m) #TODO: replace sys_state
+    tab_dict ={}
+    #tab_dict["list"] = ["resample","view_spectra","yamleditor","xcore","waveditor"]
+    tab_dict["list"] = ["xcore"]
 
-    view_spectra_m = vsp.view_spectra_m()
-    view_spectra_c = vsp.view_spectra_c(view_spectra_m)
-    view_spectra_v = vsp.view_spectra_v(win.ui,view_spectra_c,view_spectra_m)
+    if 'resampler_module_v5' in sys.modules:
+        resample_m = rsmp.resample_m() #TODO: wird gui in _m jemals gebraucht ? ich denke nein !
+        resample_c = rsmp.resample_c(resample_m) #TODO: replace sys_state
+        resample_v = rsmp.resample_v(win.ui,resample_c, resample_m) #TODO: replace sys_state
+        tab_dict["list"].append("resample")
+        resample_v.SigActivateOtherTabs.connect(win.setactivity_tabs)
+        resample_c.SigActivateOtherTabs.connect(win.setactivity_tabs)
 
-    yamleditor_m = yed.yamleditor_m()
-    yamleditor_c = yed.yamleditor_c(yamleditor_m)
-    yamleditor_v = yed.yamleditor_v(win.ui,yamleditor_c,yamleditor_m)
+    else:
+        win.ui.tabWidget.setTabVisible('tab_resample',False)
+
+    if 'view_spectra' in sys.modules:
+        view_spectra_m = vsp.view_spectra_m()
+        view_spectra_c = vsp.view_spectra_c(view_spectra_m)
+        view_spectra_v = vsp.view_spectra_v(win.ui,view_spectra_c,view_spectra_m)
+        tab_dict["list"].append("view_spectra")
+
+    if 'yaml_editor' in sys.modules:
+        yamleditor_m = yed.yamleditor_m()
+        yamleditor_c = yed.yamleditor_c(yamleditor_m)
+        yamleditor_v = yed.yamleditor_v(win.ui,yamleditor_c,yamleditor_m)
+        tab_dict["list"].append("yamleditor")
+    else:
+        page = win.ui.tabWidget.findChild(QWidget, "tab_yamleditor")
+        c_index = win.ui.tabWidget.indexOf(page)
+        win.ui.tabWidget.setTabVisible(c_index,False)
 
     xcore_m = core_m()
     xcore_c = core_c(xcore_m)
     xcore_v = core_v(win.ui,xcore_c,xcore_m)
 
-    waveditor_m = waved.waveditor_m()
-    waveditor_c = waved.waveditor_c(waveditor_m)
-    waveditor_v = waved.waveditor_v(win.ui,waveditor_c,waveditor_m)
+    if 'waveditor' in sys.modules:
+        waveditor_m = waved.waveditor_m()
+        waveditor_c = waved.waveditor_c(waveditor_m)
+        waveditor_v = waved.waveditor_v(win.ui,waveditor_c,waveditor_m)
+        tab_dict["list"].append("waveditor")
+    else:
+        page = win.ui.tabWidget.findChild(QWidget, "tab_waveditor")
+        c_index = win.ui.tabWidget.indexOf(page)
+        win.ui.tabWidget.setTabVisible(c_index,False)
 
-    resample_v.SigActivateOtherTabs.connect(win.setactivity_tabs)
-    resample_c.SigActivateOtherTabs.connect(win.setactivity_tabs)
+    if 'configuration' in sys.modules:
+        configuration_m = conf.configuration_m()
+        configuration_c = conf.configuration_c(configuration_m)
+        configuration_v = conf.configuration_v(win.ui,configuration_c,configuration_m)
+    else:
+        page = win.ui.tabWidget.findChild(QWidget, "tab_configuration")
+        c_index = win.ui.tabWidget.indexOf(page)
+        win.ui.tabWidget.setTabVisible(c_index,False)
+        pass
+        #win.ui.tabWidget.setTabVisible('configuration',False)
+
+    if 'playrec' in sys.modules:
+        playrec_m = playrec.playrec_m()
+        playrec_c = playrec.playrec_c(configuration_m)
+        playrec_v = playrec.playrec_v(win.ui,configuration_c,configuration_m)
+        playrec_v.SigActivateOtherTabs.connect(win.setactivity_tabs)
+        playrec_c.SigActivateOtherTabs.connect(win.setactivity_tabs)
+    else:
+        page = win.ui.tabWidget.findChild(QWidget, "tab_playrec")
+        c_index = win.ui.tabWidget.indexOf(page)
+        win.ui.tabWidget.setTabVisible(c_index,False)
+
     #resample_v.SigUpdateOtherGUIs.connect(win.showfilename)
     #TODO TODO TODO: das muss für alle Tabs gemacht werden
     #view_spectra_v.SigSyncGUIUpdatelist.connect(win.generate_GUIupdaterlist)
@@ -3451,8 +3508,7 @@ if __name__ == '__main__':
 
     #directory of tab objects to be activated ####TODO: simplify to simple list
     
-    tab_dict ={}
-    tab_dict["list"] = ["resample","view_spectra","yamleditor","xcore","waveditor"]
+
     #tab_dict["list"] = ["view_spectra","view_spectra"]
     
     for tabitem1 in tab_dict["list"]:
@@ -3484,6 +3540,8 @@ if __name__ == '__main__':
     win.SigRelay.emit("cm_resample",["irate",system_state["irate"]])
     win.SigRelay.emit("cm_resample",["reslist_ix",system_state["reslist_ix"]]) #TODO check: maybe local in future !
     win.SigRelay.emit("cm_playrec",["Obj_stemlabcontrol",stemlabcontrol])
+    win.SigRelay.emit("cm_configuration",["tablist",tab_dict["list"]])
+    win.SigRelay.emit("cexex_configuration",["updateGUIelements",0])
     sys.exit(app.exec_())
 
 #TODOs:

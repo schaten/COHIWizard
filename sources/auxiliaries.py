@@ -5,6 +5,39 @@ import system_module as wsys
 from datetime import datetime
 from datetime import timedelta
 from PyQt5.QtWidgets import *
+from PyQt5.QtCore import QObject, pyqtSignal    
+
+class timer_worker(QObject):
+    """_generates time signals for clock and recording timer_
+
+    :param [ParamName]: [ParamDescription], defaults to [DefaultParamVal]
+    :type [ParamName]: [ParamType](, optional)
+    ...
+    :raises [ErrorType]: [ErrorDescription]TODO
+    ...
+    :return: [ReturnDescription]
+    :rtype: [ReturnType]
+    """
+    SigTick = pyqtSignal()
+    SigFinished = pyqtSignal()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def tick(self):
+        """send a signal self.SigTick every second
+        :param : none
+        :type : none
+        :raises: none
+        :return: none
+        :rtype: none
+        """
+        while True:
+            time.sleep(1 - time.monotonic() % 1)
+            self.SigTick.emit()
+
+    def stoptick(self):
+        self.SigFinished.emit()        
 
 class auxiliaries():
 
