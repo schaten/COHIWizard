@@ -481,7 +481,6 @@ class playrec_c(QObject):
             time.sleep(0.5)
             return
         if (os.path.isfile(self.m["my_dirname"] + '/' + self.m["wavheader"]['nextfilename']) == True and self.wavheader['nextfilename'] != "" ):
-            #TODO: new wavheader needs to be extracted
             # play next file in nextfile-list
             self.m["f1"] = self.m["my_dirname"] + '/' + self.m["wavheader"]['nextfilename']
             self.SigRelay.emit("cm_all_",["f1",self.m["my_dirname"] + '/' + self.m["wavheader"]['nextfilename']])
@@ -625,6 +624,68 @@ class playrec_c(QObject):
         self.SigRelay.emit("cexex_playrec",["reset_playerbuttongoup",0])
         self.SigRelay.emit("cexex_win",["GUIreset",0])
         #self.SigGUIReset.emit()
+
+    def jump_1_byte(self):             #increment current time in playtime window and update statusbar
+        """
+        _increments file reading position by +1 byte for manually correcting for sample jumps 
+        which deviate from integer multiples of sample size (4, 8); possible needs to be repeated several times
+        this is an emergency method for exceptional usecases and not for regular operation
+        if self.modality == "play":
+            - update position slider
+            - set file read pointer to new position, |if increment| > 1
+        :param : none
+        :type : int
+        '''
+        :raises [ErrorType]: [ErrorDescription]
+        '''
+        :return: True/False on successful/unsuccesful operation
+        :rtype: bool
+        """ 
+        self.logger.debug("tracking: jump 1 byte")
+        if self.modality == 'play' and self.m["pausestate"] is False:
+            if self.m["fileopened"] is True:
+                self.prfilehandle = self.playrec_tworker.get_4()
+                self.prfilehandle.seek(1,1) #TODO: ##OPTION from current position## 0 oder 1 ?
+        # TODO: not yet safe, because increment may happen beyond EOF, check for EOF
+                
+
+    def jump_to_position(self):
+        """
+        VIEW 
+
+        :param : none
+        :type : none
+        '''
+        :raises [ErrorType]: [ErrorDescription]
+        '''
+        :return: none
+        :rtype: none
+        """ 
+        #print("jumptoposition reached")
+        self.logger.debug("jumptoposition reached")
+        system_state = sys_state.get_status()
+        sbposition = self.ui.ScrollBar_playtime.value() #TODO: already in updatecurtime(...)
+        self.curtime = int(np.floor(sbposition/1000*system_state["playlength"]))  # seconds
+        timestr = str(self.wavheader['starttime_dt'] + ndatetime.timedelta(seconds=self.curtime))
+        #win.ui.lineEditCurTime.setText(timestr)
+        self.ui.lineEditCurTime.setText(timestr)
+        position_raw = self.curtime*system_state["timescaler"]  #timescaler = bytes per second
+        # TODO: check, geändert 09-12-2023: byte position mit allen Blockaligns auch andere als 4(16 bits); 
+        # TODO: adapt for other than header 216
+        position = min(max(216, position_raw-position_raw % self.wavheader['nBlockAlign']),
+                            self.wavheader['data_nChunkSize']+216) # guarantee reading from integer multiples of 4 bytes, TODO: change '4', '216' to any wav format ! 
+        if system_state["fileopened"] is True:
+            #print("Jump to next position")
+            self.logger.debug("jumptoposition reached")
+            #print(f'system_state["fileopened"]: {system_state["fileopened"]}')
+            self.logger.debug("system_state['fileopened']: %s",system_state["fileopened"])
+            self.prfilehandle = self.playrec_tworker.get_4()
+            self.prfilehandle.seek(int(position), 0) #TODO: Anpassen an andere Fileformate
+        #calculate corresponding position in the record file; value = 216 : 1000
+        #jump to the targeted position with integer multiple of wavheader["nBitsPerSample"]/4
+        sys_state.set_status(system_state)
+
+
 
 class playrec_v(QObject):
     """_view methods for resampling module
@@ -1022,7 +1083,64 @@ class playrec_v(QObject):
                     "{"
                         "background-color: green;"
                     "}")
+
+
+
+    def updatecurtime(self,increment):             #increment current time in playtime window and update statusbar
+        """
+        _increments time indicator by value in increment, except for 0. 
+        With increment == 0 the indicator is reset to 0
+        if self.modality == "play":
+            - update position slider
+            - set file read pointer to new position, |if increment| > 1
+        :param : increment
+        :type : int
+        '''
+        :raises [ErrorType]: [ErrorDescription]
+        '''
+        :return: True/False on successful/unsuccesful operation
+        :rtype: bool
+        """ 
+        #self.curtime varies between 0 and system_state["playlength"]
+        progress = 0
+        if self.m["playthreadActive"] is False:
+            return False
+        timestr = str(self.m["wavheader"]['starttime_dt'] + ndatetime.timedelta(seconds=self.curtime))
+        playlength = self.m["wavheader"]['filesize']/self.m["wavheader"]['nAvgBytesPerSec']
+        if increment == 0:
+            timestr = str(ndatetime.timedelta(seconds=0))
+            self.m["curtime"] = 0
+            self.gui.lineEditCurTime.setText(timestr)
+
+        if self.m["modality"] == 'play' and self.m["pausestate"] is False:
+            if self.m["curtime"] > 0 and increment < 0:
+                self.m["curtime"] += increment
+            if self.m["curtime"] < playlength and increment > 0:
+                self.m["curtime"] += increment
+            if playlength > 0:
+                progress = int(np.floor(1000*(self.m["curtime"]/playlength)))
+            else:
+                return False
+            position_raw = self.m["curtime"]*self.m["timescaler"]
+            # TODO: check, geändert 09-12-2023: byte position mit allen Blockaligns auch andere als 4(16 bits); 
+            # TODO: adapt for other than header 216
+            position = min(max(216, position_raw-position_raw % self.m["wavheader"]['nBlockAlign']),
+                           self.m["wavheader"]['data_nChunkSize'])
+            # guarantee integer multiple of nBlockalign, > 0, <= filesize
+            if increment != -1 and increment != 1 or self.m["timechanged"] == True:
+                if self.m["fileopened"] is True:
+                    #print(f'increment curtime cond seek cur file open: {system_state["f1"]}')
+                    self.prfilehandle = self.playrec_c.playrec_tworker.get_4()
+                    self.prfilehandle.seek(int(position), 0) #TODO: Anpassen an andere Fileformate
+        #timestr = str(self.wavheader['starttime_dt'] + ndatetime.timedelta(seconds=self.curtime))
+        self.gui.lineEditCurTime.setText(timestr) 
+        self.gui.ScrollBar_playtime.setProperty("value", progress)
         #sys_state.set_status(system_state)
+        #print("leave updatecurtime")
+        return True
+    
+
+
 
     def editHostAddress(self):     #TODO Check if this is necessary, rename to cb_.... ! 
         ''' 

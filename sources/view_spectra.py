@@ -192,6 +192,8 @@ class view_spectra_v(QObject):
         self.SigUpdateGUI.connect(self.update_GUI)
         self.SigRelay.emit("cm_xcore",["baselineoffset",self.m["baselineoffset"]])
 
+    def reset_GUI(self):
+        pass
 
     def cb_plot_spectrum(self):
         position = self.gui.horizontalScrollBar_view_spectra.value()

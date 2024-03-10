@@ -26,6 +26,7 @@ class  yamleditor_m(QObject):
         self.mdl = {}
         self.mdl["sample"] = 0
         self.mdl["_log"] = False
+        self.mdl["annotationdir_prefix"] = 'ANN_'
                 # Create a custom logger
         logging.getLogger().setLevel(logging.DEBUG)
         # Erstelle einen Logger mit dem Modul- oder Skriptnamen

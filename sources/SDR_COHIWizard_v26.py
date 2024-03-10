@@ -64,6 +64,7 @@ import yaml_editor as yed
 import waveditor as waved
 from stemlab_control import StemlabControl
 from playrec import playrec_worker
+#import playrec
 #import configuration as conf
 
 class statlst_gen_worker(QtCore.QThread):
@@ -986,8 +987,8 @@ class WizardGUI(QMainWindow):
         self.ui.lineEdit.setFont(QFont('MS Shell Dlg 2', 12))
         self.ui.Annotate_listWidget.clear()
         #self.ui.tab_2.setEnabled(True)
-        self.ui.tab_3.setEnabled(True)
-        self.ui.tab_4.setEnabled(True)
+        self.ui.tab_view_spectra.setEnabled(True)
+        self.ui.tab_annotate.setEnabled(True)
         #self.ui.pushButton_InsertHeader.setEnabled(False)   #####TODO shift to WAV editor or send Relay for inactivation via WAV 
         self.ui.label_8.setEnabled(False)
         self.ui.label_36.setText('READY')
@@ -999,7 +1000,7 @@ class WizardGUI(QMainWindow):
         self.Tabref["View_Spectra"]["ax"].clear() #shift to Plot spectrum Tab reset
         self.Tabref["View_Spectra"]["canvas"].draw() #shift to Plot spectrum Tab reset
         self.Tabref["Resample"]["ax"].clear() #shift to Resampler Tab reset
-        self.gui.listWidget_sourcelist.clear() # shift to resampler Tab
+        self.ui.listWidget_sourcelist.clear() # shift to resampler Tab
 
         self.Tabref["Resample"]["canvas"].draw() #shift to Resampler Tab reset
         self.ui.label_Filename_Player.setText('')  #shift to Player Tab reset
@@ -1600,8 +1601,6 @@ class WizardGUI(QMainWindow):
     ######################## REPLACE BY INDIVIDUAL GUI updaters #############################
 
 
-    ###############################################CURRENT STATE OF TRANSFER
-
     def showfilename(self):
         """_updates the name of currenly loaded data file in all instances of filename labels_
         :param : none if old system, args[0] = string with filename to be displayed 
@@ -1823,6 +1822,7 @@ class WizardGUI(QMainWindow):
         #print("leave updatecurtime")
         return True
 
+
     def jump_1_byte(self):             #increment current time in playtime window and update statusbar
         """
         VIEW or CONTROLLER ?
@@ -1850,6 +1850,7 @@ class WizardGUI(QMainWindow):
         sys_state.set_status(system_state)
         # not yet safe, because increment may happen beyond EOF, check for EOF
 
+    ###############################################CURRENT STATE OF TRANSFER
 
     def jump_to_position(self):
         """
@@ -3111,8 +3112,8 @@ class WizardGUI(QMainWindow):
         else:
             if self.ext == ".wav":
                 self.filetype = "wav"
-                self.ui.tab_3.setEnabled(True)  ##########TODO: replace by Tab disable function inactivate/activate_tabs(self,selection)
-                self.ui.tab_4.setEnabled(True)  ##########TODO: replace by Tab disable function inactivate/activate_tabs(self,selection)
+                self.ui.tab_view_spectra.setEnabled(True)  ##########TODO: replace by Tab disable function inactivate/activate_tabs(self,selection)
+                self.ui.tab_annotate.setEnabled(True)  ##########TODO: replace by Tab disable function inactivate/activate_tabs(self,selection)
                 self.ui.label_8.setEnabled(False)
                 self.ui.pushButton_InsertHeader.setEnabled(False)                 #####TODO shift to WAV editor or send Relay for inactivation via WAV 
             else:
@@ -3488,16 +3489,16 @@ if __name__ == '__main__':
         pass
         #win.ui.tabWidget.setTabVisible('configuration',False)
 
-    if 'playrec' in sys.modules:
-        playrec_m = playrec.playrec_m()
-        playrec_c = playrec.playrec_c(configuration_m)
-        playrec_v = playrec.playrec_v(win.ui,configuration_c,configuration_m)
-        playrec_v.SigActivateOtherTabs.connect(win.setactivity_tabs)
-        playrec_c.SigActivateOtherTabs.connect(win.setactivity_tabs)
-    else:
-        page = win.ui.tabWidget.findChild(QWidget, "tab_playrec")
-        c_index = win.ui.tabWidget.indexOf(page)
-        win.ui.tabWidget.setTabVisible(c_index,False)
+    # if 'playrec' in sys.modules:
+    #     playrec_m = playrec.playrec_m()
+    #     playrec_c = playrec.playrec_c(configuration_m)
+    #     playrec_v = playrec.playrec_v(win.ui,configuration_c,configuration_m)
+    #     playrec_v.SigActivateOtherTabs.connect(win.setactivity_tabs)
+    #     playrec_c.SigActivateOtherTabs.connect(win.setactivity_tabs)
+    # else:
+    #     page = win.ui.tabWidget.findChild(QWidget, "tab_playrec")
+    #     c_index = win.ui.tabWidget.indexOf(page)
+    #     win.ui.tabWidget.setTabVisible(c_index,False)
 
     #resample_v.SigUpdateOtherGUIs.connect(win.showfilename)
     #TODO TODO TODO: das muss für alle Tabs gemacht werden
