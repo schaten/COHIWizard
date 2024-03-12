@@ -272,12 +272,13 @@ class playrec_m(QObject):
         # Constants
         self.CONST_SAMPLE = 0 # sample constant
         self.mdl = {}
-        self.mdl["playlist_active"] == False
+        self.mdl["playlist_active"] = False
         self.mdl["sample"] = 0
         self.mdl["LO_offset"] = 0
         self.mdl["UTC"] = False
         self.mdl["TEST"] = False
-        self.m["Buttloop_pressed"] = False
+        self.mdl["Buttloop_pressed"] = False
+        self.mdl["playthreadActive"] = False
 
 
 class playrec_c(QObject):
@@ -442,7 +443,7 @@ class playrec_c(QObject):
         # the recording loop
         self.playthread.start()
         if self.playthread.isRunning():
-            self.playthreadActive = True
+            self.m["playthreadActive"] = True
             #self.setactivity_tabs("Player","inactivate",[]) #TODO remove after tests
             self.SigActivateOtherTabs.emit("Player","inactivate",[])
             self.logger.info("playthread started in playthread_threadstarter = play_tstarter() (threadstarter)")
@@ -503,7 +504,7 @@ class playrec_c(QObject):
             #no next file, but endless mode active, replay current system_state["f1"]
             self.play_tstarter()
             time.sleep(0.1)
-            self.logger.info("playthread active: %s", self.playthreadActive)
+            self.logger.info("playthread active: %s", self.m["playthreadActive"])
             self.m["fileopened"] = True
             self.SigRelay.emit("cm_all_",["fileopened",True])
             self.updatecurtime(0) #TODO: true datetime from record
@@ -513,7 +514,7 @@ class playrec_c(QObject):
             if self.m["playlist_ix"] == 0:
                 self.m["playlist_ix"] += 1 #TODO: aktuell Hack, um bei erstem File keine Doppelabspielung zu triggern
             if self.m["playlist_ix"] < self.m["playlist_len"]: #TODO check if indexing is correct
-                self.playthreadActive = False
+                self.m["playthreadActive"] = False
                 #print(f"EOF manager: playlist index: {system_state['playlist_ix']}")
                 self.logger.debug("EOF manager: playlist index: %i", self.m['playlist_ix'])
                 lw = self.m["playlist"] #ODO: simplify by replacing lw below
@@ -691,6 +692,32 @@ class playrec_c(QObject):
         #sys_state.set_status(system_state)
 
 
+    def LO_bias_checkbounds(self):
+        """ Purpose: checks if LO bias setting is within valid bounds; 
+        :param [ParamName]: none
+        :type [ParamName]: none
+        :raises none
+        :return: True if successful, otherwise False
+        :rtype: Boolean
+        """
+        eff_ifreq = self.m["LO_offset"] + self.m["ifreq"]
+        if not self.update_LO_bias():
+            return False                 
+        if (eff_ifreq <= 0):
+            auxi.standard_errorbox("invalid negative center frequency offset, magnitude greater than LO frequency of the record, please correct value")
+            #self.reset_LO_bias()
+            self.SigRelay.emit("cexex_playrec",["resetLObias",0])
+            self.cb_Butt_STOP()
+            return False
+        if (eff_ifreq > 60000000):
+            auxi.standard_errorbox("invalid  center frequency offset, sum of record LO and offset must be < 60000 kHz, please correct value")
+            #self.reset_LO_bias()
+            self.SigRelay.emit("cexex_playrec",["resetLObias",0])
+            self.cb_Butt_STOP()
+            return False
+        return True
+
+
 class playrec_v(QObject):
     """_view methods for resampling module
     TODO: gui.wavheader --> something less general ?
@@ -716,14 +743,49 @@ class playrec_v(QObject):
         self.timertick = timer_worker()
         self.m["UTC"] = False
         self.m["TEST"] = False
+        self.m["stopstate"] = True
         self.init_playrec_ui()
 
     def init_playrec_ui(self):
         self.gui.pushButton_Loop.setChecked(False)
         self.gui.pushButton_Loop.clicked.connect(self.Buttloopmanager)
-        self.ui.listWidget_playlist.model().rowsInserted.connect(lambda: self.playlist_update())
-        self.ui.listWidget_playlist.model().rowsRemoved.connect(lambda: self.playlist_update()) 
+        self.gui.listWidget_playlist.model().rowsInserted.connect(lambda: self.playlist_update())
+        self.gui.listWidget_playlist.model().rowsRemoved.connect(lambda: self.playlist_update()) 
 
+        self.gui.pushButton_Shutdown.clicked.connect(self.shutdown)
+        self.gui.pushButton_FF.clicked.connect(
+            lambda: self.updatecurtime(self.CURTIMEINCREMENT))
+        self.gui.pushButton_REW.clicked.connect(
+                    lambda: self.updatecurtime(-self.CURTIMEINCREMENT))
+        self.gui.pushButton_adv1byte.clicked.connect(
+                    lambda: self.playrec_c.jump_1_byte())          ########### INACTIVATE if 1 byte correction should be disabled
+        self.gui.pushButton_adv1byte.setEnabled(False)  #TODO: rename: manual tracking
+        self.gui.verticalSlider_Gain.valueChanged.connect(self.cb_setgain)
+        self.gui.ScrollBar_playtime.sliderReleased.connect(self.playrec_c.jump_to_position)
+        self.gui.lineEdit_LO_bias.setFont(QFont('arial',12))
+        self.gui.lineEdit_LO_bias.setEnabled(True)
+        self.gui.lineEdit_LO_bias.setText("0000")
+        self.gui.radioButton_LO_bias.setEnabled(True)
+        self.gui.lineEdit_LO_bias.textChanged.connect(self.update_LO_bias)
+        self.gui.radioButton_LO_bias.clicked.connect(self.activate_LO_bias)
+        self.gui.pushButton_Play.setIcon(QIcon("play_v4.PNG"))
+        self.gui.pushButton_Play.clicked.connect(self.cb_Butt_toggleplay)
+        self.gui.pushButton_Stop.clicked.connect(self.playrec_c.cb_Butt_STOP)
+        self.gui.pushButton_REC.clicked.connect(self.cb_Butt_REC)        
+        self.gui.pushButton_act_playlist.clicked.connect(self.cb_Butt_toggle_playlist)
+        self.gui.lineEdit_IPAddress.returnPressed.connect(self.set_IP)
+        self.gui.lineEdit_IPAddress.setInputMask('000.000.000.000')
+        self.gui.lineEdit_IPAddress.setText("000.000.000.000")
+        self.gui.lineEdit_IPAddress.setEnabled(False)
+        self.gui.lineEdit_IPAddress.setReadOnly(True)
+        #####INFO: IP address validator from Trimmal Software    rx = QRegExp('^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])|rp-[0-9A-Fa-f]{6}\.local$')
+        #                                                          self.addrValue.setValidator(QRegExpValidator(rx, self.addrValue))
+        #pushButton->setIcon(QIcon(":/on.png"));
+        self.gui.pushButton_IP.clicked.connect(self.editHostAddress) #TODO: Remove after transfer
+        self.gui.lineEdit_IPAddress.returnPressed.connect(self.set_IP) #TODO: Remove after transfer
+        self.gui.listWidget_playlist.setEnabled(False)
+        self.gui.listWidget_sourcelist.setEnabled(False)
+        self.gui.ScrollBar_playtime.setEnabled(False)
 
     def Buttloopmanager(self):
         if self.gui.pushButton_Loop.isChecked == True:
@@ -787,6 +849,8 @@ class playrec_v(QObject):
                 self.reset_GUI()
             if  _value[0].find("setplaytimedisplay") == 0:
                 self.gui.lineEditCurTime.setText(_value[1])
+            if  _value[0].find("resetLObias") == 0:
+                self.reset_LO_bias()
 
 
 
@@ -946,7 +1010,7 @@ class playrec_v(QObject):
                 self.reset_playerbuttongroup()
                 return False
             self.gui.pushButton_Play.setIcon(QIcon("pause_v4.PNG"))
-            if self.playthreadActive == True:
+            if self.m["playthreadActive"] == True:
                 self.playrec_tworker.pausestate = False
             self.play_manager()
             self.pausestate = False
@@ -1025,7 +1089,7 @@ class playrec_v(QObject):
         self.gui.pushButton_Play.setIcon(QIcon("play_v4.PNG"))
         self.gui.pushButton_Play.setChecked(False)
         self.gui.pushButton_Loop.setChecked(False)
-        self.playthreadActive = False
+        self.m["playthreadActive"] = False
         #self.activate_tabs(["View_Spectra","Annotate","Resample","YAML_editor","WAV_header"])
         #self.setactivity_tabs("Player","activate",[])
         self.SigActivateOtherTabs.emit("Player","activate",[])
@@ -1169,7 +1233,7 @@ class playrec_v(QObject):
         :return: True if successful, otherwise False
         :rtype: Boolean
         """
-        if self.playthreadActive:
+        if self.m["playthreadActive"]:
             return False        
         LObiasraw = self.gui.lineEdit_LO_bias.text().lstrip(" ")
         if len(LObiasraw) < 1:
@@ -1189,10 +1253,27 @@ class playrec_v(QObject):
             self.reset_LO_bias()
             return False
         #transfer to systemstate
-        if self.ui.radioButton_LO_bias.isChecked() is True:
+        if self.gui.radioButton_LO_bias.isChecked() is True:
             self.m["LO_offset"] = int(i_LO_bias*1000)
             self.m["ifreq"] = int(self.m["wavheader"]['centerfreq'] + self.m["LO_offset"])
         return True
+    
+    def activate_LO_bias(self):
+        """ Purpose: handle radiobutton for LO bias setting; 
+        (1) highlight LO_lineEdit window
+        (2) call update of offset value
+        :param [ParamName]: none
+        :type [ParamName]: none
+        :raises none
+        :return: none
+        :rtype: none
+        """
+        #i_LO_bias = 0 ###TODO: activate ???
+        self.gui.lineEdit_LO_bias.setStyleSheet("background-color: white")
+        #TODO: ACTIVATE LObias check code
+        if self.gui.radioButton_LO_bias.isChecked() is True:
+            self.gui.lineEdit_LO_bias.setStyleSheet("background-color: yellow")
+            self.update_LO_bias()    
     
     def editHostAddress(self):     #TODO Check if this is necessary, rename to cb_.... ! 
         ''' 

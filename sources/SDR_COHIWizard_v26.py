@@ -64,7 +64,7 @@ import yaml_editor as yed
 import waveditor as waved
 from stemlab_control import StemlabControl
 from playrec import playrec_worker
-#import playrec
+import playrec
 #import configuration as conf
 
 class statlst_gen_worker(QtCore.QThread):
@@ -587,7 +587,7 @@ class WizardGUI(QMainWindow):
         super().__init__(*args, **kwargs)
         print("Initializing GUI, please wait....")
 
-
+        self.OLD = True
         self.TEST = True    # Test Mode Flag for testing the App, --> playloop  ##NOT USED #TODO:future system status
         self.CURTIMEINCREMENT = 5 # für playloop >>, << TODO: shift to playrec module once it exists
         self.DATABLOCKSIZE = 1024*32 # für diverse Filereader/writer TODO: occurs in plot spectrum and ANN_Spectrum; must be shifted to the respective modules in future
@@ -639,72 +639,72 @@ class WizardGUI(QMainWindow):
         #self.ui.actionOverwrite_header.triggered.connect(self.overwrite_header)
         self.SigGUIReset.connect(self.reset_GUI)
         self.ui.pushButton_resample_GainOnly.setEnabled(False)
-    
-        self.ui.checkBox_writelog.clicked.connect(self.togglelogmodus) #TODO TODO TODO: logfilemodus anders implementieren
+        #self.ui.checkBox_writelog.clicked.connect(self.togglelogmodus) #TODO TODO TODO: Remove or re-organize logfile handling (evt Config ?)
         self.ui.tabWidget.setCurrentIndex(1) #TODO: avoid magic number, unidentified
 
         ### END UI MASTER ####################################
 
         ###EUI TAB ANNOTATE####################################
-        self.ui.pushButton_Scan.setEnabled(False)
-        self.ui.pushButtonAnnotate.setEnabled(False)
-        self.ui.pushButton_Scan.clicked.connect(self.autoscan)
-        self.ui.pushButtonAnnotate.clicked.connect(self.ann_stations) 
-        self.ui.pushButtonDiscard.setEnabled(False)
-        self.ui.pushButtonDiscard.clicked.connect(self.discard_annot_line)
-        self.ui.spinBoxminSNR.valueChanged.connect(self.minSNRupdate) 
-        self.ui.lineEdit.setAlignment(QtCore.Qt.AlignLeft)
-        #self.ui.lineEdit.returnPressed.connect(self.enterlinetoannotation)
-        self.ui.pushButtonENTER.clicked.connect(self.enterlinetoannotation)
-        self.ui.pushButtonENTER.setEnabled(False)
-        #self.ui.pushButton_ScanAnn.clicked.connect(self.listclick_test)
-        self.ui.Annotate_listWidget.itemClicked.connect(self.cb_ListClicked)
-        self.ui.Annotate_listWidget.clear()
-        self.ui.progressBar_2.setProperty("value", 0)
-        ###END UI TAB ANNOTATE ####################################
+        if self.OLD:
+            self.ui.pushButton_Scan.setEnabled(False)
+            self.ui.pushButtonAnnotate.setEnabled(False)
+            self.ui.pushButton_Scan.clicked.connect(self.autoscan)
+            self.ui.pushButtonAnnotate.clicked.connect(self.ann_stations) 
+            self.ui.pushButtonDiscard.setEnabled(False)
+            self.ui.pushButtonDiscard.clicked.connect(self.discard_annot_line)
+            self.ui.spinBoxminSNR.valueChanged.connect(self.minSNRupdate) 
+            self.ui.lineEdit.setAlignment(QtCore.Qt.AlignLeft)
+            #self.ui.lineEdit.returnPressed.connect(self.enterlinetoannotation)
+            self.ui.pushButtonENTER.clicked.connect(self.enterlinetoannotation)
+            self.ui.pushButtonENTER.setEnabled(False)
+            #self.ui.pushButton_ScanAnn.clicked.connect(self.listclick_test)
+            self.ui.Annotate_listWidget.itemClicked.connect(self.cb_ListClicked)
+            self.ui.Annotate_listWidget.clear()
+            self.ui.progressBar_2.setProperty("value", 0)
+            ###END UI TAB ANNOTATE ####################################
 
-        ###UI TAB PLAYER ####################################
-        self.ui.pushButton_Shutdown.clicked.connect(self.shutdown)
-        self.ui.pushButton_FF.clicked.connect(
-            lambda: self.updatecurtime(self.CURTIMEINCREMENT))
-        self.ui.pushButton_REW.clicked.connect(
-                    lambda: self.updatecurtime(-self.CURTIMEINCREMENT))
-        self.ui.pushButton_adv1byte.clicked.connect(
-                    lambda: self.jump_1_byte())          ########### INACTIVATE if 1 byte correction should be disabled
-        self.ui.pushButton_adv1byte.setEnabled(False)  #TODO: rename: manual tracking
-        self.ui.verticalSlider_Gain.valueChanged.connect(self.cb_setgain)
-        self.ui.ScrollBar_playtime.sliderReleased.connect(self.jump_to_position)
-        self.ui.lineEdit_LO_bias.setFont(QFont('arial',12))
-        self.ui.lineEdit_LO_bias.setEnabled(True)
-        self.ui.lineEdit_LO_bias.setText("0000")
-        self.ui.radioButton_LO_bias.setEnabled(True)
-        self.ui.lineEdit_LO_bias.textChanged.connect(self.update_LO_bias)
-        self.ui.radioButton_LO_bias.clicked.connect(self.activate_LO_bias)
-        self.stopstate = True
-        self.ui.pushButton_Play.setIcon(QIcon("play_v4.PNG"))
-        self.ui.pushButton_Play.clicked.connect(self.cb_Butt_toggleplay)
-        self.ui.pushButton_Stop.clicked.connect(self.cb_Butt_STOP)
-        self.ui.pushButton_REC.clicked.connect(self.cb_Butt_REC)        
-        self.ui.pushButton_act_playlist.clicked.connect(self.cb_Butt_toggle_playlist)
+            ###UI TAB PLAYER ####################################
+            self.ui.pushButton_Shutdown.clicked.connect(self.shutdown)
+            self.ui.pushButton_FF.clicked.connect(
+                lambda: self.updatecurtime(self.CURTIMEINCREMENT))
+            self.ui.pushButton_REW.clicked.connect(
+                        lambda: self.updatecurtime(-self.CURTIMEINCREMENT))
+            self.ui.pushButton_adv1byte.clicked.connect(
+                        lambda: self.jump_1_byte())          ########### INACTIVATE if 1 byte correction should be disabled
+            self.ui.pushButton_adv1byte.setEnabled(False)  #TODO: rename: manual tracking
+            self.ui.verticalSlider_Gain.valueChanged.connect(self.cb_setgain)
+            self.ui.ScrollBar_playtime.sliderReleased.connect(self.jump_to_position)
+            self.ui.lineEdit_LO_bias.setFont(QFont('arial',12))
+            self.ui.lineEdit_LO_bias.setEnabled(True)
+            self.ui.lineEdit_LO_bias.setText("0000")
+            self.ui.radioButton_LO_bias.setEnabled(True)
+            self.ui.lineEdit_LO_bias.textChanged.connect(self.update_LO_bias)
+            self.ui.radioButton_LO_bias.clicked.connect(self.activate_LO_bias)
+            self.stopstate = True
+            self.ui.pushButton_Play.setIcon(QIcon("play_v4.PNG"))
+            self.ui.pushButton_Play.clicked.connect(self.cb_Butt_toggleplay)
+            self.ui.pushButton_Stop.clicked.connect(self.cb_Butt_STOP)
+            self.ui.pushButton_REC.clicked.connect(self.cb_Butt_REC)        
+            self.ui.pushButton_act_playlist.clicked.connect(self.cb_Butt_toggle_playlist)
 
-        self.ui.lineEdit_IPAddress.returnPressed.connect(self.set_IP)#TODO: Remove after transfer of playrec
-        self.ui.lineEdit_IPAddress.setInputMask('000.000.000.000')#TODO: Remove after transfer of playrec
-        self.ui.lineEdit_IPAddress.setText("000.000.000.000")#TODO: Remove after transfer of playrec
-        self.ui.lineEdit_IPAddress.setEnabled(False)#TODO: Remove after transfer of playrec
-        self.ui.lineEdit_IPAddress.setReadOnly(True)#TODO: Remove after transfer of playrec
-        #####INFO: IP address validator from Trimmal Software    rx = QRegExp('^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])|rp-[0-9A-Fa-f]{6}\.local$')
-        #                                                          self.addrValue.setValidator(QRegExpValidator(rx, self.addrValue))
-        #pushButton->setIcon(QIcon(":/on.png"));
-        self.ui.pushButton_IP.clicked.connect(self.editHostAddress) #TODO: Remove after transfer
-        self.ui.lineEdit_IPAddress.returnPressed.connect(self.set_IP) #TODO: Remove after transfer
-        self.ui.listWidget_playlist.setEnabled(False)
-        self.ui.listWidget_sourcelist_2.setEnabled(False)
-        self.ui.listWidget_sourcelist.setEnabled(False)
-        self.ui.listWidget_playlist_2.setEnabled(False)
-        self.ui.ScrollBar_playtime.setEnabled(False)
-        ##############transfer done for next 2 lines:
-        self.ui.listWidget_playlist.model().rowsInserted.connect(lambda: self.playlist_update()) #TODO transfer to resemplar view
-        self.ui.listWidget_playlist.model().rowsRemoved.connect(lambda: self.playlist_update()) #TODO transfer to resemplar view
+            self.ui.lineEdit_IPAddress.returnPressed.connect(self.set_IP)#TODO: Remove after transfer of playrec
+            self.ui.lineEdit_IPAddress.setInputMask('000.000.000.000')#TODO: Remove after transfer of playrec
+            self.ui.lineEdit_IPAddress.setText("000.000.000.000")#TODO: Remove after transfer of playrec
+            self.ui.lineEdit_IPAddress.setEnabled(False)#TODO: Remove after transfer of playrec
+            self.ui.lineEdit_IPAddress.setReadOnly(True)#TODO: Remove after transfer of playrec
+            #####INFO: IP address validator from Trimmal Software    rx = QRegExp('^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])|rp-[0-9A-Fa-f]{6}\.local$')
+            #                                                          self.addrValue.setValidator(QRegExpValidator(rx, self.addrValue))
+            #pushButton->setIcon(QIcon(":/on.png"));
+            self.ui.pushButton_IP.clicked.connect(self.editHostAddress) #TODO: Remove after transfer
+            self.ui.lineEdit_IPAddress.returnPressed.connect(self.set_IP) #TODO: Remove after transfer
+            self.ui.listWidget_playlist.setEnabled(False)
+            self.ui.listWidget_sourcelist_2.setEnabled(False)
+            self.ui.listWidget_sourcelist.setEnabled(False)
+            self.ui.listWidget_playlist_2.setEnabled(False)
+            self.ui.ScrollBar_playtime.setEnabled(False)
+            ##############transfer done for next 2 lines:
+            self.ui.listWidget_playlist.model().rowsInserted.connect(lambda: self.playlist_update()) #TODO transfer to resemplar view
+            self.ui.listWidget_playlist.model().rowsRemoved.connect(lambda: self.playlist_update()) #TODO transfer to resemplar view
 
         ###END UI TAB PLAYER ####################################
 
@@ -797,25 +797,25 @@ class WizardGUI(QMainWindow):
 
     # GENRAL GUI METHODS
 
-    def togglelogmodus(self):
-        """
-        ?? general core method ??
-        set modus of stdout to either file or console
-        :param: npne
-        :type: none
-        :raises: none
-        ...
-        :return: none
-        :rtype: none
-        """
-        #TODO
-        if self.ui.checkBox_writelog.isChecked:
-            system_state["_log"] = True
-            self.SigRelay.emit("cm_all_",["_log", True])
+    # def togglelogmodus(self):
+    #     """
+    #     ?? general core method ??
+    #     set modus of stdout to either file or console
+    #     :param: npne
+    #     :type: none
+    #     :raises: none
+    #     ...
+    #     :return: none
+    #     :rtype: none
+    #     """
+    #     #TODO
+    #     if self.ui.checkBox_writelog.isChecked:
+    #         system_state["_log"] = True
+    #         self.SigRelay.emit("cm_all_",["_log", True])
 
-        else:
-            system_state["_log"] = False
-            self.SigRelay.emit("cm_all_",["_log", False])
+    #     else:
+    #         system_state["_log"] = False
+    #         self.SigRelay.emit("cm_all_",["_log", False])
 
 
 ############## CORE VIEW METHOD #################
@@ -1955,9 +1955,6 @@ class WizardGUI(QMainWindow):
             sys_state.set_status(system_state)
         sys_state.set_status(system_state)
         return True
-    
-###############################################CURRENT STATE OF TRANSFER
-
 
     def LO_bias_checkbounds(self):
         """ Purpose: checks if LO bias setting is within valid bounds; 
@@ -2012,9 +2009,7 @@ class WizardGUI(QMainWindow):
             self.ui.lineEdit_LO_bias.setStyleSheet("background-color: yellow")
             self.update_LO_bias()
 
-
-
- 
+###############################################CURRENT STATE OF TRANSFER
 ############################## END TAB PLAYER ####################################
 
 ############################## TAB RESAMPLER, REMOVE COMPLETELY ####################################
@@ -3152,7 +3147,7 @@ class WizardGUI(QMainWindow):
         self.ui.lineEdit_resample_targetnameprefix.setText(self.my_filename)
         self.setstandardpaths()
         self.SigRelay.emit("cm_all_",["wavheader",self.wavheader])
-        self.showfilename()
+        #self.showfilename()
         #self.SigRelay.emit("cexex_all_",["updateGUIelements", 0])
         self.annotation_deactivate()
         self.scan_deactivate()
@@ -3299,6 +3294,7 @@ class WizardGUI(QMainWindow):
             os.mkdir(out_dirname)
         self.SigRelay.emit("cm_all_",["out_dirname",out_dirname])
         sys_state.set_status(system_state)
+        self.showfilename()
         return True
 
     def dat_extractinfo4wavheader(self):
@@ -3492,13 +3488,13 @@ if __name__ == '__main__':
         pass
         #win.ui.tabWidget.setTabVisible('configuration',False)
 
-    # if 'playrec' in sys.modules:
-    #     playrec_m = playrec.playrec_m()
-    #     playrec_c = playrec.playrec_c(configuration_m)
-    #     playrec_v = playrec.playrec_v(win.ui,configuration_c,configuration_m)
-    #     playrec_v.SigActivateOtherTabs.connect(win.setactivity_tabs)
-    #     playrec_c.SigActivateOtherTabs.connect(win.setactivity_tabs)
-    # else:
+    if 'playrec' in sys.modules and win.OLD is False:
+        playrec_m = playrec.playrec_m()
+        playrec_c = playrec.playrec_c(playrec_m)
+        playrec_v = playrec.playrec_v(win.ui,playrec_c,playrec_m)
+        playrec_v.SigActivateOtherTabs.connect(win.setactivity_tabs)
+        playrec_c.SigActivateOtherTabs.connect(win.setactivity_tabs)
+    # else:   TODO: activate after all playrec tests
     #     page = win.ui.tabWidget.findChild(QWidget, "tab_playrec")
     #     c_index = win.ui.tabWidget.indexOf(page)
     #     win.ui.tabWidget.setTabVisible(c_index,False)
