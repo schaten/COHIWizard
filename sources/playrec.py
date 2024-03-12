@@ -663,28 +663,32 @@ class playrec_c(QObject):
         """ 
         #print("jumptoposition reached")
         self.logger.debug("jumptoposition reached")
-        system_state = sys_state.get_status()
-        sbposition = self.ui.ScrollBar_playtime.value() #TODO: already in updatecurtime(...)
-        self.curtime = int(np.floor(sbposition/1000*system_state["playlength"]))  # seconds
-        timestr = str(self.wavheader['starttime_dt'] + ndatetime.timedelta(seconds=self.curtime))
+        #system_state = sys_state.get_status()
+        ####################################################################
+        #sbposition = self.ui.ScrollBar_playtime.value() #TODO: already in updatecurtime(...)
+        #ERSETZE DURCH: ####################################################
+        sbposition = self.m["playprogress"]
+        ####################################################################
+        self.curtime = int(np.floor(sbposition/1000*self.m["playlength"]))  # seconds
+        timestr = str(self.m["wavheader"]['starttime_dt'] + ndatetime.timedelta(seconds=self.curtime))
         #win.ui.lineEditCurTime.setText(timestr)
-        self.ui.lineEditCurTime.setText(timestr)
-        position_raw = self.curtime*system_state["timescaler"]  #timescaler = bytes per second
+        self.SigRelay.emit("cexex_playrec",["setplaytimedisplay",timestr])
+        #self.ui.lineEditCurTime.setText(timestr)
+        position_raw = self.curtime*self.m["timescaler"]  #timescaler = bytes per second
         # TODO: check, geändert 09-12-2023: byte position mit allen Blockaligns auch andere als 4(16 bits); 
         # TODO: adapt for other than header 216
-        position = min(max(216, position_raw-position_raw % self.wavheader['nBlockAlign']),
-                            self.wavheader['data_nChunkSize']+216) # guarantee reading from integer multiples of 4 bytes, TODO: change '4', '216' to any wav format ! 
-        if system_state["fileopened"] is True:
+        position = min(max(216, position_raw-position_raw % self.m["wavheader"]['nBlockAlign']),
+                            self.m["wavheader"]['data_nChunkSize']+216) # guarantee reading from integer multiples of 4 bytes, TODO: change '4', '216' to any wav format ! 
+        if self.m["fileopened"] is True:
             #print("Jump to next position")
             self.logger.debug("jumptoposition reached")
             #print(f'system_state["fileopened"]: {system_state["fileopened"]}')
-            self.logger.debug("system_state['fileopened']: %s",system_state["fileopened"])
+            self.logger.debug("system_state['fileopened']: %s",self.m["fileopened"])
             self.prfilehandle = self.playrec_tworker.get_4()
             self.prfilehandle.seek(int(position), 0) #TODO: Anpassen an andere Fileformate
         #calculate corresponding position in the record file; value = 216 : 1000
         #jump to the targeted position with integer multiple of wavheader["nBitsPerSample"]/4
-        sys_state.set_status(system_state)
-
+        #sys_state.set_status(system_state)
 
 
 class playrec_v(QObject):
@@ -781,6 +785,9 @@ class playrec_v(QObject):
                 self.reset_playerbuttongroup()
             if  _value[0].find("reset_GUI") == 0:
                 self.reset_GUI()
+            if  _value[0].find("setplaytimedisplay") == 0:
+                self.gui.lineEditCurTime.setText(_value[1])
+
 
 
     def toggleUTC(self):
@@ -1102,7 +1109,7 @@ class playrec_v(QObject):
         :rtype: bool
         """ 
         #self.curtime varies between 0 and system_state["playlength"]
-        progress = 0
+        self.m["playprogress"] = 0
         if self.m["playthreadActive"] is False:
             return False
         timestr = str(self.m["wavheader"]['starttime_dt'] + ndatetime.timedelta(seconds=self.curtime))
@@ -1118,7 +1125,7 @@ class playrec_v(QObject):
             if self.m["curtime"] < playlength and increment > 0:
                 self.m["curtime"] += increment
             if playlength > 0:
-                progress = int(np.floor(1000*(self.m["curtime"]/playlength)))
+                self.m["playprogress"] = int(np.floor(1000*(self.m["curtime"]/playlength)))
             else:
                 return False
             position_raw = self.m["curtime"]*self.m["timescaler"]
@@ -1134,14 +1141,59 @@ class playrec_v(QObject):
                     self.prfilehandle.seek(int(position), 0) #TODO: Anpassen an andere Fileformate
         #timestr = str(self.wavheader['starttime_dt'] + ndatetime.timedelta(seconds=self.curtime))
         self.gui.lineEditCurTime.setText(timestr) 
-        self.gui.ScrollBar_playtime.setProperty("value", progress)
+        self.gui.ScrollBar_playtime.setProperty("value", self.m["playprogress"])
         #sys_state.set_status(system_state)
         #print("leave updatecurtime")
         return True
     
+    def reset_LO_bias(self):
+        """ Purpose: reset LO bias setting to 0; 
+        :param [ParamName]: none
+        :type [ParamName]: none
+        :raises none
+        :return: none
+        :rtype: none
+        """
+        self.gui.radioButton_LO_bias.setChecked(False)
+        self.gui.radioButton_LO_bias.setEnabled(True)
+        self.m["LO_offset"] = 0
+        self.gui.lineEdit_LO_bias.setText("0")
+        self.gui.lineEdit_LO_bias.setStyleSheet("background-color: white")
 
-
-
+    def update_LO_bias(self):
+        """ Purpose: update LO bias setting; 
+        check validity of offset value: isnumeric, integer
+        :param [ParamName]: none
+        :type [ParamName]: none
+        :raises none
+        :return: True if successful, otherwise False
+        :rtype: Boolean
+        """
+        if self.playthreadActive:
+            return False        
+        LObiasraw = self.gui.lineEdit_LO_bias.text().lstrip(" ")
+        if len(LObiasraw) < 1:
+            return False
+        LObias_sign = 1
+        if LObiasraw[0] == "-":
+            LObias_sign = -1
+            LObias_test = LObiasraw.lstrip("-")
+            if len(LObias_test)<1:
+                return False
+        else:
+            LObias_test = LObiasraw
+        if LObias_test.isnumeric() == True: 
+            i_LO_bias = LObias_sign*int(LObias_test)
+        else:
+            auxi.standard_errorbox("invalid numeral in center frequency offset field, please enter valid integer value (kHz)")
+            self.reset_LO_bias()
+            return False
+        #transfer to systemstate
+        if self.ui.radioButton_LO_bias.isChecked() is True:
+            self.m["LO_offset"] = int(i_LO_bias*1000)
+            self.m["ifreq"] = int(self.m["wavheader"]['centerfreq'] + self.m["LO_offset"])
+        return True
+    
     def editHostAddress(self):     #TODO Check if this is necessary, rename to cb_.... ! 
         ''' 
         Purpose: Callback for edidHostAddress Lineedit item

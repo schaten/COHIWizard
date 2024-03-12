@@ -1850,8 +1850,7 @@ class WizardGUI(QMainWindow):
         sys_state.set_status(system_state)
         # not yet safe, because increment may happen beyond EOF, check for EOF
 
-    ###############################################CURRENT STATE OF TRANSFER
-
+   
     def jump_to_position(self):
         """
         VIEW 
@@ -1888,7 +1887,8 @@ class WizardGUI(QMainWindow):
         #jump to the targeted position with integer multiple of wavheader["nBitsPerSample"]/4
         sys_state.set_status(system_state)
 
-    def GuiEnterCurTime(self):
+ 
+    def GuiEnterCurTime(self):     ###########TODO: wird nirgends verwendet, remove ?
 
         timestr = self.ui.lineEditCurTime.text()
         #Convert timestr back to seconds
@@ -1900,6 +1900,7 @@ class WizardGUI(QMainWindow):
 
         self.curtime = total_seconds
         self.timechanged = True
+
 
     def reset_LO_bias(self):
 
@@ -1955,6 +1956,8 @@ class WizardGUI(QMainWindow):
         sys_state.set_status(system_state)
         return True
     
+###############################################CURRENT STATE OF TRANSFER
+
 
     def LO_bias_checkbounds(self):
         """ Purpose: checks if LO bias setting is within valid bounds; 
