@@ -20,7 +20,7 @@ from auxiliaries import WAVheader_tools, timer_worker
 from datetime import datetime
 import datetime as ndatetime
 from stemlab_control import StemlabControl
-
+import logging
 
 class playrec_worker(QObject):
     """ worker class for data streaming thread from PC to STEMLAB
@@ -272,6 +272,7 @@ class playrec_m(QObject):
         # Constants
         self.CONST_SAMPLE = 0 # sample constant
         self.mdl = {}
+        self.mdl["fileopened"] = False
         self.mdl["playlist_active"] = False
         self.mdl["sample"] = 0
         self.mdl["LO_offset"] = 0
@@ -279,6 +280,34 @@ class playrec_m(QObject):
         self.mdl["TEST"] = False
         self.mdl["Buttloop_pressed"] = False
         self.mdl["playthreadActive"] = False
+        self.mdl["errorf"] = False
+        self.mdl["icorr"] = 0
+        self.mdl["gain"] = 1
+        self.mdl["curtime"] = 0
+        self.mdl["pausestate"] = False
+        self.mdl["stopstate"] = False
+        self.mdl["timechanged"] = False
+        # Create a custom logger
+        logging.getLogger().setLevel(logging.DEBUG)
+        # Erstelle einen Logger mit dem Modul- oder Skriptnamen
+        self.logger = logging.getLogger(__name__)
+        # Create handlers
+        warning_handler = logging.StreamHandler()
+        debug_handler = logging.FileHandler("system_log.log")
+        warning_handler.setLevel(logging.WARNING)
+        debug_handler.setLevel(logging.DEBUG)
+
+        # Create formatters and add it to handlers
+        warning_format = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+        debug_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        warning_handler.setFormatter(warning_format)
+        debug_handler.setFormatter(debug_format)
+
+        # Add handlers to the logger
+        self.logger.addHandler(warning_handler)
+        self.logger.addHandler(debug_handler)
+
+        self.logger.debug('Init logger in playrec  reached')
 
 
 class playrec_c(QObject):
@@ -300,6 +329,8 @@ class playrec_c(QObject):
         self.m = playrec_m.mdl
         self.stemlabcontrol = StemlabControl()
         self.m["playlist_ix"] = 0
+        self.logger = playrec_m.logger
+
 
     def checkSTEMLABrates(self):        # TODO: this is ratrer a controller method than a GUI method. Transfer to other module
         """
@@ -319,21 +350,56 @@ class playrec_c(QObject):
         #check: has been done on 13-12-2023 TODO: replace ifreq by system_state["ifreq"]
         if self.m["ifreq"] < 0 or self.m["ifreq"] > 62500000:
             self.m["errorf"] = True
-            self.m["errortxt"] = "center frequency not in range (0 - 62500000) \
+            errortxt = "center frequency not in range (0 - 62500000) \
                       after _lo\n Probably not a COHIRADIA File"
 
         if self.m["irate"] not in self.m["rates"]:
             self.m["errorf"] = True
-            self.m["errortxt"] = "The sample rate of this file is inappropriate for the STEMLAB!\n\
+            errortxt = "The sample rate of this file is inappropriate for the STEMLAB!\n\
             Probably it is not a COHIRADIA File. \n \n \
             PLEASE USE THE 'Resample' TAB TO CREATE A PLAYABLE FILE ! \n\n \
             SR must be in the set: 20000, 50000, 100000, 250000, 500000, 1250000, 2500000"
             
         if self.m["icorr"] < -100 or self.m["icorr"] > 100:
             self.m["errorf"] = True
-            self.m["errortxt"] = "frequency correction min ppm must be in \
+            errortxt = "frequency correction min ppm must be in \
                       the interval (-100 - 100) after _c \n \
                       Probably not a COHIRADIA File "
+            
+        if self.m["errorf"]:
+            auxi.standard_errorbox(errortxt)
+            
+            return False
+        else:
+            return True
+        
+    def stemlabcontrol_errorhandler(self,errorstring):
+        """handler for error signals from stemlabcontrol class
+            display error in standard errormessagebox
+            NOT YET IMPLEMENTED: reset playerbuttongroup and GUI
+        VIEW
+        :param: errorstring
+        :type: str
+        :raises [none]: [none]
+        :return: none
+        :rtype: none
+        """     
+        auxi.standard_errorbox(errorstring)
+        #self.stemlabcontrol.SigError.connect(self.reset_playerbuttongroup) #TODO TODO TODO: wird bis dato nicht emittiert
+        #self.stemlabcontrol.SigError.connect(self.reset_GUI) #TODO: wird bis dato nicht emittiert
+
+    def display_status(self,messagestring):
+        """handler for message signals from stemlabcontrol class
+            display message in GUI status field, if exists
+        VIEW
+        :param: messaagestring
+        :type: str
+        :raises [none]: [none]
+        :return: none
+        :rtype: none
+        """         
+        #print(f"display status of stemlabcontrol, status = {messagestring}") #TODO: define displaystatus in more elaborate form
+
 
     def play_manager(self):
         """Callback function for Play Button; Calls file_open
@@ -350,14 +416,14 @@ class playrec_c(QObject):
         if self.m["playthreadActive"] is True:
             self.logger.debug("playthread is active, no action")
             return False
-        self.updatecurtime(0) #TODO: true datetime from record
-
+        #self.updatecurtime(0) #TODO: true datetime from record
+        self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
         if self.m["f1"] == "": #TODO: replace by line below
             return False
-        self.stemlabcontrol.SigError.connect(self.stemlabcontrol_errorhandler)
-        self.stemlabcontrol.SigMessage.connect(self.display_status) 
+        self.stemlabcontrol.SigError.connect(self.stemlabcontrol_errorhandler) #TODO: is that needed ????
+        self.stemlabcontrol.SigMessage.connect(self.display_status) #TODO: is that needed ????
         self.stemlabcontrol.set_play()
-        self.modality = "play"
+        self.m["modality"] = "play"
         # start server unless already started
         if self.m["TEST"] is False:
             self.stemlabcontrol.sdrserverstart(self.m["sdr_configparams"])
@@ -411,6 +477,7 @@ class playrec_c(QObject):
             auxi.standard_errorbox("dataformat not supported, only 16, 24 and 32 bits per sample are possible")
             return False
         #system_state = sys_state.get_status()
+        self.m["timescaler"] = self.m["wavheader"]['nSamplesPerSec']*self.m["wavheader"]['nBlockAlign']
         self.playthread = QThread()
         self.playrec_tworker = playrec_worker(self.stemlabcontrol)
         self.playrec_tworker.moveToThread(self.playthread)
@@ -435,8 +502,11 @@ class playrec_c(QObject):
 
         self.playthread.finished.connect(self.playthread.deleteLater)
         self.playrec_tworker.SigIncrementCurTime.connect(
-                                                lambda: self.updatecurtime(1))
-        self.playrec_tworker.SigIncrementCurTime.connect(self.showRFdata)
+                                                lambda: self.SigRelay.emit("cexex_playrec",["updatecurtime",1]))
+        #self.SigRelay.emit("cexex_playrec",["updatecurtime",1])
+        self.playrec_tworker.SigIncrementCurTime.connect(lambda: self.SigRelay.emit("cexex_playrec",["showRFdata",0]))
+                                                         
+                                                         #self.showRFdata)
         #self.playrec_tworker.SigBufferUnderflow.connect(
         #                                         lambda: self.bufoverflowsig()) #TODO reactivate
         # TODO: check, if updatecurtime is also controlled from within
@@ -495,7 +565,8 @@ class playrec_c(QObject):
             #TODO: self.my_filename + self.ext müssen updated werden, übernehmen aus open file
             #self.showfilename() #Remove after implementing all Modules Relay
             self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
-            self.updatecurtime(0) #TODO: true datetime from record
+            #self.updatecurtime(0) #TODO: true datetime from record
+            self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
             self.logger.info("fetch nextfile")
         elif self.m["Buttloop_pressed"]:
             time.sleep(0.1)
@@ -507,7 +578,8 @@ class playrec_c(QObject):
             self.logger.info("playthread active: %s", self.m["playthreadActive"])
             self.m["fileopened"] = True
             self.SigRelay.emit("cm_all_",["fileopened",True])
-            self.updatecurtime(0) #TODO: true datetime from record
+            #self.updatecurtime(0) #TODO: true datetime from record
+            self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
         elif self.m["playlist_len"] > 0:
             # filecheck_loop = True
             # while filecheck_loop == True:
@@ -538,7 +610,8 @@ class playrec_c(QObject):
                     #sys_state.set_status(system_state)
                     self.logger.info("EOF_manager: end of list, stop player")
                     time.sleep(0.5)
-                    self.updatecurtime(0)
+                    #self.updatecurtime(0)
+                    self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
                     self.cb_Butt_STOP()
                     #########################################----> view
         
@@ -568,14 +641,16 @@ class playrec_c(QObject):
                 self.SigRelay.emit("cm_all_",["fileopened",True])
                 time.sleep(0.5) #TODO: necessary because otherwise file may not yet have been opened by playloopworker and then updatecurtime crashes because of invalid filehandel 
                 #may be solved by updatecurtime not accessing the filehandle returned from playworker but directly from self.m["f1"]
-                self.updatecurtime(0) #TODO: true datetime from record
+                #self.updatecurtime(0) #TODO: true datetime from record
+                self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
             else:
                 #reset playlist_ix
                 self.m["playlist_ix"] = 0
                 #sys_state.set_status(system_state)
                 self.logger.info("EOF_manager: stop player")
                 time.sleep(0.5)
-                self.updatecurtime(0)
+                #self.updatecurtime(0)
+                self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
 
                 #########################################----> view
                 self.cb_Butt_STOP()
@@ -610,7 +685,7 @@ class playrec_c(QObject):
         """        
         #TODO: activate for player
         #if True:
-        self.stopstate = True
+        self.m["stopstate"] = True
         if self.m["playthreadActive"] is False:
             self.m["fileopened"] = False ###CHECK
             self.SigRelay.emit("cm_all_",["fileopened",False])
@@ -620,7 +695,8 @@ class playrec_c(QObject):
             self.playrec_tworker.stop_loop()
         if self.m["TEST"] is False:
             self.stemlabcontrol.sdrserverstop()
-        self.updatecurtime(0)        # reset playtime counter #TODO: true datetime from record
+        #self.updatecurtime(0)        # reset playtime counter #TODO: true datetime from record
+        self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
 
         self.SigRelay.emit("cexex_playrec",["reset_playerbuttongoup",0])
         self.SigRelay.emit("cexex_win",["GUIreset",0])
@@ -643,7 +719,7 @@ class playrec_c(QObject):
         :rtype: bool
         """ 
         self.logger.debug("tracking: jump 1 byte")
-        if self.modality == 'play' and self.m["pausestate"] is False:
+        if self.m["modality"] == 'play' and self.m["pausestate"] is False:
             if self.m["fileopened"] is True:
                 self.prfilehandle = self.playrec_tworker.get_4()
                 self.prfilehandle.seek(1,1) #TODO: ##OPTION from current position## 0 oder 1 ?
@@ -670,12 +746,12 @@ class playrec_c(QObject):
         #ERSETZE DURCH: ####################################################
         sbposition = self.m["playprogress"]
         ####################################################################
-        self.curtime = int(np.floor(sbposition/1000*self.m["playlength"]))  # seconds
-        timestr = str(self.m["wavheader"]['starttime_dt'] + ndatetime.timedelta(seconds=self.curtime))
+        self.m["curtime"] = int(np.floor(sbposition/1000*self.m["playlength"]))  # seconds
+        timestr = str(self.m["wavheader"]['starttime_dt'] + ndatetime.timedelta(seconds=self.m["curtime"]))
         #win.ui.lineEditCurTime.setText(timestr)
         self.SigRelay.emit("cexex_playrec",["setplaytimedisplay",timestr])
         #self.ui.lineEditCurTime.setText(timestr)
-        position_raw = self.curtime*self.m["timescaler"]  #timescaler = bytes per second
+        position_raw = self.m["curtime"]*self.m["timescaler"]  #timescaler = bytes per second
         # TODO: check, geändert 09-12-2023: byte position mit allen Blockaligns auch andere als 4(16 bits); 
         # TODO: adapt for other than header 216
         position = min(max(216, position_raw-position_raw % self.m["wavheader"]['nBlockAlign']),
@@ -744,7 +820,10 @@ class playrec_v(QObject):
         self.m["UTC"] = False
         self.m["TEST"] = False
         self.m["stopstate"] = True
+        self.logger = playrec_m.logger
         self.init_playrec_ui()
+        self.playrec_c.SigRelay.connect(self.rxhandler)
+        self.CURTIMEINCREMENT = 5
 
     def init_playrec_ui(self):
         self.gui.pushButton_Loop.setChecked(False)
@@ -835,6 +914,7 @@ class playrec_v(QObject):
         :return: none
         :rtype: none
         """
+        self.logger.debug("rxhandler playrec key: %s , value: %s", _key,_value)
         if _key.find("cm_playrec") == 0 or _key.find("cm_all_") == 0:
             #set mdl-value
             self.m[_value[0]] = _value[1]
@@ -851,7 +931,11 @@ class playrec_v(QObject):
                 self.gui.lineEditCurTime.setText(_value[1])
             if  _value[0].find("resetLObias") == 0:
                 self.reset_LO_bias()
-
+            if  _value[0].find("updatecurtime") == 0:
+                self.reset_LO_bias()
+                self.updatecurtime(_value[1])
+            if  _value[0].find("showRFdata") == 0:
+                self.showRFdata()
 
 
     def toggleUTC(self):
@@ -915,9 +999,9 @@ class playrec_v(QObject):
         '''
         if self.m["playthreadActive"] is False:
             return False
-        self.gain = 10**((self.gui.verticalSlider_Gain.value() - self.GAINOFFSET)/20)
+        self.m["gain"] = 10**((self.gui.verticalSlider_Gain.value() - self.GAINOFFSET)/20)
         #print(f"self.gain in cb:  {self.gain}")
-        self.playrec_tworker.set_6(self.gain)   #############TODO TODO TODO
+        self.playrec_tworker.set_6(self.m["gain"])   #############TODO TODO TODO
         #print(self.gain)
         #TODO: display gain value somewhere
 
@@ -973,8 +1057,6 @@ class playrec_v(QObject):
         :rtype: none
         """
         if self.gui.pushButton_Play.isChecked() == True:
-            self.m["ifreq"] = self.m["wavheader"]['centerfreq'] + self.m["LO_offset"]
-            self.m["irate"] = self.m["wavheader"]['nSamplesPerSec']
             if not self.m["fileopened"]:
                 if self.gui.radioButton_LO_bias.isChecked() is True:
                     msg = QMessageBox()
@@ -998,34 +1080,36 @@ class playrec_v(QObject):
                 #if self.cb_open_file() is False: #TODO TODO: check if works equally as before, 
                 # now the quest is for fileopened and not, if open file returned True
                 if self.m["fileopened"] is False:
+                    auxi.standard_errorbox("file must be opened before playing")
+                    #TODO TODO TODO: restore automatic call of fileopen in this case
                     self.reset_playerbuttongroup()
                     #sys_state.set_status(system_state)
                     return False
-                if not self.LO_bias_checkbounds():
+                if not self.playrec_c.LO_bias_checkbounds():
                     self.reset_playerbuttongroup()
                     return False
                 self.gui.lineEdit_LO_bias.setEnabled(False)
                 ######Setze linedit f LO_Bias inaktiv
+            self.m["ifreq"] = self.m["wavheader"]['centerfreq'] + self.m["LO_offset"]
+            self.m["irate"] = self.m["wavheader"]['nSamplesPerSec']
             if not self.playrec_c.checkSTEMLABrates():
                 self.reset_playerbuttongroup()
                 return False
             self.gui.pushButton_Play.setIcon(QIcon("pause_v4.PNG"))
             if self.m["playthreadActive"] == True:
                 self.playrec_tworker.pausestate = False
-            self.play_manager()
-            self.pausestate = False
-            self.stopstate = False
+            self.playrec_c.play_manager()
+            self.m["pausestate"] = False
+            self.m["stopstate"] = False
             self.gui.ScrollBar_playtime.setEnabled(True)
             self.gui.pushButton_adv1byte.setEnabled(True)
         else:
             self.gui.pushButton_Play.setIcon(QIcon("play_v4.PNG"))
-            self.pausestate = True ##TODO CHECK: necessary ? es gibt ja self.playrec_tworker.pausestate
+            self.m["pausestate"] = True ##TODO CHECK: necessary ? es gibt ja self.playrec_tworker.pausestate
             if self.m["playthreadActive"] == True:
                 self.playrec_tworker.pausestate = True
-
         if self.m["errorf"]:
-            auxi.standard_errorbox(self.m["errortxt"])
-            
+            #auxi.standard_errorbox(self.m["errortxt"])
             return False
         else:
             return True
@@ -1040,33 +1124,6 @@ class playrec_v(QObject):
         self.playrec_c.stemlabcontrol.RPShutdown(self.m["sdr_configparams"])
         #TODO TODO TODO: check if it would also be fine to instantiate the stemlabcontrol object only here in the player
         #it is certainly not used in other modules
-
-    def stemlabcontrol_errorhandler(self,errorstring):
-        """handler for error signals from stemlabcontrol class
-            display error in standard errormessagebox
-            NOT YET IMPLEMENTED: reset playerbuttongroup and GUI
-        VIEW
-        :param: errorstring
-        :type: str
-        :raises [none]: [none]
-        :return: none
-        :rtype: none
-        """     
-        auxi.standard_errorbox(errorstring)
-        #self.stemlabcontrol.SigError.connect(self.reset_playerbuttongroup) #TODO TODO TODO: wird bis dato nicht emittiert
-        #self.stemlabcontrol.SigError.connect(self.reset_GUI) #TODO: wird bis dato nicht emittiert
-
-    def display_status(self,messagestring):
-        """handler for message signals from stemlabcontrol class
-            display message in GUI status field, if exists
-        VIEW
-        :param: messaagestring
-        :type: str
-        :raises [none]: [none]
-        :return: none
-        :rtype: none
-        """         
-        #print(f"display status of stemlabcontrol, status = {messagestring}") #TODO: define displaystatus in more elaborate form
 
     def cb_Butt_REC(self):
         """
@@ -1172,11 +1229,12 @@ class playrec_v(QObject):
         :return: True/False on successful/unsuccesful operation
         :rtype: bool
         """ 
-        #self.curtime varies between 0 and system_state["playlength"]
+        #self.m["curtime"] varies between 0 and system_state["playlength"]
+        self.m["timescaler"] = self.m["wavheader"]['nSamplesPerSec']*self.m["wavheader"]['nBlockAlign']
         self.m["playprogress"] = 0
         if self.m["playthreadActive"] is False:
             return False
-        timestr = str(self.m["wavheader"]['starttime_dt'] + ndatetime.timedelta(seconds=self.curtime))
+        timestr = str(self.m["wavheader"]['starttime_dt'] + ndatetime.timedelta(seconds=self.m["curtime"]))
         playlength = self.m["wavheader"]['filesize']/self.m["wavheader"]['nAvgBytesPerSec']
         if increment == 0:
             timestr = str(ndatetime.timedelta(seconds=0))
@@ -1203,7 +1261,7 @@ class playrec_v(QObject):
                     #print(f'increment curtime cond seek cur file open: {system_state["f1"]}')
                     self.prfilehandle = self.playrec_c.playrec_tworker.get_4()
                     self.prfilehandle.seek(int(position), 0) #TODO: Anpassen an andere Fileformate
-        #timestr = str(self.wavheader['starttime_dt'] + ndatetime.timedelta(seconds=self.curtime))
+        #timestr = str(self.wavheader['starttime_dt'] + ndatetime.timedelta(seconds=self.m["curtime"]))
         self.gui.lineEditCurTime.setText(timestr) 
         self.gui.ScrollBar_playtime.setProperty("value", self.m["playprogress"])
         #sys_state.set_status(system_state)

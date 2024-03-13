@@ -63,7 +63,7 @@ import view_spectra as vsp
 import yaml_editor as yed
 import waveditor as waved
 from stemlab_control import StemlabControl
-from playrec import playrec_worker
+#from playrec import playrec_worker
 import playrec
 #import configuration as conf
 
@@ -87,7 +87,7 @@ class statlst_gen_worker(QtCore.QThread):
         self.__slots__[1] = _value
 
     def set_freq(self,_value):
-        self.__slots__[2] = _value
+        self.__slots__[2] = _value#
 
     def set_closed(self,_value):
         self.__slots__[3] = _value                
@@ -645,7 +645,8 @@ class WizardGUI(QMainWindow):
         ### END UI MASTER ####################################
 
         ###EUI TAB ANNOTATE####################################
-        if self.OLD:
+        #if self.OLD:
+        if ('playrec' in sys.modules) is False:
             self.ui.pushButton_Scan.setEnabled(False)
             self.ui.pushButtonAnnotate.setEnabled(False)
             self.ui.pushButton_Scan.clicked.connect(self.autoscan)
@@ -705,7 +706,8 @@ class WizardGUI(QMainWindow):
             ##############transfer done for next 2 lines:
             self.ui.listWidget_playlist.model().rowsInserted.connect(lambda: self.playlist_update()) #TODO transfer to resemplar view
             self.ui.listWidget_playlist.model().rowsRemoved.connect(lambda: self.playlist_update()) #TODO transfer to resemplar view
-
+        else:
+            pass
         ###END UI TAB PLAYER ####################################
 
         #read config file if it exists
@@ -1476,6 +1478,7 @@ class WizardGUI(QMainWindow):
             return False
         system_state = sys_state.get_status()
         self.playthread = QThread()
+        from playrec import playrec_worker
         self.playrec_tworker = playrec_worker(stemlabcontrol)
         self.playrec_tworker.moveToThread(self.playthread)
         self.playrec_tworker.set_0(system_state["f1"])
@@ -2979,7 +2982,6 @@ class WizardGUI(QMainWindow):
 
         if errorf:
             auxi.standard_errorbox(errortxt)
-            
             return False
         else:
             return True
@@ -3488,13 +3490,14 @@ if __name__ == '__main__':
         pass
         #win.ui.tabWidget.setTabVisible('configuration',False)
 
-    if 'playrec' in sys.modules and win.OLD is False:
+    if 'playrec' in sys.modules: #and win.OLD is False:
         playrec_m = playrec.playrec_m()
         playrec_c = playrec.playrec_c(playrec_m)
         playrec_v = playrec.playrec_v(win.ui,playrec_c,playrec_m)
+        tab_dict["list"].append("playrec")
         playrec_v.SigActivateOtherTabs.connect(win.setactivity_tabs)
         playrec_c.SigActivateOtherTabs.connect(win.setactivity_tabs)
-    # else:   TODO: activate after all playrec tests
+    # else:   #TODO: activate after all playrec tests
     #     page = win.ui.tabWidget.findChild(QWidget, "tab_playrec")
     #     c_index = win.ui.tabWidget.indexOf(page)
     #     win.ui.tabWidget.setTabVisible(c_index,False)
@@ -3538,6 +3541,8 @@ if __name__ == '__main__':
     win.SigRelay.emit("cm_all_",["Tabref",win.Tabref])
     win.SigRelay.emit("cm_resample",["rates",system_state["rates"]])
     win.SigRelay.emit("cm_resample",["irate",system_state["irate"]])
+    win.SigRelay.emit("cm_playrec",["rates",system_state["rates"]])
+    win.SigRelay.emit("cm_playrec",["irate",system_state["irate"]])
     win.SigRelay.emit("cm_resample",["reslist_ix",system_state["reslist_ix"]]) #TODO check: maybe local in future !
     win.SigRelay.emit("cm_playrec",["Obj_stemlabcontrol",stemlabcontrol])
     win.SigRelay.emit("cm_configuration",["tablist",tab_dict["list"]])
@@ -3551,7 +3556,7 @@ if __name__ == '__main__':
         #################TODO TEST in resample module: implement next line newly with Relay after tarnsfer of wavedit module 
         #self.gui.fill_wavtable() has already been replaced by Relay
     #
-    # * Player-Modul übertragen: 10h
+    # * Player-Modul Tests und Bugfixing: 3h
     #
     # + Player Modul um Rec ausbauen: 5h
     #
@@ -3567,7 +3572,7 @@ if __name__ == '__main__':
     #
     # * Windows Installer mit https://www.pythonguis.com/tutorials/packaging-pyside6-applications-windows-pyinstaller-installforge/ erstellen
 #
-    # * Configuration Tab with: IP address, tempdir, outdir, LT/UTC, Logging, checkboxes for Tab activation
+    # * Configuration Tab with: IP address, tempdir, outdir, LT/UTC, Logging, (checkboxes for Tab activation): 4h
 
 #
     # Recorder: New impl: worker gets setter/getter structure

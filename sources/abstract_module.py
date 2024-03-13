@@ -5,6 +5,7 @@ from PyQt5.QtCore import *
 from PyQt5 import QtGui
 import logging
 from auxiliaries import auxiliaries as auxi
+import logging
 
 class abstract_module_m(QObject):
     __slots__ = ["None"]
@@ -81,6 +82,7 @@ class abstract_module_v(QObject):
         self.DATABLOCKSIZE = 1024*32
         self.gui = gui #gui_state["gui_reference"]#system_state["gui_reference"]
         self.logger = abstract_module_m.logger
+        self.abstract_module_c.SigRelay.connect(self.rxhandler)
 
     def init_abstractmodule_ui(self):
 
