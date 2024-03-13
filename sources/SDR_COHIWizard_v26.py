@@ -645,25 +645,25 @@ class WizardGUI(QMainWindow):
         ### END UI MASTER ####################################
 
         ###EUI TAB ANNOTATE####################################
+
+        self.ui.pushButton_Scan.setEnabled(False)
+        self.ui.pushButtonAnnotate.setEnabled(False)
+        self.ui.pushButton_Scan.clicked.connect(self.autoscan)
+        self.ui.pushButtonAnnotate.clicked.connect(self.ann_stations) 
+        self.ui.pushButtonDiscard.setEnabled(False)
+        self.ui.pushButtonDiscard.clicked.connect(self.discard_annot_line)
+        self.ui.spinBoxminSNR.valueChanged.connect(self.minSNRupdate) 
+        self.ui.lineEdit.setAlignment(QtCore.Qt.AlignLeft)
+        #self.ui.lineEdit.returnPressed.connect(self.enterlinetoannotation)
+        self.ui.pushButtonENTER.clicked.connect(self.enterlinetoannotation)
+        self.ui.pushButtonENTER.setEnabled(False)
+        #self.ui.pushButton_ScanAnn.clicked.connect(self.listclick_test)
+        self.ui.Annotate_listWidget.itemClicked.connect(self.cb_ListClicked)
+        self.ui.Annotate_listWidget.clear()
+        self.ui.progressBar_2.setProperty("value", 0)
+        ###END UI TAB ANNOTATE ####################################
         #if self.OLD:
         if ('playrec' in sys.modules) is False:
-            self.ui.pushButton_Scan.setEnabled(False)
-            self.ui.pushButtonAnnotate.setEnabled(False)
-            self.ui.pushButton_Scan.clicked.connect(self.autoscan)
-            self.ui.pushButtonAnnotate.clicked.connect(self.ann_stations) 
-            self.ui.pushButtonDiscard.setEnabled(False)
-            self.ui.pushButtonDiscard.clicked.connect(self.discard_annot_line)
-            self.ui.spinBoxminSNR.valueChanged.connect(self.minSNRupdate) 
-            self.ui.lineEdit.setAlignment(QtCore.Qt.AlignLeft)
-            #self.ui.lineEdit.returnPressed.connect(self.enterlinetoannotation)
-            self.ui.pushButtonENTER.clicked.connect(self.enterlinetoannotation)
-            self.ui.pushButtonENTER.setEnabled(False)
-            #self.ui.pushButton_ScanAnn.clicked.connect(self.listclick_test)
-            self.ui.Annotate_listWidget.itemClicked.connect(self.cb_ListClicked)
-            self.ui.Annotate_listWidget.clear()
-            self.ui.progressBar_2.setProperty("value", 0)
-            ###END UI TAB ANNOTATE ####################################
-
             ###UI TAB PLAYER ####################################
             self.ui.pushButton_Shutdown.clicked.connect(self.shutdown)
             self.ui.pushButton_FF.clicked.connect(
