@@ -161,8 +161,11 @@ class StemlabControl(QObject):
         send ssh command string sequence via command string list shcomm
         '''
         count = 0
-        while (count < len(shcomm)):  #TODO REM FIN check list, only diagnostic    
-            self.ssh.exec_command(shcomm[count])
+        while (count < len(shcomm)):  #TODO REM FIN check list, only diagnostic    TODO: rewrite loop more pythonian
+            try:
+                self.ssh.exec_command(shcomm[count])
+            except:
+                print("stemlab control sshsendcommandseq, command cannot be sent")
             count = count + 1
             time.sleep(0.1)
         self.SigMessage.emit("ssh command sent")

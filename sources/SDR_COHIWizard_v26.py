@@ -722,6 +722,13 @@ class WizardGUI(QMainWindow):
             if 'STM_IP_address' in self.metadata.keys():
                 self.ui.lineEdit_IPAddress.setText(self.metadata["STM_IP_address"]) #TODO: Remove after transfer of playrec
                 self.ui.Conf_lineEdit_IPAddress.setText(self.metadata["STM_IP_address"]) #TODO TODO TODO: reorganize and shift to config module
+                ###is being overwritten
+                ###############NOT ACTIVE BECAUSE INSTANCES NOT YET EXISTANT###################
+                self.SigRelay.emit("cm_playrec",["STM_IP_address",self.metadata["STM_IP_address"]])
+                #self.SigRelay.emit("cm_configuration",["STM_IP_address",self.metadata["STM_IP_address"]])
+                #self.SigRelay.emit("cexex_playrec",["updateGUIelements",0])
+                #self.SigRelay.emit("cexex_configuration",["updateGUIelements",0])
+                ################################################################################
         except:
             #return False
 
@@ -733,6 +740,11 @@ class WizardGUI(QMainWindow):
                             "rates": system_state["rates"], "icorr":system_state["icorr"],
                             "HostAddress":system_state["HostAddress"], "LO_offset":system_state["LO_offset"]}
         system_state["sdr_configparams"] = configparams
+        ###TODO TODO TODO: the following relays do not do anything as the modules are not yet instantiated######################
+        # self.SigRelay.emit("cm_playrec",["sdr_configparams",configparams])
+        # self.SigRelay.emit("cm_playrec",["HostAddress",system_state["HostAddress"]])
+        ##################################################################################################################
+
         system_state["_log"] = False
         # TODO: define all other states and transfer to system_state; then restore system state in every method which accesses and/or modifies the state
         if "resampler_module_v5" in sys.modules:
@@ -1019,6 +1031,11 @@ class WizardGUI(QMainWindow):
             self.metadata = yaml.safe_load(stream)
             if 'STM_IP_address' in self.metadata.keys():
                 self.ui.lineEdit_IPAddress.setText(self.metadata["STM_IP_address"]) #TODO: Remove after transfer of playrec
+                self.ui.Conf_lineEdit_IPAddress.setText(self.metadata["STM_IP_address"]) #TODO TODO TODO: reorganize and shift to config module
+                self.SigRelay.emit("cm_playrec",["STM_IP_address",self.metadata["STM_IP_address"]]) #TODO: Remove after transfer of playrec
+                #self.SigRelay.emit("cm_configuration",["STM_IP_address",self.metadata["STM_IP_address"]]) #TODO: Remove after transfer of playrec
+                #self.SigRelay.emit("cexex_playrec",["updateGUIelements",0]) #TODO: Remove after transfer of playrec
+                #self.SigRelay.emit("cexex_configuration",["updateGUIelements",0]) #TODO: Remove after transfer of playrec
             stream.close()
         except:
             #return False
@@ -1673,6 +1690,7 @@ class WizardGUI(QMainWindow):
             self.logger.info("fetch nextfile")
 
         elif self.ui.pushButton_Loop.isChecked() == True:
+            self.ui.pushButton_Loop.checkStateSet
             time.sleep(0.1)
             #("restart same file in endless loop")
             self.logger.debug("restart same file in endless loop")
@@ -2897,6 +2915,7 @@ class WizardGUI(QMainWindow):
             #return False
             #print("cannot get metadata")
         system_state["HostAddress"] = self.ui.lineEdit_IPAddress.text()   ### TODO TODO TODO check if still necesary after transfer to modules playrec and config
+        self.SigRelay.emit("cm_playrec",["HostAddress",system_state["HostAddress"]])
         configparams = {"ifreq":system_state["ifreq"], "irate":system_state["irate"],
                             "rates": system_state["rates"], "icorr":system_state["icorr"],
                             "HostAddress":system_state["HostAddress"], "LO_offset":system_state["LO_offset"]}
@@ -3243,10 +3262,10 @@ class WizardGUI(QMainWindow):
         # TODO: rootpath for config file ! 
         # TODO: append metadata instead of new write
         self.metadata["last_path"] = self.my_dirname
-        self.metadata["STM_IP_address"] = system_state["HostAddress"]
-        stream = open("config_wizard.yaml", "w")
-        yaml.dump(self.metadata, stream)
-        stream.close()
+        self.metadata["STM_IP_address"] = system_state["HostAddress"] # TODO: reorganize
+        stream = open("config_wizard.yaml", "w") # TODO: reorganize
+        yaml.dump(self.metadata, stream) # TODO: reorganize
+        stream.close() # TODO: reorganize
 
         system_state["timescaler"] = self.wavheader['nSamplesPerSec']*self.wavheader['nBlockAlign']
         self.stations_filename = self.annotationpath + '/stations_list.yaml'
@@ -3536,6 +3555,7 @@ if __name__ == '__main__':
     sys_state.set_status(system_state)
     ###################CHECK IF STILL NECESSARY END ###########################
 
+    #TODO TODO TODO: shift all that to a tab initialization method in core module
     win.SigRelay.emit("cm_all_",["emergency_stop",False])
     win.SigRelay.emit("cm_all_",["fileopened",False])
     win.SigRelay.emit("cm_all_",["Tabref",win.Tabref])
@@ -3547,6 +3567,8 @@ if __name__ == '__main__':
     win.SigRelay.emit("cm_playrec",["Obj_stemlabcontrol",stemlabcontrol])
     win.SigRelay.emit("cm_configuration",["tablist",tab_dict["list"]])
     win.SigRelay.emit("cexex_configuration",["updateGUIelements",0])
+    win.SigRelay.emit("cm_playrec",["sdr_configparams",system_state["sdr_configparams"]])
+    win.SigRelay.emit("cm_playrec",["HostAddress",system_state["HostAddress"]])
     sys.exit(app.exec_())
 
 #TODOs:

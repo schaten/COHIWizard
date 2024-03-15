@@ -429,7 +429,11 @@ class playrec_c(QObject):
             self.stemlabcontrol.sdrserverstart(self.m["sdr_configparams"])
             self.logger.info(f'play_manager configparams: {self.m["sdr_configparams"]}')
             #sys_state.set_status(system_state)
-            if self.stemlabcontrol.config_socket(self.m["sdr_configparams"]):
+            configparams = {"ifreq":self.m["ifreq"], "irate":self.m["irate"],
+                    "rates": self.m["rates"], "icorr":self.m["icorr"],
+                    "HostAddress":self.m["HostAddress"], "LO_offset":self.m["LO_offset"]}
+            #self.m["sdr_configparams"]
+            if self.stemlabcontrol.config_socket(configparams):
                 self.logger.info("playthread now activated in play_manager")
                 self.play_tstarter()
             else:
@@ -478,6 +482,7 @@ class playrec_c(QObject):
             return False
         #system_state = sys_state.get_status()
         self.m["timescaler"] = self.m["wavheader"]['nSamplesPerSec']*self.m["wavheader"]['nBlockAlign']
+        self.m["playlength"] = self.m["wavheader"]['filesize']/self.m["wavheader"]['nAvgBytesPerSec']
         self.playthread = QThread()
         self.playrec_tworker = playrec_worker(self.stemlabcontrol)
         self.playrec_tworker.moveToThread(self.playthread)
@@ -551,7 +556,7 @@ class playrec_c(QObject):
             self.logger.info("EOF-manager: player has been stopped")
             time.sleep(0.5)
             return
-        if (os.path.isfile(self.m["my_dirname"] + '/' + self.m["wavheader"]['nextfilename']) == True and self.wavheader['nextfilename'] != "" ):
+        if (os.path.isfile(self.m["my_dirname"] + '/' + self.m["wavheader"]['nextfilename']) == True and self.m["wavheader"]['nextfilename'] != "" ):
             # play next file in nextfile-list
             self.m["f1"] = self.m["my_dirname"] + '/' + self.m["wavheader"]['nextfilename']
             self.SigRelay.emit("cm_all_",["f1",self.m["my_dirname"] + '/' + self.m["wavheader"]['nextfilename']])
@@ -589,14 +594,14 @@ class playrec_c(QObject):
                 self.m["playthreadActive"] = False
                 #print(f"EOF manager: playlist index: {system_state['playlist_ix']}")
                 self.logger.debug("EOF manager: playlist index: %i", self.m['playlist_ix'])
-                lw = self.m["playlist"] #ODO: simplify by replacing lw below
+                #lw = self.m["playlist"] #ODO: simplify by replacing lw below
                 self.logger.info("fetch next list file")
                 item_valid = False
                 while (not item_valid) and (self.m["playlist_ix"] < self.m["playlist_len"]):
-                    item = lw.item(self.m["playlist_ix"])
-                    self.m["f1"] = self.m["my_dirname"] + '/' + item.text() #TODO replace by line below
-                    self.SigRelay.emit("cm_all_",["f1",self.my_dirname + '/' + item.text()])
-                    self.SigRelay.emit("cm_all_",["my_filename",self.my_filename])
+                    item = self.m["playlist"][self.m["playlist_ix"]]
+                    self.m["f1"] = self.m["my_dirname"] + '/' + item #TODO replace by line below
+                    self.SigRelay.emit("cm_all_",["f1",self.m["my_dirname"] + '/' + item])
+                    #self.SigRelay.emit("cm_all_",["my_filename",self.m["my_filename"]])
                     self.logger.info("EOF manager file: %s", self.m["f1"])
                     self.m["wavheader"] = WAVheader_tools.get_sdruno_header(self,self.m["f1"])
                     item_valid = True
@@ -614,25 +619,38 @@ class playrec_c(QObject):
                     self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
                     self.cb_Butt_STOP()
                     #########################################----> view
-        
+                    self.SigRelay.emit("cexex_playrec",["reset_GUI",0])
+                    self.SigRelay.emit("cexex_playrec",["reset_playerbuttongoup",0])
                     #self.gui.listWidget_playlist.clear()
-                    self.SigRelay.emit("cm_playrec",["reset_GUI",0])
+                    self.SigRelay.emit("cexex_playrec",["reset_GUI",0])
                     #self.gui.listWidget_sourcelist.clear()
                     #sys_state.set_status(system_state)
                     return()
-                
+                if self.m["wavheader"]['sdrtype_chckID'].find('rcvr') > -1:
+                    self.m["readoffset"] = 86
+                else:
+                    self.m["readoffset"] = 216
                 self.m["playlist_ix"] += 1                #TODO: self.m Eintragung von icorr etc erfolgt an mehreren STellen, fileopen, extract dat header und hier. Könnte an einer Stelle passieren, immer, sobald ein wav-header extrahiert wird
                 self.m["ifreq"] = self.m["wavheader"]['centerfreq'] + self.m["LO_offset"]
                 self.m["irate"] = self.m["wavheader"]['nSamplesPerSec']
                 self.m["icorr"] = 0
-                self.m["readoffset"] = self.readoffset
                 self.m["timescaler"] = self.m["wavheader"]['nSamplesPerSec']*self.m["wavheader"]['nBlockAlign']
                 #print(f'EOF manager new wavheader: {self.wavheader["nSamplesPerSec"]}')
                 self.logger.debug("EOF manager new wavheader: %i", self.m["wavheader"]["nSamplesPerSec"])
                 #TODO: write new header to wav edior
                 #sys_state.set_status(system_state)
                 time.sleep(0.1)
-                self.showfilename()
+                
+                #TODO TODO TODO: remove the following after change to all new modules and Relay
+                #self.my_dirname = os.path.dirname(system_state["f1"])
+                #self.my_filename, self.ext = os.path.splitext(os.path.basename(system_state["f1"]))
+                #self.gui.label_Filename_Annotate.setText(self.my_filename + self.ext)
+                #self.ui.label_Filename_WAVHeader.setText(self.my_filename + self.ext)
+                self.m["my_filename"], self.m["ext"] = os.path.splitext(os.path.basename(self.m["f1"]))
+                self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
+                
+
+                #self.showfilename()
                 if not self.m["TEST"]:
                     self.stemlabcontrol.sdrserverstop()
                     self.logger.info("EOF manager start play_manager")
@@ -652,9 +670,11 @@ class playrec_c(QObject):
                 #self.updatecurtime(0)
                 self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
 
+
                 #########################################----> view
                 self.cb_Butt_STOP()
-
+                self.SigRelay.emit("cexex_playrec",["reset_GUI",0])
+                self.SigRelay.emit("cexex_playrec",["reset_playerbuttongoup",0])
                 #########################################----> view
                 # self.gui.listWidget_playlist.clear()
                 # self.gui.listWidget_sourcelist.clear()
@@ -726,10 +746,8 @@ class playrec_c(QObject):
         # TODO: not yet safe, because increment may happen beyond EOF, check for EOF
                 
 
-    def jump_to_position(self):
+    def jump_to_position_c(self):
         """
-        VIEW 
-
         :param : none
         :type : none
         '''
@@ -742,7 +760,7 @@ class playrec_c(QObject):
         self.logger.debug("jumptoposition reached")
         #system_state = sys_state.get_status()
         ####################################################################
-        #sbposition = self.ui.ScrollBar_playtime.value() #TODO: already in updatecurtime(...)
+        #sbposition = self.ui.ScrollBar_playtime.value() #TODO: already in updatecurtime(...)        
         #ERSETZE DURCH: ####################################################
         sbposition = self.m["playprogress"]
         ####################################################################
@@ -757,16 +775,12 @@ class playrec_c(QObject):
         position = min(max(216, position_raw-position_raw % self.m["wavheader"]['nBlockAlign']),
                             self.m["wavheader"]['data_nChunkSize']+216) # guarantee reading from integer multiples of 4 bytes, TODO: change '4', '216' to any wav format ! 
         if self.m["fileopened"] is True:
-            #print("Jump to next position")
             self.logger.debug("jumptoposition reached")
-            #print(f'system_state["fileopened"]: {system_state["fileopened"]}')
             self.logger.debug("system_state['fileopened']: %s",self.m["fileopened"])
             self.prfilehandle = self.playrec_tworker.get_4()
             self.prfilehandle.seek(int(position), 0) #TODO: Anpassen an andere Fileformate
         #calculate corresponding position in the record file; value = 216 : 1000
         #jump to the targeted position with integer multiple of wavheader["nBitsPerSample"]/4
-        #sys_state.set_status(system_state)
-
 
     def LO_bias_checkbounds(self):
         """ Purpose: checks if LO bias setting is within valid bounds; 
@@ -828,8 +842,8 @@ class playrec_v(QObject):
     def init_playrec_ui(self):
         self.gui.pushButton_Loop.setChecked(False)
         self.gui.pushButton_Loop.clicked.connect(self.Buttloopmanager)
-        self.gui.listWidget_playlist.model().rowsInserted.connect(lambda: self.playlist_update())
-        self.gui.listWidget_playlist.model().rowsRemoved.connect(lambda: self.playlist_update()) 
+        #self.gui.listWidget_playlist.model().rowsInserted.connect(self.playlist_update)
+        #self.gui.listWidget_playlist.model().rowsRemoved.connect(self.playlist_update) 
 
         self.gui.pushButton_Shutdown.clicked.connect(self.shutdown)
         self.gui.pushButton_FF.clicked.connect(
@@ -840,7 +854,7 @@ class playrec_v(QObject):
                     lambda: self.playrec_c.jump_1_byte())          ########### INACTIVATE if 1 byte correction should be disabled
         self.gui.pushButton_adv1byte.setEnabled(False)  #TODO: rename: manual tracking
         self.gui.verticalSlider_Gain.valueChanged.connect(self.cb_setgain)
-        self.gui.ScrollBar_playtime.sliderReleased.connect(self.playrec_c.jump_to_position)
+        self.gui.ScrollBar_playtime.sliderReleased.connect(self.jump_to_position)
         self.gui.lineEdit_LO_bias.setFont(QFont('arial',12))
         self.gui.lineEdit_LO_bias.setEnabled(True)
         self.gui.lineEdit_LO_bias.setText("0000")
@@ -861,13 +875,24 @@ class playrec_v(QObject):
         #                                                          self.addrValue.setValidator(QRegExpValidator(rx, self.addrValue))
         #pushButton->setIcon(QIcon(":/on.png"));
         self.gui.pushButton_IP.clicked.connect(self.editHostAddress) #TODO: Remove after transfer
-        self.gui.lineEdit_IPAddress.returnPressed.connect(self.set_IP) #TODO: Remove after transfer
+        #self.gui.lineEdit_IPAddress.returnPressed.connect(self.set_IP) #TODO: Remove after transfer
         self.gui.listWidget_playlist.setEnabled(False)
         self.gui.listWidget_sourcelist.setEnabled(False)
         self.gui.ScrollBar_playtime.setEnabled(False)
+        ###########TODO TODO TODO: remove after transfer to config Tab
+        try:
+            stream = open("config_wizard.yaml", "r")
+            self.metadata = yaml.safe_load(stream)
+            stream.close()
+            self.ismetadata = True
+            if 'STM_IP_address' in self.metadata.keys():
+                self.gui.lineEdit_IPAddress.setText(self.metadata["STM_IP_address"]) #TODO: Remove after transfer of playrec
+        except:
+            pass
+
 
     def Buttloopmanager(self):
-        if self.gui.pushButton_Loop.isChecked == True:
+        if self.gui.pushButton_Loop.isChecked() == True:
             self.m["Buttloop_pressed"] = True
         else:
             self.m["Buttloop_pressed"] = False
@@ -885,6 +910,8 @@ class playrec_v(QObject):
         print("playrec: updateGUIelements")
         self.gui.checkBox_UTC.clicked.connect(self.toggleUTC)
         self.gui.checkBox_TESTMODE.clicked.connect(self.toggleTEST)
+        self.gui.lineEdit_IPAddress.setText(self.m["STM_IP_address"])
+        self.gui.label_Filename_Player.setText(self.m["my_filename"] + self.m["ext"])
 
     def update_GUI(self,_key): #TODO TODO: is this method still needed ? reorganize. gui-calls should be avoided, better only signalling and gui must call the routenes itself
         print(" view spectra updateGUI: new updateGUI in view spectra module reached")
@@ -901,7 +928,7 @@ class playrec_v(QObject):
     def reset_GUI(self):
         self.gui.listWidget_playlist.clear()
         self.gui.listWidget_sourcelist.clear()
-
+        self.gui.label_Filename_Player.setText("")
 
     def rxhandler(self,_key,_value):
         """
@@ -937,6 +964,9 @@ class playrec_v(QObject):
             if  _value[0].find("showRFdata") == 0:
                 self.showRFdata()
 
+    def jump_to_position(self):
+        self.m["playprogress"] = self.gui.ScrollBar_playtime.value()
+        self.playrec_c.jump_to_position_c()
 
     def toggleUTC(self):
         if self.gui.checkBox_UTC.isChecked():
@@ -975,20 +1005,20 @@ class playrec_v(QObject):
         :return: none
         :rtype: none
         """
-        #print("playlist updated")  
+        #print("playlist updated")
+
         self.logger.info("playlist_update: playlist updated")
-        
-        time.sleep(1)
+        time.sleep(0.001)
         #system_state = sys_state.get_status()
         #get all items of playlist Widget and write them to system_state["playlist"]
         lw = self.gui.listWidget_playlist
         # let lw haven elements in it.
         self.m["playlist"] = []
-        for x in range(lw.count()-1):
+        for x in range(lw.count()):
             item = lw.item(x)
             #playlist.append(lw.item(x))
             self.m["playlist"].append(item.text())
-        self.m["playlist"] = self.m["playlist"]
+        #self.m["playlist"] = self.m["playlist"]
         self.m["playlist_len"] = self.gui.listWidget_playlist.count()
         #self.SigRelay.emit("cm_playrec",["playlist",self.m["playlist"]])
 
@@ -1001,7 +1031,7 @@ class playrec_v(QObject):
             return False
         self.m["gain"] = 10**((self.gui.verticalSlider_Gain.value() - self.GAINOFFSET)/20)
         #print(f"self.gain in cb:  {self.gain}")
-        self.playrec_tworker.set_6(self.m["gain"])   #############TODO TODO TODO
+        self.playrec_c.playrec_tworker.set_6(self.m["gain"])   #############TODO TODO TODO
         #print(self.gain)
         #TODO: display gain value somewhere
 
@@ -1056,6 +1086,7 @@ class playrec_v(QObject):
         :return: none
         :rtype: none
         """
+        self.playlist_update()
         if self.gui.pushButton_Play.isChecked() == True:
             if not self.m["fileopened"]:
                 if self.gui.radioButton_LO_bias.isChecked() is True:
@@ -1097,7 +1128,7 @@ class playrec_v(QObject):
                 return False
             self.gui.pushButton_Play.setIcon(QIcon("pause_v4.PNG"))
             if self.m["playthreadActive"] == True:
-                self.playrec_tworker.pausestate = False
+                self.playrec_c.playrec_tworker.pausestate = False
             self.playrec_c.play_manager()
             self.m["pausestate"] = False
             self.m["stopstate"] = False
@@ -1105,9 +1136,9 @@ class playrec_v(QObject):
             self.gui.pushButton_adv1byte.setEnabled(True)
         else:
             self.gui.pushButton_Play.setIcon(QIcon("play_v4.PNG"))
-            self.m["pausestate"] = True ##TODO CHECK: necessary ? es gibt ja self.playrec_tworker.pausestate
+            self.m["pausestate"] = True ##TODO CHECK: necessary ? es gibt ja self.playrec_c.playrec_tworker.pausestate
             if self.m["playthreadActive"] == True:
-                self.playrec_tworker.pausestate = True
+                self.playrec_c.playrec_tworker.pausestate = True
         if self.m["errorf"]:
             #auxi.standard_errorbox(self.m["errortxt"])
             return False
@@ -1119,7 +1150,7 @@ class playrec_v(QObject):
         Returns: nothing
         '''
         #system_state = sys_state.get_status()
-        self.cb_Butt_STOP()
+        self.playrec_c.cb_Butt_STOP()
         self.timertick.stoptick()
         self.playrec_c.stemlabcontrol.RPShutdown(self.m["sdr_configparams"])
         #TODO TODO TODO: check if it would also be fine to instantiate the stemlabcontrol object only here in the player
@@ -1339,11 +1370,11 @@ class playrec_v(QObject):
         activate Host IP address field and enable saving mode
         Returns: nothing
         '''
-        self.gui.Conf_lineEdit_IPAddress.setEnabled(True)
-        self.gui.Conf_lineEdit_IPAddress.setReadOnly(False)
-        self.gui.Conf_pushButton_IP.clicked.connect(self.set_IP)
-        self.gui.Conf_pushButton_IP.setText("save IP Address")
-        self.gui.Conf_pushButton_IP.adjustSize()
+        self.gui.lineEdit_IPAddress.setEnabled(True)
+        self.gui.lineEdit_IPAddress.setReadOnly(False)
+        self.gui.pushButton_IP.clicked.connect(self.set_IP)
+        self.gui.pushButton_IP.setText("save IP Address")
+        self.gui.pushButton_IP.adjustSize()
         self.IP_address_set = False
 
     def set_IP(self):
@@ -1361,7 +1392,7 @@ class playrec_v(QObject):
         """
         #system_state = sys_state.get_status()
         #self.HostAddress = self.gui.Conf_lineEdit_IPAddress.text()
-        self.m["HostAddress"] = self.gui.Conf_lineEdit_IPAddress.text()
+        self.m["HostAddress"] = self.gui.lineEdit_IPAddress.text()
         #print("IP address read")
         try:
             stream = open("config_wizard.yaml", "r")
@@ -1375,10 +1406,10 @@ class playrec_v(QObject):
         stream = open("config_wizard.yaml", "w")
         yaml.dump(self.metadata, stream)
 
-        self.gui.Conf_lineEdit_IPAddress.setReadOnly(True)
-        self.gui.Conf_lineEdit_IPAddress.setEnabled(False)
-        self.gui.Conf_pushButton_IP.clicked.connect(self.editHostAddress)
-        self.gui.Conf_pushButton_IP.setText("Set IP Address")
-        self.gui.Conf_pushButton_IP.adjustSize()
+        self.gui.lineEdit_IPAddress.setReadOnly(True)
+        self.gui.lineEdit_IPAddress.setEnabled(False)
+        self.gui.pushButton_IP.clicked.connect(self.editHostAddress)
+        self.gui.pushButton_IP.setText("Set IP Address")
+        self.gui.pushButton_IP.adjustSize()
         self.SigRelay.emit("cm_xcore",["HostAddress",self.m["HostAddress"]])
         #sys_state.set_status(system_state)
