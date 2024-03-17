@@ -72,8 +72,8 @@ class  yamleditor_v(QObject):
     """
     __slots__ = ["viewvars"]
 
-    SigAny = pyqtSignal()
-    SigUpdateGUI = pyqtSignal(object)
+    #SigAny = pyqtSignal() #TODO: remove after tests
+    #SigUpdateGUI = pyqtSignal(object) #TODO: remove after tests
     SigSyncGUIUpdatelist = pyqtSignal(object)
     SigRelay = pyqtSignal(str,object)
     

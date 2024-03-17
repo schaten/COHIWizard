@@ -43,6 +43,7 @@ class resample_m(QObject):
         self.mdl["sample"] = 0
         self.mdl["my_filename"] = ""
         self.mdl["ext"] = ""
+        self.mdl["fileopened"] = False
         # Create a custom logger
         logging.getLogger().setLevel(logging.DEBUG)
         # Erstelle einen Logger mit dem Modul- oder Skriptnamen
@@ -609,7 +610,7 @@ class resample_c(QObject):
     the state machine is defined via the scheduler method which needs to be configured and launched via a signal from the main thread (here the main GUI)
     """
     __slots__ = ["LOvars"]
-    SigUpdateGUI = pyqtSignal(str)
+    #SigUpdateGUI = pyqtSignal(str)
     SigGP = pyqtSignal()
     SigResample = pyqtSignal()
     SigAccomplish = pyqtSignal()
@@ -621,7 +622,7 @@ class resample_c(QObject):
     SigResampGUIReset = pyqtSignal()
     SigActivateOtherTabs = pyqtSignal(str,str,object)
     #SigSyncTabs = pyqtSignal(object)
-    SigUpdateGUI = pyqtSignal()
+    #SigUpdateGUI = pyqtSignal()
     SigUpdateGUIelements = pyqtSignal()
     SigDisconnectExternalMethods = pyqtSignal(str)
     SigConnectExternalMethods = pyqtSignal(str)
@@ -1501,7 +1502,7 @@ class resample_v(QObject):
     SigAny = pyqtSignal()
     SigUpdateList = pyqtSignal()
     SigCancel = pyqtSignal()
-    SigUpdateGUI = pyqtSignal(object)
+    #SigUpdateGUI = pyqtSignal(object)
     #SigSyncTabs = pyqtSignal(object)
     SigActivateOtherTabs = pyqtSignal(str,str,object)
     SigUpdateOtherGUIs = pyqtSignal()
@@ -1552,7 +1553,7 @@ class resample_v(QObject):
         #self.sys_state.set_status(system_state)
         self.DATABLOCKSIZE = 1024*32
         self.gui.pushButton_resample_cancel.clicked.connect(self.resample_c.cancel_resampling) #TODO: shift to a resample.view method
-        self.resample_c.SigUpdateGUI.connect(self.update_GUI)
+        #self.resample_c.SigUpdateGUI.connect(self.update_GUI)
         self.resample_c.SigResampGUIReset.connect(self.reset_resamp_GUI_elemets)
         self.resample_c.SigUpdateGUIelements.connect(self.updateGUIelements)
 
@@ -1576,12 +1577,12 @@ class resample_v(QObject):
         schedule_objdict["signal"]["resample"] = resample_c.SigResample
         schedule_objdict["signal"]["accomplish"] = resample_c.SigAccomplish
         schedule_objdict["signal"]["LOshift"] = resample_c.SigLOshift
-        schedule_objdict["signal"]["updateGUI"] = resample_c.SigUpdateGUI
+        #schedule_objdict["signal"]["updateGUI"] = resample_c.SigUpdateGUI
         schedule_objdict["connect"] = {}
         schedule_objdict["connect"]["resample"] = resample_c.resample
         schedule_objdict["connect"]["accomplish"] = resample_c.accomplish_resampling
         schedule_objdict["connect"]["LOshift"] = resample_c.LOshifter_new
-        schedule_objdict["connect"]["updateGUI"] = self.update_GUI
+        #schedule_objdict["connect"]["updateGUI"] = self.update_GUI
         schedule_objdict["signal"]["cancel"] = self.SigCancel
         self.m["schedule_objdict"] = schedule_objdict
         self.updateGUIelements()
@@ -1631,11 +1632,13 @@ class resample_v(QObject):
             self.m[_value[0]] = _value[1]
         if _key.find("cui_resample") == 0:
             _value[0](_value[1])   #TODO TODO: still unclear implementation
-        if _key.find("cexex_resample") == 0  or _key.find("cm_all_") == 0:
+        if _key.find("cexex_resample") == 0  or _key.find("cexex_all_") == 0:
             # if  _value[0].find("plot_spectrum") == 0:
             #     self.plot_spectrum(0,_value[1])
             if  _value[0].find("updateGUIelements") == 0:
                 self.updateGUIelements()    
+            if  _value[0].find("reset_GUI") == 0:
+                self.reset_GUI()
 
 
     def reformat_targetLOpalette(self): #TODO: check, if this stays part of gui or should be shifted to resampler module
@@ -1718,6 +1721,9 @@ class resample_v(QObject):
         self.m["clearlist"] = False
         #updateprogress_resampling
         self.updateprogress_resampling()
+        self.gui.label_Filename_resample.setText(self.m["my_filename"] + self.m["ext"])
+        #TODO TODO TODO: update plot spectrum
+        self.plot_spectrum_resample(0)
 
     def reset_GUI(self):
         """
@@ -1739,6 +1745,9 @@ class resample_v(QObject):
         self.m["Tabref"]["Resample"]["canvas"].draw()
         self.gui.label_Filename_resample.setText("")
         self.m["res_blinkstate"] = False
+        self.gui.listWidget_playlist_2.clear()
+        self.gui.listWidget_sourcelist_2.clear()
+
 
     def set_viewvars(self,_value):
         self.__slots__[0] = _value
@@ -1747,25 +1756,25 @@ class resample_v(QObject):
         return(self.__slots__[0])
 
 
-    def update_GUI(self,_key): #TODO TODO: is this method still needed ? reorganize. gui-calls should be avoided, better only signalling and gui must call the routenes itself
-        #print(" res_updateGUI: new updateGUI in resampler module reached")
-        self.logger.debug(" res_updateGUI: new updateGUI in resampler module reached")
-        self.SigUpdateGUI.disconnect(self.update_GUI)
-        if _key.find("reset") == 0:
-            #print("resampler reset all checked elements")
-            self.logger.debug("resampler reset all checked elements")
-            self.reset_resamp_GUI_elemets()
-            self.gui.lineEdit_resample_targetnameprefix.setEnabled(True) #TODO: shift to a resample.view method        
-        if _key.find("terminate") == 0:
-            #print("termination GUI update not yet defined")
-            self.logger.debug("termination GUI update not yet defined")
-        if _key.find("ext_update") == 0:
-            #update resampler gui with all elements
-            #TODO: fetch model values and re-fill all tab fields
-            pass
-        #other key possible: "none"
-        time.sleep(1)
-        self.SigUpdateGUI.connect(self.update_GUI)
+    # def update_GUI(self,_key): #TODO TODO: is this method still needed ? reorganize. gui-calls should be avoided, better only signalling and gui must call the routenes itself
+    #     #print(" res_updateGUI: new updateGUI in resampler module reached")
+    #     self.logger.debug(" res_updateGUI: new updateGUI in resampler module reached")
+    #     self.SigUpdateGUI.disconnect(self.update_GUI)
+    #     if _key.find("reset") == 0:
+    #         #print("resampler reset all checked elements")
+    #         self.logger.debug("resampler reset all checked elements")
+    #         self.reset_resamp_GUI_elemets()
+    #         self.gui.lineEdit_resample_targetnameprefix.setEnabled(True) #TODO: shift to a resample.view method        
+    #     if _key.find("terminate") == 0:
+    #         #print("termination GUI update not yet defined")
+    #         self.logger.debug("termination GUI update not yet defined")
+    #     if _key.find("ext_update") == 0:
+    #         #update resampler gui with all elements
+    #         #TODO: fetch model values and re-fill all tab fields
+    #         pass
+    #     #other key possible: "none"
+    #     time.sleep(1)
+    #     self.SigUpdateGUI.connect(self.update_GUI)
 
     def reslist_update(self): #TODO: list is only updated up to the just before list change dragged item,
         """
@@ -2494,6 +2503,7 @@ class resample_v(QObject):
                 #self.SigSyncTabs.emit(["dum", "resample", "a", "fileopened", False])
                 self.SigRelay.emit("cm_all_",["fileopened", self.m["fileopened"]])
                 self.SigUpdateOtherGUIs.emit()
+                self.SigActivateOtherTabs.emit("Resample","activate",[])
                 self.gui.listWidget_playlist_2.itemChanged.connect(self.reslist_update)
                 if not self.gui.checkBox_AutoMerge2G.isChecked():
                     self.reset_GUI()
@@ -2534,7 +2544,8 @@ class resample_v(QObject):
             print("resampling of rcvr and dat format not yet fully tested, may be problematic")
             #TODO: untersuchen, wie rcvr hier zu machen ist; an sich sollte das kein Problem sein, da ja der wavheader ohnehin bereits auf auxi umgeschrieben ist
             #return False          
-        self.SigActivateOtherTabs.emit("Resample","inactivate",["View spectra"]) #TODO: necessary ? has been done at the beginning already
+        #self.SigActivateOtherTabs.emit("Resample","inactivate",["View spectra"]) #TODO: necessary ? has been done at the beginning already
+        
         time.sleep(0.01)
 
             ####TODO CHECK !!!!!!!!!!!!!!!!!!!!! filesize wird hier falsch ermittelt, wenn rcvr files o.ä.

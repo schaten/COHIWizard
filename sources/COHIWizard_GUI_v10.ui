@@ -2203,6 +2203,10 @@
            <property name="text">
             <string/>
            </property>
+           <property name="icon">
+            <iconset>
+             <normaloff>Trackingicon.png</normaloff>Trackingicon.png</iconset>
+           </property>
            <property name="iconSize">
             <size>
              <width>40</width>

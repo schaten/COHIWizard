@@ -13,6 +13,7 @@ import os
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
+from PyQt5 import QtGui
 from scipy import signal as sig
 import yaml
 from auxiliaries import auxiliaries as auxi
@@ -289,26 +290,21 @@ class playrec_m(QObject):
         self.mdl["timechanged"] = False
         # Create a custom logger
         logging.getLogger().setLevel(logging.DEBUG)
-        # Erstelle einen Logger mit dem Modul- oder Skriptnamen
         self.logger = logging.getLogger(__name__)
         # Create handlers
         warning_handler = logging.StreamHandler()
         debug_handler = logging.FileHandler("system_log.log")
         warning_handler.setLevel(logging.WARNING)
         debug_handler.setLevel(logging.DEBUG)
-
         # Create formatters and add it to handlers
         warning_format = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
         debug_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         warning_handler.setFormatter(warning_format)
         debug_handler.setFormatter(debug_format)
-
         # Add handlers to the logger
         self.logger.addHandler(warning_handler)
         self.logger.addHandler(debug_handler)
-
         self.logger.debug('Init logger in playrec  reached')
-
 
 class playrec_c(QObject):
     """_view method
@@ -325,12 +321,11 @@ class playrec_c(QObject):
 
     # def __init__(self, *args, **kwargs): #TEST 09-01-2024
     #     super().__init__(*args, **kwargs)
-        viewvars = {}
         self.m = playrec_m.mdl
         self.stemlabcontrol = StemlabControl()
         self.m["playlist_ix"] = 0
         self.logger = playrec_m.logger
-
+        #self.SigRelay.connect()
 
     def checkSTEMLABrates(self):        # TODO: this is ratrer a controller method than a GUI method. Transfer to other module
         """
@@ -347,7 +342,6 @@ class playrec_c(QObject):
         """
         #system_state = sys_state.get_status()
         self.m["errorf"] = False
-        #check: has been done on 13-12-2023 TODO: replace ifreq by system_state["ifreq"]
         if self.m["ifreq"] < 0 or self.m["ifreq"] > 62500000:
             self.m["errorf"] = True
             errortxt = "center frequency not in range (0 - 62500000) \
@@ -367,8 +361,7 @@ class playrec_c(QObject):
                       Probably not a COHIRADIA File "
             
         if self.m["errorf"]:
-            auxi.standard_errorbox(errortxt)
-            
+            auxi.standard_errorbox(errortxt)            
             return False
         else:
             return True
@@ -385,10 +378,8 @@ class playrec_c(QObject):
         :rtype: none
         """     
         auxi.standard_errorbox(errorstring)
-        #self.stemlabcontrol.SigError.connect(self.reset_playerbuttongroup) #TODO TODO TODO: wird bis dato nicht emittiert
-        #self.stemlabcontrol.SigError.connect(self.reset_GUI) #TODO: wird bis dato nicht emittiert
 
-    def display_status(self,messagestring):
+    def display_status(self,messagestring): ##TODO TODO TODO: seems not to be used anywhere
         """handler for message signals from stemlabcontrol class
             display message in GUI status field, if exists
         VIEW
@@ -412,13 +403,11 @@ class playrec_c(QObject):
                  True if player can be started successfully
         :rtype: Boolean
         """        
-        #system_state = sys_state.get_status()
         if self.m["playthreadActive"] is True:
             self.logger.debug("playthread is active, no action")
             return False
-        #self.updatecurtime(0) #TODO: true datetime from record
         self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
-        if self.m["f1"] == "": #TODO: replace by line below
+        if self.m["f1"] == "":
             return False
         self.stemlabcontrol.SigError.connect(self.stemlabcontrol_errorhandler) #TODO: is that needed ????
         self.stemlabcontrol.SigMessage.connect(self.display_status) #TODO: is that needed ????
@@ -426,31 +415,28 @@ class playrec_c(QObject):
         self.m["modality"] = "play"
         # start server unless already started
         if self.m["TEST"] is False:
-            self.stemlabcontrol.sdrserverstart(self.m["sdr_configparams"])
+            if self.stemlabcontrol.sdrserverstart(self.m["sdr_configparams"]) is False:
+                self.SigRelay.emit("cexex_playrec",["reset_GUI",0]) #TODO remove after tests
+                self.SigRelay.emit("cexex_playrec",["reset_playerbuttongoup",0])
+                return False
             self.logger.info(f'play_manager configparams: {self.m["sdr_configparams"]}')
-            #sys_state.set_status(system_state)
             configparams = {"ifreq":self.m["ifreq"], "irate":self.m["irate"],
                     "rates": self.m["rates"], "icorr":self.m["icorr"],
                     "HostAddress":self.m["HostAddress"], "LO_offset":self.m["LO_offset"]}
-            #self.m["sdr_configparams"]
             if self.stemlabcontrol.config_socket(configparams):
                 self.logger.info("playthread now activated in play_manager")
                 self.play_tstarter()
             else:
-                #sys_state.set_status(system_state)
                 return False
         else:
             if self.play_tstarter() is False:
-                #sys_state.set_status(system_state)
                 return False
         #TODO: activateself.gui.label_RECORDING.setStyleSheet(('background-color: \
         #                                     rgb(46,210,17)'))
         #TODO: activateself.gui.label_RECORDING.setText("PLAY")
         #TODO: activateself.gui.indicator_Stop.setStyleSheet('background-color: rgb(234,234,234)')
         #TODO: activate.gui.pushButton_Rec.setEnabled(False)
-            #print("stemlabcontrols activated")
             self.logger.info("stemlabcontrols activated")
-        #sys_state.set_status(system_state)
         return True
         
     def play_tstarter(self):  # TODO: Argument (self, modality), modality= "recording", "play", move to module cplayrec controller
@@ -480,7 +466,6 @@ class playrec_c(QObject):
         else:
             auxi.standard_errorbox("dataformat not supported, only 16, 24 and 32 bits per sample are possible")
             return False
-        #system_state = sys_state.get_status()
         self.m["timescaler"] = self.m["wavheader"]['nSamplesPerSec']*self.m["wavheader"]['nBlockAlign']
         self.m["playlength"] = self.m["wavheader"]['filesize']/self.m["wavheader"]['nAvgBytesPerSec']
         self.playthread = QThread()
@@ -523,11 +508,9 @@ class playrec_c(QObject):
             self.SigActivateOtherTabs.emit("Player","inactivate",[])
             self.logger.info("playthread started in playthread_threadstarter = play_tstarter() (threadstarter)")
             # TODO replace playthreadflag by not self.playthread.isFinished()
-            #sys_state.set_status(system_state)
             return True
         else:
             auxi.standard_errorbox("STEMLAB data transfer thread could not be started")
-            #sys_state.set_status(system_state)
             return False
 
     def EOF_manager(self):
@@ -568,9 +551,9 @@ class playrec_c(QObject):
             self.m["fileopened"] = True
             self.SigRelay.emit("cm_all_",["fileopened",True])
             #TODO: self.my_filename + self.ext müssen updated werden, übernehmen aus open file
-            #self.showfilename() #Remove after implementing all Modules Relay
             self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
-            #self.updatecurtime(0) #TODO: true datetime from record
+            self.SigRelay.emit("cexex_playrec",["updateotherGUIelements",0])
+
             self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
             self.logger.info("fetch nextfile")
         elif self.m["Buttloop_pressed"]:
@@ -583,27 +566,35 @@ class playrec_c(QObject):
             self.logger.info("playthread active: %s", self.m["playthreadActive"])
             self.m["fileopened"] = True
             self.SigRelay.emit("cm_all_",["fileopened",True])
-            #self.updatecurtime(0) #TODO: true datetime from record
             self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
         elif self.m["playlist_len"] > 0:
-            # filecheck_loop = True
-            # while filecheck_loop == True:
             if self.m["playlist_ix"] == 0:
+                self.SigRelay.emit("cexex_playrec",["listhighlighter",0])
                 self.m["playlist_ix"] += 1 #TODO: aktuell Hack, um bei erstem File keine Doppelabspielung zu triggern
             if self.m["playlist_ix"] < self.m["playlist_len"]: #TODO check if indexing is correct
                 self.m["playthreadActive"] = False
-                #print(f"EOF manager: playlist index: {system_state['playlist_ix']}")
+                self.SigRelay.emit("cexex_playrec",["listhighlighter",self.m["playlist_ix"]])
                 self.logger.debug("EOF manager: playlist index: %i", self.m['playlist_ix'])
-                #lw = self.m["playlist"] #ODO: simplify by replacing lw below
                 self.logger.info("fetch next list file")
                 item_valid = False
                 while (not item_valid) and (self.m["playlist_ix"] < self.m["playlist_len"]):
                     item = self.m["playlist"][self.m["playlist_ix"]]
+                    self.m["my_filename"] = item
                     self.m["f1"] = self.m["my_dirname"] + '/' + item #TODO replace by line below
                     self.SigRelay.emit("cm_all_",["f1",self.m["my_dirname"] + '/' + item])
-                    #self.SigRelay.emit("cm_all_",["my_filename",self.m["my_filename"]])
-                    self.logger.info("EOF manager file: %s", self.m["f1"])
+                    self.logger.info("EOF manager file in loop: %s", self.m["f1"])
+                    self.logger.debug("EOF manager file in loop: %s , index: %i", item, self.m["playlist_ix"])
                     self.m["wavheader"] = WAVheader_tools.get_sdruno_header(self,self.m["f1"])
+                    self.SigRelay.emit("cm_all_",["wavheader",self.m["wavheader"]])
+                    self.SigRelay.emit("cm_all_",["my_filename",self.m["my_filename"]])
+                    ####TODO: maybe the following is obsolete:
+                    statefileopened = self.m["fileopened"]
+                    self.SigRelay.emit("cm_all_",["fileopened",True])
+                    self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
+                    self.SigRelay.emit("cm_all_",["fileopened",statefileopened])
+                    ##################################################################
+                    #self.SigRelay.emit("cexex_playrec",["updateotherGUIelements",0])
+
                     item_valid = True
                     if not self.m["wavheader"]:
                         self.logger.warning("EOF_manager: wrong wav file, skip to next listentry")
@@ -612,19 +603,12 @@ class playrec_c(QObject):
 
                 if not (self.m["playlist_ix"] < self.m["playlist_len"]):
                     self.m["playlist_ix"] = 0
-                    #sys_state.set_status(system_state)
                     self.logger.info("EOF_manager: end of list, stop player")
                     time.sleep(0.5)
-                    #self.updatecurtime(0)
                     self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
                     self.cb_Butt_STOP()
-                    #########################################----> view
-                    self.SigRelay.emit("cexex_playrec",["reset_GUI",0])
+                    self.SigRelay.emit("cexex_playrec",["reset_GUI",0]) #TODO remove after tests
                     self.SigRelay.emit("cexex_playrec",["reset_playerbuttongoup",0])
-                    #self.gui.listWidget_playlist.clear()
-                    self.SigRelay.emit("cexex_playrec",["reset_GUI",0])
-                    #self.gui.listWidget_sourcelist.clear()
-                    #sys_state.set_status(system_state)
                     return()
                 if self.m["wavheader"]['sdrtype_chckID'].find('rcvr') > -1:
                     self.m["readoffset"] = 86
@@ -635,10 +619,8 @@ class playrec_c(QObject):
                 self.m["irate"] = self.m["wavheader"]['nSamplesPerSec']
                 self.m["icorr"] = 0
                 self.m["timescaler"] = self.m["wavheader"]['nSamplesPerSec']*self.m["wavheader"]['nBlockAlign']
-                #print(f'EOF manager new wavheader: {self.wavheader["nSamplesPerSec"]}')
                 self.logger.debug("EOF manager new wavheader: %i", self.m["wavheader"]["nSamplesPerSec"])
                 #TODO: write new header to wav edior
-                #sys_state.set_status(system_state)
                 time.sleep(0.1)
                 
                 #TODO TODO TODO: remove the following after change to all new modules and Relay
@@ -647,16 +629,19 @@ class playrec_c(QObject):
                 #self.gui.label_Filename_Annotate.setText(self.my_filename + self.ext)
                 #self.ui.label_Filename_WAVHeader.setText(self.my_filename + self.ext)
                 self.m["my_filename"], self.m["ext"] = os.path.splitext(os.path.basename(self.m["f1"]))
-                self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
-                
+                self.SigRelay.emit("cm_all_",["my_filename",self.m["my_filename"]])
+                self.SigRelay.emit("cm_all_",["ext",self.m["ext"]])
+                self.SigRelay.emit("cm_all_",["f1",self.m["f1"]])
+                self.SigRelay.emit("cm_all_",["wavheader",self.m["wavheader"]])
 
-                #self.showfilename()
+                self.logger.debug("EOF manager new file before playing: %s", self.m["my_filename"])
                 if not self.m["TEST"]:
                     self.stemlabcontrol.sdrserverstop()
                     self.logger.info("EOF manager start play_manager")
                 self.play_manager()
                 self.m["fileopened"] = True
                 self.SigRelay.emit("cm_all_",["fileopened",True])
+                self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
                 time.sleep(0.5) #TODO: necessary because otherwise file may not yet have been opened by playloopworker and then updatecurtime crashes because of invalid filehandel 
                 #may be solved by updatecurtime not accessing the filehandle returned from playworker but directly from self.m["f1"]
                 #self.updatecurtime(0) #TODO: true datetime from record
@@ -664,22 +649,13 @@ class playrec_c(QObject):
             else:
                 #reset playlist_ix
                 self.m["playlist_ix"] = 0
-                #sys_state.set_status(system_state)
                 self.logger.info("EOF_manager: stop player")
                 time.sleep(0.5)
-                #self.updatecurtime(0)
                 self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
-
-
-                #########################################----> view
                 self.cb_Butt_STOP()
-                self.SigRelay.emit("cexex_playrec",["reset_GUI",0])
+                self.SigRelay.emit("cexex_playrec",["reset_GUI",0]) #TODO remove after tests
                 self.SigRelay.emit("cexex_playrec",["reset_playerbuttongoup",0])
-                #########################################----> view
-                # self.gui.listWidget_playlist.clear()
-                # self.gui.listWidget_sourcelist.clear()
-                self.SigRelay.emit("cm_playrec",["reset_GUI",0])
-        
+               
         else:
             #no next file,no endless loop --> stop player
             #print("stop player")
@@ -704,23 +680,20 @@ class playrec_c(QObject):
         :rtype: none
         """        
         #TODO: activate for player
-        #if True:
         self.m["stopstate"] = True
         if self.m["playthreadActive"] is False:
             self.m["fileopened"] = False ###CHECK
             self.SigRelay.emit("cm_all_",["fileopened",False])
-            #sys_state.set_status(system_state) ####Remove after core full impl
+            self.SigRelay.emit("cexex_playrec",["reset_GUI",0]) #TODO remove after tests
             return
         if self.m["playthreadActive"]:
             self.playrec_tworker.stop_loop()
         if self.m["TEST"] is False:
             self.stemlabcontrol.sdrserverstop()
-        #self.updatecurtime(0)        # reset playtime counter #TODO: true datetime from record
         self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
-
         self.SigRelay.emit("cexex_playrec",["reset_playerbuttongoup",0])
-        self.SigRelay.emit("cexex_win",["GUIreset",0])
-        #self.SigGUIReset.emit()
+        self.SigRelay.emit("cexex_win",["reset_GUI",0]) #TODO remove after tests, may not be connected with _c
+        self.SigRelay.emit("cexex_playrec",["reset_GUI",0]) #TODO remove after tests
 
     def jump_1_byte(self):             #increment current time in playtime window and update statusbar
         """
@@ -756,9 +729,7 @@ class playrec_c(QObject):
         :return: none
         :rtype: none
         """ 
-        #print("jumptoposition reached")
         self.logger.debug("jumptoposition reached")
-        #system_state = sys_state.get_status()
         ####################################################################
         #sbposition = self.ui.ScrollBar_playtime.value() #TODO: already in updatecurtime(...)        
         #ERSETZE DURCH: ####################################################
@@ -766,9 +737,7 @@ class playrec_c(QObject):
         ####################################################################
         self.m["curtime"] = int(np.floor(sbposition/1000*self.m["playlength"]))  # seconds
         timestr = str(self.m["wavheader"]['starttime_dt'] + ndatetime.timedelta(seconds=self.m["curtime"]))
-        #win.ui.lineEditCurTime.setText(timestr)
         self.SigRelay.emit("cexex_playrec",["setplaytimedisplay",timestr])
-        #self.ui.lineEditCurTime.setText(timestr)
         position_raw = self.m["curtime"]*self.m["timescaler"]  #timescaler = bytes per second
         # TODO: check, geändert 09-12-2023: byte position mit allen Blockaligns auch andere als 4(16 bits); 
         # TODO: adapt for other than header 216
@@ -795,13 +764,11 @@ class playrec_c(QObject):
             return False                 
         if (eff_ifreq <= 0):
             auxi.standard_errorbox("invalid negative center frequency offset, magnitude greater than LO frequency of the record, please correct value")
-            #self.reset_LO_bias()
             self.SigRelay.emit("cexex_playrec",["resetLObias",0])
             self.cb_Butt_STOP()
             return False
         if (eff_ifreq > 60000000):
             auxi.standard_errorbox("invalid  center frequency offset, sum of record LO and offset must be < 60000 kHz, please correct value")
-            #self.reset_LO_bias()
             self.SigRelay.emit("cexex_playrec",["resetLObias",0])
             self.cb_Butt_STOP()
             return False
@@ -814,9 +781,8 @@ class playrec_v(QObject):
     """
     __slots__ = ["viewvars"]
 
-    SigAny = pyqtSignal()
-    SigCancel = pyqtSignal()
-    SigUpdateGUI = pyqtSignal(object)
+    SigCancel = pyqtSignal()    # TODO: not used so far
+    #SigUpdateGUI = pyqtSignal(object) # TODO: remove after checks
     SigSyncGUIUpdatelist = pyqtSignal(object)
     SigGUIReset =pyqtSignal()
     SigRelay = pyqtSignal(str,object)
@@ -834,9 +800,12 @@ class playrec_v(QObject):
         self.m["UTC"] = False
         self.m["TEST"] = False
         self.m["stopstate"] = True
+        self.m["wavheader"] = {}
+        self.m["wavheader"]['centerfreq'] = 0
         self.logger = playrec_m.logger
         self.init_playrec_ui()
         self.playrec_c.SigRelay.connect(self.rxhandler)
+        self.playrec_c.SigRelay.connect(self.SigRelay.emit)
         self.CURTIMEINCREMENT = 5
 
     def init_playrec_ui(self):
@@ -856,7 +825,7 @@ class playrec_v(QObject):
         self.gui.verticalSlider_Gain.valueChanged.connect(self.cb_setgain)
         self.gui.ScrollBar_playtime.sliderReleased.connect(self.jump_to_position)
         self.gui.lineEdit_LO_bias.setFont(QFont('arial',12))
-        self.gui.lineEdit_LO_bias.setEnabled(True)
+        self.gui.lineEdit_LO_bias.setEnabled(False)
         self.gui.lineEdit_LO_bias.setText("0000")
         self.gui.radioButton_LO_bias.setEnabled(True)
         self.gui.lineEdit_LO_bias.textChanged.connect(self.update_LO_bias)
@@ -913,22 +882,24 @@ class playrec_v(QObject):
         self.gui.lineEdit_IPAddress.setText(self.m["STM_IP_address"])
         self.gui.label_Filename_Player.setText(self.m["my_filename"] + self.m["ext"])
 
-    def update_GUI(self,_key): #TODO TODO: is this method still needed ? reorganize. gui-calls should be avoided, better only signalling and gui must call the routenes itself
-        print(" view spectra updateGUI: new updateGUI in view spectra module reached")
-        self.SigUpdateGUI.disconnect(self.update_GUI)
-        if _key.find("ext_update") == 0:
-            #update resampler gui with all elements
-            #TODO: fetch model values and re-fill all tab fields
-            print("playrec update_GUI reached")
-            pass
-        #other key possible: "none"
-        #DO SOMETHING
-        self.SigUpdateGUI.connect(self.update_GUI)
+    # def update_GUI(self,_key): #TODO TODO: is this method still needed ? reorganize. gui-calls should be avoided, better only signalling and gui must call the routenes itself
+    #     print(" view spectra updateGUI: new updateGUI in view spectra module reached")
+    #     self.SigUpdateGUI.disconnect(self.update_GUI)
+    #     if _key.find("ext_update") == 0:
+    #         #update resampler gui with all elements
+    #         #TODO: fetch model values and re-fill all tab fields
+    #         print("playrec update_GUI reached")
+    #         pass
+    #     #other key possible: "none"
+    #     #DO SOMETHING
+    #     self.SigUpdateGUI.connect(self.update_GUI)
 
     def reset_GUI(self):
         self.gui.listWidget_playlist.clear()
         self.gui.listWidget_sourcelist.clear()
         self.gui.label_Filename_Player.setText("")
+        self.SigRelay.emit("cexex_view_spectra",["reset_GUI",0])
+        self.SigRelay.emit("cexex_resample",["reset_GUI",0])
 
     def rxhandler(self,_key,_value):
         """
@@ -959,10 +930,14 @@ class playrec_v(QObject):
             if  _value[0].find("resetLObias") == 0:
                 self.reset_LO_bias()
             if  _value[0].find("updatecurtime") == 0:
-                self.reset_LO_bias()
+                #self.reset_LO_bias()
                 self.updatecurtime(_value[1])
             if  _value[0].find("showRFdata") == 0:
                 self.showRFdata()
+            if  _value[0].find("listhighlighter") == 0:
+                self.listhighlighter(_value[1])
+            if  _value[0].find("updateotherGUIelements") == 0:
+                self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
 
     def jump_to_position(self):
         self.m["playprogress"] = self.gui.ScrollBar_playtime.value()
@@ -1036,44 +1011,54 @@ class playrec_v(QObject):
         #TODO: display gain value somewhere
 
 
-    def updatetimer(self):
-        """
-        VIEW: cb of Tab player
-        updates timer functions
-        shows date and time
-        changes between UTC and local time
-        manages recording timer
-        :param: none
-        :type: none
-        ...
-        :raises: none
-        ...
-        :return: none
-        :rtype: none
-        """
-        if self.gui.checkBox_UTC.isChecked():
-            self.UTC = True #TODO:future system state
-        else:
-            self.UTC = False
-        if self.gui.checkBox_TESTMODE.isChecked():
-            self.TEST = True #TODO:future system state
-        else:
-            self.TEST = False
+    # def updatetimer(self): TODO: remove after tests
+    #     """
+    #     VIEW: cb of Tab player
+    #     updates timer functions
+    #     shows date and time
+    #     changes between UTC and local time
+    #     manages recording timer
+    #     :param: none
+    #     :type: none
+    #     ...
+    #     :raises: none
+    #     ...
+    #     :return: none
+    #     :rtype: none
+    #     """
+    #     if self.gui.checkBox_UTC.isChecked():
+    #         self.UTC = True #TODO:future system state
+    #     else:
+    #         self.UTC = False
+    #     if self.gui.checkBox_TESTMODE.isChecked():
+    #         self.TEST = True #TODO:future system state
+    #     else:
+    #         self.TEST = False
 
-        if self.UTC:
-            dt_now = datetime.now(ndatetime.timezone.utc)
-            self.gui.label_showdate.setText(
-                dt_now.strftime('%Y-%m-%d'))
-            self.gui.label_showtime.setText(
-                dt_now.strftime('%H:%M:%S'))
-        else:
-            dt_now = datetime.now()
-            self.gui.label_showdate.setText(
-                dt_now.strftime('%Y-%m-%d'))
-            self.gui.label_showtime.setText(
-                dt_now.strftime('%H:%M:%S'))
+    #     if self.UTC:
+    #         dt_now = datetime.now(ndatetime.timezone.utc)
+    #         self.gui.label_showdate.setText(
+    #             dt_now.strftime('%Y-%m-%d'))
+    #         self.gui.label_showtime.setText(
+    #             dt_now.strftime('%H:%M:%S'))
+    #     else:
+    #         dt_now = datetime.now()
+    #         self.gui.label_showdate.setText(
+    #             dt_now.strftime('%Y-%m-%d'))
+    #         self.gui.label_showtime.setText(
+    #             dt_now.strftime('%H:%M:%S'))
 
-    
+    def popup(self,i):
+        """    
+        """
+        self.yesno = i.text()
+
+    def listhighlighter(self,_index): 
+            lw = self.gui.listWidget_playlist
+            item = lw.item(_index)
+            item.setBackground(QtGui.QColor("lightgreen"))  #TODO: shift to resampler view
+    #item.setBackground(QtGui.QColor("lightgreen"))
+
     def cb_Butt_toggleplay(self):
         """ 
         toggles the play button between play and pause states
@@ -1087,6 +1072,7 @@ class playrec_v(QObject):
         :rtype: none
         """
         self.playlist_update()
+        self.update_LO_bias()
         if self.gui.pushButton_Play.isChecked() == True:
             if not self.m["fileopened"]:
                 if self.gui.radioButton_LO_bias.isChecked() is True:
@@ -1127,6 +1113,7 @@ class playrec_v(QObject):
                 self.reset_playerbuttongroup()
                 return False
             self.gui.pushButton_Play.setIcon(QIcon("pause_v4.PNG"))
+            self.gui.lineEdit_LO_bias.setEnabled(False)
             if self.m["playthreadActive"] == True:
                 self.playrec_c.playrec_tworker.pausestate = False
             self.playrec_c.play_manager()
@@ -1313,7 +1300,7 @@ class playrec_v(QObject):
         self.gui.lineEdit_LO_bias.setText("0")
         self.gui.lineEdit_LO_bias.setStyleSheet("background-color: white")
 
-    def update_LO_bias(self):
+    def update_LO_bias(self,*args):
         """ Purpose: update LO bias setting; 
         check validity of offset value: isnumeric, integer
         :param [ParamName]: none
@@ -1322,8 +1309,11 @@ class playrec_v(QObject):
         :return: True if successful, otherwise False
         :rtype: Boolean
         """
-        if self.m["playthreadActive"]:
-            return False        
+        if len(args) > 0:
+            errormode = args[0]
+            if self.m["playthreadActive"] and (errormode.find("verbose") == 0):
+                auxi.standard_errorbox("LO bias cannot be changed while file is playing")
+                return False        
         LObiasraw = self.gui.lineEdit_LO_bias.text().lstrip(" ")
         if len(LObiasraw) < 1:
             return False
@@ -1345,6 +1335,9 @@ class playrec_v(QObject):
         if self.gui.radioButton_LO_bias.isChecked() is True:
             self.m["LO_offset"] = int(i_LO_bias*1000)
             self.m["ifreq"] = int(self.m["wavheader"]['centerfreq'] + self.m["LO_offset"])
+        else:
+            self.m["LO_offset"] = 0
+            self.m["ifreq"] = int(self.m["wavheader"]['centerfreq'] + self.m["LO_offset"])
         return True
     
     def activate_LO_bias(self):
@@ -1361,9 +1354,13 @@ class playrec_v(QObject):
         self.gui.lineEdit_LO_bias.setStyleSheet("background-color: white")
         #TODO: ACTIVATE LObias check code
         if self.gui.radioButton_LO_bias.isChecked() is True:
+            self.gui.lineEdit_LO_bias.setEnabled(True)
             self.gui.lineEdit_LO_bias.setStyleSheet("background-color: yellow")
-            self.update_LO_bias()    
-    
+        else:
+            self.gui.lineEdit_LO_bias.setEnabled(False)
+            self.gui.lineEdit_LO_bias.setStyleSheet("background-color: white")
+        self.update_LO_bias("verbose")
+
     def editHostAddress(self):     #TODO Check if this is necessary, rename to cb_.... ! 
         ''' 
         Purpose: Callback for edidHostAddress Lineedit item

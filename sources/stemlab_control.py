@@ -183,7 +183,7 @@ class StemlabControl(QObject):
         shcomm.append('/bin/bash /sdrstart.sh &')
         # connect to remote server via ssh
         if self.startssh(configparams) is False:
-            return
+            return False
         self.sdrserverstop()  #TODO ?is this necessary ?
         time.sleep(0.1)
         self.sshsendcommandseq(shcomm)

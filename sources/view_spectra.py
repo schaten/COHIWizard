@@ -85,7 +85,7 @@ class view_spectra_v(QObject):
 
     SigAny = pyqtSignal()
     SigCancel = pyqtSignal()
-    SigUpdateGUI = pyqtSignal(object)
+    #SigUpdateGUI = pyqtSignal(object) #TODO: remove after tests
     SigSyncGUIUpdatelist = pyqtSignal(object)
     SigUpdateOtherGUIs = pyqtSignal()
     SigRX = pyqtSignal(str,object)
@@ -106,7 +106,7 @@ class view_spectra_v(QObject):
         self.m["starttrim"] = False
         self.m["stoptrim"] = False
         self.gui = gui #gui_state["gui_reference"]#system_state["gui_reference"]
-        self.SigUpdateGUI.connect(self.update_GUI)
+        #self.SigUpdateGUI.connect(self.update_GUI) #TODO: remove after tests
         self.SigRX.connect(self.rxhandler)
         self.init_view_spectra_ui()
 
@@ -155,6 +155,9 @@ class view_spectra_v(QObject):
             if  _value[0].find("updateGUIelements") == 0:
                 self.updateGUIelements()
                 self.logger.debug("call updateGUIelements")
+            if  _value[0].find("reset_GUI") == 0:
+                self.reset_GUI()
+
 
     def updateGUIelements(self):
         """
@@ -175,24 +178,29 @@ class view_spectra_v(QObject):
         self.logger.debug("view spectra: emit baselineoffset %i", self.m["baselineoffset"])
         self.SigRelay.emit("cm_xcore",["baselineoffset",self.m["baselineoffset"]])
 
-    def update_GUI(self,_key): #TODO TODO: is this method still needed ? reorganize. gui-calls should be avoided, better only signalling and gui must call the routenes itself
-        #print(" view spectra updateGUI: new updateGUI in view spectra module reached")
+    # def update_GUI(self,_key): #TODO TODO: is this method still needed ? reorganize. gui-calls should be avoided, better only signalling and gui must call the routenes itself
+    #     #print(" view spectra updateGUI: new updateGUI in view spectra module reached")
 
-        self.logger.debug(" view spectra updateGUI: new updateGUI in view spectra module reached")
-        self.SigUpdateGUI.disconnect(self.update_GUI)
-        if _key.find("ext_update") == 0:
-            #update resampler gui with all elements
-            #TODO: fetch model values and re-fill all tab fields
-            print("view_spectra update_GUI reached")
-            pass
-        #other key possible: "none"
-        dummy = 0
-        self.plot_spectrum(dummy,self.m["position"])
-        time.sleep(0.1)
-        self.SigUpdateGUI.connect(self.update_GUI)
-        self.SigRelay.emit("cm_xcore",["baselineoffset",self.m["baselineoffset"]])
+    #     self.logger.debug(" view spectra updateGUI: new updateGUI in view spectra module reached")
+    #     self.SigUpdateGUI.disconnect(self.update_GUI)
+    #     if _key.find("ext_update") == 0:
+    #         #update resampler gui with all elements
+    #         #TODO: fetch model values and re-fill all tab fields
+    #         print("view_spectra update_GUI reached")
+    #         pass
+    #     #other key possible: "none"
+    #     dummy = 0
+    #     self.plot_spectrum(dummy,self.m["position"])
+    #     time.sleep(0.1)
+    #     self.SigUpdateGUI.connect(self.update_GUI)
+    #     self.SigRelay.emit("cm_xcore",["baselineoffset",self.m["baselineoffset"]])
 
     def reset_GUI(self):
+        #clear canvas
+        self.m["Tabref"]["View_Spectra"]["ax"].clear()
+        self.m["Tabref"]["View_Spectra"]["canvas"].draw()
+        self.gui.label_Filename_ViewSpectra.setText("")
+
         pass
 
     def cb_plot_spectrum(self):

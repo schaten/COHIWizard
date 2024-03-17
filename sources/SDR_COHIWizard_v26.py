@@ -56,6 +56,7 @@ import logging
 from COHIWizard_GUI_v10 import Ui_MainWindow as MyWizard
 from auxiliaries import WAVheader_tools
 from auxiliaries import auxiliaries as auxi
+from auxiliaries import timer_worker as tw
 from PyQt5.QtCore import QObject, QThread, pyqtSignal, QMutex       #TODO: OBSOLETE
 import system_module as wsys
 import resampler_module_v5 as rsmp
@@ -447,38 +448,6 @@ class autoscan_worker(QtCore.QThread):
         self.set_2(status)
         self.SigFinished.emit()
 
-class timer_worker(QObject):
-    """_generates time signals for clock and recording timer_
-
-    :param [ParamName]: [ParamDescription], defaults to [DefaultParamVal]
-    :type [ParamName]: [ParamType](, optional)
-    ...
-    :raises [ErrorType]: [ErrorDescription]TODO
-    ...
-    :return: [ReturnDescription]
-    :rtype: [ReturnType]
-    """
-    SigTick = pyqtSignal()
-    SigFinished = pyqtSignal()
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def tick(self):
-        """send a signal self.SigTick every second
-        :param : none
-        :type : none
-        :raises: none
-        :return: none
-        :rtype: none
-        """
-        while True:
-            time.sleep(1 - time.monotonic() % 1)
-            self.SigTick.emit()
-
-    def stoptick(self):
-        self.SigFinished.emit()        
-
 class core_m(QObject):
     def __init__(self):
         super().__init__()
@@ -504,6 +473,7 @@ class core_c(QObject):
         viewvars = {}
         #self.set_viewvars(viewvars)
         self.m = core_m.mdl
+
         
 
 class core_v(QObject):
@@ -521,7 +491,34 @@ class core_v(QObject):
         #viewvars = {}
         #self.set_viewvars(viewvars)
         self.m = core_m.mdl
+        self.c = core_c
         self.gui = gui #gui_state["gui_reference"]#system_state["gui_reference"]
+        self.timethread = QThread()
+        self.timertick = tw()
+        self.timertick.moveToThread(self.timethread)
+        self.timethread.started.connect(self.timertick.tick)
+        self.timertick.SigFinished.connect(self.timethread.quit)
+        self.timertick.SigFinished.connect(self.timertick.deleteLater)
+        self.timethread.finished.connect(self.timethread.deleteLater)
+        self.timertick.SigTick.connect(self.updatetimer)
+        self.timethread.start()
+        if self.timethread.isRunning():
+            self.timethreaddActive = True #TODO:future system state
+        
+    def connect_init(self): #being called from __main__
+        self.SigRelay.emit("cm_all_",["emergency_stop",False])
+        self.SigRelay.emit("cm_all_",["fileopened",False])
+        self.SigRelay.emit("cm_all_",["Tabref",win.Tabref])
+        self.SigRelay.emit("cm_resample",["rates",system_state["rates"]])
+        self.SigRelay.emit("cm_resample",["irate",system_state["irate"]])
+        self.SigRelay.emit("cm_playrec",["rates",system_state["rates"]])
+        self.SigRelay.emit("cm_playrec",["irate",system_state["irate"]])
+        self.SigRelay.emit("cm_resample",["reslist_ix",system_state["reslist_ix"]]) #TODO check: maybe local in future !
+        self.SigRelay.emit("cm_playrec",["Obj_stemlabcontrol",stemlabcontrol])
+        self.SigRelay.emit("cm_configuration",["tablist",tab_dict["list"]])
+        self.SigRelay.emit("cexex_configuration",["updateGUIelements",0])
+        self.SigRelay.emit("cm_playrec",["sdr_configparams",system_state["sdr_configparams"]])
+        self.SigRelay.emit("cm_playrec",["HostAddress",system_state["HostAddress"]])
 
     def rxhandler(self,_key,_value):
         """
@@ -546,7 +543,8 @@ class core_v(QObject):
         if _key.find("cexex_xcore") == 0  or _key.find("cexex_all_") == 0:
             if  _value[0].find("updateGUIelements") == 0:
                 self.updateGUIelements()
-
+            if  _value[0].find("updatetimer") == 0:
+                self.updatetimer()
             #handle method
             # if  _value[0].find("plot_spectrum") == 0: #EXAMPLE
             #     self.plot_spectrum(0,_value[1])   #EXAMPLE
@@ -564,12 +562,78 @@ class core_v(QObject):
         print("core: updateGUIelements")
         #self.gui.DOSOMETHING
 
-    def update_GUI(self,_key): #TODO TODO: is this method still needed ? reorganize. gui-calls should be avoided, better only signalling and gui must call the routenes itself
-        print(" view spectra updateGUI: new updateGUI in view spectra module reached")
-        self.SigUpdateGUI.disconnect(self.update_GUI)
-        if _key.find("ext_update") == 0:
-            pass
-        self.SigUpdateGUI.connect(self.update_GUI)
+    # def update_GUI(self,_key): #TODO TODO: is this method still needed ? reorganize. gui-calls should be avoided, better only signalling and gui must call the routenes itself
+    #     print(" view spectra updateGUI: new updateGUI in view spectra module reached")
+    #     self.SigUpdateGUI.disconnect(self.update_GUI)
+    #     if _key.find("ext_update") == 0:
+    #         pass
+    #     self.SigUpdateGUI.connect(self.update_GUI)
+        
+        
+    def updatetimer(self):
+        """
+        VIEW: cb of Tab player
+        updates timer functions
+        shows date and time
+        changes between UTC and local time
+        manages recording timer
+        :param: none
+        :type: none
+        ...
+        :raises: none
+        ...
+        :return: none
+        :rtype: none
+        """
+
+        if self.gui.checkBox_UTC.isChecked():
+            self.UTC = True #TODO:future system state
+        else:
+            self.UTC = False
+        if self.gui.checkBox_TESTMODE.isChecked():
+            self.TEST = True #TODO:future system state
+        else:
+            self.TEST = False
+
+        if self.UTC:
+            dt_now = datetime.now(ndatetime.timezone.utc)
+            self.gui.label_showdate.setText(
+                dt_now.strftime('%Y-%m-%d'))
+            self.gui.label_showtime.setText(
+                dt_now.strftime('%H:%M:%S'))
+        else:
+            dt_now = datetime.now()
+            self.gui.label_showdate.setText(
+                dt_now.strftime('%Y-%m-%d'))
+            self.gui.label_showtime.setText(
+                dt_now.strftime('%H:%M:%S'))
+            
+        #TODO: reimplement recorder
+
+        # if self.ui.radioButton_timeract.isChecked():
+        #     self.ui.radioButton_Timer.setChecked(False)
+        #     self.ui.dateTimeEdit_setclock.setEnabled(False)
+        #     self.ui.checkBox_UTC.setEnabled(False)
+        #     st = self.ui.dateTimeEdit_setclock.dateTime().toPyDateTime()
+        #     if self.UTC:
+        #         ct = QtCore.QDateTime.currentDateTime().toUTC().toPyDateTime()
+        #     else:
+        #         ct = QtCore.QDateTime.currentDateTime().toPyDateTime()
+        #     self.diff = np.floor((st-ct).total_seconds())
+        #     if self.diff > 0:
+        #         countdown = str(ndatetime.timedelta(seconds=self.diff))
+        #         self.ui.label_ctdn_time.setText(countdown)
+        #     else:
+        #         if self.recording_wait is True:
+        #             self.recording_wait = False
+        #             self.recordingsequence()
+        #         return
+        # else:
+        #     self.ui.checkBox_UTC.setEnabled(True)
+        #     if not self.ui.radioButton_Timer.isChecked():
+        #         self.ui.dateTimeEdit_setclock.setEnabled(False)
+        #     else:
+        #         self.ui.dateTimeEdit_setclock.setEnabled(True)
 
 class WizardGUI(QMainWindow):
     #TODO: make this the core_view method
@@ -753,7 +817,7 @@ class WizardGUI(QMainWindow):
             system_state["OLD"] = True
         #neu = resampler_module_v5, neue Modell/Signal/corestruktur
         sys_state.set_status(system_state)
-        self.reset_LO_bias()
+        #self.reset_LO_bias()
         self.Tabref={}
         self.init_Tabref()
         self.timeref = datetime.now()
@@ -763,18 +827,18 @@ class WizardGUI(QMainWindow):
         #TODO: Implement further slot communicationa shown here
         self.autoscaninst.set_0([self.ui.spinBoxNumScan.value(),self.ui.spinBoxminSNR.value(),[]])
 
-        ################# start timer tick
-        self.timethread = QThread()
-        self.timertick = timer_worker()
-        self.timertick.moveToThread(self.timethread)
-        self.timethread.started.connect(self.timertick.tick)
-        self.timertick.SigFinished.connect(self.timethread.quit)
-        self.timertick.SigFinished.connect(self.timertick.deleteLater)
-        self.timethread.finished.connect(self.timethread.deleteLater)
-        self.timertick.SigTick.connect(self.updatetimer)
-        self.timethread.start()
-        if self.timethread.isRunning():
-            self.timethreaddActive = True #TODO:future system state
+        # ################# start timer tick  #TODO: remove after tests
+        # self.timethread = QThread()
+        # self.timertick = timer_worker()
+        # self.timertick.moveToThread(self.timethread)
+        # self.timethread.started.connect(self.timertick.tick)
+        # self.timertick.SigFinished.connect(self.timethread.quit)
+        # self.timertick.SigFinished.connect(self.timertick.deleteLater)
+        # self.timethread.finished.connect(self.timethread.deleteLater)
+        # #self.timertick.SigTick.connect(self.updatetimer)
+        # self.timethread.start()
+        # if self.timethread.isRunning():
+        #     self.timethreaddActive = True #TODO:future system state
         # Create a custom logger
         # Setze den Level des Root-Loggers auf DEBUG
         logging.getLogger().setLevel(logging.DEBUG)
@@ -833,6 +897,7 @@ class WizardGUI(QMainWindow):
 
 
 ############## CORE VIEW METHOD #################
+        
     def GUI_reset_status(self):
         system_state = {}
         system_state["my_filename"] = ""
@@ -1058,569 +1123,6 @@ class WizardGUI(QMainWindow):
 
         return True
 
-    ############################## TAB PLAYER ####################################
-    def cb_Butt_toggle_playlist(self):
-        system_state = sys_state.get_status()
-        if system_state["playlist_active"] == False:
-            self.ui.pushButton_act_playlist.setChecked(True)
-            self.ui.listWidget_sourcelist.setEnabled(True)
-            self.ui.listWidget_playlist.setEnabled(True)
-            system_state["playlist_active"] = True
-        else:
-            self.ui.pushButton_act_playlist.setChecked(False)
-            self.ui.listWidget_sourcelist.setEnabled(False)
-            self.ui.listWidget_playlist.setEnabled(False)
-            system_state["playlist_active"] = False
-
-    def playlist_update(self): #TODO: list is only updated up to the just before list change dragged item,
-        """
-        VIEW
-        updates playlist whenever the playlist Widget is changed
-        :param: none
-        :type: none
-        ...
-        :raises: none
-        ...
-        :return: none
-        :rtype: none
-        """
-        #print("playlist updated")  
-        self.logger.info("playlist_update: playlist updated")
-        
-        time.sleep(1)
-        system_state = sys_state.get_status()
-        #get all items of playlist Widget and write them to system_state["playlist"]
-        lw = self.ui.listWidget_playlist
-        # let lw haven elements in it.
-        playlist = []
-        for x in range(lw.count()-1):
-            item = lw.item(x)
-            #playlist.append(lw.item(x))
-            playlist.append(item.text())
-        system_state["playlist"] = playlist
-        self.SigRelay.emit("cm_playrec",["playlist",playlist])
-        sys_state.set_status(system_state)
-
-                    # _item2.setText(x)
-
-    def cb_setgain(self):
-        '''
-        VIEW: cb of Tab player
-        #TODO
-        '''
-        if self.playthreadActive is False:
-            return False
-        self.gain = 10**((self.ui.verticalSlider_Gain.value() - self.GAINOFFSET)/20)
-        #print(f"self.gain in cb:  {self.gain}")
-        self.playrec_tworker.set_6(self.gain)
-        #print(self.gain)
-        #TODO: display gain value somewhere
-
-    def updatetimer(self):
-        """
-        VIEW: cb of Tab player
-        updates timer functions
-        shows date and time
-        changes between UTC and local time
-        manages recording timer
-        :param: none
-        :type: none
-        ...
-        :raises: none
-        ...
-        :return: none
-        :rtype: none
-        """
-
-        if self.ui.checkBox_UTC.isChecked():
-            self.UTC = True #TODO:future system state
-        else:
-            self.UTC = False
-        if self.ui.checkBox_TESTMODE.isChecked():
-            self.TEST = True #TODO:future system state
-        else:
-            self.TEST = False
-
-        if self.UTC:
-            dt_now = datetime.now(ndatetime.timezone.utc)
-            self.ui.label_showdate.setText(
-                dt_now.strftime('%Y-%m-%d'))
-            self.ui.label_showtime.setText(
-                dt_now.strftime('%H:%M:%S'))
-        else:
-            dt_now = datetime.now()
-            self.ui.label_showdate.setText(
-                dt_now.strftime('%Y-%m-%d'))
-            self.ui.label_showtime.setText(
-                dt_now.strftime('%H:%M:%S'))
-            
-        #TODO: reimplement recorder
-
-        # if self.ui.radioButton_timeract.isChecked():
-        #     self.ui.radioButton_Timer.setChecked(False)
-        #     self.ui.dateTimeEdit_setclock.setEnabled(False)
-        #     self.ui.checkBox_UTC.setEnabled(False)
-        #     st = self.ui.dateTimeEdit_setclock.dateTime().toPyDateTime()
-        #     if self.UTC:
-        #         ct = QtCore.QDateTime.currentDateTime().toUTC().toPyDateTime()
-        #     else:
-        #         ct = QtCore.QDateTime.currentDateTime().toPyDateTime()
-        #     self.diff = np.floor((st-ct).total_seconds())
-        #     if self.diff > 0:
-        #         countdown = str(ndatetime.timedelta(seconds=self.diff))
-        #         self.ui.label_ctdn_time.setText(countdown)
-        #     else:
-        #         if self.recording_wait is True:
-        #             self.recording_wait = False
-        #             self.recordingsequence()
-        #         return
-        # else:
-        #     self.ui.checkBox_UTC.setEnabled(True)
-        #     if not self.ui.radioButton_Timer.isChecked():
-        #         self.ui.dateTimeEdit_setclock.setEnabled(False)
-        #     else:
-        #         self.ui.dateTimeEdit_setclock.setEnabled(True)
-
-    
-    def cb_Butt_toggleplay(self):
-        """ 
-        toggles the play button between play and pause states
-        TODO
-        :param: none
-        :type: none
-        ...
-        :raises: none
-        ...
-        :return: none
-        :rtype: none
-        """
-        system_state = sys_state.get_status()
-        if self.ui.pushButton_Play.isChecked() == True:
-            if not system_state["fileopened"]:
-                if self.ui.radioButton_LO_bias.isChecked() is True:
-                    msg = QMessageBox()
-                    msg.setIcon(QMessageBox.Question)
-                    msg.setText("Apply LO offset")
-                    msg.setInformativeText("center frequency offset is activated, the LO will be shifted by " + str(int(system_state["LO_offset"]/1000)) + " kHz. Do you want to proceed ? If no, please inactivate center frequency offset")
-                    msg.setWindowTitle("Apply LO offset")
-                    msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-                    msg.buttonClicked.connect(self.popup)
-                    msg.exec_()
-                    if self.yesno == "&No":
-                        ###RESET playgroup
-                        self.reset_playerbuttongroup()
-                        self.reset_LO_bias()
-                        sys_state.set_status(system_state)
-                        return False
-
-                self.ui.radioButton_LO_bias.setEnabled(False)
-                if self.cb_open_file() is False:
-                    self.reset_playerbuttongroup()
-                    sys_state.set_status(system_state)
-                    return False
-                #TODO: return if open file is false
-                if not self.LO_bias_checkbounds():
-                    self.reset_playerbuttongroup()
-                    return False
-                self.ui.lineEdit_LO_bias.setEnabled(False)
-                ######Setze linedit f LO_Bias inaktiv
-            if not self.checkSTEMLABrates():
-                self.reset_playerbuttongroup()
-                return False
-            self.ui.pushButton_Play.setIcon(QIcon("pause_v4.PNG"))
-            if self.playthreadActive == True:
-                self.playrec_tworker.pausestate = False
-            self.play_manager()
-            self.pausestate = False
-            self.stopstate = False
-            self.ui.ScrollBar_playtime.setEnabled(True)
-            self.ui.pushButton_adv1byte.setEnabled(True)
-        else:
-            self.ui.pushButton_Play.setIcon(QIcon("play_v4.PNG"))
-            self.pausestate = True ##TODO CHECK: necessary ? es gibt ja self.playrec_tworker.pausestate
-            if self.playthreadActive == True:
-                self.playrec_tworker.pausestate = True
-
-
-    def editHostAddress(self):     #TODO Check if this is necessary, rename to cb_.... ! shift to config Menu
-        ''' 
-        VIEW, cb of player, not marked as cb, RENAME !
-        TODO
-        Purpose: Callback for edidHostAddress Lineedit item
-        activate Host IP address field and enable saving mode
-        Returns: nothing
-        '''
-        self.ui.lineEdit_IPAddress.setEnabled(True)
-        self.ui.lineEdit_IPAddress.setReadOnly(False)
-        self.ui.pushButton_IP.clicked.connect(self.set_IP)
-        self.ui.pushButton_IP.setText("save IP Address")
-        self.ui.pushButton_IP.adjustSize()
-        self.IP_address_set = False
-
-    def set_IP(self): #TODO TODO TODO: shift to config tab
-        """ 
-        CONTROLLER
-        set IP Address and save to config yaml
-            disable IP address line
-            enable Button for editing address 
-        :param: none
-        :type: none
-        ...
-        :raises warning message: Read error if config_wizard.yaml does not exist
-        ...
-        :return: none
-        :rtype: none
-        """
-        system_state = sys_state.get_status()
-        #self.HostAddress = self.ui.lineEdit_IPAddress.text()
-        system_state["HostAddress"] = self.ui.lineEdit_IPAddress.text() #TODO: Remove after transfer of playrec
-        #print("IP address read")
-        try:
-            stream = open("config_wizard.yaml", "r")
-            self.metadata = yaml.safe_load(stream)
-            stream.close()
-        except:
-            auxi.standard_errorbox("Cannot open Config File")
-            self.logger.error("cannot get metadata")
-            #print("cannot get metadata")
-        self.metadata["STM_IP_address"] = system_state["HostAddress"]
-        stream = open("config_wizard.yaml", "w")
-        yaml.dump(self.metadata, stream)
-
-        self.ui.lineEdit_IPAddress.setReadOnly(True)#TODO: Remove after transfer of playrec
-        self.ui.lineEdit_IPAddress.setEnabled(False)#TODO: Remove after transfer of playrec
-        self.ui.pushButton_IP.clicked.connect(self.editHostAddress)#TODO: Remove after transfer of playrec
-        self.ui.pushButton_IP.setText("Set IP Address")#TODO: Remove after transfer of playrec
-        self.ui.pushButton_IP.adjustSize()#TODO: Remove after transfer of playrec
-        sys_state.set_status(system_state)
-
-    def shutdown(self):
-        '''
-        VIEW
-        TODO: rew spinx Purpose: Callback for SHUTDOWN Button
-        Returns: nothing
-        '''
-        system_state = sys_state.get_status()
-        self.cb_Butt_STOP()
-        self.timertick.stoptick()
-        stemlabcontrol.RPShutdown(system_state["sdr_configparams"])
-
-        
-    def stemlabcontrol_errorhandler(self,errorstring): #TODO: is not being used anywhere !
-        """handler for error signals from stemlabcontrol class
-            display error in standard errormessagebox
-            reset playerbuttongroup and GUI
-        VIEW
-        :param: errorstring
-        :type: str
-        :raises [none]: [none]
-        :return: none
-        :rtype: none
-        """     
-        auxi.standard_errorbox(errorstring)
-        stemlabcontrol.SigError.connect(self.reset_playerbuttongroup) #TODO: wird bis dato nicht emittiert
-        stemlabcontrol.SigError.connect(self.reset_GUI) #TODO: wird bis dato nicht emittiert
-
-        
-    def display_status(self,messagestring):
-        """handler for message signals from stemlabcontrol class
-            display message in GUI status field, if exists
-        VIEW
-        :param: messaagestring
-        :type: str
-        :raises [none]: [none]
-        :return: none
-        :rtype: none
-        """         
-        #print(f"display status of stemlabcontrol, status = {messagestring}") #TODO: define displaystatus in more elaborate form
-
-    def play_manager(self):
-        """Callback function for Play Button; Calls file_open
-           starts data streaming to STEMLAB sdr server via method play_tstarter
-        VIEW
-        :raises [none]: [none]
-        :return: False if IP address not set, File could not be opened
-                 False if STEMLAB socket cannot be started
-                 False if playback thread cannot be started
-                 True if player can be started successfully
-        :rtype: Boolean
-        """        
-        system_state = sys_state.get_status()
-        if self.playthreadActive is True:
-            #print("playthread is active, no action")
-
-            self.logger.debug("playthread is active, no action")
-            sys_state.set_status(system_state)
-            return False
-        self.updatecurtime(0) #TODO: true datetime from record
-
-        if system_state["f1"] == "": #TODO: replace by line below
-        # if resample_m.mdl["f1"] == "":
-            sys_state.set_status(system_state)
-            return False
-        stemlabcontrol.SigError.connect(self.stemlabcontrol_errorhandler) #
-        stemlabcontrol.SigMessage.connect(self.display_status) 
-        stemlabcontrol.set_play()
-        self.modality = "play"
-        # start server unless already started
-        if self.TEST is False:
-            configparams = {"ifreq":system_state["ifreq"], "irate":system_state["irate"],
-                            "rates": system_state["rates"], "icorr":system_state["icorr"],
-                            "HostAddress":system_state["HostAddress"], "LO_offset":system_state["LO_offset"]}
-            system_state["sdr_configparams"] = configparams
-            stemlabcontrol.sdrserverstart(system_state["sdr_configparams"])
-            stemlabcontrol.set_play() #wozu ? war ja schon oben !
-            #print(f'play_manager configparams: {configparams}')
-
-            self.logger.info(f'play_manager configparams: {configparams}')
-
-            sys_state.set_status(system_state)
-            if stemlabcontrol.config_socket(configparams):
-                #print("playthread now activated in play_manager")
-                self.logger.info("playthread now activated in play_manager")
-                self.play_tstarter()
-            else:
-                sys_state.set_status(system_state)
-                return False
-        else:
-            if self.play_tstarter() is False:
-                sys_state.set_status(system_state)
-                return False
-        #TODO: activateself.ui.label_RECORDING.setStyleSheet(('background-color: \
-        #                                     rgb(46,210,17)'))
-        #TODO: activateself.ui.label_RECORDING.setText("PLAY")
-        #TODO: activateself.ui.indicator_Stop.setStyleSheet('background-color: rgb(234,234,234)')
-        #TODO: activate.ui.pushButton_Rec.setEnabled(False)
-            #print("stemlabcontrols activated")
-            self.logger.info("stemlabcontrols activated")
-        sys_state.set_status(system_state)
-        return True
-    
-    def cb_Butt_REC(self):
-        """
-        VIEW
-        Callback function for REC Button; 
-        so far dummy, as not yet implemented
-        :raises [none]: [none]
-        :return: none
-        :rtype: none
-        """                
-        auxi.standard_errorbox("Recording is not yet implemented in this version of the COHIWizard; Please use RFCorder until a new version has been released")
-        return False
-
-
-    def cb_Butt_STOP(self):
-        """
-        VIEW
-        Callback function for Stop Button; 
-        sets stopstate flag True
-        stops playrec_thread
-        stops sdrserver if running --> stops data streaming to STEMLAB sdr server
-        resets all player buttons to initial state
-        set all tabs which 
-        :raises [none]: [none]
-        :return: none
-        :rtype: none
-        """        
-        #TODO: activate for player
-        #if True:
-        self.stopstate = True
-        system_state = sys_state.get_status()
-####STRUCT TODO: das könnte ein eigener stop_manager sein :
-        if self.playthreadActive is False:
-            system_state["fileopened"] = False ###CHECK
-            self.SigRelay.emit("cm_all_",["fileopened",False])
-            sys_state.set_status(system_state) ####Remove after core full impl
-            return
-        if self.playthreadActive:
-            self.playrec_tworker.stop_loop()
-        if self.TEST is False:
-            stemlabcontrol.sdrserverstop()
-        self.updatecurtime(0)        # reset playtime counter #TODO: true datetime from record
-        self.reset_playerbuttongroup()
-        sys_state.set_status(system_state)
-        #self.reset_GUI()
-        self.SigGUIReset.emit()
-
-
-    def reset_playerbuttongroup(self):
-        """
-        VIEW
-
-        """
-        system_state = sys_state.get_status()
-        self.ui.pushButton_Play.setIcon(QIcon("play_v4.PNG"))
-        self.ui.pushButton_Play.setChecked(False)
-        self.ui.pushButton_Loop.setChecked(False)
-        self.playthreadActive = False
-        #self.activate_tabs(["View_Spectra","Annotate","Resample","YAML_editor","WAV_header"])
-        self.setactivity_tabs("Player","activate",[])
-        system_state["fileopened"] = False ###CHECK
-        self.SigRelay.emit("cm_all_",["fileopened",False])
-        self.ui.radioButton_LO_bias.setEnabled(True)
-        self.ui.lineEdit_LO_bias.setEnabled(True)
-        self.ui.ScrollBar_playtime.setEnabled(False)
-        self.ui.pushButton_adv1byte.setEnabled(False)
-        sys_state.set_status(system_state)
-
-
-    def play_tstarter(self):  # TODO: Argument (self, modality), modality= "recording", "play", move to module cplayrec controller
-        """_start playback via data stream to STEMLAB sdr server
-        starts thread 'playthread' for data streaming to the STEMLAB
-        instantiates thread worker method
-        initializes signalling_
-        CONTROLLER
-        :return: _False if error, True on succes_
-        :rtype: _Boolean_
-        """        
-
-        '''
-        Purpose: 
-        SigFinished:                 emitted by: thread worker on end of stream
-                thread termination, activate callback for Stop button
-        thread.finished:
-                thread termination
-        thread.started:
-                start worker method streaming loop
-        SigIncrementCurTime:         emitted by: thread worker every second
-                increment playtime counter by 1 second
-        Returns: False if error, True on success
-        '''
-        print("file opened in playloop thread starter")
-        if self.wavheader['nBitsPerSample'] == 16 or self.wavheader['nBitsPerSample'] == 24 or self.wavheader['nBitsPerSample'] == 32:
-            pass
-            #TODO: Anpassen an andere Fileformate, Einbau von Positionen 
-        else:
-            auxi.standard_errorbox("dataformat not supported, only 16, 24 and 32 bits per sample are possible")
-            return False
-        system_state = sys_state.get_status()
-        self.playthread = QThread()
-        from playrec import playrec_worker
-        self.playrec_tworker = playrec_worker(stemlabcontrol)
-        self.playrec_tworker.moveToThread(self.playthread)
-        self.playrec_tworker.set_0(system_state["f1"])
-        self.playrec_tworker.set_1(system_state["timescaler"])
-        self.playrec_tworker.set_2(self.TEST)
-        self.playrec_tworker.set_3(self.modality)
-        self.playrec_tworker.set_6(self.gain)
-        format = [self.wavheader["wFormatTag"], self.wavheader['nBlockAlign'], self.wavheader['nBitsPerSample']]
-        self.playrec_tworker.set_7(format)
-        
-        self.prfilehandle = self.playrec_tworker.get_4() #TODO CHECK IF REQUIRED test output, no special other function
-        #if self.modality == "play": #TODO: activate
-        if True:
-            self.playthread.started.connect(self.playrec_tworker.play_loop16)
-        # else:
-        #     self.playthread.started.connect(self.playrec_tworker.rec_loop)
-
-        self.playrec_tworker.SigFinished.connect(self.EOF_manager)
-        self.SigEOFStart.connect(self.EOF_manager)
-        self.playrec_tworker.SigFinished.connect(self.playrec_tworker.deleteLater)
-
-        self.playthread.finished.connect(self.playthread.deleteLater)
-        self.playrec_tworker.SigIncrementCurTime.connect(
-                                                lambda: self.updatecurtime(1))
-        self.playrec_tworker.SigIncrementCurTime.connect(self.showRFdata)
-        #self.playrec_tworker.SigBufferUnderflow.connect(
-        #                                         lambda: self.bufoverflowsig()) #TODO reactivate
-        # TODO: check, if updatecurtime is also controlled from within
-        # the recording loop
-        self.playthread.start()
-        if self.playthread.isRunning():
-            self.playthreadActive = True
-            #self.inactivate_tabs(["View_Spectra","Annotate","Resample","YAML_editor","WAV_header"])
-            self.setactivity_tabs("Player","inactivate",[])
-            self.logger.info("playthread started in playthread_threadstarter = play_tstarter() (threadstarter)")
-            # TODO replace playthreadflag by not self.playthread.isFinished()
-            sys_state.set_status(system_state)
-            return True
-        else:
-            auxi.standard_errorbox("STEMLAB data transfer thread could not be started")
-            sys_state.set_status(system_state)
-            return False
-
-    def showRFdata(self):
-        """_take over datasegment from player loop worker and caluclate from there the signal volume and present it in the volume indicator
-        read gain value and present it in the player Tab
-        read data segment and correlate with previous one --> detect tracking errors and correct them_
-        GUI Element
-        :return: _False if error, True on succes_
-        :rtype: _Boolean_
-        """        
-        system_state = sys_state.get_status()
-        gain = self.playrec_tworker.get_6()
-        data = self.playrec_tworker.get_5()
-        #print("dispRFdata reached")
-        #TODO: Test tracking error detector: not yet good  ! Bisher kompletter Blödsinn
-        #Idea: evaluate the correlation coefficient between the current and the previous data segment. 
-        # If lo and hi byte are interchanged I would expect much worse correlation, because the low byte then dominates the number and noise is much more prominent there
-        # if that is too weak, try with second highest nibble
-        if "previous_RF_data" in system_state.keys(): 
-            # x1 = np.bitwise_and(data[0::2], 0xFFFF) #+ 1j * data[1::2]
-            # x2 = np.bitwise_and(system_state["previous_RF_data"][0::2], 0xFFFF) #+1j * system_state["previous_RF_data"][1::2]
-            # lx1 = (x1 >> 8) & 0xF
-            # lx2 = (x2 >> 8) & 0xF
-
-            # ccf = np.corrcoef([x1, x2])
-            ccf = np.corrcoef([data[0::2], system_state["previous_RF_data"][0::2]])
-            #print(f"correlation RF with previous segment: {ccf} len(data): {len(data[0::2])} meandelta: {np.mean(data[0::2]-system_state['previous_RF_data'][0::2])}")
-
-        system_state["previous_RF_data"] = data
-        # end tracking error detector
-
-        s = len(data)
-        nan_ix = [i for i, x in enumerate(data) if np.isnan(x)]
-        if np.any(np.isnan(data)):
-            self.stopstate = True
-            time.sleep(1)
-            data[nan_ix] = np.zeros(len(nan_ix))
-            #ff = median_filter(data,30, mode = 'constant')
-            #print(f"showRFdata: NaN found in data, length: {len(nan_ix)} , maxval: {np.max(data)}, avg: {np.median(data)}")
-            self.logger.error("show RFdata: NaN found in data, length: %i ,maxval: %f , avg: %f" , len(nan_ix),  np.max(data), np.median(data))
-            sys_state.set_status(system_state)
-            return(False)
-        cv = (data[0:s-1:2].astype(np.float32) + 1j * data[1:s:2].astype(np.float32))*gain
-        if self.wavheader['wFormatTag'] == 1:
-            scl = int(2**int(self.wavheader['nBitsPerSample']-1))-1
-        elif self.wavheader['wFormatTag']  == 3:
-            scl = 1 #TODO:future system state
-        else:
-            auxi.standard_errorbox("wFormatTag is neither 1 nor 3; unsupported Format, this file cannot be processed")
-            sys_state.set_status(system_state)
-            return False
-        #print(f"scl = {scl}")
-        av = np.abs(cv)/scl  #TODO rescale according to scaler from formattag:
-        vol = np.mean(av)
-        #print(f"average signal: {vol} , gain: {gain}, scl: {self.scl}")
-        # make vol a dB value and rescale to 1000
-        # 900 = 0 dB
-        # 1000 = overload und mache Balken rot
-        # min Anzeige = 1 entspricht -100 dB
-        #print(f"data update from showRFdata: {vol}")
-        refvol = 1
-        dBvol = 20*np.log10(vol/refvol)
-        dispvol = min(dBvol + 80, 100)
-        self.ui.progressBar_volume.setValue(int(np.floor(dispvol*10))) 
-        if dispvol > 80:
-            self.ui.progressBar_volume.setStyleSheet("QProgressBar::chunk "
-                    "{"
-                        "background-color: red;"
-                    "}")
-        elif dispvol < 30:
-            self.ui.progressBar_volume.setStyleSheet("QProgressBar::chunk "
-                    "{"
-                        "background-color: yellow;"
-                    "}")           
-        else:
-            self.ui.progressBar_volume.setStyleSheet("QProgressBar::chunk "
-                    "{"
-                        "background-color: green;"
-                    "}")
-        sys_state.set_status(system_state)
-
-    ######################## REPLACE BY INDIVIDUAL GUI updaters #############################
-
-
     def showfilename(self):
         """_updates the name of currenly loaded data file in all instances of filename labels_
         :param : none if old system, args[0] = string with filename to be displayed 
@@ -1640,420 +1142,7 @@ class WizardGUI(QMainWindow):
         self.ui.label_Filename_WAVHeader.setText(self.my_filename + self.ext)
         self.ui.label_Filename_Player.setText(self.my_filename + self.ext)
         #system_state = sys_state.get_status()
-######################## END REPLACE BY INDIVIDUAL GUI updaters #############################
 
-    def EOF_manager(self):
-        """_target of SigFinished from playloop. If signal is received, a decision is made whether 
-            to stop the player completely, 
-            continue with next file if 'nextfile' in wavheader exists
-            continue restarting the same file as long as in endless mode_
-
-        :param : none
-        :type : none
-        '''
-        :raises [ErrorType]: [ErrorDescription]
-        '''
-        :return:
-        :rtype:
-        """ 
-        #TODO: check why this sequence incl file close needs to be outside the playthred worker; causes some problems
-        system_state = sys_state.get_status()
-        prfilehandle = self.playrec_tworker.get_4()
-        self.playthread.quit()
-        self.playthread.wait()
-        time.sleep(0.1)
-        prfilehandle.close()
-        system_state["fileopened"] = False
-        self.SigRelay.emit("cm_all_",["fileopened",False])
-        if self.stopstate == True:
-            #print("EOF-manager: player has been stopped")
-            self.logger.info("EOF-manager: player has been stopped")
-            time.sleep(0.5)
-            sys_state.set_status(system_state)
-            return
-        if (os.path.isfile(self.my_dirname + '/' + self.wavheader['nextfilename']) == True and self.wavheader['nextfilename'] != "" ):
-            #TODO: new wavheader needs to be extracted
-            # play next file in nextfile-list
-            system_state["f1"] = self.my_dirname + '/' + self.wavheader['nextfilename']
-            self.SigRelay.emit("cm_all_",["f1",self.my_dirname + '/' + self.wavheader['nextfilename']])
-            self.SigRelay.emit("cm_all_",["my_filename",self.my_filename])
-            self.wavheader = WAVheader_tools.get_sdruno_header(self,system_state["f1"])
-            time.sleep(0.1)
-            self.play_tstarter()
-            time.sleep(0.1)
-            system_state["fileopened"] = True
-            self.SigRelay.emit("cm_all_",["fileopened",True])
-            #TODO: self.my_filename + self.ext müssen updated werden, übernehmen aus open file
-            self.showfilename() #Remove after implementing all Modules Relay
-            self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
-            self.updatecurtime(0) #TODO: true datetime from record
-            self.logger.info("fetch nextfile")
-
-        elif self.ui.pushButton_Loop.isChecked() == True:
-            self.ui.pushButton_Loop.checkStateSet
-            time.sleep(0.1)
-            #("restart same file in endless loop")
-            self.logger.debug("restart same file in endless loop")
-            #no next file, but endless mode active, replay current system_state["f1"]
-            self.play_tstarter()
-            time.sleep(0.1)
-            self.logger.info("playthread active: %s", self.playthreadActive)
-            system_state["fileopened"] = True
-            self.SigRelay.emit("cm_all_",["fileopened",True])
-            self.updatecurtime(0) #TODO: true datetime from record
-        elif self.ui.listWidget_playlist.count() > 0:
-            # filecheck_loop = True
-            # while filecheck_loop == True:
-            if system_state["playlist_ix"] == 0:
-                system_state["playlist_ix"] += 1 #TODO: aktuell Hack, um bei erstem File keine Doppelabspielung zu triggern
-            playlist_len = self.ui.listWidget_playlist.count()
-            if system_state["playlist_ix"] < playlist_len: #TODO check if indexing is correct
-                self.playthreadActive = False
-                #print(f"EOF manager: playlist index: {system_state['playlist_ix']}")
-                self.logger.debug("EOF manager: playlist index: %i", system_state['playlist_ix'])
-                lw = self.ui.listWidget_playlist
-
-                self.logger.info("fetch next list file")
-                item_valid = False
-                
-                while (not item_valid) and (system_state["playlist_ix"] < playlist_len):
-                    item = lw.item(system_state["playlist_ix"])
-                    system_state["f1"] = self.my_dirname + '/' + item.text() #TODO replace by line below
-                    self.SigRelay.emit("cm_all_",["f1",self.my_dirname + '/' + item.text()])
-                    self.SigRelay.emit("cm_all_",["my_filename",self.my_filename])
-                    self.logger.info("EOF manager file: %s", system_state["f1"])
-                    self.wavheader = WAVheader_tools.get_sdruno_header(self,system_state["f1"])
-                    item_valid = True
-                    if not self.wavheader:
-                        self.logger.warning("EOF_manager: wrong wav file, skip to next listentry")
-                        system_state["playlist_ix"] += 1
-                        item_valid = False
-
-                if not (system_state["playlist_ix"] < playlist_len):
-                    system_state["playlist_ix"] = 0
-                    sys_state.set_status(system_state)
-                    self.logger.info("EOF_manager: end of list, stop player")
-                    time.sleep(0.5)
-                    self.updatecurtime(0)
-                    self.cb_Butt_STOP()
-                    self.ui.listWidget_playlist.clear()
-                    self.ui.listWidget_sourcelist.clear()
-                    sys_state.set_status(system_state)
-                    return()
-                
-                system_state["playlist_ix"] += 1                #TODO: system_state Eintragung von icorr etc erfolgt an mehreren STellen, fileopen, extract dat header und hier. Könnte an einer Stelle passieren, immer, sobald ein wav-header extrahiert wird
-                system_state["ifreq"] = self.wavheader['centerfreq'] + system_state["LO_offset"]
-                system_state["irate"] = self.wavheader['nSamplesPerSec']
-                system_state["icorr"] = 0
-                system_state["readoffset"] = self.readoffset
-                system_state["timescaler"] = self.wavheader['nSamplesPerSec']*self.wavheader['nBlockAlign']
-                #print(f'EOF manager new wavheader: {self.wavheader["nSamplesPerSec"]}')
-                self.logger.debug("EOF manager new wavheader: %i", self.wavheader["nSamplesPerSec"])
-                #TODO: write new header to wav edior
-                sys_state.set_status(system_state)
-                time.sleep(0.1)
-                self.showfilename()
-                if not self.TEST:
-                    stemlabcontrol.sdrserverstop()
-                    self.logger.info("EOF manager start play_manager")
-                self.play_manager()
-                system_state["fileopened"] = True
-                self.SigRelay.emit("cm_all_",["fileopened",True])
-                time.sleep(0.5) #TODO: necessary because otherwise file may not yet have been opened by playloopworker and then updatecurtime crashes because of invalid filehandel 
-                #may be solved by updatecurtime not accessing the filehandle returned from playworker but directly from system_state["f1"]
-                self.updatecurtime(0) #TODO: true datetime from record
-            else:
-                #reset playlist_ix
-                system_state["playlist_ix"] = 0
-                sys_state.set_status(system_state)
-                self.logger.info("EOF_manager: stop player")
-                time.sleep(0.5)
-                self.updatecurtime(0)
-                self.cb_Butt_STOP()
-                self.ui.listWidget_playlist.clear()
-                self.ui.listWidget_sourcelist.clear()
-        else:
-            #no next file,no endless loop --> stop player
-            #print("stop player")
-            self.logger.info("EOF_manager: stop player 2")
-            time.sleep(0.5)
-            self.cb_Butt_STOP()
-            ##TODO: introduce separate stop_manager
-            # if self.playthread.isRunning():
-            # self.playthreadActive = True
-        sys_state.set_status(system_state)
-
-
-    def updatecurtime(self,increment):             #increment current time in playtime window and update statusbar
-        """
-        VIEW or CONTROLLER ?
-        _increments time indicator by value in increment, except for 0. 
-        With increment == 0 the indicator is reset to 0
-        if self.modality == "play":
-            - update position slider
-            - set file read pointer to new position, |if increment| > 1
-        :param : increment
-        :type : int
-        '''
-        :raises [ErrorType]: [ErrorDescription]
-        '''
-        :return: True/False on successful/unsuccesful operation
-        :rtype: bool
-        """ 
-        #self.curtime varies between 0 and system_state["playlength"]
-        #print("incrementcurtime reached")
-        system_state = sys_state.get_status()
-        progress = 0
-        if self.playthreadActive is False:
-            sys_state.set_status(system_state)
-            return False
-        timestr = str(self.wavheader['starttime_dt'] + ndatetime.timedelta(seconds=self.curtime))
-
-        if increment == 0:
-            timestr = str(ndatetime.timedelta(seconds=0))
-            self.curtime = 0
-            self.ui.lineEditCurTime.setText(timestr)
-
-        if self.modality == 'play' and self.pausestate is False:
-            if self.curtime > 0 and increment < 0:
-                self.curtime += increment
-            if self.curtime < system_state["playlength"] and increment > 0:
-                self.curtime += increment
-            if system_state["playlength"] > 0:
-                progress = int(np.floor(1000*(self.curtime/system_state["playlength"])))
-            else:
-                sys_state.set_status(system_state)
-                return False
-            position_raw = self.curtime*system_state["timescaler"]
-            # TODO: check, geändert 09-12-2023: byte position mit allen Blockaligns auch andere als 4(16 bits); 
-            # TODO: adapt for other than header 216
-            position = min(max(216, position_raw-position_raw % self.wavheader['nBlockAlign']),
-                           self.wavheader['data_nChunkSize'])
-            # guarantee integer multiple of nBlockalign, > 0, <= filesize
-            if increment != -1 and increment != 1 or self.timechanged == True:
-                if system_state["fileopened"] is True:
-                    #print(f'increment curtime cond seek cur file open: {system_state["f1"]}')
-                    self.prfilehandle = self.playrec_tworker.get_4()
-                    self.prfilehandle.seek(int(position), 0) #TODO: Anpassen an andere Fileformate
-        
-        #timestr = str(self.wavheader['starttime_dt'] + ndatetime.timedelta(seconds=self.curtime))
-        self.ui.lineEditCurTime.setText(timestr) 
-        self.ui.ScrollBar_playtime.setProperty("value", progress)
-        sys_state.set_status(system_state)
-        #print("leave updatecurtime")
-        return True
-
-
-    def jump_1_byte(self):             #increment current time in playtime window and update statusbar
-        """
-        VIEW or CONTROLLER ?
-        _increments file reading position by +1 byte for manually correcting for sample jumps 
-        which deviate from integer multiples of sample size (4, 8); possible needs to be repeated several times
-        this is an emergency method for exceptional usecases and not for regular operation
-        if self.modality == "play":
-            - update position slider
-            - set file read pointer to new position, |if increment| > 1
-        :param : none
-        :type : int
-        '''
-        :raises [ErrorType]: [ErrorDescription]
-        '''
-        :return: True/False on successful/unsuccesful operation
-        :rtype: bool
-        """ 
-        system_state = sys_state.get_status()
-        #print("tracking: jump 1 byte")
-        self.logger.debug("tracking: jump 1 byte")
-        if self.modality == 'play' and self.pausestate is False:
-            if system_state["fileopened"] is True:
-                self.prfilehandle = self.playrec_tworker.get_4()
-                self.prfilehandle.seek(1,1) #TODO: ##OPTION from current position## 0 oder 1 ?
-        sys_state.set_status(system_state)
-        # not yet safe, because increment may happen beyond EOF, check for EOF
-
-   
-    def jump_to_position(self):
-        """
-        VIEW 
-
-        :param : none
-        :type : none
-        '''
-        :raises [ErrorType]: [ErrorDescription]
-        '''
-        :return: none
-        :rtype: none
-        """ 
-        #print("jumptoposition reached")
-        self.logger.debug("jumptoposition reached")
-        system_state = sys_state.get_status()
-        sbposition = self.ui.ScrollBar_playtime.value() #TODO: already in updatecurtime(...)
-        self.curtime = int(np.floor(sbposition/1000*system_state["playlength"]))  # seconds
-        timestr = str(self.wavheader['starttime_dt'] + ndatetime.timedelta(seconds=self.curtime))
-        #win.ui.lineEditCurTime.setText(timestr)
-        self.ui.lineEditCurTime.setText(timestr)
-        position_raw = self.curtime*system_state["timescaler"]  #timescaler = bytes per second
-        # TODO: check, geändert 09-12-2023: byte position mit allen Blockaligns auch andere als 4(16 bits); 
-        # TODO: adapt for other than header 216
-        position = min(max(216, position_raw-position_raw % self.wavheader['nBlockAlign']),
-                            self.wavheader['data_nChunkSize']+216) # guarantee reading from integer multiples of 4 bytes, TODO: change '4', '216' to any wav format ! 
-        if system_state["fileopened"] is True:
-            #print("Jump to next position")
-            self.logger.debug("jumptoposition reached")
-            #print(f'system_state["fileopened"]: {system_state["fileopened"]}')
-            self.logger.debug("system_state['fileopened']: %s",system_state["fileopened"])
-            self.prfilehandle = self.playrec_tworker.get_4()
-            self.prfilehandle.seek(int(position), 0) #TODO: Anpassen an andere Fileformate
-        #calculate corresponding position in the record file; value = 216 : 1000
-        #jump to the targeted position with integer multiple of wavheader["nBitsPerSample"]/4
-        sys_state.set_status(system_state)
-
- 
-    def GuiEnterCurTime(self):     ###########TODO: wird nirgends verwendet, remove ?
-
-        timestr = self.ui.lineEditCurTime.text()
-        #Convert timestr back to seconds
-        diagnostic = timestr.split(":")
-        if int(diagnostic[1]) > 59 or int(diagnostic[2]) > 59:
-            auxi.standard_errorbox("Minutes and Seconds cannot be > 59")
-            return                                                 
-        total_seconds = sum(x * int(t) for x, t in zip([3600, 60, 1], timestr.split(":"))) 
-
-        self.curtime = total_seconds
-        self.timechanged = True
-
-
-    def reset_LO_bias(self):
-
-        system_state = sys_state.get_status()
-        self.ui.radioButton_LO_bias.setChecked(False)
-        self.ui.radioButton_LO_bias.setEnabled(True)
-        system_state["LO_offset"] = 0
-        sys_state.set_status(system_state)
-        self.ui.lineEdit_LO_bias.setText("0")
-        self.ui.lineEdit_LO_bias.setStyleSheet("background-color: white")
-
-
-    def update_LO_bias(self):
-        """ Purpose: update LO bias setting; 
-        check validity of offset value: isnumeric, integer
-        :param [ParamName]: none
-        :type [ParamName]: none
-        :raises none
-        :return: True if successful, otherwise False
-        :rtype: Boolean
-        """
-        system_state = sys_state.get_status()
-
-        if self.playthreadActive:
-            sys_state.set_status(system_state)
-            return False
-        
-        LObiasraw = self.ui.lineEdit_LO_bias.text().lstrip(" ")
-        if len(LObiasraw) < 1:
-            sys_state.set_status(system_state)
-            return False
-        LObias_sign = 1
-        if LObiasraw[0] == "-":
-            LObias_sign = -1
-            LObias_test = LObiasraw.lstrip("-")
-            if len(LObias_test)<1:
-                sys_state.set_status(system_state)
-                return False
-        else:
-            LObias_test = LObiasraw
-        if LObias_test.isnumeric() == True: 
-            i_LO_bias = LObias_sign*int(LObias_test)
-        else:
-            auxi.standard_errorbox("invalid numeral in center frequency offset field, please enter valid integer value (kHz)")
-            self.reset_LO_bias()
-            sys_state.set_status(system_state)
-            return False
-        #transfer to systemstate
-        if self.ui.radioButton_LO_bias.isChecked() is True:
-            system_state["LO_offset"] = int(i_LO_bias*1000)
-            system_state["ifreq"] = int(self.wavheader['centerfreq'] + system_state["LO_offset"])
-            sys_state.set_status(system_state)
-        sys_state.set_status(system_state)
-        return True
-
-    def LO_bias_checkbounds(self):
-        """ Purpose: checks if LO bias setting is within valid bounds; 
-        :param [ParamName]: none
-        :type [ParamName]: none
-        :raises none
-        :return: True if successful, otherwise False
-        :rtype: Boolean
-        """
-
-        system_state = sys_state.get_status()
-        eff_ifreq = system_state["LO_offset"] + system_state["ifreq"]
-        if not self.update_LO_bias():
-            sys_state.set_status(system_state)
-            return False                 
-        if (eff_ifreq <= 0):
-            auxi.standard_errorbox("invalid negative center frequency offset, magnitude greater than LO frequency of the record, please correct value")
-            self.reset_LO_bias()
-            self.cb_Butt_STOP()
-            sys_state.set_status(system_state)
-            return False
-        if (eff_ifreq > 60000000):
-            auxi.standard_errorbox("invalid  center frequency offset, sum of record LO and offset must be < 60000 kHz, please correct value")
-            self.reset_LO_bias()
-            self.cb_Butt_STOP()
-            sys_state.set_status(system_state)
-            return False
-        sys_state.set_status(system_state)
-        return True
-
-    def activate_LO_bias(self):
-        """ Purpose: handle radiobutton for LO bias setting; 
-        (1) highlight LO_lineEdit window
-        (2) call update of offset value
-        :param [ParamName]: none
-        :type [ParamName]: none
-        :raises none
-        :return: none
-        :rtype: none
-        """
-
-        # if self.ui.radioButton_LO_bias.isChecked() is True:
-        #     self.ui.lineEdit_LO_bias.setEnabled(True)
-        # else:
-        #     self.ui.lineEdit_LO_bias.setEnabled(False)
-        #     self.ui.lineEdit_LO_bias.setText("0000")
-
-        #i_LO_bias = 0 ###TODO: activate ???
-        self.ui.lineEdit_LO_bias.setStyleSheet("background-color: white")
-        #TODO: ACTIVATE LObias check code
-        if self.ui.radioButton_LO_bias.isChecked() is True:
-            self.ui.lineEdit_LO_bias.setStyleSheet("background-color: yellow")
-            self.update_LO_bias()
-
-###############################################CURRENT STATE OF TRANSFER
-############################## END TAB PLAYER ####################################
-
-############################## TAB RESAMPLER, REMOVE COMPLETELY ####################################
-
-    # def reformat_targetLOpalette(self): #TODO: check, if this stays part of gui or should be shifted to resampler module
-    #     """
-    #     VIEW Element of Tab 'resample
-    #     """
-    #     self.ui.lineEdit_resample_targetLO.setStyleSheet("background-color: bisque1")
-
-    # def cb_Butt_resample(self):
-    #     #REMOVE AFTER CHANGE TO NEW STRUCTURE ; call 
-    #     #self.ui.listWidget_playlist_2.itemChanged.connect(resample_v.reslist_update) #dummy in order to prevent exceptions in case the signal is already disconnevted
-    #     #system_state = sys_state.get_status()
-    #     try:
-    #         self.ui.listWidget_playlist_2.itemChanged.disconnect(resample_v.reslist_update)
-    #     except:
-    #         pass
-
-    #     resample_v.cb_resample()
-    #     self.ui.radioButton_advanced_sampling.setChecked(False)
-
-    
 ############################## TAB ANNOTATE ####################################
 
     def annotation_completed(self):
@@ -2162,11 +1251,7 @@ class WizardGUI(QMainWindow):
         self.ui.spinBoxminSNR_ScannerTab.setProperty("value", self.PROMINENCE)
         self.SigRelay.emit("cm_all_",["prominence",self.PROMINENCE])
         self.SigRelay.emit("cexex_view-spectrum",["updateGUIelements",0])
-
-
         #self.cb_plot_spectrum()
-
-
         #.cb_plot_spectrum()
 
     def activate_WAVEDIT(self):
@@ -3555,20 +2640,21 @@ if __name__ == '__main__':
     sys_state.set_status(system_state)
     ###################CHECK IF STILL NECESSARY END ###########################
 
-    #TODO TODO TODO: shift all that to a tab initialization method in core module
-    win.SigRelay.emit("cm_all_",["emergency_stop",False])
-    win.SigRelay.emit("cm_all_",["fileopened",False])
-    win.SigRelay.emit("cm_all_",["Tabref",win.Tabref])
-    win.SigRelay.emit("cm_resample",["rates",system_state["rates"]])
-    win.SigRelay.emit("cm_resample",["irate",system_state["irate"]])
-    win.SigRelay.emit("cm_playrec",["rates",system_state["rates"]])
-    win.SigRelay.emit("cm_playrec",["irate",system_state["irate"]])
-    win.SigRelay.emit("cm_resample",["reslist_ix",system_state["reslist_ix"]]) #TODO check: maybe local in future !
-    win.SigRelay.emit("cm_playrec",["Obj_stemlabcontrol",stemlabcontrol])
-    win.SigRelay.emit("cm_configuration",["tablist",tab_dict["list"]])
-    win.SigRelay.emit("cexex_configuration",["updateGUIelements",0])
-    win.SigRelay.emit("cm_playrec",["sdr_configparams",system_state["sdr_configparams"]])
-    win.SigRelay.emit("cm_playrec",["HostAddress",system_state["HostAddress"]])
+    #all tab initializations occur in connect_init() in core module
+    xcore_v.connect_init() 
+    # win.SigRelay.emit("cm_all_",["emergency_stop",False]) #TODO: remove after tests
+    # win.SigRelay.emit("cm_all_",["fileopened",False])
+    # win.SigRelay.emit("cm_all_",["Tabref",win.Tabref])
+    # win.SigRelay.emit("cm_resample",["rates",system_state["rates"]])
+    # win.SigRelay.emit("cm_resample",["irate",system_state["irate"]])
+    # win.SigRelay.emit("cm_playrec",["rates",system_state["rates"]])
+    # win.SigRelay.emit("cm_playrec",["irate",system_state["irate"]])
+    # win.SigRelay.emit("cm_resample",["reslist_ix",system_state["reslist_ix"]]) #TODO check: maybe local in future !
+    # win.SigRelay.emit("cm_playrec",["Obj_stemlabcontrol",stemlabcontrol])
+    # win.SigRelay.emit("cm_configuration",["tablist",tab_dict["list"]])
+    # win.SigRelay.emit("cexex_configuration",["updateGUIelements",0])
+    # win.SigRelay.emit("cm_playrec",["sdr_configparams",system_state["sdr_configparams"]])
+    # win.SigRelay.emit("cm_playrec",["HostAddress",system_state["HostAddress"]])
     sys.exit(app.exec_())
 
 #TODOs:
@@ -3578,7 +2664,7 @@ if __name__ == '__main__':
         #################TODO TEST in resample module: implement next line newly with Relay after tarnsfer of wavedit module 
         #self.gui.fill_wavtable() has already been replaced by Relay
     #
-    # * Player-Modul Tests und Bugfixing: 3h
+    # * Player-Modul Tests und Bugfixing: 0.5h
     #
     # + Player Modul um Rec ausbauen: 5h
     #
@@ -3920,3 +3006,1032 @@ if __name__ == '__main__':
     #         self.ui.tab_resample.setEnabled(True)
 
 
+
+#     ############################## TAB PLAYER ####################################
+#     def cb_Butt_toggle_playlist(self):
+#         system_state = sys_state.get_status()
+#         if system_state["playlist_active"] == False:
+#             self.ui.pushButton_act_playlist.setChecked(True)
+#             self.ui.listWidget_sourcelist.setEnabled(True)
+#             self.ui.listWidget_playlist.setEnabled(True)
+#             system_state["playlist_active"] = True
+#         else:
+#             self.ui.pushButton_act_playlist.setChecked(False)
+#             self.ui.listWidget_sourcelist.setEnabled(False)
+#             self.ui.listWidget_playlist.setEnabled(False)
+#             system_state["playlist_active"] = False
+
+#     def playlist_update(self): #TODO: list is only updated up to the just before list change dragged item,
+#         """
+#         VIEW
+#         updates playlist whenever the playlist Widget is changed
+#         :param: none
+#         :type: none
+#         ...
+#         :raises: none
+#         ...
+#         :return: none
+#         :rtype: none
+#         """
+#         #print("playlist updated")  
+#         self.logger.info("playlist_update: playlist updated")
+        
+#         time.sleep(1)
+#         system_state = sys_state.get_status()
+#         #get all items of playlist Widget and write them to system_state["playlist"]
+#         lw = self.ui.listWidget_playlist
+#         # let lw haven elements in it.
+#         playlist = []
+#         for x in range(lw.count()-1):
+#             item = lw.item(x)
+#             #playlist.append(lw.item(x))
+#             playlist.append(item.text())
+#         system_state["playlist"] = playlist
+#         self.SigRelay.emit("cm_playrec",["playlist",playlist])
+#         sys_state.set_status(system_state)
+
+#                     # _item2.setText(x)
+
+#     def cb_setgain(self):
+#         '''
+#         VIEW: cb of Tab player
+#         #TODO
+#         '''
+#         if self.playthreadActive is False:
+#             return False
+#         self.gain = 10**((self.ui.verticalSlider_Gain.value() - self.GAINOFFSET)/20)
+#         #print(f"self.gain in cb:  {self.gain}")
+#         self.playrec_tworker.set_6(self.gain)
+#         #print(self.gain)
+#         #TODO: display gain value somewhere
+
+    # def updatetimer(self):
+    #     """
+    #     VIEW: cb of Tab player
+    #     updates timer functions
+    #     shows date and time
+    #     changes between UTC and local time
+    #     manages recording timer
+    #     :param: none
+    #     :type: none
+    #     ...
+    #     :raises: none
+    #     ...
+    #     :return: none
+    #     :rtype: none
+    #     """
+
+    #     if self.ui.checkBox_UTC.isChecked():
+    #         self.UTC = True #TODO:future system state
+    #     else:
+    #         self.UTC = False
+    #     if self.ui.checkBox_TESTMODE.isChecked():
+    #         self.TEST = True #TODO:future system state
+    #     else:
+    #         self.TEST = False
+
+    #     if self.UTC:
+    #         dt_now = datetime.now(ndatetime.timezone.utc)
+    #         self.ui.label_showdate.setText(
+    #             dt_now.strftime('%Y-%m-%d'))
+    #         self.ui.label_showtime.setText(
+    #             dt_now.strftime('%H:%M:%S'))
+    #     else:
+    #         dt_now = datetime.now()
+    #         self.ui.label_showdate.setText(
+    #             dt_now.strftime('%Y-%m-%d'))
+    #         self.ui.label_showtime.setText(
+    #             dt_now.strftime('%H:%M:%S'))
+            
+    #     #TODO: reimplement recorder
+
+    #     # if self.ui.radioButton_timeract.isChecked():
+    #     #     self.ui.radioButton_Timer.setChecked(False)
+    #     #     self.ui.dateTimeEdit_setclock.setEnabled(False)
+    #     #     self.ui.checkBox_UTC.setEnabled(False)
+    #     #     st = self.ui.dateTimeEdit_setclock.dateTime().toPyDateTime()
+    #     #     if self.UTC:
+    #     #         ct = QtCore.QDateTime.currentDateTime().toUTC().toPyDateTime()
+    #     #     else:
+    #     #         ct = QtCore.QDateTime.currentDateTime().toPyDateTime()
+    #     #     self.diff = np.floor((st-ct).total_seconds())
+    #     #     if self.diff > 0:
+    #     #         countdown = str(ndatetime.timedelta(seconds=self.diff))
+    #     #         self.ui.label_ctdn_time.setText(countdown)
+    #     #     else:
+    #     #         if self.recording_wait is True:
+    #     #             self.recording_wait = False
+    #     #             self.recordingsequence()
+    #     #         return
+    #     # else:
+    #     #     self.ui.checkBox_UTC.setEnabled(True)
+    #     #     if not self.ui.radioButton_Timer.isChecked():
+    #     #         self.ui.dateTimeEdit_setclock.setEnabled(False)
+    #     #     else:
+    #     #         self.ui.dateTimeEdit_setclock.setEnabled(True)
+
+    
+#     def cb_Butt_toggleplay(self):
+#         """ 
+#         toggles the play button between play and pause states
+#         TODO
+#         :param: none
+#         :type: none
+#         ...
+#         :raises: none
+#         ...
+#         :return: none
+#         :rtype: none
+#         """
+#         system_state = sys_state.get_status()
+#         if self.ui.pushButton_Play.isChecked() == True:
+#             if not system_state["fileopened"]:
+#                 if self.ui.radioButton_LO_bias.isChecked() is True:
+#                     msg = QMessageBox()
+#                     msg.setIcon(QMessageBox.Question)
+#                     msg.setText("Apply LO offset")
+#                     msg.setInformativeText("center frequency offset is activated, the LO will be shifted by " + str(int(system_state["LO_offset"]/1000)) + " kHz. Do you want to proceed ? If no, please inactivate center frequency offset")
+#                     msg.setWindowTitle("Apply LO offset")
+#                     msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+#                     msg.buttonClicked.connect(self.popup)
+#                     msg.exec_()
+#                     if self.yesno == "&No":
+#                         ###RESET playgroup
+#                         self.reset_playerbuttongroup()
+#                         self.reset_LO_bias()
+#                         sys_state.set_status(system_state)
+#                         return False
+
+#                 self.ui.radioButton_LO_bias.setEnabled(False)
+#                 if self.cb_open_file() is False:
+#                     self.reset_playerbuttongroup()
+#                     sys_state.set_status(system_state)
+#                     return False
+#                 #TODO: return if open file is false
+#                 if not self.LO_bias_checkbounds():
+#                     self.reset_playerbuttongroup()
+#                     return False
+#                 self.ui.lineEdit_LO_bias.setEnabled(False)
+#                 ######Setze linedit f LO_Bias inaktiv
+#             if not self.checkSTEMLABrates():
+#                 self.reset_playerbuttongroup()
+#                 return False
+#             self.ui.pushButton_Play.setIcon(QIcon("pause_v4.PNG"))
+#             if self.playthreadActive == True:
+#                 self.playrec_tworker.pausestate = False
+#             self.play_manager()
+#             self.pausestate = False
+#             self.stopstate = False
+#             self.ui.ScrollBar_playtime.setEnabled(True)
+#             self.ui.pushButton_adv1byte.setEnabled(True)
+#         else:
+#             self.ui.pushButton_Play.setIcon(QIcon("play_v4.PNG"))
+#             self.pausestate = True ##TODO CHECK: necessary ? es gibt ja self.playrec_tworker.pausestate
+#             if self.playthreadActive == True:
+#                 self.playrec_tworker.pausestate = True
+
+
+#     def editHostAddress(self):     #TODO Check if this is necessary, rename to cb_.... ! shift to config Menu
+#         ''' 
+#         VIEW, cb of player, not marked as cb, RENAME !
+#         TODO
+#         Purpose: Callback for edidHostAddress Lineedit item
+#         activate Host IP address field and enable saving mode
+#         Returns: nothing
+#         '''
+#         self.ui.lineEdit_IPAddress.setEnabled(True)
+#         self.ui.lineEdit_IPAddress.setReadOnly(False)
+#         self.ui.pushButton_IP.clicked.connect(self.set_IP)
+#         self.ui.pushButton_IP.setText("save IP Address")
+#         self.ui.pushButton_IP.adjustSize()
+#         self.IP_address_set = False
+
+#     def set_IP(self): #TODO TODO TODO: shift to config tab
+#         """ 
+#         CONTROLLER
+#         set IP Address and save to config yaml
+#             disable IP address line
+#             enable Button for editing address 
+#         :param: none
+#         :type: none
+#         ...
+#         :raises warning message: Read error if config_wizard.yaml does not exist
+#         ...
+#         :return: none
+#         :rtype: none
+#         """
+#         system_state = sys_state.get_status()
+#         #self.HostAddress = self.ui.lineEdit_IPAddress.text()
+#         system_state["HostAddress"] = self.ui.lineEdit_IPAddress.text() #TODO: Remove after transfer of playrec
+#         #print("IP address read")
+#         try:
+#             stream = open("config_wizard.yaml", "r")
+#             self.metadata = yaml.safe_load(stream)
+#             stream.close()
+#         except:
+#             auxi.standard_errorbox("Cannot open Config File")
+#             self.logger.error("cannot get metadata")
+#             #print("cannot get metadata")
+#         self.metadata["STM_IP_address"] = system_state["HostAddress"]
+#         stream = open("config_wizard.yaml", "w")
+#         yaml.dump(self.metadata, stream)
+
+#         self.ui.lineEdit_IPAddress.setReadOnly(True)#TODO: Remove after transfer of playrec
+#         self.ui.lineEdit_IPAddress.setEnabled(False)#TODO: Remove after transfer of playrec
+#         self.ui.pushButton_IP.clicked.connect(self.editHostAddress)#TODO: Remove after transfer of playrec
+#         self.ui.pushButton_IP.setText("Set IP Address")#TODO: Remove after transfer of playrec
+#         self.ui.pushButton_IP.adjustSize()#TODO: Remove after transfer of playrec
+#         sys_state.set_status(system_state)
+
+#     def shutdown(self):
+#         '''
+#         VIEW
+#         TODO: rew spinx Purpose: Callback for SHUTDOWN Button
+#         Returns: nothing
+#         '''
+#         system_state = sys_state.get_status()
+#         self.cb_Butt_STOP()
+#         self.timertick.stoptick()
+#         stemlabcontrol.RPShutdown(system_state["sdr_configparams"])
+
+        
+#     def stemlabcontrol_errorhandler(self,errorstring): #TODO: is not being used anywhere !
+#         """handler for error signals from stemlabcontrol class
+#             display error in standard errormessagebox
+#             reset playerbuttongroup and GUI
+#         VIEW
+#         :param: errorstring
+#         :type: str
+#         :raises [none]: [none]
+#         :return: none
+#         :rtype: none
+#         """     
+#         auxi.standard_errorbox(errorstring)
+#         stemlabcontrol.SigError.connect(self.reset_playerbuttongroup) #TODO: wird bis dato nicht emittiert
+#         stemlabcontrol.SigError.connect(self.reset_GUI) #TODO: wird bis dato nicht emittiert
+
+        
+#     def display_status(self,messagestring):
+#         """handler for message signals from stemlabcontrol class
+#             display message in GUI status field, if exists
+#         VIEW
+#         :param: messaagestring
+#         :type: str
+#         :raises [none]: [none]
+#         :return: none
+#         :rtype: none
+#         """         
+#         #print(f"display status of stemlabcontrol, status = {messagestring}") #TODO: define displaystatus in more elaborate form
+
+#     def play_manager(self):
+#         """Callback function for Play Button; Calls file_open
+#            starts data streaming to STEMLAB sdr server via method play_tstarter
+#         VIEW
+#         :raises [none]: [none]
+#         :return: False if IP address not set, File could not be opened
+#                  False if STEMLAB socket cannot be started
+#                  False if playback thread cannot be started
+#                  True if player can be started successfully
+#         :rtype: Boolean
+#         """        
+#         system_state = sys_state.get_status()
+#         if self.playthreadActive is True:
+#             #print("playthread is active, no action")
+
+#             self.logger.debug("playthread is active, no action")
+#             sys_state.set_status(system_state)
+#             return False
+#         self.updatecurtime(0) #TODO: true datetime from record
+
+#         if system_state["f1"] == "": #TODO: replace by line below
+#         # if resample_m.mdl["f1"] == "":
+#             sys_state.set_status(system_state)
+#             return False
+#         stemlabcontrol.SigError.connect(self.stemlabcontrol_errorhandler) #
+#         stemlabcontrol.SigMessage.connect(self.display_status) 
+#         stemlabcontrol.set_play()
+#         self.modality = "play"
+#         # start server unless already started
+#         if self.TEST is False:
+#             configparams = {"ifreq":system_state["ifreq"], "irate":system_state["irate"],
+#                             "rates": system_state["rates"], "icorr":system_state["icorr"],
+#                             "HostAddress":system_state["HostAddress"], "LO_offset":system_state["LO_offset"]}
+#             system_state["sdr_configparams"] = configparams
+#             stemlabcontrol.sdrserverstart(system_state["sdr_configparams"])
+#             stemlabcontrol.set_play() #wozu ? war ja schon oben !
+#             #print(f'play_manager configparams: {configparams}')
+
+#             self.logger.info(f'play_manager configparams: {configparams}')
+
+#             sys_state.set_status(system_state)
+#             if stemlabcontrol.config_socket(configparams):
+#                 #print("playthread now activated in play_manager")
+#                 self.logger.info("playthread now activated in play_manager")
+#                 self.play_tstarter()
+#             else:
+#                 sys_state.set_status(system_state)
+#                 return False
+#         else:
+#             if self.play_tstarter() is False:
+#                 sys_state.set_status(system_state)
+#                 return False
+#         #TODO: activateself.ui.label_RECORDING.setStyleSheet(('background-color: \
+#         #                                     rgb(46,210,17)'))
+#         #TODO: activateself.ui.label_RECORDING.setText("PLAY")
+#         #TODO: activateself.ui.indicator_Stop.setStyleSheet('background-color: rgb(234,234,234)')
+#         #TODO: activate.ui.pushButton_Rec.setEnabled(False)
+#             #print("stemlabcontrols activated")
+#             self.logger.info("stemlabcontrols activated")
+#         sys_state.set_status(system_state)
+#         return True
+    
+#     def cb_Butt_REC(self):
+#         """
+#         VIEW
+#         Callback function for REC Button; 
+#         so far dummy, as not yet implemented
+#         :raises [none]: [none]
+#         :return: none
+#         :rtype: none
+#         """                
+#         auxi.standard_errorbox("Recording is not yet implemented in this version of the COHIWizard; Please use RFCorder until a new version has been released")
+#         return False
+
+
+#     def cb_Butt_STOP(self):
+#         """
+#         VIEW
+#         Callback function for Stop Button; 
+#         sets stopstate flag True
+#         stops playrec_thread
+#         stops sdrserver if running --> stops data streaming to STEMLAB sdr server
+#         resets all player buttons to initial state
+#         set all tabs which 
+#         :raises [none]: [none]
+#         :return: none
+#         :rtype: none
+#         """        
+#         #TODO: activate for player
+#         #if True:
+#         self.stopstate = True
+#         system_state = sys_state.get_status()
+# ####STRUCT TODO: das könnte ein eigener stop_manager sein :
+#         if self.playthreadActive is False:
+#             system_state["fileopened"] = False ###CHECK
+#             self.SigRelay.emit("cm_all_",["fileopened",False])
+#             sys_state.set_status(system_state) ####Remove after core full impl
+#             return
+#         if self.playthreadActive:
+#             self.playrec_tworker.stop_loop()
+#         if self.TEST is False:
+#             stemlabcontrol.sdrserverstop()
+#         self.updatecurtime(0)        # reset playtime counter #TODO: true datetime from record
+#         self.reset_playerbuttongroup()
+#         sys_state.set_status(system_state)
+#         #self.reset_GUI()
+#         self.SigGUIReset.emit()
+
+
+#     def reset_playerbuttongroup(self):
+#         """
+#         VIEW
+
+#         """
+#         system_state = sys_state.get_status()
+#         self.ui.pushButton_Play.setIcon(QIcon("play_v4.PNG"))
+#         self.ui.pushButton_Play.setChecked(False)
+#         self.ui.pushButton_Loop.setChecked(False)
+#         self.playthreadActive = False
+#         #self.activate_tabs(["View_Spectra","Annotate","Resample","YAML_editor","WAV_header"])
+#         self.setactivity_tabs("Player","activate",[])
+#         system_state["fileopened"] = False ###CHECK
+#         self.SigRelay.emit("cm_all_",["fileopened",False])
+#         self.ui.radioButton_LO_bias.setEnabled(True)
+#         self.ui.lineEdit_LO_bias.setEnabled(True)
+#         self.ui.ScrollBar_playtime.setEnabled(False)
+#         self.ui.pushButton_adv1byte.setEnabled(False)
+#         sys_state.set_status(system_state)
+
+
+#     def play_tstarter(self):  # TODO: Argument (self, modality), modality= "recording", "play", move to module cplayrec controller
+#         """_start playback via data stream to STEMLAB sdr server
+#         starts thread 'playthread' for data streaming to the STEMLAB
+#         instantiates thread worker method
+#         initializes signalling_
+#         CONTROLLER
+#         :return: _False if error, True on succes_
+#         :rtype: _Boolean_
+#         """        
+
+#         '''
+#         Purpose: 
+#         SigFinished:                 emitted by: thread worker on end of stream
+#                 thread termination, activate callback for Stop button
+#         thread.finished:
+#                 thread termination
+#         thread.started:
+#                 start worker method streaming loop
+#         SigIncrementCurTime:         emitted by: thread worker every second
+#                 increment playtime counter by 1 second
+#         Returns: False if error, True on success
+#         '''
+#         print("file opened in playloop thread starter")
+#         if self.wavheader['nBitsPerSample'] == 16 or self.wavheader['nBitsPerSample'] == 24 or self.wavheader['nBitsPerSample'] == 32:
+#             pass
+#             #TODO: Anpassen an andere Fileformate, Einbau von Positionen 
+#         else:
+#             auxi.standard_errorbox("dataformat not supported, only 16, 24 and 32 bits per sample are possible")
+#             return False
+#         system_state = sys_state.get_status()
+#         self.playthread = QThread()
+#         from playrec import playrec_worker
+#         self.playrec_tworker = playrec_worker(stemlabcontrol)
+#         self.playrec_tworker.moveToThread(self.playthread)
+#         self.playrec_tworker.set_0(system_state["f1"])
+#         self.playrec_tworker.set_1(system_state["timescaler"])
+#         self.playrec_tworker.set_2(self.TEST)
+#         self.playrec_tworker.set_3(self.modality)
+#         self.playrec_tworker.set_6(self.gain)
+#         format = [self.wavheader["wFormatTag"], self.wavheader['nBlockAlign'], self.wavheader['nBitsPerSample']]
+#         self.playrec_tworker.set_7(format)
+        
+#         self.prfilehandle = self.playrec_tworker.get_4() #TODO CHECK IF REQUIRED test output, no special other function
+#         #if self.modality == "play": #TODO: activate
+#         if True:
+#             self.playthread.started.connect(self.playrec_tworker.play_loop16)
+#         # else:
+#         #     self.playthread.started.connect(self.playrec_tworker.rec_loop)
+
+#         self.playrec_tworker.SigFinished.connect(self.EOF_manager)
+#         self.SigEOFStart.connect(self.EOF_manager)
+#         self.playrec_tworker.SigFinished.connect(self.playrec_tworker.deleteLater)
+
+#         self.playthread.finished.connect(self.playthread.deleteLater)
+#         self.playrec_tworker.SigIncrementCurTime.connect(
+#                                                 lambda: self.updatecurtime(1))
+#         self.playrec_tworker.SigIncrementCurTime.connect(self.showRFdata)
+#         #self.playrec_tworker.SigBufferUnderflow.connect(
+#         #                                         lambda: self.bufoverflowsig()) #TODO reactivate
+#         # TODO: check, if updatecurtime is also controlled from within
+#         # the recording loop
+#         self.playthread.start()
+#         if self.playthread.isRunning():
+#             self.playthreadActive = True
+#             #self.inactivate_tabs(["View_Spectra","Annotate","Resample","YAML_editor","WAV_header"])
+#             self.setactivity_tabs("Player","inactivate",[])
+#             self.logger.info("playthread started in playthread_threadstarter = play_tstarter() (threadstarter)")
+#             # TODO replace playthreadflag by not self.playthread.isFinished()
+#             sys_state.set_status(system_state)
+#             return True
+#         else:
+#             auxi.standard_errorbox("STEMLAB data transfer thread could not be started")
+#             sys_state.set_status(system_state)
+#             return False
+
+#     def showRFdata(self):
+#         """_take over datasegment from player loop worker and caluclate from there the signal volume and present it in the volume indicator
+#         read gain value and present it in the player Tab
+#         read data segment and correlate with previous one --> detect tracking errors and correct them_
+#         GUI Element
+#         :return: _False if error, True on succes_
+#         :rtype: _Boolean_
+#         """        
+#         system_state = sys_state.get_status()
+#         gain = self.playrec_tworker.get_6()
+#         data = self.playrec_tworker.get_5()
+#         #print("dispRFdata reached")
+#         #TODO: Test tracking error detector: not yet good  ! Bisher kompletter Blödsinn
+#         #Idea: evaluate the correlation coefficient between the current and the previous data segment. 
+#         # If lo and hi byte are interchanged I would expect much worse correlation, because the low byte then dominates the number and noise is much more prominent there
+#         # if that is too weak, try with second highest nibble
+#         if "previous_RF_data" in system_state.keys(): 
+#             # x1 = np.bitwise_and(data[0::2], 0xFFFF) #+ 1j * data[1::2]
+#             # x2 = np.bitwise_and(system_state["previous_RF_data"][0::2], 0xFFFF) #+1j * system_state["previous_RF_data"][1::2]
+#             # lx1 = (x1 >> 8) & 0xF
+#             # lx2 = (x2 >> 8) & 0xF
+
+#             # ccf = np.corrcoef([x1, x2])
+#             ccf = np.corrcoef([data[0::2], system_state["previous_RF_data"][0::2]])
+#             #print(f"correlation RF with previous segment: {ccf} len(data): {len(data[0::2])} meandelta: {np.mean(data[0::2]-system_state['previous_RF_data'][0::2])}")
+
+#         system_state["previous_RF_data"] = data
+#         # end tracking error detector
+
+#         s = len(data)
+#         nan_ix = [i for i, x in enumerate(data) if np.isnan(x)]
+#         if np.any(np.isnan(data)):
+#             self.stopstate = True
+#             time.sleep(1)
+#             data[nan_ix] = np.zeros(len(nan_ix))
+#             #ff = median_filter(data,30, mode = 'constant')
+#             #print(f"showRFdata: NaN found in data, length: {len(nan_ix)} , maxval: {np.max(data)}, avg: {np.median(data)}")
+#             self.logger.error("show RFdata: NaN found in data, length: %i ,maxval: %f , avg: %f" , len(nan_ix),  np.max(data), np.median(data))
+#             sys_state.set_status(system_state)
+#             return(False)
+#         cv = (data[0:s-1:2].astype(np.float32) + 1j * data[1:s:2].astype(np.float32))*gain
+#         if self.wavheader['wFormatTag'] == 1:
+#             scl = int(2**int(self.wavheader['nBitsPerSample']-1))-1
+#         elif self.wavheader['wFormatTag']  == 3:
+#             scl = 1 #TODO:future system state
+#         else:
+#             auxi.standard_errorbox("wFormatTag is neither 1 nor 3; unsupported Format, this file cannot be processed")
+#             sys_state.set_status(system_state)
+#             return False
+#         #print(f"scl = {scl}")
+#         av = np.abs(cv)/scl  #TODO rescale according to scaler from formattag:
+#         vol = np.mean(av)
+#         #print(f"average signal: {vol} , gain: {gain}, scl: {self.scl}")
+#         # make vol a dB value and rescale to 1000
+#         # 900 = 0 dB
+#         # 1000 = overload und mache Balken rot
+#         # min Anzeige = 1 entspricht -100 dB
+#         #print(f"data update from showRFdata: {vol}")
+#         refvol = 1
+#         dBvol = 20*np.log10(vol/refvol)
+#         dispvol = min(dBvol + 80, 100)
+#         self.ui.progressBar_volume.setValue(int(np.floor(dispvol*10))) 
+#         if dispvol > 80:
+#             self.ui.progressBar_volume.setStyleSheet("QProgressBar::chunk "
+#                     "{"
+#                         "background-color: red;"
+#                     "}")
+#         elif dispvol < 30:
+#             self.ui.progressBar_volume.setStyleSheet("QProgressBar::chunk "
+#                     "{"
+#                         "background-color: yellow;"
+#                     "}")           
+#         else:
+#             self.ui.progressBar_volume.setStyleSheet("QProgressBar::chunk "
+#                     "{"
+#                         "background-color: green;"
+#                     "}")
+#         sys_state.set_status(system_state)
+
+#     ######################## REPLACE BY INDIVIDUAL GUI updaters #############################
+
+
+    def showfilename(self):
+        """_updates the name of currenly loaded data file in all instances of filename labels_
+        :param : none if old system, args[0] = string with filename to be displayed 
+        :type : none if old system, str else
+        '''
+        :raises [ErrorType]: [ErrorDescription]
+        '''
+        :return: none
+        :rtype: none
+        """ 
+        #self.SigRelay.emit("cm_all_",["prominence",self.PROMINENCE])
+        self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
+        #TODO TODO TODO: remove the following after change to all new modules and Relay
+        self.my_dirname = os.path.dirname(system_state["f1"])
+        self.my_filename, self.ext = os.path.splitext(os.path.basename(system_state["f1"]))
+        self.ui.label_Filename_Annotate.setText(self.my_filename + self.ext)
+        self.ui.label_Filename_WAVHeader.setText(self.my_filename + self.ext)
+        self.ui.label_Filename_Player.setText(self.my_filename + self.ext)
+        #system_state = sys_state.get_status()
+# ######################## END REPLACE BY INDIVIDUAL GUI updaters #############################
+
+#     def EOF_manager(self):
+#         """_target of SigFinished from playloop. If signal is received, a decision is made whether 
+#             to stop the player completely, 
+#             continue with next file if 'nextfile' in wavheader exists
+#             continue restarting the same file as long as in endless mode_
+
+#         :param : none
+#         :type : none
+#         '''
+#         :raises [ErrorType]: [ErrorDescription]
+#         '''
+#         :return:
+#         :rtype:
+#         """ 
+#         #TODO: check why this sequence incl file close needs to be outside the playthred worker; causes some problems
+#         system_state = sys_state.get_status()
+#         prfilehandle = self.playrec_tworker.get_4()
+#         self.playthread.quit()
+#         self.playthread.wait()
+#         time.sleep(0.1)
+#         prfilehandle.close()
+#         system_state["fileopened"] = False
+#         self.SigRelay.emit("cm_all_",["fileopened",False])
+#         if self.stopstate == True:
+#             #print("EOF-manager: player has been stopped")
+#             self.logger.info("EOF-manager: player has been stopped")
+#             time.sleep(0.5)
+#             sys_state.set_status(system_state)
+#             return
+#         if (os.path.isfile(self.my_dirname + '/' + self.wavheader['nextfilename']) == True and self.wavheader['nextfilename'] != "" ):
+#             #TODO: new wavheader needs to be extracted
+#             # play next file in nextfile-list
+#             system_state["f1"] = self.my_dirname + '/' + self.wavheader['nextfilename']
+#             self.SigRelay.emit("cm_all_",["f1",self.my_dirname + '/' + self.wavheader['nextfilename']])
+#             self.SigRelay.emit("cm_all_",["my_filename",self.my_filename])
+#             self.wavheader = WAVheader_tools.get_sdruno_header(self,system_state["f1"])
+#             time.sleep(0.1)
+#             self.play_tstarter()
+#             time.sleep(0.1)
+#             system_state["fileopened"] = True
+#             self.SigRelay.emit("cm_all_",["fileopened",True])
+#             #TODO: self.my_filename + self.ext müssen updated werden, übernehmen aus open file
+#             self.showfilename() #Remove after implementing all Modules Relay
+#             self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
+#             self.updatecurtime(0) #TODO: true datetime from record
+#             self.logger.info("fetch nextfile")
+
+#         elif self.ui.pushButton_Loop.isChecked() == True:
+#             self.ui.pushButton_Loop.checkStateSet
+#             time.sleep(0.1)
+#             #("restart same file in endless loop")
+#             self.logger.debug("restart same file in endless loop")
+#             #no next file, but endless mode active, replay current system_state["f1"]
+#             self.play_tstarter()
+#             time.sleep(0.1)
+#             self.logger.info("playthread active: %s", self.playthreadActive)
+#             system_state["fileopened"] = True
+#             self.SigRelay.emit("cm_all_",["fileopened",True])
+#             self.updatecurtime(0) #TODO: true datetime from record
+#         elif self.ui.listWidget_playlist.count() > 0:
+#             # filecheck_loop = True
+#             # while filecheck_loop == True:
+#             if system_state["playlist_ix"] == 0:
+#                 system_state["playlist_ix"] += 1 #TODO: aktuell Hack, um bei erstem File keine Doppelabspielung zu triggern
+#             playlist_len = self.ui.listWidget_playlist.count()
+#             if system_state["playlist_ix"] < playlist_len: #TODO check if indexing is correct
+#                 self.playthreadActive = False
+#                 #print(f"EOF manager: playlist index: {system_state['playlist_ix']}")
+#                 self.logger.debug("EOF manager: playlist index: %i", system_state['playlist_ix'])
+#                 lw = self.ui.listWidget_playlist
+
+#                 self.logger.info("fetch next list file")
+#                 item_valid = False
+                
+#                 while (not item_valid) and (system_state["playlist_ix"] < playlist_len):
+#                     item = lw.item(system_state["playlist_ix"])
+#                     system_state["f1"] = self.my_dirname + '/' + item.text() #TODO replace by line below
+#                     self.SigRelay.emit("cm_all_",["f1",self.my_dirname + '/' + item.text()])
+#                     self.SigRelay.emit("cm_all_",["my_filename",self.my_filename])
+#                     self.logger.info("EOF manager file: %s", system_state["f1"])
+#                     self.wavheader = WAVheader_tools.get_sdruno_header(self,system_state["f1"])
+#                     item_valid = True
+#                     if not self.wavheader:
+#                         self.logger.warning("EOF_manager: wrong wav file, skip to next listentry")
+#                         system_state["playlist_ix"] += 1
+#                         item_valid = False
+
+#                 if not (system_state["playlist_ix"] < playlist_len):
+#                     system_state["playlist_ix"] = 0
+#                     sys_state.set_status(system_state)
+#                     self.logger.info("EOF_manager: end of list, stop player")
+#                     time.sleep(0.5)
+#                     self.updatecurtime(0)
+#                     self.cb_Butt_STOP()
+#                     self.ui.listWidget_playlist.clear()
+#                     self.ui.listWidget_sourcelist.clear()
+#                     sys_state.set_status(system_state)
+#                     return()
+                
+#                 system_state["playlist_ix"] += 1                #TODO: system_state Eintragung von icorr etc erfolgt an mehreren STellen, fileopen, extract dat header und hier. Könnte an einer Stelle passieren, immer, sobald ein wav-header extrahiert wird
+#                 system_state["ifreq"] = self.wavheader['centerfreq'] + system_state["LO_offset"]
+#                 system_state["irate"] = self.wavheader['nSamplesPerSec']
+#                 system_state["icorr"] = 0
+#                 system_state["readoffset"] = self.readoffset
+#                 system_state["timescaler"] = self.wavheader['nSamplesPerSec']*self.wavheader['nBlockAlign']
+#                 #print(f'EOF manager new wavheader: {self.wavheader["nSamplesPerSec"]}')
+#                 self.logger.debug("EOF manager new wavheader: %i", self.wavheader["nSamplesPerSec"])
+#                 #TODO: write new header to wav edior
+#                 sys_state.set_status(system_state)
+#                 time.sleep(0.1)
+#                 self.showfilename()
+#                 if not self.TEST:
+#                     stemlabcontrol.sdrserverstop()
+#                     self.logger.info("EOF manager start play_manager")
+#                 self.play_manager()
+#                 system_state["fileopened"] = True
+#                 self.SigRelay.emit("cm_all_",["fileopened",True])
+#                 time.sleep(0.5) #TODO: necessary because otherwise file may not yet have been opened by playloopworker and then updatecurtime crashes because of invalid filehandel 
+#                 #may be solved by updatecurtime not accessing the filehandle returned from playworker but directly from system_state["f1"]
+#                 self.updatecurtime(0) #TODO: true datetime from record
+#             else:
+#                 #reset playlist_ix
+#                 system_state["playlist_ix"] = 0
+#                 sys_state.set_status(system_state)
+#                 self.logger.info("EOF_manager: stop player")
+#                 time.sleep(0.5)
+#                 self.updatecurtime(0)
+#                 self.cb_Butt_STOP()
+#                 self.ui.listWidget_playlist.clear()
+#                 self.ui.listWidget_sourcelist.clear()
+#         else:
+#             #no next file,no endless loop --> stop player
+#             #print("stop player")
+#             self.logger.info("EOF_manager: stop player 2")
+#             time.sleep(0.5)
+#             self.cb_Butt_STOP()
+#             ##TODO: introduce separate stop_manager
+#             # if self.playthread.isRunning():
+#             # self.playthreadActive = True
+#         sys_state.set_status(system_state)
+
+
+#     def updatecurtime(self,increment):             #increment current time in playtime window and update statusbar
+#         """
+#         VIEW or CONTROLLER ?
+#         _increments time indicator by value in increment, except for 0. 
+#         With increment == 0 the indicator is reset to 0
+#         if self.modality == "play":
+#             - update position slider
+#             - set file read pointer to new position, |if increment| > 1
+#         :param : increment
+#         :type : int
+#         '''
+#         :raises [ErrorType]: [ErrorDescription]
+#         '''
+#         :return: True/False on successful/unsuccesful operation
+#         :rtype: bool
+#         """ 
+#         #self.curtime varies between 0 and system_state["playlength"]
+#         #print("incrementcurtime reached")
+#         system_state = sys_state.get_status()
+#         progress = 0
+#         if self.playthreadActive is False:
+#             sys_state.set_status(system_state)
+#             return False
+#         timestr = str(self.wavheader['starttime_dt'] + ndatetime.timedelta(seconds=self.curtime))
+
+#         if increment == 0:
+#             timestr = str(ndatetime.timedelta(seconds=0))
+#             self.curtime = 0
+#             self.ui.lineEditCurTime.setText(timestr)
+
+#         if self.modality == 'play' and self.pausestate is False:
+#             if self.curtime > 0 and increment < 0:
+#                 self.curtime += increment
+#             if self.curtime < system_state["playlength"] and increment > 0:
+#                 self.curtime += increment
+#             if system_state["playlength"] > 0:
+#                 progress = int(np.floor(1000*(self.curtime/system_state["playlength"])))
+#             else:
+#                 sys_state.set_status(system_state)
+#                 return False
+#             position_raw = self.curtime*system_state["timescaler"]
+#             # TODO: check, geändert 09-12-2023: byte position mit allen Blockaligns auch andere als 4(16 bits); 
+#             # TODO: adapt for other than header 216
+#             position = min(max(216, position_raw-position_raw % self.wavheader['nBlockAlign']),
+#                            self.wavheader['data_nChunkSize'])
+#             # guarantee integer multiple of nBlockalign, > 0, <= filesize
+#             if increment != -1 and increment != 1 or self.timechanged == True:
+#                 if system_state["fileopened"] is True:
+#                     #print(f'increment curtime cond seek cur file open: {system_state["f1"]}')
+#                     self.prfilehandle = self.playrec_tworker.get_4()
+#                     self.prfilehandle.seek(int(position), 0) #TODO: Anpassen an andere Fileformate
+        
+#         #timestr = str(self.wavheader['starttime_dt'] + ndatetime.timedelta(seconds=self.curtime))
+#         self.ui.lineEditCurTime.setText(timestr) 
+#         self.ui.ScrollBar_playtime.setProperty("value", progress)
+#         sys_state.set_status(system_state)
+#         #print("leave updatecurtime")
+#         return True
+
+
+#     def jump_1_byte(self):             #increment current time in playtime window and update statusbar
+#         """
+#         VIEW or CONTROLLER ?
+#         _increments file reading position by +1 byte for manually correcting for sample jumps 
+#         which deviate from integer multiples of sample size (4, 8); possible needs to be repeated several times
+#         this is an emergency method for exceptional usecases and not for regular operation
+#         if self.modality == "play":
+#             - update position slider
+#             - set file read pointer to new position, |if increment| > 1
+#         :param : none
+#         :type : int
+#         '''
+#         :raises [ErrorType]: [ErrorDescription]
+#         '''
+#         :return: True/False on successful/unsuccesful operation
+#         :rtype: bool
+#         """ 
+#         system_state = sys_state.get_status()
+#         #print("tracking: jump 1 byte")
+#         self.logger.debug("tracking: jump 1 byte")
+#         if self.modality == 'play' and self.pausestate is False:
+#             if system_state["fileopened"] is True:
+#                 self.prfilehandle = self.playrec_tworker.get_4()
+#                 self.prfilehandle.seek(1,1) #TODO: ##OPTION from current position## 0 oder 1 ?
+#         sys_state.set_status(system_state)
+#         # not yet safe, because increment may happen beyond EOF, check for EOF
+
+   
+#     def jump_to_position(self):
+#         """
+#         VIEW 
+
+#         :param : none
+#         :type : none
+#         '''
+#         :raises [ErrorType]: [ErrorDescription]
+#         '''
+#         :return: none
+#         :rtype: none
+#         """ 
+#         #print("jumptoposition reached")
+#         self.logger.debug("jumptoposition reached")
+#         system_state = sys_state.get_status()
+#         sbposition = self.ui.ScrollBar_playtime.value() #TODO: already in updatecurtime(...)
+#         self.curtime = int(np.floor(sbposition/1000*system_state["playlength"]))  # seconds
+#         timestr = str(self.wavheader['starttime_dt'] + ndatetime.timedelta(seconds=self.curtime))
+#         #win.ui.lineEditCurTime.setText(timestr)
+#         self.ui.lineEditCurTime.setText(timestr)
+#         position_raw = self.curtime*system_state["timescaler"]  #timescaler = bytes per second
+#         # TODO: check, geändert 09-12-2023: byte position mit allen Blockaligns auch andere als 4(16 bits); 
+#         # TODO: adapt for other than header 216
+#         position = min(max(216, position_raw-position_raw % self.wavheader['nBlockAlign']),
+#                             self.wavheader['data_nChunkSize']+216) # guarantee reading from integer multiples of 4 bytes, TODO: change '4', '216' to any wav format ! 
+#         if system_state["fileopened"] is True:
+#             #print("Jump to next position")
+#             self.logger.debug("jumptoposition reached")
+#             #print(f'system_state["fileopened"]: {system_state["fileopened"]}')
+#             self.logger.debug("system_state['fileopened']: %s",system_state["fileopened"])
+#             self.prfilehandle = self.playrec_tworker.get_4()
+#             self.prfilehandle.seek(int(position), 0) #TODO: Anpassen an andere Fileformate
+#         #calculate corresponding position in the record file; value = 216 : 1000
+#         #jump to the targeted position with integer multiple of wavheader["nBitsPerSample"]/4
+#         sys_state.set_status(system_state)
+
+ 
+#     def GuiEnterCurTime(self):     ###########TODO: wird nirgends verwendet, remove ?
+
+#         timestr = self.ui.lineEditCurTime.text()
+#         #Convert timestr back to seconds
+#         diagnostic = timestr.split(":")
+#         if int(diagnostic[1]) > 59 or int(diagnostic[2]) > 59:
+#             auxi.standard_errorbox("Minutes and Seconds cannot be > 59")
+#             return                                                 
+#         total_seconds = sum(x * int(t) for x, t in zip([3600, 60, 1], timestr.split(":"))) 
+
+#         self.curtime = total_seconds
+#         self.timechanged = True
+
+
+#     def reset_LO_bias(self):
+
+#         system_state = sys_state.get_status()
+#         self.ui.radioButton_LO_bias.setChecked(False)
+#         self.ui.radioButton_LO_bias.setEnabled(True)
+#         system_state["LO_offset"] = 0
+#         sys_state.set_status(system_state)
+#         self.ui.lineEdit_LO_bias.setText("0")
+#         self.ui.lineEdit_LO_bias.setStyleSheet("background-color: white")
+
+
+#     def update_LO_bias(self):
+#         """ Purpose: update LO bias setting; 
+#         check validity of offset value: isnumeric, integer
+#         :param [ParamName]: none
+#         :type [ParamName]: none
+#         :raises none
+#         :return: True if successful, otherwise False
+#         :rtype: Boolean
+#         """
+#         system_state = sys_state.get_status()
+
+#         if self.playthreadActive:
+#             sys_state.set_status(system_state)
+#             return False
+        
+#         LObiasraw = self.ui.lineEdit_LO_bias.text().lstrip(" ")
+#         if len(LObiasraw) < 1:
+#             sys_state.set_status(system_state)
+#             return False
+#         LObias_sign = 1
+#         if LObiasraw[0] == "-":
+#             LObias_sign = -1
+#             LObias_test = LObiasraw.lstrip("-")
+#             if len(LObias_test)<1:
+#                 sys_state.set_status(system_state)
+#                 return False
+#         else:
+#             LObias_test = LObiasraw
+#         if LObias_test.isnumeric() == True: 
+#             i_LO_bias = LObias_sign*int(LObias_test)
+#         else:
+#             auxi.standard_errorbox("invalid numeral in center frequency offset field, please enter valid integer value (kHz)")
+#             self.reset_LO_bias()
+#             sys_state.set_status(system_state)
+#             return False
+#         #transfer to systemstate
+#         if self.ui.radioButton_LO_bias.isChecked() is True:
+#             system_state["LO_offset"] = int(i_LO_bias*1000)
+#             system_state["ifreq"] = int(self.wavheader['centerfreq'] + system_state["LO_offset"])
+#             sys_state.set_status(system_state)
+#         sys_state.set_status(system_state)
+#         return True
+
+#     def LO_bias_checkbounds(self):
+#         """ Purpose: checks if LO bias setting is within valid bounds; 
+#         :param [ParamName]: none
+#         :type [ParamName]: none
+#         :raises none
+#         :return: True if successful, otherwise False
+#         :rtype: Boolean
+#         """
+
+#         system_state = sys_state.get_status()
+#         eff_ifreq = system_state["LO_offset"] + system_state["ifreq"]
+#         if not self.update_LO_bias():
+#             sys_state.set_status(system_state)
+#             return False                 
+#         if (eff_ifreq <= 0):
+#             auxi.standard_errorbox("invalid negative center frequency offset, magnitude greater than LO frequency of the record, please correct value")
+#             self.reset_LO_bias()
+#             self.cb_Butt_STOP()
+#             sys_state.set_status(system_state)
+#             return False
+#         if (eff_ifreq > 60000000):
+#             auxi.standard_errorbox("invalid  center frequency offset, sum of record LO and offset must be < 60000 kHz, please correct value")
+#             self.reset_LO_bias()
+#             self.cb_Butt_STOP()
+#             sys_state.set_status(system_state)
+#             return False
+#         sys_state.set_status(system_state)
+#         return True
+
+#     def activate_LO_bias(self):
+#         """ Purpose: handle radiobutton for LO bias setting; 
+#         (1) highlight LO_lineEdit window
+#         (2) call update of offset value
+#         :param [ParamName]: none
+#         :type [ParamName]: none
+#         :raises none
+#         :return: none
+#         :rtype: none
+#         """
+
+#         # if self.ui.radioButton_LO_bias.isChecked() is True:
+#         #     self.ui.lineEdit_LO_bias.setEnabled(True)
+#         # else:
+#         #     self.ui.lineEdit_LO_bias.setEnabled(False)
+#         #     self.ui.lineEdit_LO_bias.setText("0000")
+
+#         #i_LO_bias = 0 ###TODO: activate ???
+#         self.ui.lineEdit_LO_bias.setStyleSheet("background-color: white")
+#         #TODO: ACTIVATE LObias check code
+#         if self.ui.radioButton_LO_bias.isChecked() is True:
+#             self.ui.lineEdit_LO_bias.setStyleSheet("background-color: yellow")
+#             self.update_LO_bias()
+
+###############################################CURRENT STATE OF TRANSFER
+############################## END TAB PLAYER ####################################
+
+############################## TAB RESAMPLER, REMOVE COMPLETELY ####################################
+
+    # def reformat_targetLOpalette(self): #TODO: check, if this stays part of gui or should be shifted to resampler module
+    #     """
+    #     VIEW Element of Tab 'resample
+    #     """
+    #     self.ui.lineEdit_resample_targetLO.setStyleSheet("background-color: bisque1")
+
+    # def cb_Butt_resample(self):
+    #     #REMOVE AFTER CHANGE TO NEW STRUCTURE ; call 
+    #     #self.ui.listWidget_playlist_2.itemChanged.connect(resample_v.reslist_update) #dummy in order to prevent exceptions in case the signal is already disconnevted
+    #     #system_state = sys_state.get_status()
+    #     try:
+    #         self.ui.listWidget_playlist_2.itemChanged.disconnect(resample_v.reslist_update)
+    #     except:
+    #         pass
+
+    #     resample_v.cb_resample()
+    #     self.ui.radioButton_advanced_sampling.setChecked(False)
+
+
+
+# class timer_worker(QObject):
+#     """_generates time signals for clock and recording timer_
+
+#     :param [ParamName]: [ParamDescription], defaults to [DefaultParamVal]
+#     :type [ParamName]: [ParamType](, optional)
+#     ...
+#     :raises [ErrorType]: [ErrorDescription]TODO
+#     ...
+#     :return: [ReturnDescription]
+#     :rtype: [ReturnType]
+#     """
+#     SigTick = pyqtSignal()
+#     SigFinished = pyqtSignal()
+
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+
+#     def tick(self):
+#         """send a signal self.SigTick every second
+#         :param : none
+#         :type : none
+#         :raises: none
+#         :return: none
+#         :rtype: none
+#         """
+#         while True:
+#             time.sleep(1 - time.monotonic() % 1)
+#             self.SigTick.emit()
+
+#     def stoptick(self):
+#         self.SigFinished.emit()        

@@ -83,6 +83,9 @@ class abstract_module_v(QObject):
         self.gui = gui #gui_state["gui_reference"]#system_state["gui_reference"]
         self.logger = abstract_module_m.logger
         self.abstract_module_c.SigRelay.connect(self.rxhandler)
+        self.init_abstract_module_ui()
+        self.abstract_module_c.SigRelay.connect(self.rxhandler)
+        self.abstract_module_c.SigRelay.connect(self.SigRelay.emit)
 
     def init_abstractmodule_ui(self):
 
@@ -109,6 +112,8 @@ class abstract_module_v(QObject):
         if _key.find("cexex_abstract_module") == 0  or _key.find("cexex_all_") == 0:
             if  _value[0].find("updateGUIelements") == 0:
                 self.updateGUIelements()
+            if  _value[0].find("reset_GUI") == 0:
+                self.reset_GUI()
             #handle method
             # if  _value[0].find("plot_spectrum") == 0: #EXAMPLE
             #     self.plot_spectrum(0,_value[1])   #EXAMPLE

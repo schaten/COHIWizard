@@ -107,9 +107,9 @@ class waveditor_v(QObject):
     """
     __slots__ = ["viewvars"]
 
-    SigAny = pyqtSignal()
+    #SigAny = pyqtSignal() #TODO: remove after tests
     SigCancel = pyqtSignal()
-    SigUpdateGUI = pyqtSignal(object)
+    #SigUpdateGUI = pyqtSignal(object) #TODO: remove after tests
     SigSyncGUIUpdatelist = pyqtSignal(object)
     SigRelay = pyqtSignal(str,object)
 
@@ -187,19 +187,22 @@ class waveditor_v(QObject):
         """
         print("waveditor: updateGUIelements")
         self.fill_wavtable()
+        #TODO TODO TODO: activate filename label window and line below:
+        self.gui.label_Filename_WAVHeader.setText(self.m["my_filename"] + self.m["ext"])
+        #self.gui.label_Filename_Player.setText(self.m["my_filename"] + self.m["ext"])
         #self.gui.DOSOMETHING
 
-    def update_GUI(self,_key): #TODO TODO: is this method still needed ? reorganize. gui-calls should be avoided, better only signalling and gui must call the routenes itself
-        print(" view spectra updateGUI: new updateGUI in view spectra module reached")
-        self.SigUpdateGUI.disconnect(self.update_GUI)
-        if _key.find("ext_update") == 0:
-            #update resampler gui with all elements
-            #TODO: fetch model values and re-fill all tab fields
-            print("waveditor update_GUI reached")
-            pass
-        #other key possible: "none"
-        #DO SOMETHING
-        self.SigUpdateGUI.connect(self.update_GUI)
+    # def update_GUI(self,_key): #TODO TODO: is this method still needed ? reorganize. gui-calls should be avoided, better only signalling and gui must call the routenes itself
+    #     print(" view spectra updateGUI: new updateGUI in view spectra module reached")
+    #     self.SigUpdateGUI.disconnect(self.update_GUI)
+    #     if _key.find("ext_update") == 0:
+    #         #update resampler gui with all elements
+    #         #TODO: fetch model values and re-fill all tab fields
+    #         print("waveditor update_GUI reached")
+    #         pass
+    #     #other key possible: "none"
+    #     #DO SOMETHING
+    #     self.SigUpdateGUI.connect(self.update_GUI)
 
     def reset_GUI(self):
         self.clear_WAVwidgets()
