@@ -608,6 +608,7 @@ class core_v(QObject):
             self.gui.label_showtime.setText(
                 dt_now.strftime('%H:%M:%S'))
             
+        self.SigRelay.emit("cexex_all_",["timertick",0])
         #TODO: reimplement recorder
 
         # if self.ui.radioButton_timeract.isChecked():
@@ -2672,7 +2673,7 @@ if __name__ == '__main__':
     #
     # * // \\ Problem lösen: 2h: in aktuellem Core, Annotator UND waveditor !!!!
     #
-    # * Core-Modul umstellen: 3h
+    # * Core-Modul umstellen: 5h
     #
     # * Tabs von nicht importierten Modulen deaktivieren/blinden: 30min
     #
@@ -2680,7 +2681,7 @@ if __name__ == '__main__':
     #
     # * Windows Installer mit https://www.pythonguis.com/tutorials/packaging-pyside6-applications-windows-pyinstaller-installforge/ erstellen
 #
-    # * Configuration Tab with: IP address, tempdir, outdir, LT/UTC, Logging, (checkboxes for Tab activation): 4h
+    # * Configuration Tab with: IP address, tempdir, outdir, Recdir, LT/UTC, Logging, (checkboxes for Tab activation): 4h
 
 #
     # Recorder: New impl: worker gets setter/getter structure
