@@ -2156,18 +2156,6 @@
            </property>
           </widget>
          </item>
-         <item row="15" column="3" colspan="2">
-          <widget class="QLabel" name="label_43">
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-            </font>
-           </property>
-           <property name="text">
-            <string>Man Tracking</string>
-           </property>
-          </widget>
-         </item>
          <item row="2" column="0" colspan="6">
           <widget class="QLineEdit" name="lineEditCurTime">
            <property name="sizePolicy">
@@ -2201,47 +2189,6 @@
            </property>
            <property name="text">
             <string>UTC</string>
-           </property>
-          </widget>
-         </item>
-         <item row="15" column="5">
-          <widget class="QPushButton" name="pushButton_adv1byte">
-           <property name="enabled">
-            <bool>true</bool>
-           </property>
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Manual tracking = advance 1 bit for correcting sudden jumps in the file read position,&lt;/p&gt;&lt;p&gt;i.e. when position deviates from integer multiple of 4 (8). It may be necessary to repeat a few times for finding the right tracking.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="autoFillBackground">
-            <bool>true</bool>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-           <property name="icon">
-            <iconset>
-             <normaloff>Trackingicon.png</normaloff>Trackingicon.png</iconset>
-           </property>
-           <property name="iconSize">
-            <size>
-             <width>40</width>
-             <height>40</height>
-            </size>
-           </property>
-           <property name="checkable">
-            <bool>true</bool>
-           </property>
-           <property name="autoRepeat">
-            <bool>true</bool>
-           </property>
-           <property name="autoDefault">
-            <bool>false</bool>
            </property>
           </widget>
          </item>
@@ -2739,6 +2686,215 @@
            </property>
           </widget>
          </item>
+         <item row="15" column="0">
+          <widget class="QPushButton" name="pushButton_adv1byte">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Manual tracking = advance 1 bit for correcting sudden jumps in the file read position,&lt;/p&gt;&lt;p&gt;i.e. when position deviates from integer multiple of 4 (8). It may be necessary to repeat a few times for finding the right tracking.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="autoFillBackground">
+            <bool>true</bool>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset>
+             <normaloff>Trackingicon.png</normaloff>Trackingicon.png</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>40</width>
+             <height>40</height>
+            </size>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+           <property name="autoRepeat">
+            <bool>true</bool>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="15" column="1">
+          <widget class="QLabel" name="label_43">
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>Man
+Tracking</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="11">
+          <widget class="QLabel" name="label_BW">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>12</pointsize>
+            </font>
+           </property>
+           <property name="autoFillBackground">
+            <bool>true</bool>
+           </property>
+           <property name="text">
+            <string>Rec Bandwidth (kHz): </string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="11">
+          <widget class="QLabel" name="label_LO">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>12</pointsize>
+            </font>
+           </property>
+           <property name="autoFillBackground">
+            <bool>true</bool>
+           </property>
+           <property name="text">
+            <string>LO frequency (kHz): </string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="12">
+          <widget class="QComboBox" name="comboBox_playrec_targetSR">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="currentIndex">
+            <number>5</number>
+           </property>
+           <item>
+            <property name="text">
+             <string>20</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>50</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>100</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>250</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>500</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>1250</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>2500</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="3" column="12">
+          <widget class="QLineEdit" name="lineEdit_playrec_LO">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="12">
+          <widget class="QComboBox" name="comboBox_playrec_targetSR_2">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="currentIndex">
+            <number>0</number>
+           </property>
+           <item>
+            <property name="text">
+             <string>LW</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>MW</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>SW 49m</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>SW 41m</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>SW 31m</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>SW 25m</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>SW 19m</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="5" column="11">
+          <widget class="QLabel" name="label_presetband">
+           <property name="text">
+            <string>Preset Band</string>
+           </property>
+          </widget>
+         </item>
         </layout>
         <zorder>progressBar_volume</zorder>
         <zorder>label_showtime</zorder>
@@ -2765,15 +2921,21 @@
         <zorder>label_27</zorder>
         <zorder>pushButton_IP</zorder>
         <zorder>lineEdit_IPAddress</zorder>
-        <zorder>pushButton_adv1byte</zorder>
         <zorder>checkBox_TESTMODE</zorder>
         <zorder>radioButton_LO_bias</zorder>
         <zorder>lineEdit_LO_bias</zorder>
         <zorder>checkBox_UTC</zorder>
-        <zorder>label_43</zorder>
         <zorder>graphicsView_2</zorder>
         <zorder>pushButton_act_playlist</zorder>
         <zorder>Label_Recindicator</zorder>
+        <zorder>pushButton_adv1byte</zorder>
+        <zorder>label_43</zorder>
+        <zorder>label_BW</zorder>
+        <zorder>label_LO</zorder>
+        <zorder>comboBox_playrec_targetSR</zorder>
+        <zorder>lineEdit_playrec_LO</zorder>
+        <zorder>comboBox_playrec_targetSR_2</zorder>
+        <zorder>label_presetband</zorder>
        </widget>
       </widget>
       <widget class="QWidget" name="tab_view_spectra">

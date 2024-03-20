@@ -520,6 +520,7 @@ class core_v(QObject):
         self.SigRelay.emit("cm_playrec",["sdr_configparams",system_state["sdr_configparams"]])
         self.SigRelay.emit("cm_playrec",["HostAddress",system_state["HostAddress"]])
 
+
     def rxhandler(self,_key,_value):
         """
         handles remote calls from other modules via Signal SigRX(_key,_value)
@@ -545,6 +546,8 @@ class core_v(QObject):
                 self.updateGUIelements()
             if  _value[0].find("updatetimer") == 0:
                 self.updatetimer()
+            if  _value[0].find("stoptick") == 0:
+                self.timertick.stoptick()
             #handle method
             # if  _value[0].find("plot_spectrum") == 0: #EXAMPLE
             #     self.plot_spectrum(0,_value[1])   #EXAMPLE
@@ -2643,6 +2646,7 @@ if __name__ == '__main__':
 
     #all tab initializations occur in connect_init() in core module
     xcore_v.connect_init() 
+    win.SigRelay.emit("cm_all_",["QTMAINWINDOWparent",win])
     # win.SigRelay.emit("cm_all_",["emergency_stop",False]) #TODO: remove after tests
     # win.SigRelay.emit("cm_all_",["fileopened",False])
     # win.SigRelay.emit("cm_all_",["Tabref",win.Tabref])
@@ -2667,7 +2671,16 @@ if __name__ == '__main__':
     #
     # * Player-Modul Tests und Bugfixing: 0.5h
     #
-    # + Player Modul um Rec ausbauen: 5h
+    # + Player Modul um Rec ausbauen:
+    #       * valid check des LO-Engabefeldes
+    #       * Filesize-begrenzung und wavheadergeneration einbauen:
+    #           Filesize in rec_loop abfragen, wenn > 2G:
+    #                loop abbrechen
+    #                   if quit --> wavheader in aktuelle Datei einbauen, neuen wavheader generieren
+    #                       playrecworker neu instanzieren und starten:
+                                # self.generate_recfilename()
+                                # self.updatecurtime(0)
+                                # self.recordingsequence()
     #
     # * Annotator Modul übertragen: 20 h
     #

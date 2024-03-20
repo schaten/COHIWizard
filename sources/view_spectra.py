@@ -138,7 +138,7 @@ class view_spectra_v(QObject):
         :return: flag False or True, False on unsuccessful execution
         :rtype: Boolean
         """
-        self.logger.debug("key: %s , value: %s", _key,_value)
+        #self.logger.debug("key: %s , value: %s", _key,_value)
 
         if _key.find("cm_view_spectra") == 0 or _key.find("cm_all_") == 0:
             #set mdl-value

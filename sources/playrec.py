@@ -10,9 +10,11 @@ from socket import socket, AF_INET, SOCK_STREAM
 from struct import pack, unpack
 import numpy as np
 import os 
+from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
+
 from PyQt5 import QtGui
 from scipy import signal as sig
 import yaml
@@ -302,10 +304,11 @@ class playrec_worker(QObject):
         self.set_6(1)##TODO: change with external gain !
         self.gain = self.__slots__[6]
         #TODO: self.fmtscl = self.__slots__[7] #scaler for data format        
-        self.fileHandle = open(self.f1, 'rb')
+        self.fileHandle = open(self.f1, 'wb')
         print(f"filehandle for set_4: {self.fileHandle} of file {self.f1} ")
         self.set_4(self.fileHandle)
         self.format = self.get_7()
+        #self.datar = self.__slots__[5]
 
         data = np.empty(self.DATABLOCKSIZE, dtype=np.float32)
         self.BUFFERFULL = self.DATABLOCKSIZE * 4
@@ -314,7 +317,7 @@ class playrec_worker(QObject):
         else:
             size = 1
             # print("data sock not opened, only test mode")
-            
+        self.set_5((data[0:size//4] * 32767).astype(np.int16))        
         self.junkspersecond = self.timescaler / (self.JUNKSIZE)
         # print(f"Junkspersec:{self.junkspersecond}")
         self.count = 0
@@ -325,6 +328,7 @@ class playrec_worker(QObject):
                 if self.pausestate is False:
                     self.mutex.lock()             
                     self.fileHandle.write((data[0:size//4] * 32767).astype(np.int16))
+                    self.set_5((data[0:size//4] * 32767).astype(np.int16))
                     # size is the number of bytes received per read operation
                     # from the socket; e.g. DATABLOCKSIZE samples have
                     # DATABLOCKSIZE*8 bytes, the data buffer is specified
@@ -350,8 +354,16 @@ class playrec_worker(QObject):
                     time.sleep(1)
                     self.count += 1
                     self.SigIncrementCurTime.emit()
-                    data[0] = 1
-                    self.fileHandle.write((data[0] * 32767).astype(np.int16))
+                    data[0] = 0.05
+                    data[1] = 0.0002
+                    data[2] = -0.0002
+                    #data[1] = 0.02
+                    #print(f">>>>>>>>>>>>>>>>>>>>>>>>>>>>> recloop data: {data}")
+                    a = (data[0:2] * 32767).astype(np.int16)
+                    print(f">>>>>>>>>>>>>>>>>>>>>>>>>>>>> testrun recloop a: {a}")
+                    self.fileHandle.write(a)
+                    self.set_5(a)
+                    time.sleep(0.1)
                 else:
                     time.sleep(1)
                     if self.stopix is True:
@@ -577,11 +589,11 @@ class playrec_c(QObject):
         self.playrec_tworker.set_7(format)
         
         self.prfilehandle = self.playrec_tworker.get_4() #TODO CHECK IF REQUIRED test output, no special other function
-        #if self.m["modality"] == "play": #TODO: activate
-        if True:
+        if self.m["modality"] == "play": #TODO: activate
+        #if True:
             self.playthread.started.connect(self.playrec_tworker.play_loop16)
-        # else:
-        #     self.playthread.started.connect(self.playrec_tworker.rec_loop)
+        else:
+            self.playthread.started.connect(self.playrec_tworker.rec_loop)
 
         self.playrec_tworker.SigFinished.connect(self.EOF_manager)
         self.SigEOFStart.connect(self.EOF_manager)
@@ -778,6 +790,7 @@ class playrec_c(QObject):
         """        
         #TODO: activate for player
         self.m["stopstate"] = True
+        self.m["recstate"] = False
         if self.m["playthreadActive"] is False:
             self.m["fileopened"] = False ###CHECK
             self.SigRelay.emit("cm_all_",["fileopened",False])
@@ -898,6 +911,8 @@ class playrec_v(QObject):
         self.m["stopstate"] = True
         self.m["wavheader"] = {}
         self.m["wavheader"]['centerfreq'] = 0
+        self.m["icorr"] = 0
+        self.RecBitsPerSample = 16 #Default 16 bit recording, may be changed in the future
         self.logger = playrec_m.logger
         self.init_playrec_ui()
         self.playrec_c.SigRelay.connect(self.rxhandler)
@@ -905,7 +920,10 @@ class playrec_v(QObject):
         self.CURTIMEINCREMENT = 5
         self.pausestate = False
         self.blinkstate = False
-        self.recording = False
+        self.m["recstate"] = False
+        self.m["recording_path"] = ""
+        self.m["recstate"] = False
+        self.gui.lineEdit_playrec_LO.setText("1125")
 
 
     def init_playrec_ui(self):
@@ -949,6 +967,7 @@ class playrec_v(QObject):
         self.gui.listWidget_sourcelist.setEnabled(False)
         self.gui.ScrollBar_playtime.setEnabled(False)
         self.gui.Label_Recindicator.setEnabled(False)
+        self.gui.checkBox_TESTMODE.clicked.connect(self.toggleTEST)
         ###########TODO TODO TODO: remove after transfer to config Tab
         try:
             stream = open("config_wizard.yaml", "r")
@@ -961,19 +980,17 @@ class playrec_v(QObject):
             pass
 
     def blinkrec(self):
-        if self.recording == False:
+        if self.m["recstate"] == False:
             self.gui.Label_Recindicator.setEnabled(False)
             self.gui.Label_Recindicator.setStyleSheet(('background-color: rgb(255,255,255)'))
             return
         self.gui.Label_Recindicator.setEnabled(True)
         if self.blinkstate:
             self.blinkstate = False
-            print("blink")
             self.gui.Label_Recindicator.setStyleSheet(('background-color: rgb(255,50,50)'))
         else:
             self.blinkstate = True
             self.gui.Label_Recindicator.setStyleSheet(('background-color: rgb(0,255,255)'))
-            print("blonk")
 
     def Buttloopmanager(self):
         if self.gui.pushButton_Loop.isChecked() == True:
@@ -1027,7 +1044,7 @@ class playrec_v(QObject):
         :return: none
         :rtype: none
         """
-        self.logger.debug("rxhandler playrec key: %s , value: %s", _key,_value)
+        #self.logger.debug("rxhandler playrec key: %s , value: %s", _key,_value)
         if _key.find("cm_playrec") == 0 or _key.find("cm_all_") == 0:
             #set mdl-value
             self.m[_value[0]] = _value[1]
@@ -1054,7 +1071,8 @@ class playrec_v(QObject):
             if  _value[0].find("updateotherGUIelements") == 0:
                 self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
             if  _value[0].find("timertick") == 0:
-                self.blinkrec()
+                if self.m["recstate"]:
+                    self.blinkrec()
                 
 
     def jump_to_position(self):
@@ -1257,31 +1275,132 @@ class playrec_v(QObject):
         '''
         #system_state = sys_state.get_status()
         self.playrec_c.cb_Butt_STOP()
-        self.timertick.stoptick()
+        #self.timertick.stoptick()
+        self.SigRelay.emit("cexex_xcore",["stoptick",0])
         self.playrec_c.stemlabcontrol.RPShutdown(self.m["sdr_configparams"])
         #TODO TODO TODO: check if it would also be fine to instantiate the stemlabcontrol object only here in the player
         #it is certainly not used in other modules
 
+    def recording_path_checker(self):
+        """
+        checks, if recording path exists in config_wizard.yaml and if the path exists
+        if not: ask for target pathname and store in config.wizard.yaml
+        param: none
+        type: none
+        :raises [none]: [none]
+        :return: none
+        :rtype: none
+        """         
+        self.standardpath = os.getcwd()  #TODO: this is a core variable in core model
+        try:
+            stream = open("config_wizard.yaml", "r")
+            self.metadata = yaml.safe_load(stream)
+            stream.close()
+            self.ismetadata = True
+        except:
+            self.ismetadata = False
+        recfail = False
+        if "recording_path" not in self.metadata:
+            recfail = True
+        elif not os.path.isdir(self.metadata["recording_path"]):
+            recfail = True
+        if recfail:
+            options = QFileDialog.Options()
+            options |= QFileDialog.ShowDirsOnly
+            self.m["recording_path"] = QFileDialog.getExistingDirectory(self.m["QTMAINWINDOWparent"], "Select Recording Directory", options=options)
+            self.logger.debug("playrec recording path: %s", self.m["recording_path"])
+            self.metadata["recording_path"] = self.m["recording_path"]
+            stream = open("config_wizard.yaml", "w")
+            yaml.dump(self.metadata, stream)
+            stream.close()
+        else:
+            self.m["recording_path"] = self.metadata["recording_path"]
+        self.logger.debug("playrec recording button recording path: %s", self.m["recording_path"])
+
     def cb_Butt_REC(self):
         """
-        VIEW
         Callback function for REC Button; 
-        so far dummy, as not yet implemented
+        #######################so far dummy, as not yet implemented
         :raises [none]: [none]
         :return: none
         :rtype: none
         """                
+        self.recording_path_checker()
+        #auxi.standard_errorbox("Recording is not yet implemented in this version of the COHIWizard; Please use RFCorder until a new version has been released")
         if self.pausestate:
             self.pausestate = False
             self.gui.pushButton_REC.setIcon(QIcon("rec_v4.PNG"))
-            self.recording = False
+            self.m["recstate"] = False #TODO TODO TODO: check if obsolete
+            self.m["recstate"] = False
         else:
             self.pausestate = True
             self.gui.pushButton_REC.setIcon(QIcon("pause_v4.PNG"))
-            self.recording = True
+            self.m["recstate"] = True
+            # if len(self.m["recording_path"]) == 0:
+            #     print("playrec recorderbutton: no rec path defined")
+            #     ##TODO TODO TODO: recording path abfragen
+            #     return False
+            self.playrec_c.stemlabcontrol.set_rec()
+            self.m["modality"] = "rec"
+            self.gui.checkBox_UTC.setEnabled(False)
+            # if self.gui.radioButton_timeract.isChecked():
+            # # TODO: activate self.recordingsequence in timerupdate
+            #     self.recording_wait = True
+            #     return
+            #else:
+            self.generate_recfilename()
+            self.updatecurtime(0)
+            self.recordingsequence()
+            #self.recording_wait = False
 
-        auxi.standard_errorbox("Recording is not yet implemented in this version of the COHIWizard; Please use RFCorder until a new version has been released")
-        return False
+    def recordingsequence(self):
+        """start SDR server unless already started. References to 
+        :class: `StemlabControl`
+        :return: False if STEMLAB socket cannot be started
+                 False if playback thread cannot be started 
+        :rtype: Boolean
+        """
+        if self.m["TEST"] is False:
+            self.playrec_c.stemlabcontrol.sdrserverstart(self.m["sdr_configparams"])
+            self.playrec_c.stemlabcontrol.set_rec()
+            configparams = {"ifreq":self.m["ifreq"], "irate":self.m["irate"],
+                    "rates": self.m["rates"], "icorr":self.m["icorr"],
+                    "HostAddress":self.m["HostAddress"], "LO_offset":self.m["LO_offset"]}
+            if self.playrec_c.stemlabcontrol.config_socket(configparams):
+                self.playrec_c.play_tstarter()
+            else:
+                return False
+        else:
+            if self.playrec_c.play_tstarter() is False:
+                return False
+        self.m["recstate"] = True
+        self.m["stopstate"] = False
+        #####   disable radiobuttons f timer and timerset
+        # self.gui.radioButton_Timer.setEnabled(False)
+        # self.gui.radioButton_timeract.setEnabled(False)
+        # self.gui.indicator_Stop.setStyleSheet('background-color: rgb(234,234,234)')
+        # self.gui.pushButton_Play.setEnabled(False)
+
+    def generate_recfilename(self):
+        """generate filenae for recording file from:
+        recording_path/cohiwizard_datestring_Ttimestring_LOfrequency.dat
+        :return: False if STEMLAB socket cannot be started
+                 False if playback thread cannot be started 
+        :rtype: Boolean
+        """
+        dt_now = datetime.now()
+        self.m["f1"] = self.m["recording_path"] + "/cohiwizard_" + dt_now.strftime('%Y%m%d') +"_T" + dt_now.strftime('%H%M%S')
+        self.m["f1"] += self.gui.lineEdit_playrec_LO.text() + "kHz.dat"
+        if (self.gui.lineEdit_playrec_LO.text()).isnumeric():
+            self.m["ifreq"] = int(1000*int(self.gui.lineEdit_playrec_LO.text()))
+            self.m["irate"] = int(1000*int(self.gui.comboBox_playrec_targetSR.currentText()))
+        else:
+            print("LO not numeric")
+            return False
+        self.RecBitsPerSample
+        dummy_filesize = 300
+        creation_date = datetime.now()
+        self.m["wavheader"] = WAVheader_tools.basic_wavheader(self,self.m["icorr"],self.m["irate"],self.m["ifreq"],self.RecBitsPerSample,dummy_filesize,creation_date)
 
 
     def reset_playerbuttongroup(self):
@@ -1292,6 +1411,9 @@ class playrec_v(QObject):
         self.gui.pushButton_Play.setIcon(QIcon("play_v4.PNG"))
         self.gui.pushButton_Play.setChecked(False)
         self.gui.pushButton_Loop.setChecked(False)
+        self.gui.pushButton_REC.setIcon(QIcon("rec_v4.PNG"))
+        self.gui.Label_Recindicator.setEnabled(False)
+        self.gui.Label_Recindicator.setStyleSheet(('background-color: rgb(255,255,255)'))
         self.m["playthreadActive"] = False
         #self.activate_tabs(["View_Spectra","Annotate","Resample","YAML_editor","WAV_header"])
         #self.setactivity_tabs("Player","activate",[])
@@ -1315,6 +1437,8 @@ class playrec_v(QObject):
         data = self.playrec_c.playrec_tworker.get_5()
         #tracking error detector removed, appears in old main module
         s = len(data)
+        time.sleep(0.001)
+        #print(f"############### playrec recloop data: {data[0]}")
         nan_ix = [i for i, x in enumerate(data) if np.isnan(x)]
         if np.any(np.isnan(data)):
             self.m["stopstate"] = True
@@ -1541,71 +1665,71 @@ class playrec_v(QObject):
 
 
 
-    def GuiClickRec(self):
-        """Purpose: Callback for REC button
-        calls file create
-        starts data streaming from STEMLAB sdr server w method recthread_start
+    # def GuiClickRec(self):
+    #     """Purpose: Callback for REC button
+    #     calls file create
+    #     starts data streaming from STEMLAB sdr server w method recthread_start
 
-        :return: False on error, True otherwise
-        :rtype: Boolean
-        """        
-        self.gui.checkBox_TESTMODE.setEnabled(False)
-        if self.IP_address_set is False:  ##TODO replace with standarderrormethod
-            auxi.standard_errorbox("IP Address Error; Enter STEMLAB IP address and press '''save IP Address''' ") 
-            return False
+    #     :return: False on error, True otherwise
+    #     :rtype: Boolean
+    #     """        
+    #     self.gui.checkBox_TESTMODE.setEnabled(False)
+    #     if self.IP_address_set is False:  ##TODO replace with standarderrormethod
+    #         auxi.standard_errorbox("IP Address Error; Enter STEMLAB IP address and press '''save IP Address''' ") 
+    #         return False
 
-        if self.pausestate is True:
-            self.pausestate = False
-            self.playrec.pausestate = False
-            # self.ui.indicator_Rec.setStyleSheet('background-color: \
-            #                                     rgb(255,254,210)') 
-            # self.gui.indicator_Pause.setStyleSheet('background-color: \
-            #                                       rgb(234,234,234)')    
-            self.gui.label_RECORDING.setStyleSheet(('background-color: \
-                                                  rgb(255,50,50)'))
-            return True
+    #     if self.pausestate is True:
+    #         self.pausestate = False
+    #         self.playrec.pausestate = False
+    #         # self.ui.indicator_Rec.setStyleSheet('background-color: \
+    #         #                                     rgb(255,254,210)') 
+    #         # self.gui.indicator_Pause.setStyleSheet('background-color: \
+    #         #                                       rgb(234,234,234)')    
+    #         self.gui.label_RECORDING.setStyleSheet(('background-color: \
+    #                                               rgb(255,50,50)'))
+    #         return True
 
-        self.playrec_c.stemlabcontrol.set_rec()
-        self.m["modality"] = "rec"
-        self.gui.checkBox_UTC.setEnabled(False)
-        if self.playthreadActive is False:
-            if self.fileopened is False:
-                if self.FileOpen() is False:
-                    return False
-                self.updatecurtime(0)
+    #     self.playrec_c.stemlabcontrol.set_rec()
+    #     self.m["modality"] = "rec"
+    #     self.gui.checkBox_UTC.setEnabled(False)
+    #     if self.playthreadActive is False:
+    #         if self.fileopened is False:
+    #             if self.FileOpen() is False:
+    #                 return False
+    #             self.updatecurtime(0)
 
-            if self.gui.radioButton_timeract.isChecked():
-            # TODO: activate self.recordingsequence in timerupdate
-                self.recording_wait = True
-                return
-            else:
-                self.recordingsequence()
-                self.recording_wait = False
+    #         if self.gui.radioButton_timeract.isChecked():
+    #         # TODO: activate self.recordingsequence in timerupdate
+    #             self.recording_wait = True
+    #             return
+    #         else:
+    #             self.recordingsequence()
+    #             self.recording_wait = False
 
-    def recordingsequence(self):
-        """start SDR server unless already started. References to 
-        :class: `StemlabControl`
+    # def recordingsequence(self):
+    #     """start SDR server unless already started. References to 
+    #     :class: `StemlabControl`
 
-        :return: False if STEMLAB socket cannot started
-                 False if playback thread cannot be started 
-        :rtype: Boolean
-        """
-        if self.TEST is False:
-            self.playrec_c.stemlabcontrol.sdrserverstart()
-            self.playrec_c.stemlabcontrol.set_rec()
-            if self.playrec_c.stemlabcontrol.config_socket():
-                self.playrec_c.playthread_start()
-            else:
-                return False
-        else:
-            if self.playrec_c.playthread_start() is False:
-                return False
+    #     :return: False if STEMLAB socket cannot started
+    #              False if playback thread cannot be started 
+    #     :rtype: Boolean
+    #     """
+    #     if self.m["TEST"] is False:
+    #         self.playrec_c.stemlabcontrol.sdrserverstart()
+    #         self.playrec_c.stemlabcontrol.set_rec()
+    #         if self.playrec_c.stemlabcontrol.config_socket():
+    #             self.playrec_c.playthread_start()
+    #         else:
+    #             return False
+    #     else:
+    #         if self.playrec_c.playthread_start() is False:
+    #             return False
 
-        self.gui.label_RECORDING.setStyleSheet(('background-color: \
-                                             rgb(255,50,50)'))
-        self.gui.label_RECORDING.setText("RECORDING")
-        #####   disable radiobuttons f timer and timerset
-        self.gui.radioButton_Timer.setEnabled(False)
-        self.gui.radioButton_timeract.setEnabled(False)
-        self.gui.indicator_Stop.setStyleSheet('background-color: rgb(234,234,234)')
-        self.gui.pushButton_Play.setEnabled(False)
+    #     self.gui.label_RECORDING.setStyleSheet(('background-color: \
+    #                                          rgb(255,50,50)'))
+    #     self.gui.label_RECORDING.setText("RECORDING")
+    #     #####   disable radiobuttons f timer and timerset
+    #     self.gui.radioButton_Timer.setEnabled(False)
+    #     self.gui.radioButton_timeract.setEnabled(False)
+    #     self.gui.indicator_Stop.setStyleSheet('background-color: rgb(234,234,234)')
+    #     self.gui.pushButton_Play.setEnabled(False)
