@@ -46,7 +46,7 @@ class playrec_worker(QObject):
         :rtype: none
     """
 
-    __slots__ = ["filename", "timescaler", "TEST", "modality","fileHandle","data","gain","formattag"]
+    __slots__ = ["filename", "timescaler", "TEST", "modality","fileHandle","data","gain","formattag","datablocksize"]
 
     SigFinished = pyqtSignal()
     SigIncrementCurTime = pyqtSignal()
@@ -94,6 +94,10 @@ class playrec_worker(QObject):
         return(self.__slots__[7])
     def set_7(self,_value):
         self.__slots__[7] = _value
+    def get_8(self):
+        return(self.__slots__[8])
+    def set_8(self,_value):
+        self.__slots__[8] = _value
 
     def play_loop16(self):
         """
@@ -114,6 +118,7 @@ class playrec_worker(QObject):
         __slots__[5]: data segment to be returned every second
         __slots__[6]: gain, scaling factor for playback
         __slots__[7]: formatlist: [formattag blockalign bitpsample]
+        __slots__[8]: datablocksize
         :type : none
         '''
         :raises [ErrorType]: none
@@ -135,6 +140,7 @@ class playrec_worker(QObject):
         print(f"filehandle for set_4: {self.fileHandle} of file {self.f1} ")
         self.set_4(self.fileHandle)
         format = self.get_7()
+        self.set_8(self.DATABLOCKSIZE)
         #print(f"Filehandle :{self.fileHandle}")
 
         self.fileHandle.seek(216, 1)  #TODO: other formats than wav SDRUno not supported !
@@ -294,7 +300,7 @@ class playrec_worker(QObject):
         :return: none
         :rtype: none
         """
-
+        size2G = 2**31
         self.stopix = False
         self.f1 = self.__slots__[0]
         self.timescaler = self.__slots__[1]
@@ -304,12 +310,12 @@ class playrec_worker(QObject):
         self.set_6(1)##TODO: change with external gain !
         self.gain = self.__slots__[6]
         #TODO: self.fmtscl = self.__slots__[7] #scaler for data format        
-        self.fileHandle = open(self.f1, 'wb')
+        self.fileHandle = open(self.f1, 'ab') #TODO check if append mode is appropriate
         print(f"filehandle for set_4: {self.fileHandle} of file {self.f1} ")
         self.set_4(self.fileHandle)
         self.format = self.get_7()
         #self.datar = self.__slots__[5]
-
+        self.set_8(self.DATABLOCKSIZE)
         data = np.empty(self.DATABLOCKSIZE, dtype=np.float32)
         self.BUFFERFULL = self.DATABLOCKSIZE * 4
         if hasattr(self.stemlabcontrol, 'data_sock'):
@@ -322,6 +328,7 @@ class playrec_worker(QObject):
         # print(f"Junkspersec:{self.junkspersecond}")
         self.count = 0
         readbytes = 0
+        totbytes = 0
         buf_ix = False
         while size > 0 and self.stopix is False:
             if self.TEST is False:
@@ -333,17 +340,18 @@ class playrec_worker(QObject):
                     # from the socket; e.g. DATABLOCKSIZE samples have
                     # DATABLOCKSIZE*8 bytes, the data buffer is specified
                     # for DATABLOCKSIZE float32 elements, i.e. 4 bit words
-
                     size = self.stemlabcontrol.data_sock.recv_into(data)
                     if size < self.BUFFERFULL:
                         self.SigBufferUnderflow.emit()
                     #  write next 2048 bytes
                     # TODO: check for replacing clock signalling by other clock
                     readbytes = readbytes + size
-
+                    totbytes += size 
                     if readbytes > RECSEC:
                         self.SigIncrementCurTime.emit()
                         readbytes = 0
+                    if totbytes > size2G - self.DATABLOCKSIZE*2:
+                       self.stopix = True 
                     self.mutex.unlock()
                 else:
                     time.sleep(0.1)
@@ -354,6 +362,7 @@ class playrec_worker(QObject):
                     time.sleep(1)
                     self.count += 1
                     self.SigIncrementCurTime.emit()
+                    self.mutex.lock()
                     data[0] = 0.05
                     data[1] = 0.0002
                     data[2] = -0.0002
@@ -363,6 +372,7 @@ class playrec_worker(QObject):
                     print(f">>>>>>>>>>>>>>>>>>>>>>>>>>>>> testrun recloop a: {a}")
                     self.fileHandle.write(a)
                     self.set_5(a)
+                    self.mutex.unlock()
                     time.sleep(0.1)
                 else:
                     time.sleep(1)
@@ -434,6 +444,7 @@ class playrec_c(QObject):
         self.stemlabcontrol = StemlabControl()
         self.m["playlist_ix"] = 0
         self.logger = playrec_m.logger
+        self.RecBitsPerSample = 16 #Default 16 bit recording, may be changed in the future
         #self.SigRelay.connect()
 
     def checkSTEMLABrates(self):        # TODO: this is ratrer a controller method than a GUI method. Transfer to other module
@@ -596,6 +607,7 @@ class playrec_c(QObject):
             self.playthread.started.connect(self.playrec_tworker.rec_loop)
 
         self.playrec_tworker.SigFinished.connect(self.EOF_manager)
+        self.playrec_tworker.SigFinished.connect(self.recloopmanager)
         self.SigEOFStart.connect(self.EOF_manager)
         self.playrec_tworker.SigFinished.connect(self.playrec_tworker.deleteLater)
 
@@ -622,6 +634,82 @@ class playrec_c(QObject):
             auxi.standard_errorbox("STEMLAB data transfer thread could not be started")
             return False
 
+    def recordingsequence(self):
+        """start SDR server unless already started. References to 
+        :class: `StemlabControl`
+        :return: False if STEMLAB socket cannot be started
+                 False if playback thread cannot be started 
+        :rtype: Boolean
+        """
+        ovwrt_flag = False
+        WAVheader_tools.write_sdruno_header(self,self.m["f1"],self.m["wavheader"],ovwrt_flag)
+        if self.m["TEST"] is False:
+            self.stemlabcontrol.sdrserverstart(self.m["sdr_configparams"])
+            self.stemlabcontrol.set_rec()
+            configparams = {"ifreq":self.m["ifreq"], "irate":self.m["irate"],
+                    "rates": self.m["rates"], "icorr":self.m["icorr"],
+                    "HostAddress":self.m["HostAddress"], "LO_offset":self.m["LO_offset"]}
+            if self.stemlabcontrol.config_socket(configparams):
+                self.play_tstarter()
+            else:
+                return False
+        else:
+            if self.play_tstarter() is False:
+                return False
+        self.m["recstate"] = True
+        self.m["stopstate"] = False
+        #####   disable radiobuttons f timer and timerset
+        # self.gui.radioButton_Timer.setEnabled(False)
+        # self.gui.radioButton_timeract.setEnabled(False)
+        # self.gui.indicator_Stop.setStyleSheet('background-color: rgb(234,234,234)')
+        # self.gui.pushButton_Play.setEnabled(False)
+
+
+    def generate_recfilename(self):
+        """generate filenae for recording file from:
+        recording_path/cohiwizard_datestring_Ttimestring_LOfrequency.dat
+        :return: False if STEMLAB socket cannot be started
+                 False if playback thread cannot be started 
+        :rtype: Boolean
+        """
+        dt_now = datetime.now()
+        self.m["f1"] = self.m["recording_path"] + "/cohiwizard_" + dt_now.strftime('%Y%m%d') +"_T" + dt_now.strftime('%H%M%S')
+        self.m["f1"] += "_" + str(int(self.m["ifreq"]/1000)) + "kHz.wav"
+        #self.RecBitsPerSample
+        creation_date = datetime.now()
+        self.DATABLOCKSIZE = playrec_worker(self).DATABLOCKSIZE
+        #calculate expected filesize
+        filesize = int(2*self.DATABLOCKSIZE*(2**31//(self.DATABLOCKSIZE*2)))
+        self.m["wavheader"] = WAVheader_tools.basic_wavheader(self,self.m["icorr"],self.m["irate"],self.m["ifreq"],self.RecBitsPerSample,filesize,creation_date)
+        return True
+        
+    def recloopmanager(self):
+        if self.m["modality"] == "play":
+            return
+        prfilehandle = self.playrec_tworker.get_4()
+        self.playthread.quit()
+        self.playthread.wait()
+        time.sleep(0.1)
+        prfilehandle.close()
+        self.SigRelay.emit("cm_all_",["fileopened",False])
+        if self.m["stopstate"] == True:
+            self.logger.info("EOF-manager: player has been stopped")
+            file_stats = os.stat(self.m["f1"])
+            self.m["wavheader"]['filesize'] = file_stats.st_size
+            #TODO TODO TODO: Stoptime, Starttime nachziehen
+            self.m["ovwrt_flag"] = True
+            WAVheader_tools.write_sdruno_header(self,self.m["f1"],self.m["wavheader"],self.m["ovwrt_flag"])
+            time.sleep(0.01)
+            return
+        self.generate_recfilename()
+
+        if not self.m["stopstate"]:
+            if not self.generate_recfilename():
+                self.cb_Butt_STOP()
+                return False
+            #TODO TODO TODO: Stoptime, Starttime im vorigen wavheader nachziehen
+            self.recordingsequence()
+
     def EOF_manager(self):
         """_target of SigFinished from playloop. If signal is received, a decision is made whether 
             to stop the player completely, 
@@ -636,6 +724,8 @@ class playrec_c(QObject):
         :return:
         :rtype:
         """ 
+        if self.m["modality"] == "rec":
+            return
         #TODO: check why this sequence incl file close needs to be outside the playthred worker; causes some problems
         prfilehandle = self.playrec_tworker.get_4()
         self.playthread.quit()
@@ -791,6 +881,7 @@ class playrec_c(QObject):
         #TODO: activate for player
         self.m["stopstate"] = True
         self.m["recstate"] = False
+        self.m["pausestate"] =False
         if self.m["playthreadActive"] is False:
             self.m["fileopened"] = False ###CHECK
             self.SigRelay.emit("cm_all_",["fileopened",False])
@@ -908,17 +999,19 @@ class playrec_v(QObject):
         self.playrec_c = playrec_c
         self.m["UTC"] = False
         self.m["TEST"] = False
+        self.LO_LOW = 0
+        self.LO_HIGH = 50000
         self.m["stopstate"] = True
         self.m["wavheader"] = {}
         self.m["wavheader"]['centerfreq'] = 0
         self.m["icorr"] = 0
-        self.RecBitsPerSample = 16 #Default 16 bit recording, may be changed in the future
+        
         self.logger = playrec_m.logger
         self.init_playrec_ui()
         self.playrec_c.SigRelay.connect(self.rxhandler)
         self.playrec_c.SigRelay.connect(self.SigRelay.emit)
         self.CURTIMEINCREMENT = 5
-        self.pausestate = False
+        self.m["pausestate"] = False
         self.blinkstate = False
         self.m["recstate"] = False
         self.m["recording_path"] = ""
@@ -1317,6 +1410,50 @@ class playrec_v(QObject):
             self.m["recording_path"] = self.metadata["recording_path"]
         self.logger.debug("playrec recording button recording path: %s", self.m["recording_path"])
 
+    def numeraltest(self,_item,lo_bound,hi_bound,errortextsource):
+        """
+        checks, if _item is a numeral and if it obeys certain criteria
+        criteria:  <lo_bound, >hi bound, 
+        param: _item: text to be checked
+        type: str
+        param: lo_bound: lowest valid value
+        type: int
+        param: hi_bound: highest valid value
+        type: int
+        param: errortextsource: text describing the source of the _item
+        type: str
+        :raises [none]: [none]
+        :return: True if succesful, False else
+        :rtype: Boolean
+        """   
+        numeraltest = True
+        if not _item.isnumeric():
+            numeraltest = False
+        _item = _item.replace(".", "")
+        if not _item[1:].isdigit(): #TODO: necessary ?
+            numeraltest = False
+        if numeraltest == False:
+            auxi.standard_errorbox(errortextsource + "invalid characters, must be numeric float value !")
+            return False
+        try:
+            tester = float(_item)
+        except TypeError:
+            #print("plot_res_spectrum: wrong format of TARGET_LO")
+            self.logger.error("playrec numeraltest, wrong format")
+            auxi.standard_errorbox(errortextsource + "invalid characters, must be numeric float value !")
+            return False
+        except ValueError:
+            #print("plot_res_spectrum: wrong format of TARGET_LO")
+            self.logger.error("plot_res_spectrum: wrong format of TARGET_LO")
+            auxi.standard_errorbox(errortextsource +"invalid characters, must be numeric float value !")
+            #TARGET_LO = self.m["wavheader"]['centerfreq']
+            return False
+        if (tester < lo_bound) or (tester > hi_bound):
+            self.logger.error("plot_res_spectrum: wrong format of TARGET_LO")
+            auxi.standard_errorbox(errortextsource + "value exceeds valid bounds !")
+            return False
+        return True
+
     def cb_Butt_REC(self):
         """
         Callback function for REC Button; 
@@ -1326,82 +1463,35 @@ class playrec_v(QObject):
         :rtype: none
         """                
         self.recording_path_checker()
-        #auxi.standard_errorbox("Recording is not yet implemented in this version of the COHIWizard; Please use RFCorder until a new version has been released")
-        if self.pausestate:
-            self.pausestate = False
-            self.gui.pushButton_REC.setIcon(QIcon("rec_v4.PNG"))
-            self.m["recstate"] = False #TODO TODO TODO: check if obsolete
-            self.m["recstate"] = False
-        else:
-            self.pausestate = True
-            self.gui.pushButton_REC.setIcon(QIcon("pause_v4.PNG"))
-            self.m["recstate"] = True
-            # if len(self.m["recording_path"]) == 0:
-            #     print("playrec recorderbutton: no rec path defined")
-            #     ##TODO TODO TODO: recording path abfragen
-            #     return False
-            self.playrec_c.stemlabcontrol.set_rec()
-            self.m["modality"] = "rec"
-            self.gui.checkBox_UTC.setEnabled(False)
-            # if self.gui.radioButton_timeract.isChecked():
+        #   self.gui.pushButton_REC.setIcon(QIcon("pause_v4.PNG"))
+        self.m["recstate"] = True
+        # if len(self.m["recording_path"]) == 0:
+        #     print("playrec recorderbutton: no rec path defined")
+        #     ##TODO TODO TODO: recording path abfragen
+        #     return False
+        self.playrec_c.stemlabcontrol.set_rec()
+        self.m["modality"] = "rec"
+        self.gui.checkBox_UTC.setEnabled(False)
+        # if self.gui.radioButton_timeract.isChecked():
             # # TODO: activate self.recordingsequence in timerupdate
             #     self.recording_wait = True
             #     return
             #else:
-            self.generate_recfilename()
-            self.updatecurtime(0)
-            self.recordingsequence()
-            #self.recording_wait = False
-
-    def recordingsequence(self):
-        """start SDR server unless already started. References to 
-        :class: `StemlabControl`
-        :return: False if STEMLAB socket cannot be started
-                 False if playback thread cannot be started 
-        :rtype: Boolean
-        """
-        if self.m["TEST"] is False:
-            self.playrec_c.stemlabcontrol.sdrserverstart(self.m["sdr_configparams"])
-            self.playrec_c.stemlabcontrol.set_rec()
-            configparams = {"ifreq":self.m["ifreq"], "irate":self.m["irate"],
-                    "rates": self.m["rates"], "icorr":self.m["icorr"],
-                    "HostAddress":self.m["HostAddress"], "LO_offset":self.m["LO_offset"]}
-            if self.playrec_c.stemlabcontrol.config_socket(configparams):
-                self.playrec_c.play_tstarter()
-            else:
-                return False
-        else:
-            if self.playrec_c.play_tstarter() is False:
-                return False
-        self.m["recstate"] = True
-        self.m["stopstate"] = False
-        #####   disable radiobuttons f timer and timerset
-        # self.gui.radioButton_Timer.setEnabled(False)
-        # self.gui.radioButton_timeract.setEnabled(False)
-        # self.gui.indicator_Stop.setStyleSheet('background-color: rgb(234,234,234)')
-        # self.gui.pushButton_Play.setEnabled(False)
-
-    def generate_recfilename(self):
-        """generate filenae for recording file from:
-        recording_path/cohiwizard_datestring_Ttimestring_LOfrequency.dat
-        :return: False if STEMLAB socket cannot be started
-                 False if playback thread cannot be started 
-        :rtype: Boolean
-        """
-        dt_now = datetime.now()
-        self.m["f1"] = self.m["recording_path"] + "/cohiwizard_" + dt_now.strftime('%Y%m%d') +"_T" + dt_now.strftime('%H%M%S')
-        self.m["f1"] += self.gui.lineEdit_playrec_LO.text() + "kHz.dat"
-        if (self.gui.lineEdit_playrec_LO.text()).isnumeric():
+        if self.numeraltest(self.gui.lineEdit_playrec_LO.text(),self.LO_LOW,self.LO_HIGH,"LO value in recorder tab"):
             self.m["ifreq"] = int(1000*int(self.gui.lineEdit_playrec_LO.text()))
             self.m["irate"] = int(1000*int(self.gui.comboBox_playrec_targetSR.currentText()))
         else:
-            print("LO not numeric")
             return False
-        self.RecBitsPerSample
-        dummy_filesize = 300
-        creation_date = datetime.now()
-        self.m["wavheader"] = WAVheader_tools.basic_wavheader(self,self.m["icorr"],self.m["irate"],self.m["ifreq"],self.RecBitsPerSample,dummy_filesize,creation_date)
 
+        if not self.playrec_c.generate_recfilename():
+            return False
+        self.updatecurtime(0)
+        self.gui.pushButton_FF.setEnabled(False)
+        self.gui.pushButton_REW.setEnabled(False)
+        self.gui.pushButton_Loop.setEnabled(False)
+        self.gui.pushButton_Play.setEnabled(False)
+
+        self.playrec_c.recordingsequence()
 
     def reset_playerbuttongroup(self):
         """
@@ -1424,6 +1514,17 @@ class playrec_v(QObject):
         self.gui.lineEdit_LO_bias.setEnabled(True)
         self.gui.ScrollBar_playtime.setEnabled(False)
         self.gui.pushButton_adv1byte.setEnabled(False)
+        self.gui.pushButton_act_playlist.setChecked(False)
+        self.gui.listWidget_sourcelist.setEnabled(False)
+        self.gui.listWidget_playlist.setEnabled(False)
+        self.gui.pushButton_Play.setEnabled(True)
+        self.gui.pushButton_FF.setEnabled(True)
+        self.gui.pushButton_REW.setEnabled(True)
+        self.gui.pushButton_Loop.setEnabled(True)
+        self.gui.pushButton_Stop.setEnabled(True)
+        self.gui.pushButton_REC.setEnabled(True)
+        self.m["playlist_active"] = False
+
 
     def showRFdata(self):
         """_take over datasegment from player loop worker and caluclate from there the signal volume and present it in the volume indicator
@@ -1433,11 +1534,13 @@ class playrec_v(QObject):
         :return: _False if error, True on succes_
         :rtype: _Boolean_
         """        
+        if self.m["TEST"]:
+            return
         self.m["gain"] = self.playrec_c.playrec_tworker.get_6()
         data = self.playrec_c.playrec_tworker.get_5()
         #tracking error detector removed, appears in old main module
         s = len(data)
-        time.sleep(0.001)
+        time.sleep(1)
         #print(f"############### playrec recloop data: {data[0]}")
         nan_ix = [i for i, x in enumerate(data) if np.isnan(x)]
         if np.any(np.isnan(data)):
@@ -1481,8 +1584,6 @@ class playrec_v(QObject):
                     "{"
                         "background-color: green;"
                     "}")
-
-
 
     def updatecurtime(self,increment):             #increment current time in playtime window and update statusbar
         """
@@ -1661,75 +1762,3 @@ class playrec_v(QObject):
         self.gui.pushButton_IP.setText("Set IP Address")
         self.gui.pushButton_IP.adjustSize()
         self.SigRelay.emit("cm_xcore",["HostAddress",self.m["HostAddress"]])
-        #sys_state.set_status(system_state)
-
-
-
-    # def GuiClickRec(self):
-    #     """Purpose: Callback for REC button
-    #     calls file create
-    #     starts data streaming from STEMLAB sdr server w method recthread_start
-
-    #     :return: False on error, True otherwise
-    #     :rtype: Boolean
-    #     """        
-    #     self.gui.checkBox_TESTMODE.setEnabled(False)
-    #     if self.IP_address_set is False:  ##TODO replace with standarderrormethod
-    #         auxi.standard_errorbox("IP Address Error; Enter STEMLAB IP address and press '''save IP Address''' ") 
-    #         return False
-
-    #     if self.pausestate is True:
-    #         self.pausestate = False
-    #         self.playrec.pausestate = False
-    #         # self.ui.indicator_Rec.setStyleSheet('background-color: \
-    #         #                                     rgb(255,254,210)') 
-    #         # self.gui.indicator_Pause.setStyleSheet('background-color: \
-    #         #                                       rgb(234,234,234)')    
-    #         self.gui.label_RECORDING.setStyleSheet(('background-color: \
-    #                                               rgb(255,50,50)'))
-    #         return True
-
-    #     self.playrec_c.stemlabcontrol.set_rec()
-    #     self.m["modality"] = "rec"
-    #     self.gui.checkBox_UTC.setEnabled(False)
-    #     if self.playthreadActive is False:
-    #         if self.fileopened is False:
-    #             if self.FileOpen() is False:
-    #                 return False
-    #             self.updatecurtime(0)
-
-    #         if self.gui.radioButton_timeract.isChecked():
-    #         # TODO: activate self.recordingsequence in timerupdate
-    #             self.recording_wait = True
-    #             return
-    #         else:
-    #             self.recordingsequence()
-    #             self.recording_wait = False
-
-    # def recordingsequence(self):
-    #     """start SDR server unless already started. References to 
-    #     :class: `StemlabControl`
-
-    #     :return: False if STEMLAB socket cannot started
-    #              False if playback thread cannot be started 
-    #     :rtype: Boolean
-    #     """
-    #     if self.m["TEST"] is False:
-    #         self.playrec_c.stemlabcontrol.sdrserverstart()
-    #         self.playrec_c.stemlabcontrol.set_rec()
-    #         if self.playrec_c.stemlabcontrol.config_socket():
-    #             self.playrec_c.playthread_start()
-    #         else:
-    #             return False
-    #     else:
-    #         if self.playrec_c.playthread_start() is False:
-    #             return False
-
-    #     self.gui.label_RECORDING.setStyleSheet(('background-color: \
-    #                                          rgb(255,50,50)'))
-    #     self.gui.label_RECORDING.setText("RECORDING")
-    #     #####   disable radiobuttons f timer and timerset
-    #     self.gui.radioButton_Timer.setEnabled(False)
-    #     self.gui.radioButton_timeract.setEnabled(False)
-    #     self.gui.indicator_Stop.setStyleSheet('background-color: rgb(234,234,234)')
-    #     self.gui.pushButton_Play.setEnabled(False)
