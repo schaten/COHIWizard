@@ -9,15 +9,16 @@ import time
 from socket import socket, AF_INET, SOCK_STREAM
 from struct import pack, unpack
 import numpy as np
-import os 
+import os
+from pathlib import Path, PureWindowsPath
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
-
 from PyQt5 import QtGui
 from scipy import signal as sig
 import yaml
+import shutil
 from auxiliaries import auxiliaries as auxi
 from auxiliaries import WAVheader_tools, timer_worker
 from datetime import datetime
@@ -50,7 +51,7 @@ class playrec_worker(QObject):
 
     SigFinished = pyqtSignal()
     SigIncrementCurTime = pyqtSignal()
-    SigBufferUnderflow = pyqtSignal()
+    SigBufferOverflow = pyqtSignal()
 
     def __init__(self, stemlabcontrolinst,*args,**kwargs):
 
@@ -106,7 +107,7 @@ class playrec_worker(QObject):
         sends signals:     
             SigFinished = pyqtSignal()
             SigIncrementCurTime = pyqtSignal()
-            SigBufferUnderflow = pyqtSignal()
+            SigBufferOverflow = pyqtSignal()
 
         :param : no regular parameters; as this is a thread worker communication occurs via
         class slots __slots__[i], i = 0...3
@@ -281,7 +282,7 @@ class playrec_worker(QObject):
         sends signals:     
             SigFinished = pyqtSignal()
             SigIncrementCurTime = pyqtSignal()
-            SigBufferUnderflow = pyqtSignal()
+            SigBufferOverflow = pyqtSignal()
 
         :param : no regular parameters; as this is a thread worker communication occurs via
         class slots __slots__[i], i = 0...3
@@ -307,7 +308,7 @@ class playrec_worker(QObject):
         RECSEC = self.timescaler*2 ###TODO TODO TODO check if this is still appropriate; has to do with Bytes per sample (nBytesAlign)
         self.TEST = self.__slots__[2]
         self.modality = self.__slots__[3]
-        self.set_6(1)##TODO: change with external gain !
+        self.set_6(1)
         self.gain = self.__slots__[6]
         #TODO: self.fmtscl = self.__slots__[7] #scaler for data format        
         self.fileHandle = open(self.f1, 'ab') #TODO check if append mode is appropriate
@@ -322,64 +323,52 @@ class playrec_worker(QObject):
             size = self.stemlabcontrol.data_sock.recv_into(data)
         else:
             size = 1
-            # print("data sock not opened, only test mode")
         self.set_5((data[0:size//4] * 32767).astype(np.int16))        
         self.junkspersecond = self.timescaler / (self.JUNKSIZE)
-        # print(f"Junkspersec:{self.junkspersecond}")
         self.count = 0
         readbytes = 0
         totbytes = 0
-        buf_ix = False
         while size > 0 and self.stopix is False:
             if self.TEST is False:
-                if self.pausestate is False:
-                    self.mutex.lock()             
-                    self.fileHandle.write((data[0:size//4] * 32767).astype(np.int16))
+                self.mutex.lock()             
+                self.fileHandle.write((data[0:size//4] * 32767).astype(np.int16))
+                # size is the number of bytes received per read operation
+                # from the socket; e.g. DATABLOCKSIZE samples have
+                # DATABLOCKSIZE*8 bytes, the data buffer is specified
+                # for DATABLOCKSIZE float32 elements, i.e. 4 bit words
+                size = self.stemlabcontrol.data_sock.recv_into(data)
+                if size > self.BUFFERFULL:
+                    self.SigBufferOverflow.emit()
+                    print(f"size: {size} buffersize: {self.BUFFERFULL}")
+                #  write next BUFFERSIZE bytes
+                # TODO: check for replacing clock signalling by other clock
+                readbytes = readbytes + size
+                #totbytes += size 
+                if readbytes > RECSEC:
                     self.set_5((data[0:size//4] * 32767).astype(np.int16))
-                    # size is the number of bytes received per read operation
-                    # from the socket; e.g. DATABLOCKSIZE samples have
-                    # DATABLOCKSIZE*8 bytes, the data buffer is specified
-                    # for DATABLOCKSIZE float32 elements, i.e. 4 bit words
-                    size = self.stemlabcontrol.data_sock.recv_into(data)
-                    if size < self.BUFFERFULL:
-                        self.SigBufferUnderflow.emit()
-                    #  write next 2048 bytes
-                    # TODO: check for replacing clock signalling by other clock
-                    readbytes = readbytes + size
-                    totbytes += size 
-                    if readbytes > RECSEC:
-                        self.SigIncrementCurTime.emit()
-                        readbytes = 0
-                    if totbytes > size2G - self.DATABLOCKSIZE*2:
-                       self.stopix = True 
-                    self.mutex.unlock()
-                else:
-                    time.sleep(0.1)
-                    if self.stopix is True:
-                        break
-            else:           # Dummy operations for testing without SDR
-                if self.pausestate is False:
-                    time.sleep(1)
-                    self.count += 1
                     self.SigIncrementCurTime.emit()
-                    self.mutex.lock()
-                    data[0] = 0.05
-                    data[1] = 0.0002
-                    data[2] = -0.0002
-                    #data[1] = 0.02
-                    #print(f">>>>>>>>>>>>>>>>>>>>>>>>>>>>> recloop data: {data}")
-                    a = (data[0:2] * 32767).astype(np.int16)
-                    print(f">>>>>>>>>>>>>>>>>>>>>>>>>>>>> testrun recloop a: {a}")
-                    self.fileHandle.write(a)
-                    self.set_5(a)
-                    self.mutex.unlock()
-                    time.sleep(0.1)
-                else:
-                    time.sleep(1)
-                    if self.stopix is True:
-                        break
-        #win.fileopened = False  # TODO TODO TODO:CHECK  manage via signalling, maybe is already
-
+                    totbytes += int(readbytes/2)
+                    readbytes = 0
+                    #print(f"totbytes {totbytes}")
+                if totbytes > size2G - self.DATABLOCKSIZE*4:
+                    print(f">>>>>>>>>>>>>>>>>>>rec_loop eof reached totbytes: {totbytes} ref: {size2G - self.DATABLOCKSIZE}")
+                    self.stopix = True 
+                self.mutex.unlock()
+            else:           # Dummy operations for testing without SDR
+                time.sleep(1)
+                #self.SigBufferOverflow.emit()  #####TEST ONLY
+                self.count += 1
+                self.SigIncrementCurTime.emit()
+                self.mutex.lock()
+                data[0] = 0.05
+                data[1] = 0.0002
+                data[2] = -0.0002
+                a = (data[0:2] * 32767).astype(np.int16)
+                print(f">>>>>>>>>>>>>>>>>>>>>>>>>>>>> testrun recloop a: {a}")
+                self.fileHandle.write(a)
+                self.set_5(a)
+                self.mutex.unlock()
+                time.sleep(0.1)
         self.SigFinished.emit()
 
 class playrec_m(QObject):
@@ -616,12 +605,9 @@ class playrec_c(QObject):
                                                 lambda: self.SigRelay.emit("cexex_playrec",["updatecurtime",1]))
         #self.SigRelay.emit("cexex_playrec",["updatecurtime",1])
         self.playrec_tworker.SigIncrementCurTime.connect(lambda: self.SigRelay.emit("cexex_playrec",["showRFdata",0]))
-                                                         
-                                                         #self.showRFdata)
-        #self.playrec_tworker.SigBufferUnderflow.connect(
-        #                                         lambda: self.bufoverflowsig()) #TODO reactivate
-        # TODO: check, if updatecurtime is also controlled from within
-        # the recording loop
+        if self.m["modality"] == "rec":        
+            self.playrec_tworker.SigBufferOverflow.connect(
+                                         lambda: self.SigRelay.emit("cexex_playrec",["indicate_bufoverflow",0])) #TODO reactivate
         self.playthread.start()
         if self.playthread.isRunning():
             self.m["playthreadActive"] = True
@@ -641,6 +627,10 @@ class playrec_c(QObject):
                  False if playback thread cannot be started 
         :rtype: Boolean
         """
+        #CHECK FOR SUFFICIENT DISK SPACE ON VOLUME
+        expected_filesize = 2**31
+        if self.checkdiskspace(expected_filesize, self.m["recording_path"]) is False:
+            return False
         ovwrt_flag = False
         WAVheader_tools.write_sdruno_header(self,self.m["f1"],self.m["wavheader"],ovwrt_flag)
         if self.m["TEST"] is False:
@@ -658,11 +648,27 @@ class playrec_c(QObject):
                 return False
         self.m["recstate"] = True
         self.m["stopstate"] = False
-        #####   disable radiobuttons f timer and timerset
-        # self.gui.radioButton_Timer.setEnabled(False)
-        # self.gui.radioButton_timeract.setEnabled(False)
-        # self.gui.indicator_Stop.setStyleSheet('background-color: rgb(234,234,234)')
-        # self.gui.pushButton_Play.setEnabled(False)
+
+    def checkdiskspace(self,expected_filesize, _dir): #TODO: transfer to auxiliary module 
+        """check if free diskspace is sufficient for writing expeczed_filesize bytes on directory _dir
+        :param: expected_filesize
+        :type: int
+        :param: _dir
+        :type: str
+        ...
+        :raises: none
+        ...
+        :return: True if enough space, False else
+        :rtype: Boolean
+        """
+        total, used, free = shutil.disk_usage(_dir)
+        if free < expected_filesize:
+            print(f"not enough diskspace for this process, please free at least {expected_filesize - free} bytes")
+            auxi.standard_errorbox(f"not enough diskspace for this process, please free at least {expected_filesize - free} bytes")
+            return False
+        else:
+            return True
+
 
 
     def generate_recfilename(self):
@@ -684,30 +690,33 @@ class playrec_c(QObject):
         return True
         
     def recloopmanager(self):
+        print("playrec recloop next loop")
         if self.m["modality"] == "play":
             return
         prfilehandle = self.playrec_tworker.get_4()
+        prfilehandle.close()
         self.playthread.quit()
         self.playthread.wait()
-        time.sleep(0.1)
-        prfilehandle.close()
+        #time.sleep(0.1)
         self.SigRelay.emit("cm_all_",["fileopened",False])
-        if self.m["stopstate"] == True:
+        if self.m["stopstate"]:
             self.logger.info("EOF-manager: player has been stopped")
             file_stats = os.stat(self.m["f1"])
             self.m["wavheader"]['filesize'] = file_stats.st_size
-            #TODO TODO TODO: Stoptime, Starttime nachziehen
-            self.m["ovwrt_flag"] = True
-            WAVheader_tools.write_sdruno_header(self,self.m["f1"],self.m["wavheader"],self.m["ovwrt_flag"])
-            time.sleep(0.01)
-            return
-        self.generate_recfilename()
-
+        spt = datetime.now()
+        self.m["wavheader"]['stoptime_dt'] = spt
+        self.m["wavheader"]['stoptime'] = [spt.year, spt.month, 0, spt.day, spt.hour, spt.minute, spt.second, int(spt.microsecond/1000)] 
+        self.m["ovwrt_flag"] = True
+        WAVheader_tools.write_sdruno_header(self,self.m["f1"],self.m["wavheader"],self.m["ovwrt_flag"])
         if not self.m["stopstate"]:
-            if not self.generate_recfilename():
-                self.cb_Butt_STOP()
-                return False
-            #TODO TODO TODO: Stoptime, Starttime im vorigen wavheader nachziehen
+            f1old = self.m["f1"]
+            wavheader_old = self.m["wavheader"]
+            #print("fire up next recloop #########################")
+            self.logger.debug("playrec recloopmanager fire up next recloop ")
+            self.generate_recfilename()
+            #wavheader_old['nextfilename'] = self.m["f1"]
+            wavheader_old['nextfilename'] = Path(self.m["f1"]).name
+            WAVheader_tools.write_sdruno_header(self,f1old,wavheader_old,self.m["ovwrt_flag"])
             self.recordingsequence()
 
     def EOF_manager(self):
@@ -879,6 +888,7 @@ class playrec_c(QObject):
         :rtype: none
         """        
         #TODO: activate for player
+        #print("STOP PRESSED R")
         self.m["stopstate"] = True
         self.m["recstate"] = False
         self.m["pausestate"] =False
@@ -895,6 +905,7 @@ class playrec_c(QObject):
         self.SigRelay.emit("cexex_playrec",["reset_playerbuttongoup",0])
         self.SigRelay.emit("cexex_win",["reset_GUI",0]) #TODO remove after tests, may not be connected with _c
         self.SigRelay.emit("cexex_playrec",["reset_GUI",0]) #TODO remove after tests
+        print("STOP pressed")
 
     def jump_1_byte(self):             #increment current time in playtime window and update statusbar
         """
@@ -1005,6 +1016,7 @@ class playrec_v(QObject):
         self.m["wavheader"] = {}
         self.m["wavheader"]['centerfreq'] = 0
         self.m["icorr"] = 0
+        self.lastupdatecurtime = datetime.now()
         
         self.logger = playrec_m.logger
         self.init_playrec_ui()
@@ -1157,6 +1169,7 @@ class playrec_v(QObject):
             if  _value[0].find("updatecurtime") == 0:
                 #self.reset_LO_bias()
                 self.updatecurtime(_value[1])
+                #print(f"UPDATECURTIME: {_value[1]}")
             if  _value[0].find("showRFdata") == 0:
                 self.showRFdata()
             if  _value[0].find("listhighlighter") == 0:
@@ -1166,7 +1179,9 @@ class playrec_v(QObject):
             if  _value[0].find("timertick") == 0:
                 if self.m["recstate"]:
                     self.blinkrec()
-                
+            if  _value[0].find("indicate_bufoverflow") == 0:
+                self.indicate_bufoverflow()
+                                
 
     def jump_to_position(self):
         self.m["playprogress"] = self.gui.ScrollBar_playtime.value()
@@ -1490,7 +1505,8 @@ class playrec_v(QObject):
         self.gui.pushButton_REW.setEnabled(False)
         self.gui.pushButton_Loop.setEnabled(False)
         self.gui.pushButton_Play.setEnabled(False)
-
+        self.gui.verticalSlider_Gain.setEnabled(False)
+        #TODO TODO TODO warning if host not reachable
         self.playrec_c.recordingsequence()
 
     def reset_playerbuttongroup(self):
@@ -1523,8 +1539,15 @@ class playrec_v(QObject):
         self.gui.pushButton_Loop.setEnabled(True)
         self.gui.pushButton_Stop.setEnabled(True)
         self.gui.pushButton_REC.setEnabled(True)
+        self.gui.verticalSlider_Gain.setEnabled(True)
         self.m["playlist_active"] = False
 
+    def indicate_bufoverflow(self):
+        """_indicate if during recording a buffer underflow occurred
+        :return: none
+        :rtype: none
+        """        
+        print("playrec RECORDING: bufferoverflow")
 
     def showRFdata(self):
         """_take over datasegment from player loop worker and caluclate from there the signal volume and present it in the volume indicator
@@ -1540,12 +1563,12 @@ class playrec_v(QObject):
         data = self.playrec_c.playrec_tworker.get_5()
         #tracking error detector removed, appears in old main module
         s = len(data)
-        time.sleep(1)
+        #time.sleep(1)
         #print(f"############### playrec recloop data: {data[0]}")
         nan_ix = [i for i, x in enumerate(data) if np.isnan(x)]
         if np.any(np.isnan(data)):
             self.m["stopstate"] = True
-            time.sleep(1)
+            #time.sleep(1)
             data[nan_ix] = np.zeros(len(nan_ix))
             self.logger.error("show RFdata: NaN found in data, length: %i ,maxval: %f , avg: %f" , len(nan_ix),  np.max(data), np.median(data))
             #sys_state.set_status(system_state)
@@ -1565,9 +1588,11 @@ class playrec_v(QObject):
         # 900 = 0 dB
         # 1000 = overload und mache Balken rot
         # min Anzeige = 1 entspricht -100 dB
-        refvol = 1
+        refvol = 0.5
         dBvol = 20*np.log10(vol/refvol)
         dispvol = min(dBvol + 80, 100)
+        if np.any(np.isnan(dispvol)):
+            return
         self.gui.progressBar_volume.setValue(int(np.floor(dispvol*10))) 
         if dispvol > 80:
             self.gui.progressBar_volume.setStyleSheet("QProgressBar::chunk "
@@ -1600,13 +1625,26 @@ class playrec_v(QObject):
         :return: True/False on successful/unsuccesful operation
         :rtype: bool
         """ 
+        delta =  datetime.now() - self.lastupdatecurtime
+        #print(f"updateurtime microsec: {delta}")
+        if delta.microseconds < 10000:
+            return
+        #print(f"updatecurtime UPDATECURTIME: {increment}")
         #self.m["curtime"] varies between 0 and system_state["playlength"]
         self.m["timescaler"] = self.m["wavheader"]['nSamplesPerSec']*self.m["wavheader"]['nBlockAlign']
         self.m["playprogress"] = 0
-        if self.m["playthreadActive"] is False:
-            return False
+        time.sleep(0.01)
+        # if self.m["playthreadActive"] is False:
+        #     return False
+        # else:
+        #     try:
+        #         self.playrec_c.playrec_tworker.SigIncrementCurTime.disconnect(self.playrec_c.SigRelay)
+        #     except:
+        #         pass
+        #     pass
         timestr = str(self.m["wavheader"]['starttime_dt'] + ndatetime.timedelta(seconds=self.m["curtime"]))
         playlength = self.m["wavheader"]['filesize']/self.m["wavheader"]['nAvgBytesPerSec']
+
         if increment == 0:
             timestr = str(ndatetime.timedelta(seconds=0))
             self.m["curtime"] = 0
@@ -1632,11 +1670,18 @@ class playrec_v(QObject):
                     #print(f'increment curtime cond seek cur file open: {system_state["f1"]}')
                     self.prfilehandle = self.playrec_c.playrec_tworker.get_4()
                     self.prfilehandle.seek(int(position), 0) #TODO: Anpassen an andere Fileformate
+        else:
+            self.m["curtime"] += increment
+            timestr = str(ndatetime.timedelta(seconds=0) + ndatetime.timedelta(seconds=self.m["curtime"]))
+            #print(f"time indicator increment:{increment}, timebase: {ndatetime.timedelta(seconds=0)} curt: {ndatetime.timedelta(seconds=self.m['curtime'])}")
         #timestr = str(self.wavheader['starttime_dt'] + ndatetime.timedelta(seconds=self.m["curtime"]))
         self.gui.lineEditCurTime.setText(timestr) 
         self.gui.ScrollBar_playtime.setProperty("value", self.m["playprogress"])
         #sys_state.set_status(system_state)
         #print("leave updatecurtime")
+        # if self.m["playthreadActive"]:
+        #     self.playrec_c.playrec_tworker.SigIncrementCurTime.connect(lambda: self.playrec_c.SigRelay.emit("cexex_playrec",["updatecurtime",1]))
+        self.lastupdatecurtime = datetime.now()
         return True
     
     def reset_LO_bias(self):

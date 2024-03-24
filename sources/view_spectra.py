@@ -251,15 +251,7 @@ class view_spectra_v(QObject):
             #print(f"---> wavheader: {self.m['wavheader']} pscale: {pscale} horzscal: {self.m['horzscal']}")
             position = int(np.floor(pscale*np.round(self.m["wavheader"]['data_nChunkSize']*self.m["horzscal"]/pscale/1000)))
             #ret = auxi.readsegment_new(position,self.DATABLOCKSIZE)
-            #NEW 08-12-2023 #######################TODO###################### tBPS not yet clear
-                #TODO: in future replace by:
-                #remove readsegment, readsegment_new in this class !
-                #from auxiliaries import readsegment, readsegment_new
-                #filepath = system_state["f1"]
-                #readoffset = system_state["readoffset"]
-                #readsegment(filepath,position,readoffset,DATABLOCKSIZE)
-                #readsegment_new(filepath,position,readoffset,DATABLOCKSIZE,self.m["wavheader"]["nBitsPerSample"],32,self.m["wavheader"]["wFormatTag"])
-                #self.duration = ret["duration"]
+
             #ret = auxi.readsegment_new(self.m["f1"],position,self.DATABLOCKSIZE,self.m["wavheader"]["nBitsPerSample"],32,self.m["wavheader"]["wFormatTag"])
             if self.m["wavheader"]['sdrtype_chckID'].find('rcvr') > -1:
                 self.readoffset = 86
@@ -280,7 +272,9 @@ class view_spectra_v(QObject):
                 realindex = np.arange(0,self.DATABLOCKSIZE,2)
                 imagindex = np.arange(1,self.DATABLOCKSIZE,2)
                 #calculate spectrum and shift/rescale appropriately
-                trace = np.abs(data[realindex]+1j*data[imagindex])
+                #trace = np.abs(data[realindex]+1j*data[imagindex])
+                trace = np.real(data[realindex]+1j*data[imagindex])
+
                 trace = trace * np.power(10,self.m["resampling_gain"]/20)
                 N = len(trace)
                 deltat = 1/self.m["wavheader"]['nSamplesPerSec']

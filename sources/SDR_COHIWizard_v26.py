@@ -36,6 +36,7 @@ import os
 import subprocess
 import datetime as ndatetime
 from datetime import datetime
+from pathlib import Path, PureWindowsPath
 #from datetime import timedelta
 #from socket import socket, AF_INET, SOCK_STREAM
 from struct import pack, unpack
@@ -1585,7 +1586,7 @@ class WizardGUI(QMainWindow):
         self.baselineoffset = system_state["baselineoffset"]
         #check if annotation path exists and create if not
         if os.path.exists(self.cohiradia_yamlheader_filename) == False:         #exist yaml file: create from yaml-editor
-            self.cohiradia_yamlheader_dirname = self.my_dirname + '/' + self.annotationdir_prefix + self.my_filename
+            self.cohiradia_yamlheader_dirname = self.my_dirname + '/' + self.annotationdir_prefix + system_state["my_filename"]
             if os.path.exists(self.cohiradia_yamlheader_dirname) == False:
                 os.mkdir(self.cohiradia_yamlheader_dirname)
 
@@ -2060,7 +2061,7 @@ class WizardGUI(QMainWindow):
         
         """
         #TODO TODO TODO: check if the selfs must be selfs !
-        self.annotationpath = self.my_dirname + '/' + self.annotationdir_prefix + self.my_filename
+        self.annotationpath = self.my_dirname + '/' + self.annotationdir_prefix + system_state["my_filename"]
         self.stations_filename = self.annotationpath + '/stations_list.yaml'
         self.status_filename = self.annotationpath + '/status.yaml'
         self.annotation_filename = self.annotationpath + '/snrannotation.yaml'
@@ -2088,7 +2089,7 @@ class WizardGUI(QMainWindow):
         ix = 0
         for x in os.listdir(self.my_dirname):
             if x.endswith(".wav"):
-                if x != (self.my_filename + self.ext):
+                if x != (system_state["my_filename"] + system_state["ext"]):
                     playlist.append(x) 
                     _item1=self.ui.listWidget_sourcelist.item(ix)
                     _item1.setText(x)
@@ -2099,27 +2100,27 @@ class WizardGUI(QMainWindow):
                     self.ui.listWidget_sourcelist.addItem(item)
                     ix += 1
                 else:
-                    self.logger.debug("resread_playlist: automat remove from selectlist: %s", self.my_filename + self.ext)
+                    self.logger.debug("resread_playlist: automat remove from selectlist: %s", system_state["my_filename"] + system_state["ext"])
         #TODO: erzeuge einen Einag in Playlist    listWidget_playlist
 
-    def showfilename(self):
-        """_updates the name of currenly loaded data file in all instances of filename labels_
-        :param : none if old system, args[0] = string with filename to be displayed 
-        :type : none if old system, str else
-        '''
-        :raises [ErrorType]: [ErrorDescription]
-        '''
-        :return: none
-        :rtype: none
-        """ 
-        #self.SigRelay.emit("cm_all_",["prominence",self.PROMINENCE])
-        self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
-        #TODO TODO TODO: remove the following after change to all new modules and Relay
-        self.my_dirname = os.path.dirname(system_state["f1"])
-        self.my_filename, self.ext = os.path.splitext(os.path.basename(system_state["f1"]))
-        self.ui.label_Filename_Annotate.setText(self.my_filename + self.ext)
-        self.ui.label_Filename_WAVHeader.setText(self.my_filename + self.ext)
-        self.ui.label_Filename_Player.setText(self.my_filename + self.ext)
+    # def showfilename(self): #TODO: remove after tests
+    #     """_updates the name of currenly loaded data file in all instances of filename labels_
+    #     :param : none if old system, args[0] = string with filename to be displayed 
+    #     :type : none if old system, str else
+    #     '''
+    #     :raises [ErrorType]: [ErrorDescription]
+    #     '''
+    #     :return: none
+    #     :rtype: none
+    #     """ 
+    #     #self.SigRelay.emit("cm_all_",["prominence",self.PROMINENCE])
+    #     self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
+    #     #TODO TODO TODO: remove the following after change to all new modules and Relay
+    #     self.my_dirname = os.path.dirname(system_state["f1"])
+    #     self.my_filename, self.ext = os.path.splitext(os.path.basename(system_state["f1"]))
+    #     self.ui.label_Filename_Annotate.setText(self.my_filename + self.ext)
+    #     self.ui.label_Filename_WAVHeader.setText(self.my_filename + self.ext)
+    #     self.ui.label_Filename_Player.setText(self.my_filename + self.ext)
 
 
     #@njit
@@ -2170,13 +2171,13 @@ class WizardGUI(QMainWindow):
         system_state["sfilesize"] = file_stats.st_size
         self.my_dirname = os.path.dirname(system_state["f1"])
         #TODO TODO TODO: replace self.my_filename and self.ext by resp system state entries
-        self.my_filename, self.ext = os.path.splitext(os.path.basename(system_state["f1"]))
-        system_state["ext"] = self.ext
-        system_state["my_filename"] = self.my_filename
-        
+        #self.my_filename, self.ext = os.path.splitext(os.path.basename(system_state["f1"]))
+        system_state["ext"] = Path(system_state["f1"]).suffix
+        system_state["my_filename"] = Path(system_state["f1"]).stem
+
         self.SigRelay.emit("cm_all_",["my_dirname", self.my_dirname])
-        self.SigRelay.emit("cm_all_",["ext",self.ext])
-        self.SigRelay.emit("cm_all_",["my_filename",self.my_filename])
+        self.SigRelay.emit("cm_all_",["ext",system_state["ext"]])
+        self.SigRelay.emit("cm_all_",["my_filename",system_state["my_filename"]])
 
         system_state["temp_directory"] = self.my_dirname + "/temp"
         self.SigRelay.emit("cm_all_",["temp_directory",self.my_dirname + "/temp"])
@@ -2184,13 +2185,13 @@ class WizardGUI(QMainWindow):
         if os.path.exists(system_state["temp_directory"]) == False:         #exist yaml file: create from yaml-editor
             os.mkdir( system_state["temp_directory"])
 
-        if self.ext == ".dat" or self.ext == ".raw":
+        if system_state["ext"] == ".dat" or system_state["ext"] == ".raw":
             self.filetype = "dat"
             ## TODO: wavheader-Writing zum Button Insert Header connecten
             self.ui.label_8.setEnabled(True)
             self.ui.pushButton_InsertHeader.setEnabled(True)   #####TODO shift to WAV editor or send Relay for inactivation via WAV 
         else:
-            if self.ext == ".wav":
+            if system_state["ext"] == ".wav":
                 self.filetype = "wav"
                 self.ui.tab_view_spectra.setEnabled(True)  ##########TODO: replace by Tab disable function inactivate/activate_tabs(self,selection)
                 self.ui.tab_annotate.setEnabled(True)  ##########TODO: replace by Tab disable function inactivate/activate_tabs(self,selection)
@@ -2210,7 +2211,7 @@ class WizardGUI(QMainWindow):
         else:
             self.wavheader = WAVheader_tools.get_sdruno_header(self,system_state["f1"])
             if self.wavheader != False:
-                #self.next_filename = self.extract_startstoptimes_auxi(self.wavheader)
+                #self.next_filename = system_state["ext"]ract_startstoptimes_auxi(self.wavheader)
                 self.next_filename = waveditor_c.extract_startstoptimes_auxi(self.wavheader)
             else:
                 auxi.standard_errorbox("File is not recognized as a valid IQ wav file (not auxi/rcvr compatible or not a RIFF file)")
@@ -2226,7 +2227,7 @@ class WizardGUI(QMainWindow):
             return False
         self.SigRelay.emit("cm_waveditor",["filetype",self.filetype])
         #TODO: mache das konfigurierbar:
-        self.ui.lineEdit_resample_targetnameprefix.setText(self.my_filename)
+        self.ui.lineEdit_resample_targetnameprefix.setText(system_state["my_filename"])
         self.setstandardpaths()
         self.SigRelay.emit("cm_all_",["wavheader",self.wavheader])
         #self.showfilename()
@@ -2254,7 +2255,7 @@ class WizardGUI(QMainWindow):
         ix = 0
         for x in os.listdir(self.my_dirname):
             if x.endswith(".wav"):
-                if True: #x != (self.my_filename + self.ext): #TODO: obsolete old form when automatically loading opened file to playlist
+                if True: #x != (system_state["my_filename"] + system_state["ext"]): #TODO: obsolete old form when automatically loading opened file to playlist
                     resfilelist.append(x) 
                     _item1=self.ui.listWidget_sourcelist_2.item(ix)
                     _item1.setText(x)
@@ -2277,7 +2278,7 @@ class WizardGUI(QMainWindow):
             item = QtWidgets.QListWidgetItem()
             self.ui.listWidget_playlist.addItem(item)
             _item1=self.ui.listWidget_playlist.item(0)
-            _item1.setText(self.my_filename + self.ext)
+            _item1.setText(system_state["my_filename"] + system_state["ext"])
             fnt = _item1.font()
             fnt.setPointSize(9)
             playlist.append(system_state["f1"])
@@ -2287,7 +2288,7 @@ class WizardGUI(QMainWindow):
             self.ui.listWidget_playlist_2.addItem(item)
             _item2=self.ui.listWidget_playlist_2.item(0)
             #TODO: problematic when invalid wav file (music)
-            _item2.setText(self.my_filename + self.ext)
+            _item2.setText(system_state["my_filename"] + system_state["ext"])
             fnt = _item2.font()
             fnt.setPointSize(9)
             reslist.append(system_state["f1"])
@@ -2400,9 +2401,9 @@ class WizardGUI(QMainWindow):
         :rtype: Boolean
         """
         system_state = sys_state.get_status()
-        loix = self.my_filename.find('_lo')
-        cix = self.my_filename.find('_c')
-        rateix = self.my_filename.find('_r')
+        loix = system_state["my_filename"].find('_lo')
+        cix = system_state["my_filename"].find('_c')
+        rateix = system_state["my_filename"].find('_r')
         icheck = True
         i_LO_bias = 0 ###TODO: remove, activate ???
 
@@ -2426,12 +2427,12 @@ class WizardGUI(QMainWindow):
         if rateix == -1 or cix == -1 or loix == -1:
             icheck = False
         
-        freq = self.my_filename[loix+3:loix+7]
+        freq = system_state["my_filename"][loix+3:loix+7]
         freq = freq + '000'
         if freq.isdecimal() == False:
             icheck = False
 
-        rate = self.my_filename[rateix+2:cix]
+        rate = system_state["my_filename"][rateix+2:cix]
         rate = rate + '000'
         if rate.isdecimal() == False:
             icheck = False            
