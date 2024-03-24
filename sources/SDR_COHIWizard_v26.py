@@ -2632,19 +2632,23 @@ if __name__ == '__main__':
     # * Player-Modul Tests und Bugfixing: 0.5h
     #
     # + Player Modul um Rec ausbauen:
-    #       * valid check des LO-Engabefeldes
-    #       * Filesize-begrenzung und wavheadergeneration einbauen:
-    #           Filesize in rec_loop abfragen, wenn > 2G:
-    #                loop abbrechen
-    #                   if quit --> wavheader in aktuelle Datei einbauen, neuen wavheader generieren
-    #                       playrecworker neu instanzieren und starten:
-                                # self.generate_recfilename()
-                                # self.updatecurtime(0)
-                                # self.recordingsequence()
-
-    # 
-    #   Nach Stop Rec den Wavheader bezügl Filesize korrigieren: os.stats size des f1 abfragen, 
-    #                                                           headerüberschreiber füttern
+    #   2G Filesizebeschraenkung noch nicht ganz korrekt; Abbruch in rec_loop muss revidiert werden
+    #   Aufnahmedauer einstellbar machen
+    #   Aufnahmezeitpunkt automatisieren
+    #   Strategie: Mit Pushbutton Timer aktivieren, evt. Countdown anzeigen
+    #   Startzeit einstellen: Im Startzeit-Fenster wird nach Aktivierung des Pushbutton 
+    #       eine Zeit datetime.now() + 15 Minuten angezeigt, die man editieren kann
+    #       Wenn die aktuelle Zeit die Fensterzeit erreicht, wird gestartet
+    #       Countdown läuft im Spieldauer-Anzeigefenster
+    #      wird die Startzeit erreicht, wird das Eingabefenster deaktiviert und die Aufnahme startet
+    #               
+    #
+    #   Preset Bänder aktivieren, LO und SR werden automatisch je nach Dropdown-Item eingestellt
+    #    
+    #   UTC Strategie einbauen
+    #   
+    #
+    #   
     #
     # * Annotator Modul übertragen: 20 h
     #

@@ -1028,6 +1028,8 @@ class playrec_v(QObject):
         self.m["recstate"] = False
         self.m["recording_path"] = ""
         self.m["recstate"] = False
+        self.m["modality"] = ""
+        self.m["pausestate"] = False
         self.gui.lineEdit_playrec_LO.setText("1125")
 
 
@@ -1072,7 +1074,13 @@ class playrec_v(QObject):
         self.gui.listWidget_sourcelist.setEnabled(False)
         self.gui.ScrollBar_playtime.setEnabled(False)
         self.gui.Label_Recindicator.setEnabled(False)
+        #self.gui.playrec_RECSTART_dateTimeEdit.setText
+        self.gui.playrec_RECSTART_dateTimeEdit.setDateTime(datetime.now())
+        self.gui.playrec_radioButton_RECAUTOSTART.clicked.connect(self.toggleRecAutostart)
+        
         self.gui.checkBox_TESTMODE.clicked.connect(self.toggleTEST)
+        preset_time = QTime(00, 30, 00) 
+        self.gui.playrec_RECLENGTH_timeEdit.setTime(preset_time)
         ###########TODO TODO TODO: remove after transfer to config Tab
         try:
             stream = open("config_wizard.yaml", "r")
@@ -1084,6 +1092,70 @@ class playrec_v(QObject):
         except:
             pass
 
+    def toggleRecAutostart(self):
+        if self.gui.playrec_radioButton_RECAUTOSTART.isChecked():
+            self.m["autostart"] = True
+            self.gui.playrec_label_RECSTART.setEnabled(True)
+            self.gui.playrec_label_RECSTART.setStyleSheet("background-color : yellow")
+            font = self.gui.playrec_label_RECSTART.font()
+            font.setPointSize(12)
+            self.gui.playrec_label_RECSTART.setFont(font)
+            font.setBold(True)
+            self.gui.playrec_label_RECSTART.setFont(font)
+            self.gui.playrec_RECSTART_dateTimeEdit.setEnabled(True)
+            self.gui.playrec_RECSTART_dateTimeEdit.setDateTime(datetime.now() + ndatetime.timedelta(minutes=15))
+        else:
+            self.m["autostart"] = False
+            self.gui.playrec_label_RECSTART.setEnabled(False)
+            self.gui.playrec_label_RECSTART.setStyleSheet("background-color : lightgray")
+            font = self.gui.playrec_label_RECSTART.font()
+            font.setPointSize(12)
+            self.gui.playrec_label_RECSTART.setFont(font)
+            font.setBold(False)
+            self.gui.playrec_label_RECSTART.setFont(font)
+            self.gui.playrec_RECSTART_dateTimeEdit.setEnabled(False)
+
+    def countdown(self):
+        """
+        updates countdown in play time indicator, if playrec_radioButton_RECAUTOSTART is enabled 
+        starts recording if countdown drops < 0
+        :param: none
+        :type: none
+        ...
+        :raises: none
+        ...
+        :return: none
+        :rtype: none
+        """
+        if self.m["recstate"]:
+            current_datetime = QDateTime.currentDateTime()    
+            # Zeit aus dem QTimeEdit-Objekt
+            #qtimeedit = self.gui.playrec_RECLENGTH_timeEdit
+            #time_from_qtimeedit = qtimeedit.time()       
+            # Zeit aus dem QTimeEdit-Objekt zu aktuellen Datum hinzufügen
+            #hours = time_from_qtimeedit.hour()
+            #minutes = time_from_qtimeedit.minute()
+            #seconds = time_from_qtimeedit.second()
+            #target_datetime = current_datetime.addSecs(hours * 3600 + minutes * 60 + seconds)
+            # Differenz berechnen
+            remaining_time = current_datetime.secsTo(self.target_datetime)
+            print(f"playrec countdown residual time : {remaining_time}")
+            if remaining_time == 0:
+                self.playrec_c.cb_Butt_STOP()
+            return
+        if self.gui.playrec_radioButton_RECAUTOSTART.isChecked():
+            countdown =  self.gui.playrec_RECSTART_dateTimeEdit.dateTime().toPyDateTime() - datetime.now()
+            self.gui.lineEditCurTime.setText(str(countdown).split('.')[0])
+            print(countdown.total_seconds())
+            if countdown.total_seconds() <= 0:
+                self.cb_Butt_REC()
+                self.gui.playrec_radioButton_RECAUTOSTART.setChecked(False)
+                self.gui.playrec_label_REC_duration.setStyleSheet("background-color : yellow")
+                #self.gui.playrec_label_REC_duration.setStyleSheet("background-color : lightgray")
+                font = self.gui.playrec_label_REC_duration.font()
+                font.setPointSize(14)
+                self.toggleRecAutostart()
+            
     def blinkrec(self):
         if self.m["recstate"] == False:
             self.gui.Label_Recindicator.setEnabled(False)
@@ -1179,11 +1251,22 @@ class playrec_v(QObject):
             if  _value[0].find("timertick") == 0:
                 if self.m["recstate"]:
                     self.blinkrec()
+                self.countdown()
             if  _value[0].find("indicate_bufoverflow") == 0:
                 self.indicate_bufoverflow()
                                 
 
     def jump_to_position(self):
+        """
+        jump to next player file position
+        :param: none
+        :type: none
+        ...
+        :raises: none
+        ...
+        :return: none
+        :rtype: none
+        """
         self.m["playprogress"] = self.gui.ScrollBar_playtime.value()
         self.playrec_c.jump_to_position_c()
 
@@ -1214,7 +1297,6 @@ class playrec_v(QObject):
 
     def playlist_update(self): #TODO: list is only updated up to the just before list change dragged item,
         """
-        VIEW
         updates playlist whenever the playlist Widget is changed
         :param: none
         :type: none
@@ -1507,6 +1589,19 @@ class playrec_v(QObject):
         self.gui.pushButton_Play.setEnabled(False)
         self.gui.verticalSlider_Gain.setEnabled(False)
         #TODO TODO TODO warning if host not reachable
+
+        current_datetime = QDateTime.currentDateTime()    
+        # Zeit aus dem QTimeEdit-Objekt
+        qtimeedit = self.gui.playrec_RECLENGTH_timeEdit
+        time_from_qtimeedit = qtimeedit.time()       
+        # Zeit aus dem QTimeEdit-Objekt zu aktuellen Datum hinzufügen
+        hours = time_from_qtimeedit.hour()
+        minutes = time_from_qtimeedit.minute()
+        seconds = time_from_qtimeedit.second()
+        self.target_datetime = current_datetime.addSecs(hours * 3600 + minutes * 60 + seconds)
+        self.gui.playrec_label_REC_duration.setStyleSheet("background-color : yellow")
+        font = self.gui.playrec_label_REC_duration.font()
+        font.setPointSize(14)
         self.playrec_c.recordingsequence()
 
     def reset_playerbuttongroup(self):
@@ -1540,6 +1635,9 @@ class playrec_v(QObject):
         self.gui.pushButton_Stop.setEnabled(True)
         self.gui.pushButton_REC.setEnabled(True)
         self.gui.verticalSlider_Gain.setEnabled(True)
+        self.gui.playrec_label_REC_duration.setStyleSheet("background-color : lightgray")
+        font = self.gui.playrec_label_REC_duration.font()
+        font.setPointSize(14)
         self.m["playlist_active"] = False
 
     def indicate_bufoverflow(self):
@@ -1634,14 +1732,6 @@ class playrec_v(QObject):
         self.m["timescaler"] = self.m["wavheader"]['nSamplesPerSec']*self.m["wavheader"]['nBlockAlign']
         self.m["playprogress"] = 0
         time.sleep(0.01)
-        # if self.m["playthreadActive"] is False:
-        #     return False
-        # else:
-        #     try:
-        #         self.playrec_c.playrec_tworker.SigIncrementCurTime.disconnect(self.playrec_c.SigRelay)
-        #     except:
-        #         pass
-        #     pass
         timestr = str(self.m["wavheader"]['starttime_dt'] + ndatetime.timedelta(seconds=self.m["curtime"]))
         playlength = self.m["wavheader"]['filesize']/self.m["wavheader"]['nAvgBytesPerSec']
 
@@ -1673,16 +1763,12 @@ class playrec_v(QObject):
         else:
             self.m["curtime"] += increment
             timestr = str(ndatetime.timedelta(seconds=0) + ndatetime.timedelta(seconds=self.m["curtime"]))
-            #print(f"time indicator increment:{increment}, timebase: {ndatetime.timedelta(seconds=0)} curt: {ndatetime.timedelta(seconds=self.m['curtime'])}")
-        #timestr = str(self.wavheader['starttime_dt'] + ndatetime.timedelta(seconds=self.m["curtime"]))
-        self.gui.lineEditCurTime.setText(timestr) 
+        if not self.gui.playrec_radioButton_RECAUTOSTART.isChecked():
+            self.gui.lineEditCurTime.setText(timestr) 
         self.gui.ScrollBar_playtime.setProperty("value", self.m["playprogress"])
-        #sys_state.set_status(system_state)
-        #print("leave updatecurtime")
-        # if self.m["playthreadActive"]:
-        #     self.playrec_c.playrec_tworker.SigIncrementCurTime.connect(lambda: self.playrec_c.SigRelay.emit("cexex_playrec",["updatecurtime",1]))
         self.lastupdatecurtime = datetime.now()
         return True
+    
     
     def reset_LO_bias(self):
         """ Purpose: reset LO bias setting to 0; 
