@@ -62,6 +62,7 @@ from PyQt5.QtCore import QObject, QThread, pyqtSignal, QMutex       #TODO: OBSOL
 import system_module as wsys
 import resampler_module_v5 as rsmp
 import view_spectra as vsp
+#import annotate as ann
 import yaml_editor as yed
 import waveditor as waved
 from stemlab_control import StemlabControl
@@ -613,32 +614,6 @@ class core_v(QObject):
                 dt_now.strftime('%H:%M:%S'))
             
         self.SigRelay.emit("cexex_all_",["timertick",0])
-        #TODO: reimplement recorder
-
-        # if self.ui.radioButton_timeract.isChecked():
-        #     self.ui.radioButton_Timer.setChecked(False)
-        #     self.ui.dateTimeEdit_setclock.setEnabled(False)
-        #     self.ui.checkBox_UTC.setEnabled(False)
-        #     st = self.ui.dateTimeEdit_setclock.dateTime().toPyDateTime()
-        #     if self.UTC:
-        #         ct = QtCore.QDateTime.currentDateTime().toUTC().toPyDateTime()
-        #     else:
-        #         ct = QtCore.QDateTime.currentDateTime().toPyDateTime()
-        #     self.diff = np.floor((st-ct).total_seconds())
-        #     if self.diff > 0:
-        #         countdown = str(ndatetime.timedelta(seconds=self.diff))
-        #         self.ui.label_ctdn_time.setText(countdown)
-        #     else:
-        #         if self.recording_wait is True:
-        #             self.recording_wait = False
-        #             self.recordingsequence()
-        #         return
-        # else:
-        #     self.ui.checkBox_UTC.setEnabled(True)
-        #     if not self.ui.radioButton_Timer.isChecked():
-        #         self.ui.dateTimeEdit_setclock.setEnabled(False)
-        #     else:
-        #         self.ui.dateTimeEdit_setclock.setEnabled(True)
 
 class WizardGUI(QMainWindow):
     #TODO: make this the core_view method
@@ -658,34 +633,34 @@ class WizardGUI(QMainWindow):
 
         self.OLD = True
         self.TEST = True    # Test Mode Flag for testing the App, --> playloop  ##NOT USED #TODO:future system status
-        self.CURTIMEINCREMENT = 5 # für playloop >>, << TODO: shift to playrec module once it exists
+        self.CURTIMEINCREMENT = 5 # für playloop >>, << TODO: shift to play<<<<<module once it exists
         self.DATABLOCKSIZE = 1024*32 # für diverse Filereader/writer TODO: occurs in plot spectrum and ANN_Spectrum; must be shifted to the respective modules in future
-        self.DELTAF = 5000 #minimum peak distance in Hz for peak detector #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
-        self.PEAKWIDTH = 10 # minimum peak width in Hz for peak detector #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
-        self.PROMINENCE = 15 # minimum peak prominence in dB above baseline for peak detector #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
-        self.FILTERKERNEL = 2 # length of the moving median filter kernel in % of the spectral span #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
-        self.NUMSNAPS = 5 #number of segments evaluated for annotation #TODO:occurs in ann-module; must be shifted to the respective module in future
-        self.STICHTAG = datetime(2023,2,25,0,0,0) #TODO: only used in stationsloop of statslist_gen_worker as self.host.STICHTAG, Move to module annotation
-        self.GAINOFFSET = 40 #TODO: move to player module
+        self.DELTAF = 5000 #######minimum peak distance in Hz for peak detector #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
+        self.PEAKWIDTH = 10 ########### minimum peak width in Hz for peak detector #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
+        self.PROMINENCE = 15 ######### minimum peak prominence in dB above baseline for peak detector #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
+        self.FILTERKERNEL = 2 ############# length of the moving median filter kernel in % of the spectral span #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
+        self.NUMSNAPS = 5 #############number of segments evaluated for annotation #TODO:occurs in ann-module; must be shifted to the respective module in future
+        self.STICHTAG = datetime(2023,2,25,0,0,0) ###########TODO: only used in stationsloop of statslist_gen_worker as self.host.STICHTAG, Move to module annotation
+        #self.GAINOFFSET = 40 #TODO: move to player module
         self.autoscan_ix = 0 #TODO:future system state
-        self.gain = 1 #TODO:future system state
+        #self.gain = 1 #TODO:future system state
         self.bps = ['8', '16', '24', '32'] #TODO:future system state
         self.standardLO = 1100 #TODO:future system state
-        self.locs_union = [] #TODO:future system state
-        self.freq_union = [] #TODO:future system state
-        self.oldposition = 0 #TODO:future system state
-        self.ovwrt_flag = False #TODO:future system state
+        self.locs_union = [] ##############TODO:future system state
+        self.freq_union = [] #################TODO:future system state
+        self.oldposition = 0 ###################TODO:future system state
+        #self.ovwrt_flag = False #TODO:future system state
         self.autoscanthreadActive = False #TODO:future system state
         self.progressvalue = 0 #TODO:future system state
-        self.cohiradia_yamlheader_filename = 'dummy' #TODO:future system state
-        self.cohiradia_yamltailer_filename = 'dummy' #TODO:future system state
-        self.cohiradia_yamlfinal_filename = 'dummy' #TODO:future system state
-        self.annotationdir_prefix = 'ANN_' #TODO:future system state
-        self.flag_ann_completed = False #TODO:future system state
-        self.lock_playthreadstart = True #TODO:future system state
+        self.cohiradia_yamlheader_filename = 'dummy' #################TODO:future system state
+        self.cohiradia_yamltailer_filename = 'dummy' ####################TODO:future system state
+        self.cohiradia_yamlfinal_filename = 'dummy' #####################TODO:future system state
+        self.annotationdir_prefix = 'ANN_' ##################TODO:future system state
+        self.flag_ann_completed = False ###############TODO:future system state
+        #self.lock_playthreadstart = True #TODO:future system state
         self.playthreadActive = False #TODO:future system state
-        self.curtime = 0 #TODO:future system state
-        self.timechanged=False #TODO:future system state
+        #self.curtime = 0 #TODO:future system state
+        #self.timechanged=False #TODO:future system state
         self.position = 0 #TODO:future system state URGENT !!!!!!!!!!!!!!
         self.tab_dict = {}
 
@@ -698,39 +673,33 @@ class WizardGUI(QMainWindow):
         self.ui.setupUi(self)
         self.ui.tableWidget_basisfields.verticalHeader().setVisible(True)   
 
-        ## TODO: wavheader-Writing zum Button Insert Header connecten
-        # connect menubar events
-        #Abonnierung von system state update wie folgt:
-        #sys_state.SigUpdateStatus.connect(lambda: print("5§§§§§% ------- Statusupdate on Signal received ------"))
 
         ### UI MASTER ####################################
         self.ui.actionFile_open.triggered.connect(self.cb_open_file)
-        #self.ui.actionOverwrite_header.triggered.connect(self.overwrite_header)
         self.SigGUIReset.connect(self.reset_GUI)
         self.ui.pushButton_resample_GainOnly.setEnabled(False)
-        #self.ui.checkBox_writelog.clicked.connect(self.togglelogmodus) #TODO TODO TODO: Remove or re-organize logfile handling (evt Config ?)
         self.ui.tabWidget.setCurrentIndex(1) #TODO: avoid magic number, unidentified
 
         ### END UI MASTER ####################################
 
         ###EUI TAB ANNOTATE####################################
-
-        self.ui.pushButton_Scan.setEnabled(False)
-        self.ui.pushButtonAnnotate.setEnabled(False)
-        self.ui.pushButton_Scan.clicked.connect(self.autoscan)
-        self.ui.pushButtonAnnotate.clicked.connect(self.ann_stations) 
-        self.ui.pushButtonDiscard.setEnabled(False)
-        self.ui.pushButtonDiscard.clicked.connect(self.discard_annot_line)
-        self.ui.spinBoxminSNR.valueChanged.connect(self.minSNRupdate) 
-        self.ui.lineEdit.setAlignment(QtCore.Qt.AlignLeft)
-        #self.ui.lineEdit.returnPressed.connect(self.enterlinetoannotation)
-        self.ui.pushButtonENTER.clicked.connect(self.enterlinetoannotation)
-        self.ui.pushButtonENTER.setEnabled(False)
-        #self.ui.pushButton_ScanAnn.clicked.connect(self.listclick_test)
-        self.ui.Annotate_listWidget.itemClicked.connect(self.cb_ListClicked)
-        self.ui.Annotate_listWidget.clear()
-        self.ui.progressBar_2.setProperty("value", 0)
-        ###END UI TAB ANNOTATE ####################################
+        if not ('annotate' in sys.modules):
+            self.ui.pushButton_Scan.setEnabled(False)
+            self.ui.pushButtonAnnotate.setEnabled(False)
+            self.ui.pushButton_Scan.clicked.connect(self.autoscan)
+            self.ui.pushButtonAnnotate.clicked.connect(self.ann_stations) 
+            self.ui.pushButtonDiscard.setEnabled(False)
+            self.ui.pushButtonDiscard.clicked.connect(self.discard_annot_line)
+            self.ui.spinBoxminSNR.valueChanged.connect(self.minSNRupdate) 
+            self.ui.lineEdit.setAlignment(QtCore.Qt.AlignLeft)
+            #self.ui.lineEdit.returnPressed.connect(self.enterlinetoannotation)
+            self.ui.pushButtonENTER.clicked.connect(self.enterlinetoannotation)
+            self.ui.pushButtonENTER.setEnabled(False)
+            #self.ui.pushButton_ScanAnn.clicked.connect(self.listclick_test)
+            self.ui.Annotate_listWidget.itemClicked.connect(self.cb_ListClicked)
+            self.ui.Annotate_listWidget.clear()
+            self.ui.progressBar_2.setProperty("value", 0)
+            ###END UI TAB ANNOTATE ####################################
         #read config file if it exists
         self.standardpath = os.getcwd()  #TODO: this is a core variable in core model
         self.metadata = {"last_path": self.standardpath}
@@ -784,18 +753,6 @@ class WizardGUI(QMainWindow):
         #TODO: Implement further slot communicationa shown here
         self.autoscaninst.set_0([self.ui.spinBoxNumScan.value(),self.ui.spinBoxminSNR.value(),[]])
 
-        # ################# start timer tick  #TODO: remove after tests
-        # self.timethread = QThread()
-        # self.timertick = timer_worker()
-        # self.timertick.moveToThread(self.timethread)
-        # self.timethread.started.connect(self.timertick.tick)
-        # self.timertick.SigFinished.connect(self.timethread.quit)
-        # self.timertick.SigFinished.connect(self.timertick.deleteLater)
-        # self.timethread.finished.connect(self.timethread.deleteLater)
-        # #self.timertick.SigTick.connect(self.updatetimer)
-        # self.timethread.start()
-        # if self.timethread.isRunning():
-        #     self.timethreaddActive = True #TODO:future system state
         # Create a custom logger
         # Setze den Level des Root-Loggers auf DEBUG
         logging.getLogger().setLevel(logging.DEBUG)
@@ -827,7 +784,6 @@ class WizardGUI(QMainWindow):
             print(ex.stdout, file=sys.stdout, end='', flush=True)
             if len(ex.stderr) > 0: 
                 self.soxnotexist = True
-
         self.logger.info("Init logger in core reached")
 
     # GENRAL GUI METHODS
@@ -860,7 +816,7 @@ class WizardGUI(QMainWindow):
         system_state["my_filename"] = ""
         system_state["ext"] = ""
         system_state["annotation_prefix"] = 'ANN_' #TODO: not used anywhere
-        system_state["resampling_gain"] = 0
+        #system_state["resampling_gain"] = 0
         system_state["emergency_stop"] = False
         system_state["timescaler"] = 0
         system_state["fileopened"] = False
@@ -871,16 +827,16 @@ class WizardGUI(QMainWindow):
         system_state["icorr"] = 0
         system_state["irates"] = ['2500', '1250', '500', '250', '100', '50', '20']
         system_state["gui_reference"] = self
-        system_state["actionlabel"] = ""
+        #system_state["actionlabel"] = ""
         system_state["LO_offset"] = 0
         system_state["playlist_ix"] = 0
         system_state["reslist_ix"] = 0
         system_state["list_out_files_resampled"] = []
-        system_state["playlist_active"] = False
-        system_state["progress"] = 0
-        system_state["temp_LOerror"] = False
-        system_state["starttrim"] = False
-        system_state["stoptrim"] = False
+        #system_state["playlist_active"] = False
+        #system_state["progress"] = 0
+        #system_state["temp_LOerror"] = False
+        #system_state["starttrim"] = False
+        #system_state["stoptrim"] = False
         sys_state.set_status(system_state)
 
     def generate_canvas(self,dummy,gridref,gridc,gridt,Tabref):
@@ -913,8 +869,6 @@ class WizardGUI(QMainWindow):
         Tabref["canvas"] = canvas
         Tabref["ax"].plot([], [])
         Tabref["canvas"].draw()
-
-##############################  RESAMPLE MODULE, REMOVE ###########################
         
     def init_Tabref(self): #TODO:future system state
         """
@@ -947,7 +901,7 @@ class WizardGUI(QMainWindow):
         #TODO: change 10-12-2023: since GUI10: self.generate_canvas(self,self.ui.gridLayout_5,[10,0,1,5],[-1,-1,-1,-1],self.Tabref["Resample"])
         self.generate_canvas(self,self.ui.gridLayout_5,[6,0,6,4],[-1,-1,-1,-1],self.Tabref["Resample"])
 
-##############################  RESAMPLE MODULE, END REMOVE ###########################
+
 
     def setactivity_tabs(self,caller,statuschange,exceptionlist):
         """
@@ -1011,41 +965,43 @@ class WizardGUI(QMainWindow):
         self.oldposition = 0
         
         ###########transfer to tab Annotator
-        self.ui.pushButtonAnnotate.setFont(QFont('MS Shell Dlg 2', 12))
-        self.ui.pushButton_Scan.setFont(QFont('MS Shell Dlg 2', 12))
-        self.ui.pushButtonAnnotate.setStyleSheet("background-color : rgb(220, 220, 220)")
-        self.ui.pushButton_Scan.setStyleSheet("background-color : rgb(220, 220, 220)")
-        self.ui.lineEdit.setText('')
-        self.ui.lineEdit_TX_Site.setText('')
-        self.ui.lineEdit_Country.setText('')
-        #self.ui.line_Edit.setAlignment(QtCore.Qt.AlignLeft)
-        self.ui.lineEdit.setStyleSheet("background-color : white")
-        self.ui.lineEdit.setFont(QFont('MS Shell Dlg 2', 12))
-        self.ui.Annotate_listWidget.clear()
+        if not ('annotate' in sys.modules):
+            self.ui.pushButtonAnnotate.setFont(QFont('MS Shell Dlg 2', 12))
+            self.ui.pushButton_Scan.setFont(QFont('MS Shell Dlg 2', 12))
+            self.ui.pushButtonAnnotate.setStyleSheet("background-color : rgb(220, 220, 220)")
+            self.ui.pushButton_Scan.setStyleSheet("background-color : rgb(220, 220, 220)")
+            self.ui.lineEdit.setText('')
+            self.ui.lineEdit_TX_Site.setText('')
+            self.ui.lineEdit_Country.setText('')
+            #self.ui.line_Edit.setAlignment(QtCore.Qt.AlignLeft)
+            self.ui.lineEdit.setStyleSheet("background-color : white")
+            self.ui.lineEdit.setFont(QFont('MS Shell Dlg 2', 12))
+            self.ui.Annotate_listWidget.clear()
+            self.ui.tab_annotate.setEnabled(True)
         #self.ui.tab_2.setEnabled(True)
         self.ui.tab_view_spectra.setEnabled(True)
-        self.ui.tab_annotate.setEnabled(True)
+
         #self.ui.pushButton_InsertHeader.setEnabled(False)   #####TODO shift to WAV editor or send Relay for inactivation via WAV 
         self.ui.label_8.setEnabled(False)
         self.ui.label_36.setText('READY')
         self.ui.label_36.setFont(QFont('arial',12))
         self.ui.label_36.setStyleSheet("background-color: lightgray")
-        self.ui.radioButton_WAVEDIT.setChecked(False)
+        self.ui.radioButton_WAVEDIT.setChecked(False) #########?? TODO OBSOLETE HERE ?
         #self.activate_WAVEDIT() # to wav editor Tab reset
         self.SigRelay.emit("cexex_waveditor",["activate_WAVEDIT",0])
-        self.Tabref["View_Spectra"]["ax"].clear() #shift to Plot spectrum Tab reset
-        self.Tabref["View_Spectra"]["canvas"].draw() #shift to Plot spectrum Tab reset
-        self.Tabref["Resample"]["ax"].clear() #shift to Resampler Tab reset
-        self.ui.listWidget_sourcelist.clear() # shift to resampler Tab
+        self.Tabref["View_Spectra"]["ax"].clear() #############shift to Plot spectrum Tab reset
+        self.Tabref["View_Spectra"]["canvas"].draw() ############shift to Plot spectrum Tab reset
+        self.Tabref["Resample"]["ax"].clear() #############shift to Resampler Tab reset
+        self.ui.listWidget_sourcelist.clear() ############### shift to resampler Tab
 
         self.Tabref["Resample"]["canvas"].draw() #shift to Resampler Tab reset
-        self.ui.label_Filename_Player.setText('')  #shift to Player Tab reset
-        self.ui.label_Filename_ViewSpectra.setText('') #shift to Plot spectrum Tab reset
+        #self.ui.label_Filename_Player.setText('')  #shift to Player Tab reset
+        #self.ui.label_Filename_ViewSpectra.setText('') #shift to Plot spectrum Tab reset
         self.ui.label_Filename_Annotate.setText('') #shift to Annotator Tab reset
-        self.ui.label_Filename_WAVHeader.setText('') #shift to wav editor Tab reset
-        self.ui.label_Filename_resample.setText('') #shift to resampler Tab reset
-        self.ui.listWidget_playlist.clear() #TODO: shift to Player Tab reset
-        self.ui.listWidget_sourcelist.clear() #TODO: shift to Player Tab reset
+        #self.ui.label_Filename_WAVHeader.setText('') #shift to wav editor Tab reset
+        #self.ui.label_Filename_resample.setText('') #shift to resampler Tab reset
+        self.ui.listWidget_playlist.clear() #TODO: shift to Player Tab reset after splitting
+        self.ui.listWidget_sourcelist.clear() #TODO: shift to Player Tab reset after splitting
         #self.clear_WAVwidgets() #TODO: shift to to a WAVeditor reset
 
         try:
@@ -1065,19 +1021,13 @@ class WizardGUI(QMainWindow):
             #logging.error("reset_gui: cannot get metadata")
             self.logger.error("reset_gui: cannot get metadata")
         #self.open_template_flag = False
-        try:
-            stream = open(self.status_filename, "r")
-            status = yaml.safe_load(stream)
-            stream.close()
-        except:
-            #print("cannot get status")
-            return False 
-        
-        #TODO: reade info on spinbox settings MF kernel etc from status file if it exists
-        #self.ui.spinBoxKernelwidth.setProperty("value", 15)
-        #self.ui.spinBoxNumScan.setProperty("value", 10)
-        #self.ui.spinBoxminBaselineoffset.setProperty("value", 5)
-
+        # try:
+        #     stream = open(self.status_filename, "r")
+        #     status = yaml.safe_load(stream)
+        #     stream.close()
+        # except:
+        #     #print("cannot get status")
+        #     return False 
         return True
 
     def showfilename(self):
@@ -1387,109 +1337,107 @@ class WizardGUI(QMainWindow):
         sys_state.set_status(system_state)
         return ret
 
-    def readsegment_new(self,f1,position,DATABLOCKSIZE,sBPS,tBPS,wFormatTag):       #TODO: This is a controller method, should be transferred to an annotation module
-        """
-        CONTROLLER
-        opens file f1 and reads a data segment from position 216 + position #TODO: check if 216 is universal !
-        the segment has length DATABLOCKSIZE
-        segment is read according to format specified in wFormattag (int, float) and sBPS(16, 32, 24)
-        segment is returned as float array of complex numbers, even entries = real, odd entries = imaginary
-        output format is 16 or 32bit according to value specified in tBPS. No other BPS (e.g. 8) are allowed.
-        24 Bit mode is not recommended for frequent calling, because inefficient (slow !)
-        :param self: An instance of the class containing attributes such as header information and filtering parameters.
-        :type self: object
-        :param: position
-        :type position: int
-        :param: DATABLOCKSIZE: size of bytes to be read
-        :type position: int
-        :param: sBPS: Bits per sample of source file 
-        :type sBPS: int
-        :param: tBPS: Bits per sample of target file 
-        :type tBPS: int
-        :param: wFormatTag: 1 or 3, wav-Format of source file 
-        :type wFormatTag: int
-        :raises [ErrorType]: [ErrorDescription]
-        :return: ret = dictionary with fields: ret["data"], ret["size]; size is either the number of bytes read or -1 in case of invalid file formats
-        :rtype: dictionary; type of field "data": np.float32 array of size self.DATABLOCKSIZE ; type of field "size": int
-        """
-        #print(f"read segment reached, position: {position}")
-        #data = np.empty(DATABLOCKSIZE, dtype=np.int16) #TODO: DATABLOCKSIZE dynamisch anpassen !
-        fid = open(f1, 'rb')
-        if wFormatTag == 1:
-            scl = int(2**int(sBPS-1))-1   #if self.wavheader['nBitsPerSample'] 2147483648 8388608 32767
-        else:
-            scl = 1
-        if sBPS == 16:
-            fid.seek(self.readoffset+position, 0)
-            if wFormatTag == 3: # read 16bit float
-                dataraw = np.empty(DATABLOCKSIZE, dtype=np.float16)
-                size = fid.readinto(dataraw)
-                if tBPS == 32: #write 32 bit float
-                    data = dataraw.astype(np.float32)
-                else: # write to 16bit float
-                    data = dataraw.astype(np.float16)
-            elif wFormatTag == 1: # read int16
-                dataraw = np.empty(DATABLOCKSIZE, dtype=np.int16)
-                size = fid.readinto(dataraw)
-                if tBPS == 32:
-                    data = dataraw.astype(np.float32)/scl
-                else:
-                    data = dataraw.astype(np.float16)/scl
-            else:
-                auxi.standard_errorbox("unsupported Format Tag (wFormatTag): value other than 1 or 3 encountered")
-                size = -1
-            fid.close()
-        elif sBPS == 32:
-            fid.seek(216+position, 0) #TODO: ist 216 allgemein oder self.readoffset+position, 0)
-            if  wFormatTag == 3: #read float32
-                dataraw = np.empty(DATABLOCKSIZE, dtype=np.float32)
-                size = fid.readinto(dataraw)
-                if tBPS == 32: # write to float32
-                    data = dataraw.astype(np.float32)
-                else:
-                    data = (dataraw>>16).astype(np.float16)# check ob das für float gilt oder nur für INT !!TODO 
-                size = fid.readinto(data)
-            elif  wFormatTag == 1: #read int32
-                dataraw = np.empty(DATABLOCKSIZE, dtype=np.int32)
-                size = fid.readinto(dataraw)
-                if tBPS == 32:
-                    data = dataraw.astype(np.float32)/scl
-                else:
-                    data = ((dataraw/scl)>>16).astype(np.float16)
-                size = fid.readinto(dataraw)
-            else:
-                auxi.standard_errorbox("Unsupported FormatTag (wFormatTag): value other than 1 or 3 encountered")
-                size = -1
-            fid.close()
-        elif sBPS == 24:   #This mode is useful ONLY for general short reading purposes (plotting) NOT for LOshifting !
-            #localize data identifier
-            fid.seek(self.readoffset+position, 0)
-            data = np.empty(DATABLOCKSIZE, dtype=np.float32)
-            size = 0
-            for lauf in range(0,DATABLOCKSIZE):
-                d = fid.read(3)
-                if d == None:
-                    fid.close()
-                    size = 3*(lauf-1)
-                else:
-                    dataraw = unpack('<%ul' % 1 ,d + (b'\x00' if d[2] < 128 else b'\xff'))
-                    if  wFormatTag == 1:
-                        data[lauf] = np.float32(dataraw[0]/8388608)
-                    else:
-                        data[lauf] = dataraw[0]
-                    size += 3
-        else:
-            auxi.standard_errorbox("no encodings except 16, 24 and 32 bits are supported")
-            #return invalid
-            size = -1
-        fid.close()
-        ret = {}
-        ret["data"] = data
-        ret["size"] = size
-        #return data
-        return ret
-
-
+    # def readsegment_new(self,f1,position,DATABLOCKSIZE,sBPS,tBPS,wFormatTag):       #TODO: This is a controller method, should be transferred to an annotation module
+    #     """
+    #     CONTROLLER
+    #     opens file f1 and reads a data segment from position 216 + position #TODO: check if 216 is universal !
+    #     the segment has length DATABLOCKSIZE
+    #     segment is read according to format specified in wFormattag (int, float) and sBPS(16, 32, 24)
+    #     segment is returned as float array of complex numbers, even entries = real, odd entries = imaginary
+    #     output format is 16 or 32bit according to value specified in tBPS. No other BPS (e.g. 8) are allowed.
+    #     24 Bit mode is not recommended for frequent calling, because inefficient (slow !)
+    #     :param self: An instance of the class containing attributes such as header information and filtering parameters.
+    #     :type self: object
+    #     :param: position
+    #     :type position: int
+    #     :param: DATABLOCKSIZE: size of bytes to be read
+    #     :type position: int
+    #     :param: sBPS: Bits per sample of source file 
+    #     :type sBPS: int
+    #     :param: tBPS: Bits per sample of target file 
+    #     :type tBPS: int
+    #     :param: wFormatTag: 1 or 3, wav-Format of source file 
+    #     :type wFormatTag: int
+    #     :raises [ErrorType]: [ErrorDescription]
+    #     :return: ret = dictionary with fields: ret["data"], ret["size]; size is either the number of bytes read or -1 in case of invalid file formats
+    #     :rtype: dictionary; type of field "data": np.float32 array of size self.DATABLOCKSIZE ; type of field "size": int
+    #     """
+    #     #print(f"read segment reached, position: {position}")
+    #     #data = np.empty(DATABLOCKSIZE, dtype=np.int16) #TODO: DATABLOCKSIZE dynamisch anpassen !
+    #     fid = open(f1, 'rb')
+    #     if wFormatTag == 1:
+    #         scl = int(2**int(sBPS-1))-1   #if self.wavheader['nBitsPerSample'] 2147483648 8388608 32767
+    #     else:
+    #         scl = 1
+    #     if sBPS == 16:
+    #         fid.seek(self.readoffset+position, 0)
+    #         if wFormatTag == 3: # read 16bit float
+    #             dataraw = np.empty(DATABLOCKSIZE, dtype=np.float16)
+    #             size = fid.readinto(dataraw)
+    #             if tBPS == 32: #write 32 bit float
+    #                 data = dataraw.astype(np.float32)
+    #             else: # write to 16bit float
+    #                 data = dataraw.astype(np.float16)
+    #         elif wFormatTag == 1: # read int16
+    #             dataraw = np.empty(DATABLOCKSIZE, dtype=np.int16)
+    #             size = fid.readinto(dataraw)
+    #             if tBPS == 32:
+    #                 data = dataraw.astype(np.float32)/scl
+    #             else:
+    #                 data = dataraw.astype(np.float16)/scl
+    #         else:
+    #             auxi.standard_errorbox("unsupported Format Tag (wFormatTag): value other than 1 or 3 encountered")
+    #             size = -1
+    #         fid.close()
+    #     elif sBPS == 32:
+    #         fid.seek(216+position, 0) #TODO: ist 216 allgemein oder self.readoffset+position, 0)
+    #         if  wFormatTag == 3: #read float32
+    #             dataraw = np.empty(DATABLOCKSIZE, dtype=np.float32)
+    #             size = fid.readinto(dataraw)
+    #             if tBPS == 32: # write to float32
+    #                 data = dataraw.astype(np.float32)
+    #             else:
+    #                 data = (dataraw>>16).astype(np.float16)# check ob das für float gilt oder nur für INT !!TODO 
+    #             size = fid.readinto(data)
+    #         elif  wFormatTag == 1: #read int32
+    #             dataraw = np.empty(DATABLOCKSIZE, dtype=np.int32)
+    #             size = fid.readinto(dataraw)
+    #             if tBPS == 32:
+    #                 data = dataraw.astype(np.float32)/scl
+    #             else:
+    #                 data = ((dataraw/scl)>>16).astype(np.float16)
+    #             size = fid.readinto(dataraw)
+    #         else:
+    #             auxi.standard_errorbox("Unsupported FormatTag (wFormatTag): value other than 1 or 3 encountered")
+    #             size = -1
+    #         fid.close()
+    #     elif sBPS == 24:   #This mode is useful ONLY for general short reading purposes (plotting) NOT for LOshifting !
+    #         #localize data identifier
+    #         fid.seek(self.readoffset+position, 0)
+    #         data = np.empty(DATABLOCKSIZE, dtype=np.float32)
+    #         size = 0
+    #         for lauf in range(0,DATABLOCKSIZE):
+    #             d = fid.read(3)
+    #             if d == None:
+    #                 fid.close()
+    #                 size = 3*(lauf-1)
+    #             else:
+    #                 dataraw = unpack('<%ul' % 1 ,d + (b'\x00' if d[2] < 128 else b'\xff'))
+    #                 if  wFormatTag == 1:
+    #                     data[lauf] = np.float32(dataraw[0]/8388608)
+    #                 else:
+    #                     data[lauf] = dataraw[0]
+    #                 size += 3
+    #     else:
+    #         auxi.standard_errorbox("no encodings except 16, 24 and 32 bits are supported")
+    #         #return invalid
+    #         size = -1
+    #     fid.close()
+    #     ret = {}
+    #     ret["data"] = data
+    #     ret["size"] = size
+    #     #return data
+    #     return ret
 
     def scanupdateGUI(self):
         """_summary_
@@ -2103,26 +2051,6 @@ class WizardGUI(QMainWindow):
                     self.logger.debug("resread_playlist: automat remove from selectlist: %s", system_state["my_filename"] + system_state["ext"])
         #TODO: erzeuge einen Einag in Playlist    listWidget_playlist
 
-    # def showfilename(self): #TODO: remove after tests
-    #     """_updates the name of currenly loaded data file in all instances of filename labels_
-    #     :param : none if old system, args[0] = string with filename to be displayed 
-    #     :type : none if old system, str else
-    #     '''
-    #     :raises [ErrorType]: [ErrorDescription]
-    #     '''
-    #     :return: none
-    #     :rtype: none
-    #     """ 
-    #     #self.SigRelay.emit("cm_all_",["prominence",self.PROMINENCE])
-    #     self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
-    #     #TODO TODO TODO: remove the following after change to all new modules and Relay
-    #     self.my_dirname = os.path.dirname(system_state["f1"])
-    #     self.my_filename, self.ext = os.path.splitext(os.path.basename(system_state["f1"]))
-    #     self.ui.label_Filename_Annotate.setText(self.my_filename + self.ext)
-    #     self.ui.label_Filename_WAVHeader.setText(self.my_filename + self.ext)
-    #     self.ui.label_Filename_Player.setText(self.my_filename + self.ext)
-
-
     #@njit
     def FileOpen(self):   #TODO: shift to general system module ?
         '''
@@ -2174,11 +2102,9 @@ class WizardGUI(QMainWindow):
         #self.my_filename, self.ext = os.path.splitext(os.path.basename(system_state["f1"]))
         system_state["ext"] = Path(system_state["f1"]).suffix
         system_state["my_filename"] = Path(system_state["f1"]).stem
-
         self.SigRelay.emit("cm_all_",["my_dirname", self.my_dirname])
         self.SigRelay.emit("cm_all_",["ext",system_state["ext"]])
         self.SigRelay.emit("cm_all_",["my_filename",system_state["my_filename"]])
-
         system_state["temp_directory"] = self.my_dirname + "/temp"
         self.SigRelay.emit("cm_all_",["temp_directory",self.my_dirname + "/temp"])
 
@@ -2353,7 +2279,7 @@ class WizardGUI(QMainWindow):
         self.ui.spinBoxKernelwidth.setEnabled(True)
         self.ui.label_6.setText("Baseline Offset:" + str(self.ui.spinBoxminBaselineoffset.value()))
         self.position = self.ui.horizontalScrollBar_view_spectra.value()
-        self.lock_playthreadstart = True
+        #self.lock_playthreadstart = True
         
         system_state = sys_state.get_status()#TODO: check: obsolete ! because of Relay !
         system_state["horzscal"] = self.position #TODO: check: obsolete ! because of Relay !
@@ -2362,7 +2288,7 @@ class WizardGUI(QMainWindow):
 
         #self.SigRelay.emit("cexex_all_",["updateGUIelements", 0]) 
         #TODO TODO TODO: track multiple calls of plot_spectrum
-        self.lock_playthreadstart = False
+        #self.lock_playthreadstart = False
         #TODO: is that really necessary on each fileopen ? 
         #self.read_yaml_header(self)
         resample_v.update_resample_GUI()
@@ -2536,6 +2462,15 @@ if __name__ == '__main__':
         view_spectra_v = vsp.view_spectra_v(win.ui,view_spectra_c,view_spectra_m)
         tab_dict["list"].append("view_spectra")
 
+    if 'annotate' in sys.modules:
+        win_annOLD = False
+        annotate_m = ann.annotate_m()
+        annotate_c = ann.annotate_c(annotate_m)
+        annotate_v = ann.annotate_v(win.ui,annotate_c,annotate_m)
+        tab_dict["list"].append("annotate")
+    else:
+        win_annOLD = True
+
     if 'yaml_editor' in sys.modules:
         yamleditor_m = yed.yamleditor_m()
         yamleditor_c = yed.yamleditor_c(yamleditor_m)
@@ -2631,46 +2566,22 @@ if __name__ == '__main__':
     #
     # * Player-Modul Tests und Bugfixing: 0.5h
     #
-    # + Player Modul um Rec ausbauen:
-    #   2G Filesizebeschraenkung noch nicht ganz korrekt; Abbruch in rec_loop muss revidiert werden
-    #   Aufnahmedauer einstellbar machen
-    #   Aufnahmezeitpunkt automatisieren
-    #   Strategie: Mit Pushbutton Timer aktivieren, evt. Countdown anzeigen
-    #   Startzeit einstellen: Im Startzeit-Fenster wird nach Aktivierung des Pushbutton 
-    #       eine Zeit datetime.now() + 15 Minuten angezeigt, die man editieren kann
-    #       Wenn die aktuelle Zeit die Fensterzeit erreicht, wird gestartet
-    #       Countdown läuft im Spieldauer-Anzeigefenster
-    #      wird die Startzeit erreicht, wird das Eingabefenster deaktiviert und die Aufnahme startet
-    #               
-    #
-    #   Preset Bänder aktivieren, LO und SR werden automatisch je nach Dropdown-Item eingestellt
     #    
     #   UTC Strategie einbauen
-    #   
     #
-    #   
+    # * Annotator Modul übertragen: 40 h
     #
-    # * Annotator Modul übertragen: 20 h
-    #
-    # * // \\ Problem lösen: 2h: in aktuellem Core, Annotator UND waveditor !!!!
+    # * // \\ Problem lösen: 2h: in aktuellem Core, Annotator UND waveditor !!!! geht mit Path()
     #
     # * Core-Modul umstellen: 5h
     #
     # * Tabs von nicht importierten Modulen deaktivieren/blinden: 30min
     #
-    # * eval-Befehl bei Kompilation testen: 30 min
-    #
     # * Windows Installer mit https://www.pythonguis.com/tutorials/packaging-pyside6-applications-windows-pyinstaller-installforge/ erstellen
 #
     # * Configuration Tab with: IP address, tempdir, outdir, Recdir, LT/UTC, Logging, (checkboxes for Tab activation): 4h
 
-#
-    # Recorder: New impl: worker gets setter/getter structure
-    #                       
-    #                       progress-clock: SigSpecplotemit(object: data) for external spectrum plot
-    # Recorder starter routine: setup thread
-    #                           finished.connect close file and complete wav header
-    #                           SigSpecplot.connect: plot signal somewhere
+
     #
     #   zerlege plot_spectrum in einen view_spectra spezifischen Teil und einen generellen Spektralplotter, der in einen Canvas das Spektrum eines Datenstrings plottet
     #       spectrum(canvas_ref,data,*args) in auxiliary Modul

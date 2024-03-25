@@ -1614,6 +1614,7 @@ class resample_v(QObject):
         self.gui.lineEdit_resample_Gain.setText("0")
         self.gui.lineEdit_resample_Gain.setEnabled(True)
         self.gui.radioButton_resgain.setEnabled(True)
+        self.gui.label_Filename_resample.setText('')
         #self.gui.checkBox_writelog.clicked.connect(self.togglelogmodus) #TODO TODO TODO: logfilemodus anders implementieren
 
     def rxhandler(self,_key,_value):
@@ -1747,6 +1748,7 @@ class resample_v(QObject):
         self.m["res_blinkstate"] = False
         self.gui.listWidget_playlist_2.clear()
         self.gui.listWidget_sourcelist_2.clear()
+        self.gui.label_Filename_resample.setText('')
 
 
     def set_viewvars(self,_value):

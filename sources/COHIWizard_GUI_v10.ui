@@ -87,7 +87,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>5</number>
       </property>
       <property name="iconSize">
        <size>
@@ -1576,31 +1576,6 @@ UFL</string>
            </property>
           </widget>
          </item>
-         <item row="7" column="0" rowspan="8" colspan="4">
-          <widget class="QListWidget" name="listWidget_sourcelist">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="dragEnabled">
-            <bool>false</bool>
-           </property>
-           <property name="dragDropOverwriteMode">
-            <bool>false</bool>
-           </property>
-           <property name="dragDropMode">
-            <enum>QAbstractItemView::DragDrop</enum>
-           </property>
-           <property name="defaultDropAction">
-            <enum>Qt::MoveAction</enum>
-           </property>
-           <property name="selectionMode">
-            <enum>QAbstractItemView::SingleSelection</enum>
-           </property>
-          </widget>
-         </item>
          <item row="12" column="8">
           <widget class="QLabel" name="label_44">
            <property name="text">
@@ -1695,21 +1670,6 @@ UFL</string>
            </property>
            <property name="autoDefault">
             <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="14" column="13">
-          <widget class="QCheckBox" name="checkBox_UTC">
-           <property name="font">
-            <font>
-             <pointsize>12</pointsize>
-            </font>
-           </property>
-           <property name="toolTip">
-            <string>switch to UTC</string>
-           </property>
-           <property name="text">
-            <string>UTC</string>
            </property>
           </widget>
          </item>
@@ -2252,6 +2212,9 @@ UFL</string>
              <pointsize>10</pointsize>
             </font>
            </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;enter LO offset here in integer kHz&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="autoFillBackground">
             <bool>false</bool>
            </property>
@@ -2609,28 +2572,6 @@ UFL</string>
            </property>
           </widget>
          </item>
-         <item row="7" column="4" rowspan="8" colspan="4">
-          <widget class="QListWidget" name="listWidget_playlist">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="dragEnabled">
-            <bool>false</bool>
-           </property>
-           <property name="dragDropMode">
-            <enum>QAbstractItemView::DragDrop</enum>
-           </property>
-           <property name="defaultDropAction">
-            <enum>Qt::MoveAction</enum>
-           </property>
-           <property name="selectionMode">
-            <enum>QAbstractItemView::SingleSelection</enum>
-           </property>
-          </widget>
-         </item>
          <item row="1" column="13">
           <widget class="QLineEdit" name="lineEdit_IPAddress">
            <property name="enabled">
@@ -2694,30 +2635,6 @@ UFL</string>
            </property>
           </widget>
          </item>
-         <item row="2" column="12">
-          <widget class="QLabel" name="label_BW">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>12</pointsize>
-            </font>
-           </property>
-           <property name="autoFillBackground">
-            <bool>true</bool>
-           </property>
-           <property name="text">
-            <string>Rec Bandwidth (kHz): </string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
          <item row="18" column="0">
           <widget class="QPushButton" name="pushButton_adv1byte">
            <property name="enabled">
@@ -2767,10 +2684,77 @@ UFL</string>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
+           <property name="palette">
+            <palette>
+             <active>
+              <colorrole role="Base">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>255</red>
+                 <green>255</green>
+                 <blue>255</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Window">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>229</red>
+                 <green>255</green>
+                 <blue>220</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </active>
+             <inactive>
+              <colorrole role="Base">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>255</red>
+                 <green>255</green>
+                 <blue>255</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Window">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>229</red>
+                 <green>255</green>
+                 <blue>220</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </inactive>
+             <disabled>
+              <colorrole role="Base">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>229</red>
+                 <green>255</green>
+                 <blue>220</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Window">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>229</red>
+                 <green>255</green>
+                 <blue>220</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </disabled>
+            </palette>
+           </property>
            <property name="font">
             <font>
              <pointsize>12</pointsize>
             </font>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;central frequency of the band, = Local Oscillator&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="autoFillBackground">
             <bool>true</bool>
@@ -2801,54 +2785,15 @@ Tracking</string>
          </item>
          <item row="3" column="13">
           <widget class="QLineEdit" name="lineEdit_playrec_LO">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;enter central frequency of the band here in integer kHz&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="autoFillBackground">
+            <bool>true</bool>
+           </property>
            <property name="text">
             <string/>
            </property>
-          </widget>
-         </item>
-         <item row="2" column="13">
-          <widget class="QComboBox" name="comboBox_playrec_targetSR">
-           <property name="enabled">
-            <bool>true</bool>
-           </property>
-           <property name="currentIndex">
-            <number>5</number>
-           </property>
-           <item>
-            <property name="text">
-             <string>20</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>50</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>100</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>250</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>500</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>1250</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>2500</string>
-            </property>
-           </item>
           </widget>
          </item>
          <item row="11" column="11" colspan="3">
@@ -2861,6 +2806,168 @@ Tracking</string>
            </property>
           </widget>
          </item>
+         <item row="2" column="12">
+          <widget class="QLabel" name="label_BW">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="palette">
+            <palette>
+             <active>
+              <colorrole role="Button">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>229</red>
+                 <green>255</green>
+                 <blue>212</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Base">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>255</red>
+                 <green>255</green>
+                 <blue>255</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Window">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>229</red>
+                 <green>255</green>
+                 <blue>220</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </active>
+             <inactive>
+              <colorrole role="Button">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>229</red>
+                 <green>255</green>
+                 <blue>212</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Base">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>255</red>
+                 <green>255</green>
+                 <blue>255</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Window">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>229</red>
+                 <green>255</green>
+                 <blue>220</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </inactive>
+             <disabled>
+              <colorrole role="Button">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>229</red>
+                 <green>255</green>
+                 <blue>212</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Base">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>229</red>
+                 <green>255</green>
+                 <blue>220</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Window">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>229</red>
+                 <green>255</green>
+                 <blue>220</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </disabled>
+            </palette>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>12</pointsize>
+            </font>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Width of the band to be recorded, Sampling rate&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="autoFillBackground">
+            <bool>true</bool>
+           </property>
+           <property name="text">
+            <string>Rec Bandwidth (kHz): </string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="12">
+          <widget class="QLabel" name="playrec_label_REC_duration">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select duration of the recording in HH:MM:SS&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>REC Duration</string>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="12">
+          <widget class="QRadioButton" name="playrec_radioButton_RECAUTOSTART">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>11</pointsize>
+            </font>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;activate autostart timer for recording&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>REC AUTOSTART</string>
+           </property>
+           <property name="autoExclusive">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="10" column="12">
+          <widget class="QLabel" name="playrec_label_RECSTART">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;recording start time&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>REC Start</string>
+           </property>
+          </widget>
+         </item>
          <item row="6" column="12" colspan="2">
           <widget class="Line" name="line">
            <property name="orientation">
@@ -2868,10 +2975,346 @@ Tracking</string>
            </property>
           </widget>
          </item>
+         <item row="4" column="12">
+          <widget class="QLabel" name="label_presetband">
+           <property name="palette">
+            <palette>
+             <active>
+              <colorrole role="Base">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>255</red>
+                 <green>255</green>
+                 <blue>255</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Window">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>229</red>
+                 <green>255</green>
+                 <blue>220</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </active>
+             <inactive>
+              <colorrole role="Base">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>255</red>
+                 <green>255</green>
+                 <blue>255</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Window">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>229</red>
+                 <green>255</green>
+                 <blue>220</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </inactive>
+             <disabled>
+              <colorrole role="Base">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>229</red>
+                 <green>255</green>
+                 <blue>220</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Window">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>229</red>
+                 <green>255</green>
+                 <blue>220</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </disabled>
+            </palette>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Choose preselected AM broadcasting band&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="autoFillBackground">
+            <bool>true</bool>
+           </property>
+           <property name="text">
+            <string>Preset Band</string>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="13">
+          <widget class="QTimeEdit" name="playrec_RECLENGTH_timeEdit">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;edit preselected AM broadcasting band&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="displayFormat">
+            <string>HH:mm:ss</string>
+           </property>
+          </widget>
+         </item>
+         <item row="10" column="13">
+          <widget class="QDateTimeEdit" name="playrec_RECSTART_dateTimeEdit">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;set autostart date and time for start of the recording&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="displayFormat">
+            <string>dd.MM.yyyy HH:mm:ss</string>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="13">
+          <widget class="QFrame" name="frame_16">
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="4" rowspan="9" colspan="4">
+          <widget class="QListWidget" name="listWidget_playlist">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;playlist window. drag items from selection list&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="dragEnabled">
+            <bool>false</bool>
+           </property>
+           <property name="dragDropMode">
+            <enum>QAbstractItemView::DragDrop</enum>
+           </property>
+           <property name="defaultDropAction">
+            <enum>Qt::MoveAction</enum>
+           </property>
+           <property name="selectionMode">
+            <enum>QAbstractItemView::SingleSelection</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="12" colspan="2">
+          <widget class="QLabel" name="label_35">
+           <property name="palette">
+            <palette>
+             <active>
+              <colorrole role="Button">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>207</red>
+                 <green>232</green>
+                 <blue>234</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Light">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>244</red>
+                 <green>255</green>
+                 <blue>252</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Midlight">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>204</red>
+                 <green>227</green>
+                 <blue>227</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Base">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>240</red>
+                 <green>255</green>
+                 <blue>254</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Window">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>221</red>
+                 <green>253</green>
+                 <blue>255</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="NoRole">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>230</red>
+                 <green>255</green>
+                 <blue>255</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </active>
+             <inactive>
+              <colorrole role="Button">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>207</red>
+                 <green>232</green>
+                 <blue>234</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Light">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>244</red>
+                 <green>255</green>
+                 <blue>252</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Midlight">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>204</red>
+                 <green>227</green>
+                 <blue>227</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Base">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>240</red>
+                 <green>255</green>
+                 <blue>254</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Window">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>221</red>
+                 <green>253</green>
+                 <blue>255</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="NoRole">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>0</red>
+                 <green>0</green>
+                 <blue>0</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </inactive>
+             <disabled>
+              <colorrole role="Button">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>207</red>
+                 <green>232</green>
+                 <blue>234</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Light">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>244</red>
+                 <green>255</green>
+                 <blue>252</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Midlight">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>204</red>
+                 <green>227</green>
+                 <blue>227</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Base">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>221</red>
+                 <green>253</green>
+                 <blue>255</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Window">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>221</red>
+                 <green>253</green>
+                 <blue>255</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="NoRole">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>0</red>
+                 <green>0</green>
+                 <blue>0</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </disabled>
+            </palette>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>12</pointsize>
+             <weight>50</weight>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p/&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="autoFillBackground">
+            <bool>true</bool>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="text">
+            <string>TIMER:                    </string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
          <item row="4" column="13">
           <widget class="QComboBox" name="comboBox_playrec_targetSR_2">
            <property name="enabled">
             <bool>true</bool>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;pick AM broadcasting band&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="currentIndex">
             <number>0</number>
@@ -2913,65 +3356,177 @@ Tracking</string>
            </item>
           </widget>
          </item>
-         <item row="4" column="12">
-          <widget class="QLabel" name="label_presetband">
-           <property name="text">
-            <string>Preset Band</string>
-           </property>
-          </widget>
-         </item>
-         <item row="9" column="12">
-          <widget class="QRadioButton" name="playrec_radioButton_RECAUTOSTART">
-           <property name="enabled">
-            <bool>true</bool>
-           </property>
+         <item row="18" column="7">
+          <widget class="QCheckBox" name="checkBox_UTC">
            <property name="font">
             <font>
-             <pointsize>11</pointsize>
+             <pointsize>12</pointsize>
             </font>
            </property>
            <property name="toolTip">
-            <string>shift center frequency (LO) for up/downconversion</string>
+            <string>switch to UTC</string>
            </property>
            <property name="text">
-            <string>REC AUTOSTART</string>
+            <string>UTC</string>
            </property>
-           <property name="autoExclusive">
+          </widget>
+         </item>
+         <item row="2" column="13">
+          <widget class="QFrame" name="frame_15">
+           <property name="palette">
+            <palette>
+             <active>
+              <colorrole role="Base">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>255</red>
+                 <green>255</green>
+                 <blue>255</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Window">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>229</red>
+                 <green>255</green>
+                 <blue>220</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </active>
+             <inactive>
+              <colorrole role="Base">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>255</red>
+                 <green>255</green>
+                 <blue>255</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Window">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>229</red>
+                 <green>255</green>
+                 <blue>220</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </inactive>
+             <disabled>
+              <colorrole role="Base">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>229</red>
+                 <green>255</green>
+                 <blue>220</blue>
+                </color>
+               </brush>
+              </colorrole>
+              <colorrole role="Window">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>229</red>
+                 <green>255</green>
+                 <blue>220</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </disabled>
+            </palette>
+           </property>
+           <property name="autoFillBackground">
+            <bool>true</bool>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+           <widget class="QComboBox" name="comboBox_playrec_targetSR">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="geometry">
+             <rect>
+              <x>7</x>
+              <y>4</y>
+              <width>271</width>
+              <height>41</height>
+             </rect>
+            </property>
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;pick the width of the band to be recorded, Sampling rate&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="currentIndex">
+             <number>5</number>
+            </property>
+            <item>
+             <property name="text">
+              <string>20</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>50</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>100</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>250</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>500</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>1250</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>2500</string>
+             </property>
+            </item>
+           </widget>
+          </widget>
+         </item>
+         <item row="7" column="0" rowspan="9" colspan="4">
+          <widget class="QListWidget" name="listWidget_sourcelist">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;selection list window. drag items to playlist&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="dragEnabled">
             <bool>false</bool>
            </property>
-          </widget>
-         </item>
-         <item row="10" column="12">
-          <widget class="QLabel" name="playrec_label_RECSTART">
-           <property name="enabled">
+           <property name="dragDropOverwriteMode">
             <bool>false</bool>
            </property>
-           <property name="text">
-            <string>REC Start</string>
+           <property name="dragDropMode">
+            <enum>QAbstractItemView::DragDrop</enum>
            </property>
-          </widget>
-         </item>
-         <item row="7" column="13">
-          <widget class="QTimeEdit" name="playrec_RECLENGTH_timeEdit">
-           <property name="displayFormat">
-            <string>HH:mm:ss</string>
+           <property name="defaultDropAction">
+            <enum>Qt::MoveAction</enum>
            </property>
-          </widget>
-         </item>
-         <item row="10" column="13">
-          <widget class="QDateTimeEdit" name="playrec_RECSTART_dateTimeEdit">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="displayFormat">
-            <string>dd.MM.yyyy HH:mm:ss</string>
-           </property>
-          </widget>
-         </item>
-         <item row="7" column="12">
-          <widget class="QLabel" name="playrec_label_REC_duration">
-           <property name="text">
-            <string>REC Duration</string>
+           <property name="selectionMode">
+            <enum>QAbstractItemView::SingleSelection</enum>
            </property>
           </widget>
          </item>
@@ -3004,7 +3559,6 @@ Tracking</string>
         <zorder>checkBox_TESTMODE</zorder>
         <zorder>radioButton_LO_bias</zorder>
         <zorder>lineEdit_LO_bias</zorder>
-        <zorder>checkBox_UTC</zorder>
         <zorder>graphicsView_2</zorder>
         <zorder>pushButton_act_playlist</zorder>
         <zorder>Label_Recindicator</zorder>
@@ -3012,7 +3566,6 @@ Tracking</string>
         <zorder>label_43</zorder>
         <zorder>label_BW</zorder>
         <zorder>label_LO</zorder>
-        <zorder>comboBox_playrec_targetSR</zorder>
         <zorder>lineEdit_playrec_LO</zorder>
         <zorder>label_32</zorder>
         <zorder>playrec_RECLENGTH_timeEdit</zorder>
@@ -3024,6 +3577,10 @@ Tracking</string>
         <zorder>line</zorder>
         <zorder>line_3</zorder>
         <zorder>playrec_label_REC_duration</zorder>
+        <zorder>checkBox_UTC</zorder>
+        <zorder>label_35</zorder>
+        <zorder>frame_15</zorder>
+        <zorder>frame_16</zorder>
        </widget>
       </widget>
       <widget class="QWidget" name="tab_view_spectra">
@@ -5479,16 +6036,6 @@ Tracking</string>
            </property>
           </widget>
          </item>
-         <item row="15" column="0">
-          <widget class="QCheckBox" name="checkBox_writelog">
-           <property name="toolTip">
-            <string>write print outputs to file instead of console</string>
-           </property>
-           <property name="text">
-            <string>Write logfile</string>
-           </property>
-          </widget>
-         </item>
          <item row="12" column="5">
           <widget class="QCheckBox" name="checkBox_AutoMerge2G">
            <property name="toolTip">
@@ -5766,6 +6313,35 @@ Tracking</string>
             <enum>QFrame::Raised</enum>
            </property>
           </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="formLayoutWidget">
+        <property name="geometry">
+         <rect>
+          <x>460</x>
+          <y>60</y>
+          <width>351</width>
+          <height>80</height>
+         </rect>
+        </property>
+        <layout class="QFormLayout" name="formLayout">
+         <item row="0" column="0">
+          <widget class="QRadioButton" name="radioButton">
+           <property name="text">
+            <string>Write Logfile</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QPushButton" name="pushButton_2">
+           <property name="text">
+            <string>Edit Recording path</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="lineEdit_3"/>
          </item>
         </layout>
        </widget>

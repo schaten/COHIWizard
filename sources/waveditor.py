@@ -135,6 +135,7 @@ class waveditor_v(QObject):
         self.gui.tableWidget_basisfields.setEnabled(False)
         self.gui.tableWidget_starttime.setEnabled(False)
         self.gui.tableWidget_3.setEnabled(False)
+        self.gui.label_Filename_WAVHeader.setText('')
         self.clear_WAVwidgets()
 
 
@@ -231,6 +232,7 @@ class waveditor_v(QObject):
         self.gui.tableWidget_3.item(1, 0).setText("")
         self.gui.tableWidget_3.item(0, 0).setText("")
         self.gui.tableWidget_3.item(3, 0).setText("")
+        self.gui.label_Filename_WAVHeader.setText('') #shift to wav editor Tab reset
 
     def overwrite_header(self):
         """overwrite the tabwidget items of the wav-editor tab

@@ -10,6 +10,7 @@ from socket import socket, AF_INET, SOCK_STREAM
 from struct import pack, unpack
 import numpy as np
 import os
+import pytz
 from pathlib import Path, PureWindowsPath
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import *
@@ -127,7 +128,7 @@ class playrec_worker(QObject):
         :return: none
         :rtype: none
         """
-        print("reached playloopthread")
+        #print("reached playloopthread")
         self.f1 = self.__slots__[0]
         timescaler = self.__slots__[1]
         TEST = self.__slots__[2]
@@ -138,7 +139,7 @@ class playrec_worker(QObject):
         self.stopix = False
         position = 1
         self.fileHandle = open(self.f1, 'rb')
-        print(f"filehandle for set_4: {self.fileHandle} of file {self.f1} ")
+        #print(f"filehandle for set_4: {self.fileHandle} of file {self.f1} ")
         self.set_4(self.fileHandle)
         format = self.get_7()
         self.set_8(self.DATABLOCKSIZE)
@@ -249,7 +250,7 @@ class playrec_worker(QObject):
                         break
         #print('worker  thread finished')
         self.SigFinished.emit()
-        print("SigFinished from playloop emitted")
+        #print("SigFinished from playloop emitted")
 
 
     def stop_loop(self):
@@ -312,7 +313,7 @@ class playrec_worker(QObject):
         self.gain = self.__slots__[6]
         #TODO: self.fmtscl = self.__slots__[7] #scaler for data format        
         self.fileHandle = open(self.f1, 'ab') #TODO check if append mode is appropriate
-        print(f"filehandle for set_4: {self.fileHandle} of file {self.f1} ")
+        #print(f"filehandle for set_4: {self.fileHandle} of file {self.f1} ")
         self.set_4(self.fileHandle)
         self.format = self.get_7()
         #self.datar = self.__slots__[5]
@@ -337,9 +338,9 @@ class playrec_worker(QObject):
                 # DATABLOCKSIZE*8 bytes, the data buffer is specified
                 # for DATABLOCKSIZE float32 elements, i.e. 4 bit words
                 size = self.stemlabcontrol.data_sock.recv_into(data)
-                if size > self.BUFFERFULL:
+                if size >= 0.98*self.BUFFERFULL:
                     self.SigBufferOverflow.emit()
-                    print(f"size: {size} buffersize: {self.BUFFERFULL}")
+                    #print(f"size: {size} buffersize: {self.BUFFERFULL}")
                 #  write next BUFFERSIZE bytes
                 # TODO: check for replacing clock signalling by other clock
                 readbytes = readbytes + size
@@ -351,12 +352,12 @@ class playrec_worker(QObject):
                     readbytes = 0
                     #print(f"totbytes {totbytes}")
                 if totbytes > size2G - self.DATABLOCKSIZE*4:
-                    print(f">>>>>>>>>>>>>>>>>>>rec_loop eof reached totbytes: {totbytes} ref: {size2G - self.DATABLOCKSIZE}")
+                    #print(f">>>>>>>>>>>>>>>>>>>rec_loop eof reached totbytes: {totbytes} ref: {size2G - self.DATABLOCKSIZE}")
                     self.stopix = True 
                 self.mutex.unlock()
             else:           # Dummy operations for testing without SDR
                 time.sleep(1)
-                #self.SigBufferOverflow.emit()  #####TEST ONLY
+                self.SigBufferOverflow.emit()  #####TEST ONLY
                 self.count += 1
                 self.SigIncrementCurTime.emit()
                 self.mutex.lock()
@@ -364,7 +365,7 @@ class playrec_worker(QObject):
                 data[1] = 0.0002
                 data[2] = -0.0002
                 a = (data[0:2] * 32767).astype(np.int16)
-                print(f">>>>>>>>>>>>>>>>>>>>>>>>>>>>> testrun recloop a: {a}")
+                #print(f">>>>>>>>>>>>>>>>>>>>>>>>>>>>> testrun recloop a: {a}")
                 self.fileHandle.write(a)
                 self.set_5(a)
                 self.mutex.unlock()
@@ -568,7 +569,7 @@ class playrec_c(QObject):
                 increment playtime counter by 1 second
         Returns: False if error, True on success
         """        
-        print("file opened in playloop thread starter")
+        #print("file opened in playloop thread starter")
         if self.m["wavheader"]['nBitsPerSample'] == 16 or self.m["wavheader"]['nBitsPerSample'] == 24 or self.m["wavheader"]['nBitsPerSample'] == 32:
             pass
             #TODO: Anpassen an andere Fileformate, Einbau von Positionen 
@@ -669,8 +670,6 @@ class playrec_c(QObject):
         else:
             return True
 
-
-
     def generate_recfilename(self):
         """generate filenae for recording file from:
         recording_path/cohiwizard_datestring_Ttimestring_LOfrequency.dat
@@ -683,14 +682,17 @@ class playrec_c(QObject):
         self.m["f1"] += "_" + str(int(self.m["ifreq"]/1000)) + "kHz.wav"
         #self.RecBitsPerSample
         creation_date = datetime.now()
+        creation_date = creation_date.astimezone(pytz.utc)
         self.DATABLOCKSIZE = playrec_worker(self).DATABLOCKSIZE
         #calculate expected filesize
         filesize = int(2*self.DATABLOCKSIZE*(2**31//(self.DATABLOCKSIZE*2)))
         self.m["wavheader"] = WAVheader_tools.basic_wavheader(self,self.m["icorr"],self.m["irate"],self.m["ifreq"],self.RecBitsPerSample,filesize,creation_date)
+        self.m["wavheader"]["starttime"] = [creation_date.year, creation_date.month, 0, creation_date.day, creation_date.hour, creation_date.minute, creation_date.second, int(creation_date.microsecond/1000)]  
+        self.m["wavheader"]["starttime_dt"] = creation_date
         return True
         
     def recloopmanager(self):
-        print("playrec recloop next loop")
+        #print("playrec recloop next loop")
         if self.m["modality"] == "play":
             return
         prfilehandle = self.playrec_tworker.get_4()
@@ -703,7 +705,9 @@ class playrec_c(QObject):
             self.logger.info("EOF-manager: player has been stopped")
             file_stats = os.stat(self.m["f1"])
             self.m["wavheader"]['filesize'] = file_stats.st_size
+            self.m["wavheader"]['data_nChunkSize'] = self.m["wavheader"]['filesize'] - 208
         spt = datetime.now()
+        spt = spt.astimezone(pytz.utc)
         self.m["wavheader"]['stoptime_dt'] = spt
         self.m["wavheader"]['stoptime'] = [spt.year, spt.month, 0, spt.day, spt.hour, spt.minute, spt.second, int(spt.microsecond/1000)] 
         self.m["ovwrt_flag"] = True
@@ -896,6 +900,7 @@ class playrec_c(QObject):
             self.m["fileopened"] = False ###CHECK
             self.SigRelay.emit("cm_all_",["fileopened",False])
             self.SigRelay.emit("cexex_playrec",["reset_GUI",0]) #TODO remove after tests
+            self.SigRelay.emit("cexex_playrec",["reset_playerbuttongoup",0])
             return
         if self.m["playthreadActive"]:
             self.playrec_tworker.stop_loop()
@@ -904,8 +909,7 @@ class playrec_c(QObject):
         self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
         self.SigRelay.emit("cexex_playrec",["reset_playerbuttongoup",0])
         self.SigRelay.emit("cexex_win",["reset_GUI",0]) #TODO remove after tests, may not be connected with _c
-        self.SigRelay.emit("cexex_playrec",["reset_GUI",0]) #TODO remove after tests
-        print("STOP pressed")
+        #print("STOP pressed")
 
     def jump_1_byte(self):             #increment current time in playtime window and update statusbar
         """
@@ -1074,9 +1078,13 @@ class playrec_v(QObject):
         self.gui.listWidget_sourcelist.setEnabled(False)
         self.gui.ScrollBar_playtime.setEnabled(False)
         self.gui.Label_Recindicator.setEnabled(False)
+        self.gui.comboBox_playrec_targetSR.setCurrentIndex(5)
+        self.gui.comboBox_playrec_targetSR_2.setCurrentIndex(1) #TODO: rename to playrec_Bandpreset
+        self.gui.comboBox_playrec_targetSR_2.currentIndexChanged.connect(self.preset_SR_LO)
         #self.gui.playrec_RECSTART_dateTimeEdit.setText
         self.gui.playrec_RECSTART_dateTimeEdit.setDateTime(datetime.now())
         self.gui.playrec_radioButton_RECAUTOSTART.clicked.connect(self.toggleRecAutostart)
+        self.gui.label_Filename_Player.setText('')
         
         self.gui.checkBox_TESTMODE.clicked.connect(self.toggleTEST)
         preset_time = QTime(00, 30, 00) 
@@ -1091,6 +1099,31 @@ class playrec_v(QObject):
                 self.gui.lineEdit_IPAddress.setText(self.metadata["STM_IP_address"]) #TODO: Remove after transfer of playrec
         except:
             pass
+
+    def preset_SR_LO(self):
+        text = self.gui.comboBox_playrec_targetSR_2.currentText()
+        if text.find("LW") == 0:
+            self.gui.lineEdit_playrec_LO.setText("220")
+            self.gui.comboBox_playrec_targetSR.setCurrentIndex(3)
+        if text.find("MW") == 0:
+            self.gui.lineEdit_playrec_LO.setText("1125")
+            self.gui.comboBox_playrec_targetSR.setCurrentIndex(5)
+        if text.find("SW 49m") == 0:
+            self.gui.lineEdit_playrec_LO.setText("6050")
+            self.gui.comboBox_playrec_targetSR.setCurrentIndex(4)
+        if text.find("SW 41m") == 0:
+            self.gui.lineEdit_playrec_LO.setText("7325")
+            self.gui.comboBox_playrec_targetSR.setCurrentIndex(3)
+        if text.find("SW 31m") == 0:
+            self.gui.lineEdit_playrec_LO.setText("9650")
+            self.gui.comboBox_playrec_targetSR.setCurrentIndex(4)
+        if text.find("SW 25m") == 0:
+            self.gui.lineEdit_playrec_LO.setText("11850")
+            self.gui.comboBox_playrec_targetSR.setCurrentIndex(4)
+        if text.find("SW 19m") == 0:
+            self.gui.lineEdit_playrec_LO.setText("15450")
+            self.gui.comboBox_playrec_targetSR.setCurrentIndex(5)
+        pass
 
     def toggleRecAutostart(self):
         if self.gui.playrec_radioButton_RECAUTOSTART.isChecked():
@@ -1139,14 +1172,14 @@ class playrec_v(QObject):
             #target_datetime = current_datetime.addSecs(hours * 3600 + minutes * 60 + seconds)
             # Differenz berechnen
             remaining_time = current_datetime.secsTo(self.target_datetime)
-            print(f"playrec countdown residual time : {remaining_time}")
+            #print(f"playrec countdown residual time : {remaining_time}")
             if remaining_time == 0:
                 self.playrec_c.cb_Butt_STOP()
             return
         if self.gui.playrec_radioButton_RECAUTOSTART.isChecked():
             countdown =  self.gui.playrec_RECSTART_dateTimeEdit.dateTime().toPyDateTime() - datetime.now()
             self.gui.lineEditCurTime.setText(str(countdown).split('.')[0])
-            print(countdown.total_seconds())
+            #print(countdown.total_seconds())
             if countdown.total_seconds() <= 0:
                 self.cb_Butt_REC()
                 self.gui.playrec_radioButton_RECAUTOSTART.setChecked(False)
@@ -1154,17 +1187,22 @@ class playrec_v(QObject):
                 #self.gui.playrec_label_REC_duration.setStyleSheet("background-color : lightgray")
                 font = self.gui.playrec_label_REC_duration.font()
                 font.setPointSize(14)
+                self.gui.playrec_label_REC_duration.setFont(font)
                 self.toggleRecAutostart()
             
     def blinkrec(self):
         if self.m["recstate"] == False:
             self.gui.Label_Recindicator.setEnabled(False)
             self.gui.Label_Recindicator.setStyleSheet(('background-color: rgb(255,255,255)'))
+            self.gui.label_32.setStyleSheet("background-color : lightgrey")
+            self.gui.label_32.setEnabled(False)
             return
         self.gui.Label_Recindicator.setEnabled(True)
         if self.blinkstate:
             self.blinkstate = False
             self.gui.Label_Recindicator.setStyleSheet(('background-color: rgb(255,50,50)'))
+            self.gui.label_32.setStyleSheet("background-color : lightgrey")
+            self.gui.label_32.setEnabled(False)
         else:
             self.blinkstate = True
             self.gui.Label_Recindicator.setStyleSheet(('background-color: rgb(0,255,255)'))
@@ -1185,7 +1223,7 @@ class playrec_v(QObject):
         :return: flag False or True, False on unsuccessful execution
         :rtype: Boolean
         """
-        print("playrec: updateGUIelements")
+        #print("playrec: updateGUIelements")
         self.gui.checkBox_UTC.clicked.connect(self.toggleUTC)
         self.gui.checkBox_TESTMODE.clicked.connect(self.toggleTEST)
         self.gui.lineEdit_IPAddress.setText(self.m["STM_IP_address"])
@@ -1209,6 +1247,7 @@ class playrec_v(QObject):
         self.gui.label_Filename_Player.setText("")
         self.SigRelay.emit("cexex_view_spectra",["reset_GUI",0])
         self.SigRelay.emit("cexex_resample",["reset_GUI",0])
+        self.gui.label_Filename_Player.setText('')
 
     def rxhandler(self,_key,_value):
         """
@@ -1497,7 +1536,11 @@ class playrec_v(QObject):
         if recfail:
             options = QFileDialog.Options()
             options |= QFileDialog.ShowDirsOnly
-            self.m["recording_path"] = QFileDialog.getExistingDirectory(self.m["QTMAINWINDOWparent"], "Select Recording Directory", options=options)
+            self.m["recording_path"] = ""
+            while len(self.m["recording_path"]) < 1:
+                self.m["recording_path"] = QFileDialog.getExistingDirectory(self.m["QTMAINWINDOWparent"], "Select Recording Directory", options=options)
+                if len(self.m["recording_path"]) < 1:
+                    auxi.standard_errorbox("Recording path must be defined, please define it by clicking OK !")
             self.logger.debug("playrec recording path: %s", self.m["recording_path"])
             self.metadata["recording_path"] = self.m["recording_path"]
             stream = open("config_wizard.yaml", "w")
@@ -1561,7 +1604,6 @@ class playrec_v(QObject):
         """                
         self.recording_path_checker()
         #   self.gui.pushButton_REC.setIcon(QIcon("pause_v4.PNG"))
-        self.m["recstate"] = True
         # if len(self.m["recording_path"]) == 0:
         #     print("playrec recorderbutton: no rec path defined")
         #     ##TODO TODO TODO: recording path abfragen
@@ -1602,7 +1644,9 @@ class playrec_v(QObject):
         self.gui.playrec_label_REC_duration.setStyleSheet("background-color : yellow")
         font = self.gui.playrec_label_REC_duration.font()
         font.setPointSize(14)
+        self.gui.playrec_label_REC_duration.setFont(font)
         self.playrec_c.recordingsequence()
+        #self.m["recstate"] = True
 
     def reset_playerbuttongroup(self):
         """
@@ -1638,6 +1682,10 @@ class playrec_v(QObject):
         self.gui.playrec_label_REC_duration.setStyleSheet("background-color : lightgray")
         font = self.gui.playrec_label_REC_duration.font()
         font.setPointSize(14)
+        self.gui.playrec_label_REC_duration.setFont(font)
+        self.gui.checkBox_UTC.setEnabled(True)
+        self.gui.label_32.setStyleSheet("background-color : lightgrey")
+        self.gui.label_32.setEnabled(False)
         self.m["playlist_active"] = False
 
     def indicate_bufoverflow(self):
@@ -1646,6 +1694,8 @@ class playrec_v(QObject):
         :rtype: none
         """        
         print("playrec RECORDING: bufferoverflow")
+        self.gui.label_32.setStyleSheet("background-color : red")
+        self.gui.label_32.setEnabled(True)
 
     def showRFdata(self):
         """_take over datasegment from player loop worker and caluclate from there the signal volume and present it in the volume indicator
@@ -1764,7 +1814,8 @@ class playrec_v(QObject):
             self.m["curtime"] += increment
             timestr = str(ndatetime.timedelta(seconds=0) + ndatetime.timedelta(seconds=self.m["curtime"]))
         if not self.gui.playrec_radioButton_RECAUTOSTART.isChecked():
-            self.gui.lineEditCurTime.setText(timestr) 
+            self.gui.lineEditCurTime.setText(timestr)
+            #TODO TODO TODO: display true time since start of recording in hours!
         self.gui.ScrollBar_playtime.setProperty("value", self.m["playprogress"])
         self.lastupdatecurtime = datetime.now()
         return True

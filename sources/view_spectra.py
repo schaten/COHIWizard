@@ -123,6 +123,7 @@ class view_spectra_v(QObject):
         self.gui.radioButton_plotraw.clicked.connect(self.cb_plot_spectrum)
     #     #self.SigToolbar.connect(lambda: self.plot_spectrum(self,self.position)) #TODO Remove ???
         self.gui.spinBoxNumScan.setProperty("value", 10) #TODO: avoid magic number
+        self.gui.label_Filename_ViewSpectra.setText('')
         
     # def connector(self):
     #     self.SigSyncGUIUpdatelist.emit(self.updateGUIelements)
@@ -200,6 +201,7 @@ class view_spectra_v(QObject):
         self.m["Tabref"]["View_Spectra"]["ax"].clear()
         self.m["Tabref"]["View_Spectra"]["canvas"].draw()
         self.gui.label_Filename_ViewSpectra.setText("")
+        
 
         pass
 

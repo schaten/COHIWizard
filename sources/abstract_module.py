@@ -84,11 +84,10 @@ class abstract_module_v(QObject):
         self.logger = abstract_module_m.logger
         self.abstract_module_c.SigRelay.connect(self.rxhandler)
         self.init_abstract_module_ui()
-        self.abstract_module_c.SigRelay.connect(self.rxhandler)
         self.abstract_module_c.SigRelay.connect(self.SigRelay.emit)
 
     def init_abstractmodule_ui(self):
-
+        #self.gui.GUIMETHOD(dosomething) or self.gui.GUIELEMENT.property = something
         #self.gui.GUIMETHOD.connect(self.related_method) #EXAMPLE
         pass
 
@@ -130,19 +129,6 @@ class abstract_module_v(QObject):
         """
         print("abstract_module: updateGUIelements")
         #self.gui.DOSOMETHING
-
-    def update_GUI(self,_key): #TODO TODO: is this method still needed ? reorganize. gui-calls should be avoided, better only signalling and gui must call the routenes itself
-        print(" view spectra updateGUI: new updateGUI in view spectra module reached")
-        self.SigUpdateGUI.disconnect(self.update_GUI)
-        if _key.find("ext_update") == 0:
-            #update resampler gui with all elements
-            #TODO: fetch model values and re-fill all tab fields
-            print("abstract_module update_GUI reached")
-            pass
-        #other key possible: "none"
-        #DO SOMETHING
-        self.SigUpdateGUI.connect(self.update_GUI)
-
 
     def reset_GUI(self):
         pass
