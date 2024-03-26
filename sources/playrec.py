@@ -338,8 +338,9 @@ class playrec_worker(QObject):
                 # DATABLOCKSIZE*8 bytes, the data buffer is specified
                 # for DATABLOCKSIZE float32 elements, i.e. 4 bit words
                 size = self.stemlabcontrol.data_sock.recv_into(data)
-                if size >= 0.98*self.BUFFERFULL:
-                    self.SigBufferOverflow.emit()
+                if size >= self.BUFFERFULL:
+                    #self.SigBufferOverflow.emit()
+                    pass
                     #print(f"size: {size} buffersize: {self.BUFFERFULL}")
                 #  write next BUFFERSIZE bytes
                 # TODO: check for replacing clock signalling by other clock
@@ -902,13 +903,14 @@ class playrec_c(QObject):
             self.SigRelay.emit("cexex_playrec",["reset_GUI",0]) #TODO remove after tests
             self.SigRelay.emit("cexex_playrec",["reset_playerbuttongoup",0])
             return
-        if self.m["playthreadActive"]:
+        else:
             self.playrec_tworker.stop_loop()
         if self.m["TEST"] is False:
             self.stemlabcontrol.sdrserverstop()
         self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
         self.SigRelay.emit("cexex_playrec",["reset_playerbuttongoup",0])
-        self.SigRelay.emit("cexex_win",["reset_GUI",0]) #TODO remove after tests, may not be connected with _c
+        self.SigRelay.emit("cexex_playrec",["reset_GUI",0])
+        #self.SigRelay.emit("cexex_win",["reset_GUI",0]) #TODO remove after tests, may not be connected with _c
         #print("STOP pressed")
 
     def jump_1_byte(self):             #increment current time in playtime window and update statusbar
@@ -1809,7 +1811,10 @@ class playrec_v(QObject):
                 if self.m["fileopened"] is True:
                     #print(f'increment curtime cond seek cur file open: {system_state["f1"]}')
                     self.prfilehandle = self.playrec_c.playrec_tworker.get_4()
-                    self.prfilehandle.seek(int(position), 0) #TODO: Anpassen an andere Fileformate
+                    try:
+                        self.prfilehandle.seek(int(position), 0) #TODO: Anpassen an andere Fileformate
+                    except:
+                        self.logger.error("playrec.updaecurtimer: seek in closed file error")
         else:
             self.m["curtime"] += increment
             timestr = str(ndatetime.timedelta(seconds=0) + ndatetime.timedelta(seconds=self.m["curtime"]))

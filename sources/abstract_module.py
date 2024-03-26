@@ -79,6 +79,7 @@ class abstract_module_v(QObject):
         #viewvars = {}
         #self.set_viewvars(viewvars)
         self.m = abstract_module_m.mdl
+        self.abstract_module_c = abstract_module_c
         self.DATABLOCKSIZE = 1024*32
         self.gui = gui #gui_state["gui_reference"]#system_state["gui_reference"]
         self.logger = abstract_module_m.logger

@@ -746,12 +746,12 @@ class WizardGUI(QMainWindow):
         #self.reset_LO_bias()
         self.Tabref={}
         self.init_Tabref()
-        self.timeref = datetime.now()
-        self.autoscanthread = QThread()
-        self.autoscaninst = autoscan_worker(self)
-        self.autoscaninst.moveToThread(self.autoscanthread)
+        self.timeref = datetime.now()    #TODO TODO TODO: remove, no 2 autoscaninstances !
+        self.autoscanthread = QThread()    #TODO TODO TODO: remove, no 2 autoscaninstances !
+        self.autoscaninst = autoscan_worker(self)    #TODO TODO TODO: remove, no 2 autoscaninstances !
+        self.autoscaninst.moveToThread(self.autoscanthread)    #TODO TODO TODO: remove, no 2 autoscaninstances !
         #TODO: Implement further slot communicationa shown here
-        self.autoscaninst.set_0([self.ui.spinBoxNumScan.value(),self.ui.spinBoxminSNR.value(),[]])
+        self.autoscaninst.set_0([self.ui.spinBoxNumScan.value(),self.ui.spinBoxminSNR.value(),[]])    #TODO TODO TODO: remove, no 2 autoscaninstances !
 
         # Create a custom logger
         # Setze den Level des Root-Loggers auf DEBUG
@@ -2003,7 +2003,7 @@ class WizardGUI(QMainWindow):
         """
         self.yesno = i.text()
 
-    def setstandardpaths(self):  #TODO: shift to general system module ?
+    def setstandardpaths(self):  #TODO: shift to general system module ? must be part of the system configuration procedure
         """
         CONTROLLER
         
@@ -2013,6 +2013,10 @@ class WizardGUI(QMainWindow):
         self.stations_filename = self.annotationpath + '/stations_list.yaml'
         self.status_filename = self.annotationpath + '/status.yaml'
         self.annotation_filename = self.annotationpath + '/snrannotation.yaml'
+        self.SigRelay.emit("cm_annotate",["annotationpath",self.annotationpath])
+        self.SigRelay.emit("cm_annotate",["stations_filename",self.stations_filename])
+        self.SigRelay.emit("cm_annotate",["status_filename",self.status_filename])
+        self.SigRelay.emit("cm_annotate",["annotation_filename",self.annotation_filename])
         self.cohiradia_metadata_filename = self.annotationpath + '/cohiradia_metadata.yaml'
         self.cohiradia_yamlheader_filename = self.annotationpath + '/cohiradia_metadata_header.yaml'
         self.cohiradia_yamltailer_filename = self.annotationpath + '/cohiradia_metadata_tailer.yaml'
@@ -2021,6 +2025,10 @@ class WizardGUI(QMainWindow):
         self.SigRelay.emit("cm_yamleditor",["cohiradia_yamltailer_filename",self.cohiradia_yamltailer_filename])
         self.SigRelay.emit("cm_yamleditor",["cohiradia_yamlfinal_filename",self.cohiradia_yamlfinal_filename])
         self.SigRelay.emit("cm_yamleditor",["cohiradia_metadata_filename",self.cohiradia_metadata_filename])
+        self.SigRelay.emit("cm_annotate",["cohiradia_yamlheader_filename",self.cohiradia_yamlheader_filename])
+        self.SigRelay.emit("cm_annotate",["cohiradia_yamltailer_filename",self.cohiradia_yamltailer_filename])
+        self.SigRelay.emit("cm_annotate",["cohiradia_yamlfinal_filename",self.cohiradia_yamlfinal_filename])
+        self.SigRelay.emit("cm_annotate",["cohiradia_metadata_filename",self.cohiradia_metadata_filename])
             #self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
 
             ############################ CURRENT STATE RELAY, CONTINUE FROM HERE
@@ -2574,6 +2582,8 @@ if __name__ == '__main__':
     # * // \\ Problem lösen: 2h: in aktuellem Core, Annotator UND waveditor !!!! geht mit Path()
     #
     # * Core-Modul umstellen: 5h
+    #
+    # generelles systemkonfigurations-setup: auch für standarpath-Generator: je nach install. Modul !
     #
     # * Tabs von nicht importierten Modulen deaktivieren/blinden: 30min
     #
