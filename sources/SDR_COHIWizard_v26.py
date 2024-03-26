@@ -238,7 +238,7 @@ class autoscan_worker(QtCore.QThread):
     :return: [ReturnDescription]
     :rtype: [ReturnType]
     """
-    __slots__ = ["slot_0", "slot_1","hoststates"]
+    __slots__ = ["slot_0", "slot_1","hoststates","progressvalue","horzscal","filepath","readoffset","wavheader","datablocksize","baselineoffset"]
 
     SigUpdatestatus = pyqtSignal()
     SigUpdateGUI = pyqtSignal()
@@ -294,8 +294,35 @@ class autoscan_worker(QtCore.QThread):
 
     def get_2(self):
         return(self.__slots__[2])
-
-
+    def set_progressvalue(self,_value):
+        self.__slots__[3] = _value
+    def get_progressvalue(self):
+        return(self.__slots__[3])
+    def set_horzscal(self,_value):
+        self.__slots__[4] = _value
+    def get_horzscal(self):
+        return(self.__slots__[4])
+    def set_filepath(self,_value):
+        self.__slots__[5] = _value
+    def get_filepath(self):
+        return(self.__slots__[5])
+    def set_readoffset(self,_value):
+        self.__slots__[6] = _value
+    def get_readoffset(self):
+        return(self.__slots__[6])
+    def set_wavheader(self,_value):
+        self.__slots__[7] = _value
+    def get_wavheader(self):
+        return(self.__slots__[7])
+    def set_datablocksize(self,_value):
+        self.__slots__[8] = _value
+    def get_datablocksize(self):
+        return(self.__slots__[8])
+    def set_baselineoffset(self,_value):
+        self.__slots__[9] = _value
+    def get_baselineoffset(self):
+        return(self.__slots__[9])
+    
     #@njit
     def autoscan_fun(self):
         """
@@ -310,11 +337,11 @@ class autoscan_worker(QtCore.QThread):
         """
         print(f"slots received, value 0= :{self.__slots__[0][0]}")
         print(f"slots received, value 1 = :{self.__slots__[0][1]}")
-        status = self.get_2()
-        pv = status["progressvalue"]
-        hs = status["horzscal"]
-        print(f"status: {status}")
-        print(f"slots received, progressvalue = :{pv} , horzscal = {hs}")
+        #status = self.get_2()
+        #pv = status["progressvalue"]
+        #hs = status["horzscal"]
+        #print(f"status: {status}")
+        #print(f"slots received, progressvalue = :{pv} , horzscal = {hs}")
         self.SigUpdateGUI.emit()
         self.SigScandeactivate.emit()
         # TODO: CHECK: connect self.scan_deactivate()
@@ -322,69 +349,55 @@ class autoscan_worker(QtCore.QThread):
         self.NUMSNAPS = self.__slots__[0][0]
         self.PROMINENCE = self.__slots__[0][1]
         self.annot = [dict() for x in range(self.NUMSNAPS)]
-        for self.autoscan_ix in range(self.NUMSNAPS+1):
-            self.position = int(np.floor(self.autoscan_ix/self.NUMSNAPS*1000))
+        for self.autoscan_ix in range(self.NUMSNAPS):
+            self.position = int(np.floor(self.autoscan_ix/self.NUMSNAPS*100))   #Tausenderskalierung
             self.host.progressvalue = self.position #TODO: replace by SLOTS Baustelle eröffnet:
-            status["progressvalue"] = self.position
-            self.SigProgressBar.emit()
-            self.__slots__[1] = False
+            #status["progressvalue"] = self.position
+            #self.__slots__[1] = False   #################changed
+            self.set_1(False)   ################interchanged
+            self.SigProgressBar.emit() ################interchanged
             #print("progressbar updated")
             # write for confirmation from Progress bar updating
-            while self.__slots__[1] == False:
-                time.sleep(0.01)
-            self.host.horzscal = self.position #TODO: replace by SLOTS Baustelle eröffnet:
-            status["horzscal"] = self.position
+            while self.get_1() == False:  ############ chnage
+                time.sleep(0.001)
+            #self.host.horzscal = self.position #TODO: replace by SLOTS Baustelle eröffnet:
+            #status["horzscal"] = self.position
             #print("horzscal set")
-            if self.autoscan_ix > self.NUMSNAPS-1:
-                self.autoscan_ix = 0  #??????????? necessary
+            if False:# self.autoscan_ix > self.NUMSNAPS-1:
+                self.autoscan_ix = 0
             else:
                 #print(f"autoindex:{self.autoscan_ix}")
                 #data = self.host.readsegment() #TODO: replace by slots communication
-                pscale = self.host.wavheader['nBlockAlign']#TODO: replace by slots communication
-                position = int(np.floor(pscale*np.round(self.host.wavheader['data_nChunkSize']*self.host.horzscal/pscale/1000)))
-                #TODO: in future replace by:
-                #remove readsegment in this class !
-                #from auxiliaries import readsegment
-                #filepath = system_state["f1"]
-                #readoffset = system_state["readoffset"]
-                #readsegment(filepath,position,readoffset,DATABLOCKSIZE)
-                #self.duration = ret["duration"]
-                ret = self.host.readsegment(position,self.host.DATABLOCKSIZE)#TODO: replace by slots communication
-                #TODO: in future replace by:
-                #remove readsegment in this class !
-                #from auxiliaries import readsegment
-                #filepath = system_state["f1"]
-                #readoffset = system_state["readoffset"]
-                #readsegment(filepath,position,readoffset,DATABLOCKSIZE)
-                #self.duration = ret["duration"]
-
+                wavheader = self.get_wavheader()
+                pscale = wavheader['nBlockAlign']#TODO: replace by slots communication
+                position = int(np.floor(pscale*np.round(wavheader['data_nChunkSize']*self.position/pscale/100)))
+                #ret = self.host.readsegment(position,self.host.DATABLOCKSIZE)#TODO: replace by slots communication  #####CHANGED !!!!!
+                BPS = wavheader["nBitsPerSample"]
+                ret = auxi.readsegment_new(self,self.get_filepath(),position,self.get_readoffset(), self.get_datablocksize(),BPS,BPS,wavheader["wFormatTag"])#TODO: replace by slots communication
                 data = ret["data"]
-                
-                if 2*ret["size"]/self.host.wavheader["nBlockAlign"] < self.host.DATABLOCKSIZE:
+                if 2*ret["size"]/wavheader["nBlockAlign"] < self.get_datablocksize():
                     return False
                 # ret = {}
                 # ret["data"] = data
                 # ret["size"] = size
                 # #print('annotator: data read')
-
                 #TODO: new invalidity condition, replace/remove old one: 
                 # if len(data) == 10:
                 #     if np.all(data == np.linspace(0,9,10)):
                 #         return False
-
                 pdata = self.host.ann_spectrum(self,data)#TODO: replace by slots communication
                 self.__slots__[0][2] = pdata
+                self.set_1(False)
                 self.SigPlotdata.emit()
                 # wait until plot has been carried out
-                self.__slots__[1] = False
-                while self.__slots__[1] == False:
-                    time.sleep(0.01)
+                while self.get_1() == False:
+                    time.sleep(0.001)
                 self.annot[self.autoscan_ix]["FREQ"] = pdata["datax"] 
                 self.annot[self.autoscan_ix]["PKS"] = pdata["peaklocs"]
                 #TODO: remove: peakprops = pdata["peakprops"]
                 peaklocs = pdata["peaklocs"]
                 datay = pdata["datay"]
-                basel = pdata["databasel"] + self.host.baselineoffset#TODO: replace by slots communication
+                basel = pdata["databasel"] + self.get_baselineoffset()
                 self.annot[self.autoscan_ix]["SNR"] = datay[peaklocs] - basel[peaklocs]
 
                 #collect all peaks which have occurred at least once in an array
@@ -446,8 +459,6 @@ class autoscan_worker(QtCore.QThread):
         while self.__slots__[1] == False:
                 time.sleep(0.01)
 
-        #time.sleep(0.01)
-        self.set_2(status)
         self.SigFinished.emit()
 
 class core_m(QObject):
@@ -1233,109 +1244,109 @@ class WizardGUI(QMainWindow):
                "peaklocs": peaklocs, "peakprops": peakprops, "databasel": databasel}
         return ret
 
-    def readsegment(self,position,DATABLOCKSIZE):       #TODO: This is a controller method, should be transferred to an annotation module
-        """
-        CONTROLLER
-        opens file system_state["f1"] and reads a data segment from position 216 + position
-        the segment has length DATABLOCKSIZE
-        segment is returned as float array of complex numbers, even entries = real, odd entries = imaginary
-        :param self: An instance of the class containing attributes such as header information and filtering parameters.
-        :type self: object
-        :param: position
-        :type position: int
-        :param: DATABLOCKSIZE: size of bytes to be read
-        :type position: int
-        :raises [ErrorType]: [ErrorDescription]
-        :return: ret = dictionary with fields: ret["data"], ret["size]; size is either the number of bytes read or -1 in case of invalid file formats
-        :rtype: dictionary; type of field "data": np.float32 array of size self.DATABLOCKSIZE ; type of field "size": int
-        """
-        #print(f"read segment reached, position: {position}")
-        #data = np.empty(DATABLOCKSIZE, dtype=np.int16) #TODO: DATABLOCKSIZE dynamisch anpassen !
-        system_state = sys_state.get_status()
-        self.fileHandle = open(system_state["f1"], 'rb')
-        pscale = self.wavheader['nBlockAlign']
-        if self.wavheader['wFormatTag'] == 1:
-            scl = int(2**int(self.wavheader['nBitsPerSample']-1))-1   #if self.wavheader['nBitsPerSample'] 2147483648 8388608 32767
-        else:
-            scl = 1
-        #TODO:
-        #position = int(np.floor(pscale*np.round(self.wavheader['data_nChunkSize']*system_state["horzscal"]/pscale/1000)))
-        if self.wavheader['nBitsPerSample'] == 16:
-            #position = int(np.floor(pscale*np.round(self.wavheader['data_nChunkSize']*system_state["horzscal"]/pscale/1000)))
-            self.fileHandle.seek(self.readoffset+position, 0)
-            # invalid = np.empty(10, dtype=np.int16)  %TODO: remove after tests, 05-12-2023
-            # invalid = np.linspace(0,9,10)  %TODO: remove after tests, 05-12-2023
-            if self.wavheader['wFormatTag'] == 3:
-                data = np.empty(DATABLOCKSIZE, dtype=np.float16)
-                size = self.fileHandle.readinto(data)
-            elif self.wavheader['wFormatTag'] == 1:
-                dataraw = np.empty(DATABLOCKSIZE, dtype=np.int16)
-                size = self.fileHandle.readinto(dataraw)
-                data = dataraw.astype(np.float32)/scl
-            else:
-                auxi.standard_errorbox("unsupported Format Tag (wFormatTag): value other than 1 or 3 encountered")
-                #return invalid
-                size = -1
-            self.fileHandle.close()
-            # if size < DATABLOCKSIZE:
-            #     return invalid
-            self.duration = self.wavheader['data_nChunkSize']/pscale/self.wavheader['nSamplesPerSec']
-        elif self.wavheader['nBitsPerSample'] == 32:
-            #position = int(np.floor(pscale*np.round(self.wavheader['data_nChunkSize']*system_state["horzscal"]/pscale/1000)))
-            self.fileHandle.seek(216+position, 0) #TODO: ist 216 allgemein oder self.readoffset+position, 0)
-            if self.wavheader['wFormatTag'] == 3:
-                data = np.empty(DATABLOCKSIZE, dtype=np.float32)
-                size = self.fileHandle.readinto(data)
-            elif self.wavheader['wFormatTag'] == 1:
-                dataraw = np.empty(DATABLOCKSIZE, dtype=np.int32)
-                size = self.fileHandle.readinto(dataraw)
-                data = dataraw.astype(np.float32)/2147483648        
-            else:
-                auxi.standard_errorbox("Unsupported FormatTag (wFormatTag): value other than 1 or 3 encountered")
-                #return invalid
-                size = -1
-            self.fileHandle.close()
-            # if size < DATABLOCKSIZE:
-            #     return invalid
-            #data = dataraw.astype(np.float32)
-            self.duration = self.wavheader['data_nChunkSize']/pscale/self.wavheader['nSamplesPerSec']
-        elif self.wavheader['nBitsPerSample'] == 24:
-            #localize data identifier
-            self.fileHandle.seek(self.readoffset+position, 0)
-            data = np.empty(DATABLOCKSIZE, dtype=np.float32)
-            #data = np.empty(self.DATABLOCKSIZE, dtype=np.int32)
-            # if self.wavheader['wFormatTag'] == 3:
-            #     data = np.empty(self.DATABLOCKSIZE, dtype=np.float32)
-            # elif self.wavheader['wFormatTag'] == 1:
-            #     dataraw = np.empty(self.DATABLOCKSIZE, dtype=np.int32)
-            #size = self.fileHandle.readinto(data)
-            size = 0
-            for lauf in range(0,DATABLOCKSIZE):
-                d = self.fileHandle.read(3)
-                if d == None:
-                    self.fileHandle.close()
-                    #return invalid
-                    size = 3*(lauf-1)
-                else:
-                    #dataraw = unpack('<i', d + (0x00 if d[2] < 128 else 0xff))
-                    dataraw = unpack('<%ul' % 1 ,d + (b'\x00' if d[2] < 128 else b'\xff'))
-                    if self.wavheader['wFormatTag'] == 1:
-                        data[lauf] = np.float32(dataraw[0]/8388608)
-                    else:
-                        data[lauf] = dataraw[0]
-                    size += 3
-            self.duration = self.wavheader['data_nChunkSize']/pscale/self.wavheader['nSamplesPerSec']
-        else:
-            auxi.standard_errorbox("no encodings except 16, 24 and 32 bits are supported")
-            #return invalid
-            size = -1
-        self.fileHandle.close()
-        ret = {}
-        ret["data"] = data
-        ret["size"] = size
-        #return data
-        sys_state.set_status(system_state)
-        return ret
+    # def readsegment(self,position,DATABLOCKSIZE):       #TODO: This is a controller method, should be transferred to an annotation module
+    #     """
+    #     CONTROLLER
+    #     opens file system_state["f1"] and reads a data segment from position 216 + position
+    #     the segment has length DATABLOCKSIZE
+    #     segment is returned as float array of complex numbers, even entries = real, odd entries = imaginary
+    #     :param self: An instance of the class containing attributes such as header information and filtering parameters.
+    #     :type self: object
+    #     :param: position
+    #     :type position: int
+    #     :param: DATABLOCKSIZE: size of bytes to be read
+    #     :type position: int
+    #     :raises [ErrorType]: [ErrorDescription]
+    #     :return: ret = dictionary with fields: ret["data"], ret["size]; size is either the number of bytes read or -1 in case of invalid file formats
+    #     :rtype: dictionary; type of field "data": np.float32 array of size self.DATABLOCKSIZE ; type of field "size": int
+    #     """
+    #     #print(f"read segment reached, position: {position}")
+    #     #data = np.empty(DATABLOCKSIZE, dtype=np.int16) #TODO: DATABLOCKSIZE dynamisch anpassen !
+    #     system_state = sys_state.get_status()
+    #     self.fileHandle = open(system_state["f1"], 'rb')
+    #     pscale = self.wavheader['nBlockAlign']
+    #     if self.wavheader['wFormatTag'] == 1:
+    #         scl = int(2**int(self.wavheader['nBitsPerSample']-1))-1   #if self.wavheader['nBitsPerSample'] 2147483648 8388608 32767
+    #     else:
+    #         scl = 1
+    #     #TODO:
+    #     #position = int(np.floor(pscale*np.round(self.wavheader['data_nChunkSize']*system_state["horzscal"]/pscale/1000)))
+    #     if self.wavheader['nBitsPerSample'] == 16:
+    #         #position = int(np.floor(pscale*np.round(self.wavheader['data_nChunkSize']*system_state["horzscal"]/pscale/1000)))
+    #         self.fileHandle.seek(self.readoffset+position, 0)
+    #         # invalid = np.empty(10, dtype=np.int16)  %TODO: remove after tests, 05-12-2023
+    #         # invalid = np.linspace(0,9,10)  %TODO: remove after tests, 05-12-2023
+    #         if self.wavheader['wFormatTag'] == 3:
+    #             data = np.empty(DATABLOCKSIZE, dtype=np.float16)
+    #             size = self.fileHandle.readinto(data)
+    #         elif self.wavheader['wFormatTag'] == 1:
+    #             dataraw = np.empty(DATABLOCKSIZE, dtype=np.int16)
+    #             size = self.fileHandle.readinto(dataraw)
+    #             data = dataraw.astype(np.float32)/scl
+    #         else:
+    #             auxi.standard_errorbox("unsupported Format Tag (wFormatTag): value other than 1 or 3 encountered")
+    #             #return invalid
+    #             size = -1
+    #         self.fileHandle.close()
+    #         # if size < DATABLOCKSIZE:
+    #         #     return invalid
+    #         self.duration = self.wavheader['data_nChunkSize']/pscale/self.wavheader['nSamplesPerSec']
+    #     elif self.wavheader['nBitsPerSample'] == 32:
+    #         #position = int(np.floor(pscale*np.round(self.wavheader['data_nChunkSize']*system_state["horzscal"]/pscale/1000)))
+    #         self.fileHandle.seek(216+position, 0) #TODO: ist 216 allgemein oder self.readoffset+position, 0)
+    #         if self.wavheader['wFormatTag'] == 3:
+    #             data = np.empty(DATABLOCKSIZE, dtype=np.float32)
+    #             size = self.fileHandle.readinto(data)
+    #         elif self.wavheader['wFormatTag'] == 1:
+    #             dataraw = np.empty(DATABLOCKSIZE, dtype=np.int32)
+    #             size = self.fileHandle.readinto(dataraw)
+    #             data = dataraw.astype(np.float32)/2147483648        
+    #         else:
+    #             auxi.standard_errorbox("Unsupported FormatTag (wFormatTag): value other than 1 or 3 encountered")
+    #             #return invalid
+    #             size = -1
+    #         self.fileHandle.close()
+    #         # if size < DATABLOCKSIZE:
+    #         #     return invalid
+    #         #data = dataraw.astype(np.float32)
+    #         self.duration = self.wavheader['data_nChunkSize']/pscale/self.wavheader['nSamplesPerSec']
+    #     elif self.wavheader['nBitsPerSample'] == 24:
+    #         #localize data identifier
+    #         self.fileHandle.seek(self.readoffset+position, 0)
+    #         data = np.empty(DATABLOCKSIZE, dtype=np.float32)
+    #         #data = np.empty(self.DATABLOCKSIZE, dtype=np.int32)
+    #         # if self.wavheader['wFormatTag'] == 3:
+    #         #     data = np.empty(self.DATABLOCKSIZE, dtype=np.float32)
+    #         # elif self.wavheader['wFormatTag'] == 1:
+    #         #     dataraw = np.empty(self.DATABLOCKSIZE, dtype=np.int32)
+    #         #size = self.fileHandle.readinto(data)
+    #         size = 0
+    #         for lauf in range(0,DATABLOCKSIZE):
+    #             d = self.fileHandle.read(3)
+    #             if d == None:
+    #                 self.fileHandle.close()
+    #                 #return invalid
+    #                 size = 3*(lauf-1)
+    #             else:
+    #                 #dataraw = unpack('<i', d + (0x00 if d[2] < 128 else 0xff))
+    #                 dataraw = unpack('<%ul' % 1 ,d + (b'\x00' if d[2] < 128 else b'\xff'))
+    #                 if self.wavheader['wFormatTag'] == 1:
+    #                     data[lauf] = np.float32(dataraw[0]/8388608)
+    #                 else:
+    #                     data[lauf] = dataraw[0]
+    #                 size += 3
+    #         self.duration = self.wavheader['data_nChunkSize']/pscale/self.wavheader['nSamplesPerSec']
+    #     else:
+    #         auxi.standard_errorbox("no encodings except 16, 24 and 32 bits are supported")
+    #         #return invalid
+    #         size = -1
+    #     self.fileHandle.close()
+    #     ret = {}
+    #     ret["data"] = data
+    #     ret["size"] = size
+    #     #return data
+    #     sys_state.set_status(system_state)
+    #     return ret
 
     # def readsegment_new(self,f1,position,DATABLOCKSIZE,sBPS,tBPS,wFormatTag):       #TODO: This is a controller method, should be transferred to an annotation module
     #     """
@@ -1455,7 +1466,7 @@ class WizardGUI(QMainWindow):
         VIEW
         _summary_
         """
-        self.ui.progressBar_2.setProperty("value", int(self.progressvalue/10))
+        self.ui.progressBar_2.setProperty("value", int(self.progressvalue))
         #send continue flag to autoscan task
         if self.autoscanthreadActive == True:
             self.autoscaninst.set_1(True)
@@ -1472,7 +1483,7 @@ class WizardGUI(QMainWindow):
             # self.host.annotation
 
             #self.autoscaninst.set_2(autoscan_statuspars)
-            checkstatus = self.autoscaninst.get_2()
+            #checkstatus = self.autoscaninst.get_2()
             #print(f"check status from get_2 in Progresbarupdate: {checkstatus}")
             
     def status_writetableread(self):
@@ -1549,6 +1560,12 @@ class WizardGUI(QMainWindow):
         autoscan_statuspars["horzscal"] = system_state["horzscal"]
             # __slots__[2] has entries: self.host.progressvalue, 
         self.autoscaninst.set_2(autoscan_statuspars)
+        system_state = sys_state.get_status()
+        self.autoscaninst.set_filepath(system_state["f1"])
+        self.autoscaninst.set_readoffset(system_state["readoffset"])
+        self.autoscaninst.set_wavheader(system_state["wavheader"])
+        self.autoscaninst.set_datablocksize(self.DATABLOCKSIZE)
+        self.autoscaninst.set_baselineoffset(system_state["baselineoffset"])
 
         #self.PROMINENCE = self.host.ui.spinBoxminSNR.value()
 
@@ -2277,6 +2294,7 @@ class WizardGUI(QMainWindow):
                 return False 
             if status["annotated"] == True:
                 self.annotation_completed()
+                self.ui.pushButton_Writeyamlheader.setEnabled(True)
             else:
                 self.annotation_activate()
         else:
@@ -2311,6 +2329,9 @@ class WizardGUI(QMainWindow):
             os.mkdir(out_dirname)
         self.SigRelay.emit("cm_all_",["out_dirname",out_dirname])
         sys_state.set_status(system_state)
+        ##############TODO TODO TODO: intermediate hack for comm with scan worker
+        self.f1 = system_state["f1"]
+        self.readoffset = system_state["readoffset"]
         self.showfilename()
         return True
 

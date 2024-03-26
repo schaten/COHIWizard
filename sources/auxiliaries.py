@@ -149,6 +149,7 @@ class auxiliaries():
         # ret["duration"] = duration
         #return data
         return ret
+    
 
     def standard_errorbox(errortext):
         msg = QMessageBox()
