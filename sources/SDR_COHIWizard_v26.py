@@ -85,16 +85,12 @@ class statlst_gen_worker(QtCore.QThread):
 
     def set_status_position(self,_value):
         self.__slots__[0] = _value
-
     def set_T(self,_value):
         self.__slots__[1] = _value
-
     def set_freq(self,_value):
         self.__slots__[2] = _value#
-
     def set_closed(self,_value):
         self.__slots__[3] = _value                
-
     def get_status_position(self):  ##TODO: obsolete
         return(self.__slots__[0])
     
@@ -238,15 +234,17 @@ class autoscan_worker(QtCore.QThread):
     :return: [ReturnDescription]
     :rtype: [ReturnType]
     """
-    __slots__ = ["slot_0", "slot_1","hoststates","progressvalue","horzscal","filepath","readoffset","wavheader","datablocksize","baselineoffset"]
+    __slots__ = ["GUI_parameters", "continue","pdata","progressvalue","horzscal","filepath","readoffset","wavheader","datablocksize","baselineoffset","unions","annotation_filename","annotation"]
 
-    SigUpdatestatus = pyqtSignal()
+    SigUpdateUnions = pyqtSignal()
     SigUpdateGUI = pyqtSignal()
     SigScandeactivate = pyqtSignal()
     SigFinished = pyqtSignal()
     SigProgressBar = pyqtSignal()
     SigStatustable = pyqtSignal()
     SigPlotdata = pyqtSignal()
+    SigAnnSpectrum = pyqtSignal(object)
+    SigAnnotation = pyqtSignal()
 
     def __init__(self, host_window):
         super(autoscan_worker, self).__init__()
@@ -257,42 +255,21 @@ class autoscan_worker(QtCore.QThread):
         self.slot_1 = [False]
         self.slot_2 = {}
 
-    def set_0(self,_value):
+    def set_GUI_parameters(self,_value):
         """TODO
         sets __slots__[0]
-        __slots__[0] has entries: NUMSNAPS, PROMINENCE, pdata
+        __slots__[0] has entries: NUMSNAPS, PROMINENCE
         """
         self.__slots__[0] = _value
-
-    def get_0(self):
+    def get_GUI_parameters(self):
         return(self.__slots__[0])
-    
-    def set_1(self,_value):
-        """TODO
-        sets __slots__[1]
-        __slots__[1] has 1 entry: if True --> continue this thread worker task 
-        """
+    def set_continue(self,_value):
         self.__slots__[1] = _value
-
-    def get_1(self):
+    def get_continue(self):
         return(self.__slots__[1])
-    
-    def set_2(self,_value):
-        """TODO
-        sets __slots__[2]
-        __slots__[2] has entries: self.host.progressvalue, 
-        self.host.horzscal, self.host.wavheader, self.host.Baselineoffset,  self.host.DATABLOCKSIZE
-        self.host.locs_union 
-        self.host.freq_union 
-        elf.host.my_dirname + '/' + self.host.my_filename
-        self.host.annotation_filename
-        self.host.annotation
-
-        needed: access method self.host.readsegment, self.host.ann_spectrum
-        """
+    def set_pdata(self,_value):
         self.__slots__[2] = _value
-
-    def get_2(self):
+    def get_pdata(self):
         return(self.__slots__[2])
     def set_progressvalue(self,_value):
         self.__slots__[3] = _value
@@ -322,7 +299,18 @@ class autoscan_worker(QtCore.QThread):
         self.__slots__[9] = _value
     def get_baselineoffset(self):
         return(self.__slots__[9])
-    
+    def set_unions(self,_value):
+        self.__slots__[10] = _value
+    def get_unions(self):
+        return(self.__slots__[10])
+    def set_annotation_filename(self,_value):
+        self.__slots__[11] = _value
+    def get_annotation_filename(self):
+        return(self.__slots__[11])
+    def set_annotation(self,_value):
+        self.__slots__[12] = _value
+    def get_annotation(self):
+        return(self.__slots__[12])
     #@njit
     def autoscan_fun(self):
         """
@@ -335,35 +323,21 @@ class autoscan_worker(QtCore.QThread):
         :return: none
         :rtype: none
         """
-        print(f"slots received, value 0= :{self.__slots__[0][0]}")
-        print(f"slots received, value 1 = :{self.__slots__[0][1]}")
-        #status = self.get_2()
-        #pv = status["progressvalue"]
-        #hs = status["horzscal"]
-        #print(f"status: {status}")
-        #print(f"slots received, progressvalue = :{pv} , horzscal = {hs}")
         self.SigUpdateGUI.emit()
         self.SigScandeactivate.emit()
         # TODO: CHECK: connect self.scan_deactivate()
-
-        self.NUMSNAPS = self.__slots__[0][0]
-        self.PROMINENCE = self.__slots__[0][1]
+        self.NUMSNAPS = self.get_GUI_parameters()[0]
+        self.PROMINENCE = self.get_GUI_parameters()[1]
         self.annot = [dict() for x in range(self.NUMSNAPS)]
         for self.autoscan_ix in range(self.NUMSNAPS):
-            self.position = int(np.floor(self.autoscan_ix/self.NUMSNAPS*100))   #Tausenderskalierung
-            self.host.progressvalue = self.position #TODO: replace by SLOTS Baustelle eröffnet:
-            #status["progressvalue"] = self.position
-            #self.__slots__[1] = False   #################changed
-            self.set_1(False)   ################interchanged
+            self.position = int(np.floor(self.autoscan_ix/self.NUMSNAPS*100))
+            self.set_progressvalue(self.position)
+            self.set_continue(False)   ################interchanged
             self.SigProgressBar.emit() ################interchanged
-            #print("progressbar updated")
             # write for confirmation from Progress bar updating
-            while self.get_1() == False:  ############ chnage
+            while self.get_continue() == False:  ############ chnage
                 time.sleep(0.001)
-            #self.host.horzscal = self.position #TODO: replace by SLOTS Baustelle eröffnet:
-            #status["horzscal"] = self.position
-            #print("horzscal set")
-            if False:# self.autoscan_ix > self.NUMSNAPS-1:
+            if False:               # self.autoscan_ix > self.NUMSNAPS-1: TODO check if necessary, remove
                 self.autoscan_ix = 0
             else:
                 #print(f"autoindex:{self.autoscan_ix}")
@@ -377,29 +351,26 @@ class autoscan_worker(QtCore.QThread):
                 data = ret["data"]
                 if 2*ret["size"]/wavheader["nBlockAlign"] < self.get_datablocksize():
                     return False
-                # ret = {}
-                # ret["data"] = data
-                # ret["size"] = size
-                # #print('annotator: data read')
                 #TODO: new invalidity condition, replace/remove old one: 
                 # if len(data) == 10:
                 #     if np.all(data == np.linspace(0,9,10)):
                 #         return False
-                pdata = self.host.ann_spectrum(self,data)#TODO: replace by slots communication
-                self.__slots__[0][2] = pdata
-                self.set_1(False)
+                self.set_continue(False)
+                self.SigAnnSpectrum.emit(data)
+                while self.get_continue() == False:
+                    time.sleep(0.001)
+                pdata = self.get_pdata()
+                self.set_continue(False)
                 self.SigPlotdata.emit()
                 # wait until plot has been carried out
-                while self.get_1() == False:
+                while self.get_continue() == False:
                     time.sleep(0.001)
                 self.annot[self.autoscan_ix]["FREQ"] = pdata["datax"] 
                 self.annot[self.autoscan_ix]["PKS"] = pdata["peaklocs"]
-                #TODO: remove: peakprops = pdata["peakprops"]
                 peaklocs = pdata["peaklocs"]
                 datay = pdata["datay"]
                 basel = pdata["databasel"] + self.get_baselineoffset()
                 self.annot[self.autoscan_ix]["SNR"] = datay[peaklocs] - basel[peaklocs]
-
                 #collect all peaks which have occurred at least once in an array
                 self.locs_union = np.union1d(self.locs_union, self.annot[self.autoscan_ix]["PKS"])
                 self.freq_union = np.union1d(self.freq_union, self.annot[self.autoscan_ix]["FREQ"][self.annot[self.autoscan_ix]["PKS"]])
@@ -410,9 +381,10 @@ class autoscan_worker(QtCore.QThread):
 
         self.locs_union= self.locs_union[y_ix]
         self.freq_union = self.freq_union[y_ix]
-        self.host.locs_union = self.locs_union #TODO: replace by slots communication
-        self.host.freq_union = self.freq_union #TODO: replace by slots communication
-
+        self.set_unions([self.locs_union,self.freq_union])
+        self.SigUpdateUnions.emit()
+        #self.host.locs_union = self.locs_union #TODO: replace by slots communication
+        #self.host.freq_union = self.freq_union #TODO: replace by slots communication
         meansnr = np.zeros(len(self.locs_union))
         minsnr = 1000*np.ones(len(self.locs_union))
         maxsnr = -1000*np.ones(len(self.locs_union))
@@ -436,29 +408,23 @@ class autoscan_worker(QtCore.QThread):
         self.annotation["MSNR"] = meansnr/self.NUMSNAPS
         self.annotation["FREQ"] = np.round(self.freq_union/1000) # signifikante Stellen
         yamldata = [dict() for x in range(len(self.annotation["FREQ"]))]
-
         for ix in range(len(self.annotation["FREQ"])):
             yamldata[ix]["FREQ:"] = str(self.annotation["FREQ"][ix])
             yamldata[ix]["SNR:"] = str(np.floor(self.annotation["MSNR"][ix]))
         
-        #if os.path.isdir(self.host.my_dirname + '/' + self.host.my_filename) == False:
-        #    os.mkdir(self.host.my_dirname + '/' + self.host.my_filename)#TODO: replace by slots communication
-        #print("annotator: reannot finished")
-        #self.annotation_filename = self.annotationpath + '/snrannotation.yaml'
-        #TODO: check if file exists
         try:
-            stream = open(self.host.annotation_filename, "w")#TODO: replace by slots communication
+            stream = open(self.get_annotation_filename(), "w")
             yaml.dump(yamldata, stream)
             stream.close()
         except:
-            print("cannot write annotation yaml")
+            print("cannot write annotation yaml, annotation filename not defined")
             pass
-        self.host.annotation = self.annotation#TODO: replace by slots communication
-        self.SigStatustable.emit()
+        #self.host.annotation = self.annotation#TODO: replace by slots communication
+        self.set_annotation(self.annotation)
+        self.SigAnnotation.emit()
         self.__slots__[1] = False #TODO: replace by stter and getter access
         while self.__slots__[1] == False:
-                time.sleep(0.01)
-
+                time.sleep(0.001)
         self.SigFinished.emit()
 
 class core_m(QObject):
@@ -758,11 +724,11 @@ class WizardGUI(QMainWindow):
         self.Tabref={}
         self.init_Tabref()
         self.timeref = datetime.now()    #TODO TODO TODO: remove, no 2 autoscaninstances !
-        self.autoscanthread = QThread()    #TODO TODO TODO: remove, no 2 autoscaninstances !
-        self.autoscaninst = autoscan_worker(self)    #TODO TODO TODO: remove, no 2 autoscaninstances !
-        self.autoscaninst.moveToThread(self.autoscanthread)    #TODO TODO TODO: remove, no 2 autoscaninstances !
-        #TODO: Implement further slot communicationa shown here
-        self.autoscaninst.set_0([self.ui.spinBoxNumScan.value(),self.ui.spinBoxminSNR.value(),[]])    #TODO TODO TODO: remove, no 2 autoscaninstances !
+        # self.autoscanthread = QThread()    #TODO TODO TODO: remove, no 2 autoscaninstances !
+        # self.autoscaninst = autoscan_worker(self)    #TODO TODO TODO: remove, no 2 autoscaninstances !
+        # self.autoscaninst.moveToThread(self.autoscanthread)    #TODO TODO TODO: remove, no 2 autoscaninstances !
+        # #TODO: Implement further slot communicationa shown here
+        # self.autoscaninst.get0_GUI_parameters([self.ui.spinBoxNumScan.value(),self.ui.spinBoxminSNR.value(),[]])    #TODO TODO TODO: remove, no 2 autoscaninstances !
 
         # Create a custom logger
         # Setze den Level des Root-Loggers auf DEBUG
@@ -1183,7 +1149,7 @@ class WizardGUI(QMainWindow):
                     self.ui.tableWidget_starttime.setEnabled(False)
                     self.ui.tableWidget_3.setEnabled(False)
 
-    def ann_spectrum(self,dummy,data):      #TODO: This is a controller method, should be transferred to an annotation module
+    def ann_spectrum(self,data):      #TODO: This is a controller method, should be transferred to an annotation module
         """
         CONTROLLER
         generate a single spectrum from complex data
@@ -1466,11 +1432,14 @@ class WizardGUI(QMainWindow):
         VIEW
         _summary_
         """
-        self.ui.progressBar_2.setProperty("value", int(self.progressvalue))
+        self.ui.progressBar_2.setProperty("value", int(self.autoscaninst.get_progressvalue()))
         #send continue flag to autoscan task
         if self.autoscanthreadActive == True:
-            self.autoscaninst.set_1(True)
-            #TODO: check if here appropriate: set/get_2
+            self.autoscaninst.set_continue(True)
+        # self.ui.progressBar_2.setProperty("value", int(self.progressvalue)) #########
+        # if self.autoscanthreadActive == True: ###########
+        #     self.autoscaninst.set_continue(True) ################
+        #     #TODO: check if here appropriate: set/get_2
             #autoscan_statuspars = {}
             #autoscan_statuspars["progressvalue"] = self.progressvalue 
             #autoscan_statuspars["horzscal"] = system_state["horzscal"]
@@ -1491,11 +1460,12 @@ class WizardGUI(QMainWindow):
         VIEW
         _summary_
         """
+
         self.ui.progressBar_2.setProperty("value", int(0))
         self.ui.label.setText("Status: read MWList table for annotation")
         #send continue flag to autoscan task
         if self.autoscanthreadActive == True:
-            self.autoscaninst.set_1(True)
+            self.autoscaninst.set_continue(True)
 
     def autoscan_finished(self):
         """
@@ -1522,8 +1492,8 @@ class WizardGUI(QMainWindow):
         if self.ui.radioButton_plotpreview.isChecked() is True:
             plt.close()
             plt.cla()
-            autoscan_ret = self.autoscaninst.get_0()
-            pdata = autoscan_ret[2]
+            pdata = self.autoscaninst.get_pdata()
+            #pdata = autoscan_ret[2]
             #self.__slots__[0][2] = pdata
             plt.plot(pdata["datax"],pdata["datay"])
             plt.xlabel("frequency (Hz)")
@@ -1532,7 +1502,7 @@ class WizardGUI(QMainWindow):
             plt.pause(1)
         #send continue flag to autoscan task
         if self.autoscanthreadActive == True:
-            self.autoscaninst.set_1(True)
+            self.autoscaninst.set_continue(True)
 
     def autoscan(self):  #TODO: shift to controller module associated with annotation
         """
@@ -1553,37 +1523,47 @@ class WizardGUI(QMainWindow):
         self.autoscaninst = autoscan_worker(self)
         self.autoscaninst.moveToThread(self.autoscanthread)
         #TODO: Implement further slot communicationa shown here
-        self.autoscaninst.set_0([self.ui.spinBoxNumScan.value(),self.ui.spinBoxminSNR.value(),[]])
-        #TODO: Check if here appropriate FFFFFFFFFFFFFFFFFFFFFFFFFFF
-        autoscan_statuspars = {}
-        autoscan_statuspars["progressvalue"] = self.progressvalue 
-        autoscan_statuspars["horzscal"] = system_state["horzscal"]
-            # __slots__[2] has entries: self.host.progressvalue, 
-        self.autoscaninst.set_2(autoscan_statuspars)
+        self.autoscaninst.set_GUI_parameters([self.ui.spinBoxNumScan.value(),self.ui.spinBoxminSNR.value(),[]])
         system_state = sys_state.get_status()
         self.autoscaninst.set_filepath(system_state["f1"])
         self.autoscaninst.set_readoffset(system_state["readoffset"])
         self.autoscaninst.set_wavheader(system_state["wavheader"])
         self.autoscaninst.set_datablocksize(self.DATABLOCKSIZE)
+        self.autoscaninst.set_annotation_filename(self.annotation_filename)
         self.autoscaninst.set_baselineoffset(system_state["baselineoffset"])
-
         #self.PROMINENCE = self.host.ui.spinBoxminSNR.value()
-
         self.autoscanthread.started.connect(self.autoscaninst.autoscan_fun)
         self.autoscaninst.SigFinished.connect(self.autoscan_finished)
         self.autoscaninst.SigFinished.connect(self.ann_stations)
         self.autoscaninst.SigFinished.connect(self.autoscanthread.quit)
         self.autoscaninst.SigFinished.connect(self.autoscanthread.deleteLater)
-        #self.timertick.SigFinished.connect(self.timertick.deleteLater)
         self.autoscaninst.SigProgressBar.connect(self.Progressbarupdate)
         self.autoscaninst.SigPlotdata.connect(self.scanplot)
         self.autoscaninst.SigScandeactivate.connect(self.scan_deactivate)
         self.autoscaninst.SigUpdateGUI.connect(self.scanupdateGUI)
         self.autoscaninst.SigStatustable.connect(self.status_writetableread)
+        self.autoscaninst.SigAnnSpectrum.connect(self.annspectrumhandler)
+        self.autoscaninst.SigUpdateUnions.connect(self.annupdateunions)
+        self.autoscaninst.SigAnnotation.connect(self.annotationset)
+
         self.autoscanthread.start()
         if self.autoscanthread.isRunning():
             self.autoscanthreadActive = True
         sys_state.set_status(system_state)
+
+    def annotationset(self):
+        self.annotation = self.autoscaninst.get_annotation()
+        self.autoscaninst.set_continue(True)
+
+    def annupdateunions(self):
+        [self.locs_union,self.freq_union] =self.autoscaninst.get_unions()
+        self.autoscaninst.set_continue(True)
+
+    def annspectrumhandler(self,data):
+        pdata = self.ann_spectrum(data)
+        self.autoscaninst.set_pdata(pdata)
+        self.autoscaninst.set_continue(True)
+        pass
 
     #@njit
     def ann_stations(self): #TODO: shift to annotation module, this is a controller method
