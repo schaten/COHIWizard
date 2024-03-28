@@ -62,7 +62,7 @@ from PyQt5.QtCore import QObject, QThread, pyqtSignal, QMutex       #TODO: OBSOL
 import system_module as wsys
 import resampler_module_v5 as rsmp
 import view_spectra as vsp
-#import annotate as ann
+import annotate as ann
 import yaml_editor as yed
 import waveditor as waved
 from stemlab_control import StemlabControl
@@ -340,10 +340,8 @@ class autoscan_worker(QtCore.QThread):
             if False:               # self.autoscan_ix > self.NUMSNAPS-1: TODO check if necessary, remove
                 self.autoscan_ix = 0
             else:
-                #print(f"autoindex:{self.autoscan_ix}")
-                #data = self.host.readsegment() #TODO: replace by slots communication
                 wavheader = self.get_wavheader()
-                pscale = wavheader['nBlockAlign']#TODO: replace by slots communication
+                pscale = wavheader['nBlockAlign']
                 position = int(np.floor(pscale*np.round(wavheader['data_nChunkSize']*self.position/pscale/100)))
                 #ret = self.host.readsegment(position,self.host.DATABLOCKSIZE)#TODO: replace by slots communication  #####CHANGED !!!!!
                 BPS = wavheader["nBitsPerSample"]
@@ -378,17 +376,13 @@ class autoscan_worker(QtCore.QThread):
         # within 1 kHz span 
         uniquefreqs = pd.unique(np.round(self.freq_union/1000))
         xyi, x_ix, y_ix = np.intersect1d(uniquefreqs, np.round(self.freq_union/1000), return_indices=True)
-
         self.locs_union= self.locs_union[y_ix]
         self.freq_union = self.freq_union[y_ix]
         self.set_unions([self.locs_union,self.freq_union])
         self.SigUpdateUnions.emit()
-        #self.host.locs_union = self.locs_union #TODO: replace by slots communication
-        #self.host.freq_union = self.freq_union #TODO: replace by slots communication
         meansnr = np.zeros(len(self.locs_union))
         minsnr = 1000*np.ones(len(self.locs_union))
         maxsnr = -1000*np.ones(len(self.locs_union))
-        #print('annotator: start reannotation')
         reannot = {}
         for ix in range(self.NUMSNAPS): 
             # find indices of current LOCS in the unified LOC vector self.locs_union
@@ -419,11 +413,10 @@ class autoscan_worker(QtCore.QThread):
         except:
             print("cannot write annotation yaml, annotation filename not defined")
             pass
-        #self.host.annotation = self.annotation#TODO: replace by slots communication
         self.set_annotation(self.annotation)
         self.SigAnnotation.emit()
-        self.__slots__[1] = False #TODO: replace by stter and getter access
-        while self.__slots__[1] == False:
+        self.set_continue(False)
+        while self.get_continue() == False:
                 time.sleep(0.001)
         self.SigFinished.emit()
 
@@ -627,7 +620,7 @@ class WizardGUI(QMainWindow):
         self.freq_union = [] #################TODO:future system state
         self.oldposition = 0 ###################TODO:future system state
         #self.ovwrt_flag = False #TODO:future system state
-        self.autoscanthreadActive = False #TODO:future system state
+        self.autoscanthreadActive = False #TODO:future system state  #remove after implementation of annotator module
         self.progressvalue = 0 #TODO:future system state
         self.cohiradia_yamlheader_filename = 'dummy' #################TODO:future system state
         self.cohiradia_yamltailer_filename = 'dummy' ####################TODO:future system state
@@ -686,6 +679,8 @@ class WizardGUI(QMainWindow):
             self.metadata = yaml.safe_load(stream)
             stream.close()
             self.ismetadata = True
+            #self.SigRelay.emit("cm_all_",["metadata",self.metadata])
+            #self.SigRelay.emit("cm_all_",["ismetadata",self.ismetadata])
             if 'STM_IP_address' in self.metadata.keys():
                 self.ui.lineEdit_IPAddress.setText(self.metadata["STM_IP_address"]) #TODO: Remove after transfer of playrec
                 self.ui.Conf_lineEdit_IPAddress.setText(self.metadata["STM_IP_address"]) #TODO TODO TODO: reorganize and shift to config module
@@ -1489,20 +1484,19 @@ class WizardGUI(QMainWindow):
         _summary_
         """
         #TODO: only execute if Preview_plot == True   radioButton_plotpreview
+        if self.autoscanthreadActive == False:
+            return
         if self.ui.radioButton_plotpreview.isChecked() is True:
             plt.close()
             plt.cla()
             pdata = self.autoscaninst.get_pdata()
-            #pdata = autoscan_ret[2]
-            #self.__slots__[0][2] = pdata
             plt.plot(pdata["datax"],pdata["datay"])
             plt.xlabel("frequency (Hz)")
             plt.ylabel("peak amplitude (dB)")
             plt.show()
             plt.pause(1)
         #send continue flag to autoscan task
-        if self.autoscanthreadActive == True:
-            self.autoscaninst.set_continue(True)
+        self.autoscaninst.set_continue(True)
 
     def autoscan(self):  #TODO: shift to controller module associated with annotation
         """
@@ -2014,6 +2008,9 @@ class WizardGUI(QMainWindow):
         self.SigRelay.emit("cm_annotate",["stations_filename",self.stations_filename])
         self.SigRelay.emit("cm_annotate",["status_filename",self.status_filename])
         self.SigRelay.emit("cm_annotate",["annotation_filename",self.annotation_filename])
+        self.SigRelay.emit("cm_annotate",["annotationdir_prefix",self.annotationdir_prefix])
+        self.SigRelay.emit("cm_all_",["standardpath",self.standardpath])
+        
         self.cohiradia_metadata_filename = self.annotationpath + '/cohiradia_metadata.yaml'
         self.cohiradia_yamlheader_filename = self.annotationpath + '/cohiradia_metadata_header.yaml'
         self.cohiradia_yamltailer_filename = self.annotationpath + '/cohiradia_metadata_tailer.yaml'
@@ -2076,6 +2073,10 @@ class WizardGUI(QMainWindow):
         self.ui.pushButton_resample_split2G.clicked.connect(resample_v.cb_split2G_Button)
         #TODO:  replace by RELAY; call this function only if resample_v is instantiated !
         resample_v.enable_resamp_GUI_elemets(True)
+        
+        self.SigRelay.emit("cm_all_",["ismetadata",self.ismetadata])
+        if self.ismetadata:
+            self.SigRelay.emit("cm_all_",["metadata",self.metadata])
 
         filters = "SDR wav files (*.wav);;Raw IQ (*.dat *.raw )"
         selected_filter = "SDR wav files (*.wav)"
@@ -2246,7 +2247,7 @@ class WizardGUI(QMainWindow):
         system_state["ifreq"] = self.wavheader['centerfreq'] + system_state["LO_offset"] #ONLY used in player, so shift
         system_state["irate"] = self.wavheader['nSamplesPerSec'] #ONLY used in palyer, so shift
         system_state["readoffset"] = self.readoffset   
-        self.SigRelay.emit("cm_resample",["readoffset",system_state["readoffset"]])
+        self.SigRelay.emit("cm_all_",["readoffset",system_state["readoffset"]])
         #self.SigRelay.emit("cm_resample",["readoffset",system_state["readoffset"]])
         #self.fill_wavtable()
 
@@ -2308,6 +2309,8 @@ class WizardGUI(QMainWindow):
         if os.path.exists(out_dirname) == False:         #exist yaml file: create from yaml-editor
             os.mkdir(out_dirname)
         self.SigRelay.emit("cm_all_",["out_dirname",out_dirname])
+        #self.SigRelay.emit("cm_all_",["baselineoffset",self.baselineoffset])
+
         sys_state.set_status(system_state)
         ##############TODO TODO TODO: intermediate hack for comm with scan worker
         self.f1 = system_state["f1"]

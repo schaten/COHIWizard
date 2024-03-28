@@ -77,6 +77,8 @@ class view_spectra_c(QObject):
         self.m = view_spectra_m.mdl
         self.logger = view_spectra_m.logger
 
+
+
 class view_spectra_v(QObject):
     """_view methods for resampling module
     TODO: gui.wavheader --> something less general ?
@@ -381,7 +383,8 @@ class view_spectra_v(QObject):
 
     def minSNRupdate_ScannerTab(self):
         self.m["prominence"] = self.gui.spinBoxminSNR_ScannerTab.value()
-        #das ist ein externer Zugriff
+        #TODO: this is an access to a function of another module; very dangerous, because it must be exactly known how to call that function
+        #should this option be offered by the rxhandlers anyway ?
         self.SigRelay.emit("cui_annotate",[self.gui.spinBoxminSNR.setProperty,["value",self.m["prominence"]]]) 
         self.gui.spinBoxminSNR.setProperty("value", self.m["prominence"]) #TODO TODO TODO: remove after relocation of annotator and activate line above
         #self.m["position"] = self.gui.horizontalScrollBar_view_spectra.value()

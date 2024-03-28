@@ -87,7 +87,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>5</number>
+       <number>2</number>
       </property>
       <property name="iconSize">
        <size>
@@ -3994,72 +3994,10 @@ Tracking</string>
            </property>
           </widget>
          </item>
-         <item row="3" column="3">
-          <widget class="QLabel" name="label_2">
-           <property name="toolTip">
-            <string>number of evaluation steps when scanning record for peaks</string>
-           </property>
-           <property name="text">
-            <string>#scan steps</string>
-           </property>
-          </widget>
-         </item>
          <item row="11" column="0" colspan="8">
           <widget class="QLabel" name="label">
            <property name="text">
             <string>Status:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="5">
-          <widget class="QPushButton" name="pushButton_Scan">
-           <property name="toolTip">
-            <string>Scan record, extract peaks with SNR &gt; min SNR</string>
-           </property>
-           <property name="text">
-            <string>Scan</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="2">
-          <widget class="QSpinBox" name="spinBoxminSNR">
-           <property name="toolTip">
-            <string>minimum SNR for auto-selection of peaks</string>
-           </property>
-           <property name="keyboardTracking">
-            <bool>false</bool>
-           </property>
-           <property name="minimum">
-            <number>0</number>
-           </property>
-           <property name="maximum">
-            <number>100</number>
-           </property>
-           <property name="singleStep">
-            <number>5</number>
-           </property>
-           <property name="value">
-            <number>10</number>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="6">
-          <widget class="QPushButton" name="pushButtonAnnotate">
-           <property name="toolTip">
-            <string>assign peaks to candidates of stations</string>
-           </property>
-           <property name="text">
-            <string>Annotate</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="QLabel" name="label_3">
-           <property name="toolTip">
-            <string>minimum SNR for auto-selection of peaks</string>
-           </property>
-           <property name="text">
-            <string>min SNR (dB)</string>
            </property>
           </widget>
          </item>
@@ -4111,19 +4049,6 @@ Tracking</string>
              <string>TESTITEM2</string>
             </property>
            </item>
-          </widget>
-         </item>
-         <item row="3" column="4">
-          <widget class="QSpinBox" name="spinBoxNumScan">
-           <property name="toolTip">
-            <string>number of evaluation steps when scanning record for peaks</string>
-           </property>
-           <property name="keyboardTracking">
-            <bool>false</bool>
-           </property>
-           <property name="value">
-            <number>20</number>
-           </property>
           </widget>
          </item>
          <item row="13" column="1" colspan="7">
@@ -4374,6 +4299,81 @@ Tracking</string>
            </property>
            <property name="text">
             <string>Discard</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="7">
+          <widget class="QPushButton" name="pushButtonAnnotate">
+           <property name="toolTip">
+            <string>assign peaks to candidates of stations</string>
+           </property>
+           <property name="text">
+            <string>Annotate</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="6">
+          <widget class="QPushButton" name="pushButton_Scan">
+           <property name="toolTip">
+            <string>Scan record, extract peaks with SNR &gt; min SNR</string>
+           </property>
+           <property name="text">
+            <string>Scan</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="5">
+          <widget class="QSpinBox" name="spinBoxNumScan">
+           <property name="toolTip">
+            <string>number of evaluation steps when scanning record for peaks</string>
+           </property>
+           <property name="keyboardTracking">
+            <bool>false</bool>
+           </property>
+           <property name="value">
+            <number>20</number>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="4">
+          <widget class="QLabel" name="label_2">
+           <property name="toolTip">
+            <string>number of evaluation steps when scanning record for peaks</string>
+           </property>
+           <property name="text">
+            <string>#scan steps</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="3">
+          <widget class="QSpinBox" name="spinBoxminSNR">
+           <property name="toolTip">
+            <string>minimum SNR for auto-selection of peaks</string>
+           </property>
+           <property name="keyboardTracking">
+            <bool>false</bool>
+           </property>
+           <property name="minimum">
+            <number>0</number>
+           </property>
+           <property name="maximum">
+            <number>100</number>
+           </property>
+           <property name="singleStep">
+            <number>5</number>
+           </property>
+           <property name="value">
+            <number>10</number>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="2">
+          <widget class="QLabel" name="label_3">
+           <property name="toolTip">
+            <string>minimum SNR for auto-selection of peaks</string>
+           </property>
+           <property name="text">
+            <string>min SNR (dB)</string>
            </property>
           </widget>
          </item>
