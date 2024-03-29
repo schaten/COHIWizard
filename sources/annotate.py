@@ -37,9 +37,9 @@ import system_module as wsys
 
 
 class statlst_gen_worker(QtCore.QThread):
-    __slots__ = ["status_position","T","freq","closed","stations_filename"]
+    __slots__ = ["continue","T","freq","closed","stations_filename","rectime","stichtag","locs_union","annotation","progressvalue","statusfilename"]
     
-    SigProgressBar1 = pyqtSignal()
+    SigProgressBar = pyqtSignal()
     SigFinished = pyqtSignal()
 
     def __init__(self, host_window):
@@ -48,20 +48,50 @@ class statlst_gen_worker(QtCore.QThread):
         self.__slots__[2] = []
         self.__slots__[3] = []
         self.mutex = QtCore.QMutex()
-    def set_status_position(self,_value):
+    def set_continue(self,_value):
         self.__slots__[0] = _value
+    def get_continue(self):  ##TODO: obsolete ??
+        return(self.__slots__[0])
     def set_T(self,_value):
         self.__slots__[1] = _value
+    def get_T(self):
+        return(self.__slots__[1])  
     def set_freq(self,_value):
-        self.__slots__[2] = _value#
+        self.__slots__[2] = _value
+    def get_freq(self):
+        return(self.__slots__[2])
     def set_closed(self,_value):
-        self.__slots__[3] = _value                
-    def get_status_position(self):  ##TODO: obsolete
-        return(self.__slots__[0])
+        self.__slots__[3] = _value
+    def get_closed(self):
+        return(self.__slots__[3])            
     def set_stations_filename(self,_value):
         self.__slots__[4] = _value  
-    def get_stations_filename(self):  ##TODO: obsolete
+    def get_stations_filename(self):
         return(self.__slots__[4])    
+    def set_rectime(self,_value):
+        self.__slots__[5] = _value  
+    def get_rectime(self):  
+        return(self.__slots__[5])    
+    def set_stichtag(self,_value):
+        self.__slots__[6] = _value  
+    def get_stichtag(self):  
+        return(self.__slots__[6])    
+    def set_locs_union(self,_value):
+        self.__slots__[7] = _value  
+    def get_locs_union(self):  
+        return(self.__slots__[7])    
+    def set_annotation(self,_value):
+        self.__slots__[8] = _value  
+    def get_annotation(self):  
+        return(self.__slots__[8])    
+    def set_progressvalue(self,_value):
+        self.__slots__[9] = _value  
+    def get_progressvalue(self):  
+        return(self.__slots__[9])
+    def set_status_filename(self,_value):
+        self.__slots__[10] = _value  
+    def get_status_filename(self):  
+        return(self.__slots__[10]) 
     
     #@njit
     def stationsloop(self):
@@ -75,50 +105,82 @@ class statlst_gen_worker(QtCore.QThread):
         :return: [ReturnDescription]
         :rtype: [ReturnType]
         """
+        locs_union = self.get_locs_union()
+        rectime = self.get_rectime()
+        stichtag = self.get_stichtag()
+        annotation = self.get_annotation()
+        #progressvalue = self.get_stichtag()
+
         try:
             f = open(self.get_stations_filename(), 'w', encoding='utf-8')
             # Laufe durch alle Peak-Frequenzen des Spektrums mit index ix
             #make this a thread
-            for ix in range(len(self.host.locs_union)):
-                progress = np.floor(100*ix/len(self.host.locs_union))
+            #print(f"statslist gen worker: stations_loop reached, write file: {self.get_stations_filename()}, fileref: {f}")
+            #for ix in range(len(self.host.locs_union)):
+            for ix in range(len(locs_union)):
+                
+                #progress = np.floor(100*ix/len(self.host.locs_union))
+                progress = np.floor(100*ix/len(locs_union))
+                
+                self.set_progressvalue(int(progress))
                 #print(f"peak index during annotation:{ix}")
-                f.write('- frequency: "{}"\n'.format(self.host.annotation["FREQ"][ix]))
-                f.write('  snr: "{}"\n'.format(round(self.host.annotation["MSNR"][ix])))
+                # f.write('- frequency: "{}"\n'.format(self.host.annotation["FREQ"][ix]))
+                # f.write('  snr: "{}"\n'.format(round(self.host.annotation["MSNR"][ix])))
+                f.write('- frequency: "{}"\n'.format(annotation["FREQ"][ix]))
+                f.write('  snr: "{}"\n'.format(round(annotation["MSNR"][ix])))
                 # locs union enthält nur Frequenzindices, nicht Frequenzen ! ggf. umrechnen !
                 # suche für jede freq ix alle MWtabellen-Einträge mit der gleichen Frequenz und sammle die entspr Tabellenindices im array ixf
-                ixf = [i for i, x in enumerate(self.__slots__[2]) if np.abs((x - self.host.annotation["FREQ"][ix])) < 1e-6]
+                #ixf = [i for i, x in enumerate(self.__slots__[2]) if np.abs((x - self.host.annotation["FREQ"][ix])) < 1e-6]
+                ixf = [i for i, x in enumerate(self.__slots__[2]) if np.abs((x - annotation["FREQ"][ix])) < 1e-6]
+                _T = self.get_T()
                 if np.size(ixf) > 0:
+                    #print("annoate: npsize>0 reached")
                     # wenn ixf nicht leer setze Landeszähler ix_c auf 0, initialisiere flag cs auf 'none'
                     cs = [] # memory for current country
                     sortedtable = [] #Setze sortedtable zurück
                     yaml_ix = 0
                     for ix2 in ixf:
-                        #print(ix2)
+                        #print(f"annotate worker: ix2: {ix2}, ixf: {ixf}")
                         # für jeden index ix2 in ixf zum Peak ix prüfe ob es den String 'ex ' in der Stationsspalte der MWTabelle gibt
-                        if type(self.__slots__[1].station.iloc[ix2]) != str:
+                        #if type(self.__slots__[1].station.iloc[ix2]) != str:
+                        if type(_T.station.iloc[ix2]) != str:    
                             curr_station = 'No Name'
                         else:
-                            curr_station = self.__slots__[1].station.iloc[ix2]
-                        if type(self.__slots__[1].programme.iloc[ix2]) != str:
+                            #curr_station = self.__slots__[1].station.iloc[ix2]
+                            curr_station = _T.station.iloc[ix2]
+                        #print(f"Hurraa 1, current station: {curr_station}")
+                        #if type(self.__slots__[1].programme.iloc[ix2]) != str:
+                        if type(_T.programme.iloc[ix2]) != str:
+                            #print("typecheck A")
                             curr_programme = 'No Name'
                         else:
-                            curr_programme = self.__slots__[1].programme.iloc[ix2]
-                        if type(self.__slots__[1].tx_site.iloc[ix2]) != str:
+                            #print("typecheck B")
+                            #curr_programme = self.__slots__[1].programme.iloc[ix2]
+                            curr_programme = _T.programme.iloc[ix2]
+                            #print("typecheck B")
+                        print(f"Hurraa 1, current programme: {curr_programme}")
+                        #if type(self.__slots__[1].tx_site.iloc[ix2]) != str:
+                        if type(_T.tx_site.iloc[ix2]) != str:
                             curr_tx_site = 'No Name'
                         else:
-                            curr_tx_site = self.__slots__[1].tx_site.iloc[ix2]
-
+                            #curr_tx_site = self.__slots__[1].tx_site.iloc[ix2]
+                            curr_tx_site = _T.tx_site.iloc[ix2]
+                        #print(f"Hurraa 1, current tx site: {curr_tx_site}")
                         if curr_station.find("ex ") == 0:
                             stdcheck = True
                         else:
                             stdcheck = False
-
+                        #print(f"Hurraa 1, stdcheck: {stdcheck}")
                         # für jeden index ix2 in ixf zum Peak ix prüfe ob es den String 'INACTI' in der Stationsspalte der MWTabelle gibt
                         inactcheck = 'INACTI' in curr_station
                         # logisches label falls ()'ex ' oder 'INACT') und recording-time > Stichtag der MWTabellen-Erstellung
                         # kennzeichnet, wenn ein Sender sicher zum Zeitpunkt der Aufnahme geschlossen war
-                        auto_closedlabel = (stdcheck or inactcheck) and (self.host.rectime >= self.host.STICHTAG)
-                        if not ((self.__slots__[3][ix2] - self.host.rectime).days <= 0 or auto_closedlabel):
+                        #auto_closedlabel = (stdcheck or inactcheck) and (self.host.rectime >= self.host.STICHTAG)
+                        auto_closedlabel = (stdcheck or inactcheck) and (rectime >= stichtag)
+                        #print(f"auto_closedlabel: {auto_closedlabel}")
+                        # if not ((self.__slots__[3][ix2] - self.host.rectime).days <= 0 or auto_closedlabel):
+                        if not ((self.__slots__[3][ix2] - rectime).days <= 0 or auto_closedlabel):
+                            #print("ifnot case Hurraa 2")
                             #wenn NICHT (geschlossen oder recording-time >= explizite Schließzeit in der Spalte closed) --> Sender ist Kandidat
                             # Progeamm und Station aus MWTabelle übernehmen
                             # Land country aus MWTabelle übernehmen
@@ -138,8 +200,8 @@ class statlst_gen_worker(QtCore.QThread):
                                 cs.append(country)  # memorize the entered country
                                 yaml_ix += 1
                     # for this ixf (i.e. this peak frequency) write all entries of the sorted table
-
-                    #print(ix2)
+                            #print("end of ifnot case quest reached")
+                    #print(f"annotate after first loop: ix2: {ix2}")
                     ix2 = -1
                     for ix2 in range(len(sortedtable)):
                         
@@ -169,27 +231,33 @@ class statlst_gen_worker(QtCore.QThread):
                     f.write('  country0: "not identified"\n')
                     f.write('  programme0: "not identified"\n')
                     f.write('  tx-site0: "not identified"\n')
-
-                self.host.progressvalue = int(progress)*10
-                self.mutex.lock()
-                self.SigProgressBar1.emit()
-                self.mutex.unlock()
-                time.sleep(0.001)
+                #print("stationsloop progressvalue emit <<<<<<<<<<<<<<<<<<<<")
+                #self.host.progressvalue = int(progress)*10
+                self.set_progressvalue(int(progress))
+                self.set_continue(False)
+                #self.mutex.lock()
+                #self.SigProgressBar.emit()
+                #self.mutex.unlock()
+                # wait for confirmation from Progress bar updating
+                while self.get_continue() == False:
+                    time.sleep(0.001)
         except:
-            #print("annotation file not yet existent")
+            print("annotation file not yet existent")
             #logging.info("annotation file not yet existent")
             return False
 
         status = {}
         status["freqindex"] = 0
         status["annotated"] = False
-        stream = open(self.host.status_filename, "w")
+        stream = open(self.get_status_filename(), "w")
         yaml.dump(status, stream)
         stream.close()
-
-        self.host.progressvalue = int(0)
-        self.SigProgressBar1.emit()
-        time.sleep(0.001)
+        self.set_continue(False)
+        self.set_progressvalue(int(progress))
+        self.SigProgressBar.emit()
+        # wait for confirmation from Progress bar updating
+        while self.get_continue() == False:
+            time.sleep(0.001)
         self.SigFinished.emit()
 
 class autoscan_worker(QtCore.QThread):
@@ -394,6 +462,7 @@ class autoscan_worker(QtCore.QThread):
         while self.get_continue() == False:
                 time.sleep(0.001)
         self.SigFinished.emit()
+        print("+++++++++++++++++++++++++++++          leave autoscan thread")
 
 
 class annotate_m(QObject):
@@ -449,7 +518,7 @@ class annotate_c(QObject):
         self.m["PEAKWIDTH"] = 10 # minimum peak width in Hz for peak detector #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
         self.m["PROMINENCE"] = 15 # minimum peak prominence in dB above baseline for peak detector #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
         self.m["FILTERKERNEL"] = 2 # length of the moving median filter kernel in % of the spectral span #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
-
+        self.STICHTAG = datetime(2023,2,25,0,0,0)
 
     def autoscan(self):
         """
@@ -477,7 +546,8 @@ class annotate_c(QObject):
         self.autoscanthread.started.connect(self.autoscaninst.autoscan_fun)
         self.autoscaninst.SigFinished.connect(self.ann_stations)
         self.autoscaninst.SigFinished.connect(self.autoscanthread.quit)
-        self.autoscaninst.SigFinished.connect(self.autoscanthread.deleteLater)
+        self.autoscaninst.SigFinished.connect(self.autoscaninst.deleteLater)
+        self.autoscanthread.finished.connect(self.autoscanthread.deleteLater)
         self.autoscaninst.SigUpdateUnions.connect(self.annupdateunions)
         self.autoscaninst.SigAnnSpectrum.connect(self.annspectrumhandler)
         self.autoscaninst.SigAnnotation.connect(self.annotationset)
@@ -637,23 +707,40 @@ class annotate_c(QObject):
             stoptime = self.m["wavheader"]['stoptime']
             self.rectime = datetime(starttime[0],starttime[1],starttime[3],starttime[4],starttime[5],starttime[6])
             self.recstop = datetime(stoptime[0],stoptime[1],stoptime[3],stoptime[4],stoptime[5],stoptime[6]) #TODO: seems to be unused
-
+            #self.m["scan_completed_ref"]()
             self.statlst_genthread = QThread()
             self.statlst_geninst = statlst_gen_worker(self)
             self.statlst_geninst.moveToThread(self.statlst_genthread)
-            self.statlst_geninst.set_status_position(0)
+            self.statlst_geninst.set_continue(True)
             self.statlst_geninst.set_T(T)
             self.statlst_geninst.set_freq(freq)
             self.statlst_geninst.set_closed(closed)
             self.statlst_geninst.set_stations_filename(self.stations_filename)
+            self.statlst_geninst.set_locs_union(self.locs_union)
+            self.statlst_geninst.set_rectime(self.rectime)
+            self.statlst_geninst.set_stichtag(self.STICHTAG)
+            self.statlst_geninst.set_annotation(self.annotation)
+            self.statlst_geninst.set_status_filename(self.m["status_filename"])
             self.statlst_genthread.started.connect(self.statlst_geninst.stationsloop)
+            self.statlst_geninst.SigProgressBar.connect(self.m["Progressbarupdate2_ref"])  #TODO: unsaubere Lösung; controller funs should not access GUI functions
             self.statlst_geninst.SigFinished.connect(self.m["scan_completed_ref"])  #TODO: unsaubere Lösung; controller funs should not access GUI functions
             self.statlst_geninst.SigFinished.connect(self.statlst_genthread.quit)
-            self.statlst_geninst.SigFinished.connect(self.statlst_genthread.deleteLater)
-            self.statlst_geninst.SigProgressBar1.connect(self.m["Progressbarupdate_ref"])  #TODO: unsaubere Lösung; controller funs should not access GUI functions
+            self.statlst_geninst.SigFinished.connect(lambda: print("statlst_geninst is being terminated###############!!!!!!!!!!!!!!!!#######################!!!!!!!!!!!!!!!!!!!!!!!!#################"))
+            self.statlst_geninst.SigFinished.connect(self.statlst_geninst.deleteLater)
+            self.statlst_genthread.finished.connect(self.statlst_genthread.deleteLater)
             self.statlst_genthread.start()
             if self.statlst_genthread.isRunning():
                 self.statlst_genthreadActive = True
+            pass
+
+    #    self.merge2G_thread.started.connect(self.merge2G_worker.merge2G_worker)
+    #     #self.merge2G_worker.SigPupdate.connect(lambda: resample_v.updateprogress_resampling(self)) #TODO: check if lambda call is appropriate.
+    #     self.merge2G_worker.SigPupdate.connect(self.PupdateSignalHandler)
+    #     self.merge2G_worker.SigFinishedmerge2G.connect(self.merge2G_thread.quit)
+    #     self.merge2G_worker.SigFinishedmerge2G.connect(self.merge2G_worker.deleteLater)
+    #     self.merge2G_thread.finished.connect(self.merge2G_thread.deleteLater)
+    #     self.merge2G_thread.finished.connect(lambda: self.merge2G_cleanup(input_file_list))
+
 
         else:
             self.m["scan_completed_ref"]()  #TODO: unsaubere Lösung; controller funs should not access GUI functions
@@ -674,7 +761,7 @@ class annotate_c(QObject):
                     self.stations = yaml.safe_load(stream)
                     stream.close()
                 except:
-                    #print("cannot get stations list")
+                    print("cannot get stations list")
                     return False
                 ######################################## GUI UPDATE AND GUI RESET RELAY ##############################################################################################
                 #self.gui.labelFrequency.setText('Frequency: ' + str(self.stations[freq_ix]['frequency'] + ' kHz'))
@@ -691,6 +778,7 @@ class annotate_c(QObject):
                 #######################################################################################################################################
             self.SigRelay.emit("cexex_annotate",["interactive_station_select",0])
             #self.interactive_station_select()
+
 
     def enterlinetoannotation(self):
         """
@@ -791,6 +879,7 @@ class annotate_v(QObject):
         self.autoscanthreadActive = False
         self.m["scan_completed_ref"] = self.scan_completed
         self.m["Progressbarupdate_ref"] = self.Progressbarupdate
+        self.m["Progressbarupdate2_ref"] = self.Progressbarupdate2
 
     def init_annotate_ui(self):
         #preset ui elements of annotator
@@ -868,6 +957,8 @@ class annotate_v(QObject):
                 self.gui.labelFrequency.setText(_value[1])
             if  _value[0].find("pushButtonENTERdisable") == 0:
                 self.gui.pushButtonENTER.setEnabled(False)
+
+
             #handle method
             # if  _value[0].find("plot_spectrum") == 0: #EXAMPLE
             #     self.plot_spectrum(0,_value[1])   #EXAMPLE
@@ -1058,11 +1149,26 @@ class annotate_v(QObject):
         # #send continue flag to autoscan task
         # if self.autoscanthreadActive == True:
         #     self.annotate_c.autoscaninst.set_1(True)
-
+        print("Progressbarupdate")
         self.gui.progressBar_2.setProperty("value", int(self.annotate_c.autoscaninst.get_progressvalue()))
         #send continue flag to autoscan task
         if self.annotate_c.autoscanthreadActive == True:
             self.annotate_c.autoscaninst.set_continue(True)
+
+    def Progressbarupdate2(self):
+        """
+        VIEW
+        _summary_
+        """
+        # self.gui.progressBar_2.setProperty("value", int(self.annotate_c.autoscaninst.get_progressvalue())) ##TODO: remove after tests
+        # #send continue flag to autoscan task
+        # if self.autoscanthreadActive == True:
+        #     self.annotate_c.autoscaninst.set_1(True)
+        print("Progressbarupdate 2 222222222222222")
+        self.gui.progressBar_2.setProperty("value", int(self.annotate_c.statlst_geninst.get_progressvalue()))
+        #send continue flag to autoscan task
+        if self.annotate_c.statlst_genthreadActive == True:
+            self.annotate_c.statlst_geninst.set_continue(True)
 
     def status_writetableread(self):
         """
@@ -1274,7 +1380,7 @@ class annotate_v(QObject):
     #         self.statlst_genthread = QThread()
     #         self.statlst_geninst = statlst_gen_worker(self)
     #         self.statlst_geninst.moveToThread(self.statlst_genthread)
-    #         self.statlst_geninst.set_status_position(0)
+    #         self.statlst_geninst.set_continue(0)
     #         self.statlst_geninst.set_T(T)
     #         self.statlst_geninst.set_freq(freq)
     #         self.statlst_geninst.set_closed(closed)
@@ -1282,7 +1388,7 @@ class annotate_v(QObject):
     #         self.statlst_geninst.SigFinished.connect(self.scan_completed)
     #         self.statlst_geninst.SigFinished.connect(self.statlst_genthread.quit)
     #         self.statlst_geninst.SigFinished.connect(self.statlst_genthread.deleteLater)
-    #         self.statlst_geninst.SigProgressBar1.connect(self.Progressbarupdate)
+    #         self.statlst_geninst.SigProgressBar.connect(self.Progressbarupdate)
     #         self.statlst_genthread.start()
     #         if self.statlst_genthread.isRunning():
     #             self.statlst_genthreadActive = True
@@ -1452,7 +1558,7 @@ class annotate_v(QObject):
         programme_string = '  programme: "{}"\n'.format(programstr)
         tx_site_string = '  tx-site: "{}"\n'.format(txstr)
         freq_ix = self.current_freq_ix
-        with open(self.cohiradia_metadata_filename, 'a+', encoding='utf-8') as f:
+        with open(self.m["cohiradia_metadata_filename"], 'a+', encoding='utf-8') as f:
             f.write('- frequency: "{}"\n'.format(self.stations[freq_ix]['frequency']))
             f.write('  snr: "{}"\n'.format(self.stations[freq_ix]['snr']))
             f.write(country_string)
@@ -1511,7 +1617,7 @@ class annotate_v(QObject):
             #print("cannot get status")
             return False 
         try:
-            stream = open(self.stations_filename, "r", encoding="utf8")
+            stream = open(self.m["stations_filename"], "r", encoding="utf8")
             self.stations = yaml.safe_load(stream)
             stream.close()
         except:

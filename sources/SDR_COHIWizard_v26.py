@@ -610,7 +610,7 @@ class WizardGUI(QMainWindow):
         self.PROMINENCE = 15 ######### minimum peak prominence in dB above baseline for peak detector #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
         self.FILTERKERNEL = 2 ############# length of the moving median filter kernel in % of the spectral span #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
         self.NUMSNAPS = 5 #############number of segments evaluated for annotation #TODO:occurs in ann-module; must be shifted to the respective module in future
-        self.STICHTAG = datetime(2023,2,25,0,0,0) ###########TODO: only used in stationsloop of statslist_gen_worker as self.host.STICHTAG, Move to module annotation
+        self.STICHTAG = datetime(2023,2,25,0,0,0) ########### DONE ! TODO: only used in stationsloop of statslist_gen_worker as self.host.STICHTAG, Move to module annotation
         #self.GAINOFFSET = 40 #TODO: move to player module
         self.autoscan_ix = 0 #TODO:future system state
         #self.gain = 1 #TODO:future system state
