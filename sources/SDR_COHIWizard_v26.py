@@ -1747,7 +1747,6 @@ class WizardGUI(QMainWindow):
         # time.sleep(0.01)
         self.ui.pushButtonDiscard.setEnabled(True)
 
-
     def cb_ListClicked(self,item):
         """
         CONTROLLER

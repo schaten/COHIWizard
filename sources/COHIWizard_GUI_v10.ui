@@ -81,13 +81,13 @@
        <bool>false</bool>
       </property>
       <property name="toolTip">
-       <string>write diagnostic log to file instead of terminal</string>
+       <string/>
       </property>
       <property name="autoFillBackground">
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>1</number>
       </property>
       <property name="iconSize">
        <size>
@@ -4283,6 +4283,9 @@ Tracking</string>
            <property name="text">
             <string>ENTER</string>
            </property>
+           <property name="shortcut">
+            <string>Return</string>
+           </property>
           </widget>
          </item>
          <item row="5" column="4" colspan="3">
@@ -4299,6 +4302,9 @@ Tracking</string>
            </property>
            <property name="text">
             <string>Discard</string>
+           </property>
+           <property name="shortcut">
+            <string>Alt+Right</string>
            </property>
           </widget>
          </item>
@@ -6385,6 +6391,9 @@ Tracking</string>
    <property name="text">
     <string>File open</string>
    </property>
+   <property name="shortcut">
+    <string>Alt+F</string>
+   </property>
   </action>
   <action name="actionSave_header_to_template">
    <property name="text">
@@ -6394,6 +6403,9 @@ Tracking</string>
   <action name="actionOverwrite_header">
    <property name="text">
     <string>Overwrite header</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+H</string>
    </property>
   </action>
   <action name="actionLoad_template_header">

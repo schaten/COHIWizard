@@ -158,7 +158,7 @@ class statlst_gen_worker(QtCore.QThread):
                             #curr_programme = self.__slots__[1].programme.iloc[ix2]
                             curr_programme = _T.programme.iloc[ix2]
                             #print("typecheck B")
-                        print(f"Hurraa 1, current programme: {curr_programme}")
+                        #print(f"Hurraa 1, current programme: {curr_programme}")
                         #if type(self.__slots__[1].tx_site.iloc[ix2]) != str:
                         if type(_T.tx_site.iloc[ix2]) != str:
                             curr_tx_site = 'No Name'
@@ -231,16 +231,16 @@ class statlst_gen_worker(QtCore.QThread):
                     f.write('  country0: "not identified"\n')
                     f.write('  programme0: "not identified"\n')
                     f.write('  tx-site0: "not identified"\n')
-                #print("stationsloop progressvalue emit <<<<<<<<<<<<<<<<<<<<")
+                print("stationsloop progressvalue emit <<<<<<<<<<<<<<<<<<<<")
                 #self.host.progressvalue = int(progress)*10
-                self.set_progressvalue(int(progress))
-                self.set_continue(False)
+                #self.set_progressvalue(int(progress))
+                #self.set_continue(False)
                 #self.mutex.lock()
                 #self.SigProgressBar.emit()
                 #self.mutex.unlock()
                 # wait for confirmation from Progress bar updating
-                while self.get_continue() == False:
-                    time.sleep(0.001)
+                # while self.get_continue() == False:
+                #     time.sleep(0.001)
         except:
             print("annotation file not yet existent")
             #logging.info("annotation file not yet existent")
@@ -830,11 +830,13 @@ class annotate_c(QObject):
         read yaml stations_list.yaml
 
         """
+        print("discard reached")
         try:
             stream = open(self.m["status_filename"], "r")
             status = yaml.safe_load(stream)
             stream.close()
         except:
+            print("discard cannot write to yaml")
             return False 
         freq_ix = status["freqindex"] # read last frequency index which was treated in interactive list checking
         #Discard this frequency, advance freq counter, do not write to cohiradia annotation
@@ -1298,133 +1300,6 @@ class annotate_v(QObject):
         if self.autoscanthreadActive == True:
             self.annotate_c.autoscaninst.set_continue(True)
 
-
-    # #@njit
-    # def ann_stations(self): TODO: remove after tests
-    #     """
-    #     CONTROLLER
-    #     read MWLIST and collect stations info in dictionary, initialize yamlheader, starts statlst_gen_worker for stationslist generation, 
-    #         finally calls interactive_station_select()
-    #         depends on: statlst_gen_worker, Progressbarupdate(), csan_completed(), write_yaml_header(), interactive_station_select(), annotation_completed()
-    #     :param : none
-    #     :type : none
-    #     :raises [ErrorType]: [ErrorDescription]
-    #     :return: flag False on unsuccessful execution if stations list or status file non-existent
-    #     :rtype: Boolean
-    #     """
-
-    #     self.stations_filename = self.m["annotationpath"] + '/stations_list.yaml'
-    #     if os.path.exists(self.stations_filename) == False:
-
-    #         # read Annotation_basis table from mwlist.org
-    #         self.gui.label.setText("Status: read MWList table for annotation")
-    #         #TODO: make list selectable
-    #         filters ="MWList files (*.xlsx)"
-    #         selected_filter = "MWList files (*.xlsx)"
-    #         filename=""
-    #         if self.ismetadata == False:
-    #             filename =  QtWidgets.QFileDialog.getOpenFileName(self,
-    #                                                                 "Open new stations list (e.g. MWList) file"
-    #                                                                 , self.m["standardpath"], filters, selected_filter)
-    #         else:
-    #             #print('open file with last path')
-    #             if "last_MWlist" in self.m["metadata"]:
-    #                 filters =  "MWList files (*.xlsx)"
-    #                 selected_filter = filters
-    #                 filename =  QtWidgets.QFileDialog.getOpenFileName(self,
-    #                                                                 "Open stations list (e.g. MWList) file (last used is selected)"
-    #                                                                 ,self.m["metadata"]["last_MWlist"] , filters, selected_filter)
-    #             else:
-    #                 filename =  QtWidgets.QFileDialog.getOpenFileName(self,
-    #                                                 "Open new stations list (e.g. MWList) file"
-    #                                                 , self.m["standardpath"], filters, selected_filter)
-    #         if len(filename[0]) == 0:
-    #             return False
-    #         list_selection = filename[0]   
-    #         self.m["metadata"]["last_MWlist"] = list_selection
-
-    #         stream = open("config_wizard.yaml", "w")
-    #         yaml.dump(self.m["metadata"], stream)
-    #         stream.close()
-
-    #         #MWlistname = self.m["standardpath"] + '\\MWLIST_Volltabelle.xlsx' ###TODO remove if checked
-    #         MWlistname = list_selection
-
-    #         #print('read MWLIST table from ' + MWlistname)
-    #         time.sleep(0.01)
-    #         T = pd.read_excel(MWlistname)
-    #         #print("generate annotation basis")
-    #         self.gui.label.setText("Status: Generate annotation basis")
-
-    #         freq = [] # column with all tabulated frequencies in MWtabelle
-    #         closed = [] # column with dates of corresponding closure times if available (if element in table is type datetime)
-    #         for ix in range(len(T)):
-    #             testclosed = T.closed.iloc[ix]
-    #             dummytime = datetime(5000,1,1,1,1,1)
-    #             if type(testclosed) == datetime:
-    #                 closed.append(datetime.strptime(str(testclosed), '%Y-%m-%d %H:%M:%S'))
-    #                 #stations which are not closed must have dummy entries where no datetime
-    #             else:
-    #                 closed.append(datetime.strptime(str(dummytime), '%Y-%m-%d %H:%M:%S'))
-    #             freq.append(float(T.freq.iloc[ix]))
-    #         self.gui.label.setText("Status: annotate peaks and write stations list to yaml file")
-
-    #         #self.write_yaml_header()            #write header part of the cohiradia yaml
-
-    #         #start generation of stations list as a separate thread
-    #         starttime = self.m["wavheader"]['starttime']
-    #         stoptime = self.m["wavheader"]['stoptime']
-    #         self.rectime = datetime(starttime[0],starttime[1],starttime[3],starttime[4],starttime[5],starttime[6])
-    #         self.recstop = datetime(stoptime[0],stoptime[1],stoptime[3],stoptime[4],stoptime[5],stoptime[6]) #TODO: seems to be unused
-
-    #         self.statlst_genthread = QThread()
-    #         self.statlst_geninst = statlst_gen_worker(self)
-    #         self.statlst_geninst.moveToThread(self.statlst_genthread)
-    #         self.statlst_geninst.set_continue(0)
-    #         self.statlst_geninst.set_T(T)
-    #         self.statlst_geninst.set_freq(freq)
-    #         self.statlst_geninst.set_closed(closed)
-    #         self.statlst_genthread.started.connect(self.statlst_geninst.stationsloop)
-    #         self.statlst_geninst.SigFinished.connect(self.scan_completed)
-    #         self.statlst_geninst.SigFinished.connect(self.statlst_genthread.quit)
-    #         self.statlst_geninst.SigFinished.connect(self.statlst_genthread.deleteLater)
-    #         self.statlst_geninst.SigProgressBar.connect(self.Progressbarupdate)
-    #         self.statlst_genthread.start()
-    #         if self.statlst_genthread.isRunning():
-    #             self.statlst_genthreadActive = True
-
-        # else:
-        #     self.scan_completed()
-        #     try:
-        #         stream = open(self.m["status_filename"], "r")
-        #         status = yaml.safe_load(stream)
-        #         stream.close()
-        #     except:
-        #         #print("cannot get status")
-        #         return False 
-            
-        #     if status["annotated"] == True:
-        #         self.annotation_completed()
-        #     else:
-        #         freq_ix = status["freqindex"]
-        #         try:
-        #             stream = open(self.stations_filename, "r", encoding="utf8")
-        #             self.stations = yaml.safe_load(stream)
-        #             stream.close()
-        #         except:
-        #             #print("cannot get stations list")
-        #             return False
-        #         self.gui.labelFrequency.setText('Frequency: ' + str(self.stations[freq_ix]['frequency'] + ' kHz'))
-        #         #self.gui.lineEdit.setText('Frequency: ' + str(self.stations[freq_ix]['frequency'] + ' kHz'))
-        #         self.gui.lineEdit.setFont(QFont('MS Shell Dlg 2', 12))
-        #         self.gui.lineEdit.setText('')
-        #         self.gui.lineEdit_TX_Site.setText('')
-        #         self.gui.lineEdit_Country.setText('')
-        #         self.gui.lineEdit.setStyleSheet("background-color : white")
-        #         self.gui.lineEdit.setFont(QFont('MS Shell Dlg 2', 12))
-        #     self.gui.pushButtonENTER.setEnabled(False)
-        #     self.interactive_station_select()
-
     #@njit
     def interactive_station_select(self):  #TODO: move to annotation module
         """
@@ -1432,6 +1307,7 @@ class annotate_v(QObject):
         read yaml stations_list.yaml
 
         """
+        print("interactive station select annotator module")
         self.gui.Annotate_listWidget.clear()
         self.gui.lineEdit.setText('')
         self.gui.lineEdit_TX_Site.setText('')
@@ -1494,6 +1370,7 @@ class annotate_v(QObject):
 
         """
         #memorize status and advance freq_ix
+        print("list clicked annotator module")
         try:
             stream = open(self.m["status_filename"], "r")
             status = yaml.safe_load(stream)
@@ -1539,14 +1416,14 @@ class annotate_v(QObject):
 
         """
         #self.gui.lineEdit.setEnabled(False)
-        #print('Editline copy to metadata file')
+        print('Editline copy to metadata file, module annotator')
         self.gui.pushButtonENTER.setEnabled(False)
         try:
             stream = open(self.m["status_filename"], "r")
             status = yaml.safe_load(stream)
             stream.close()
         except:
-            #print("cannot get status")
+            print("enterlineannotation cannot get status")
             return False
         
         freq_ix = status["freqindex"]
@@ -1570,7 +1447,8 @@ class annotate_v(QObject):
         stream = open(self.m["status_filename"], "w")
         yaml.dump(status, stream)
         stream.close()
-        self.gui.progressBar_2.setProperty("value", (freq_ix + 1)/len(self.stations)*100)
+        #print(f"forward progressbar enterline_annotation, value: {(freq_ix + 1)/len(self.stations)*100}")
+        #self.gui.progressBar_2.setProperty("value", (freq_ix + 1)/len(self.stations)*100)
         self.gui.Annotate_listWidget.clear()
         self.interactive_station_select()
 
@@ -1580,11 +1458,13 @@ class annotate_v(QObject):
         read yaml stations_list.yaml
 
         """
+        print("DISCARD annotatemodule")
         try:
             stream = open(self.m["status_filename"], "r")
             status = yaml.safe_load(stream)
             stream.close()
         except:
+            print("stream not iopened DISCARD annotatemodule")
             return False 
         freq_ix = status["freqindex"] # read last frequency index which was treated in interactive list checking
         #Discard this frequency, advance freq counter, do not write to cohiradia annotation
@@ -1595,7 +1475,8 @@ class annotate_v(QObject):
         yaml.dump(status, stream)
         stream.close()
         self.interactive_station_select()
-        self.gui.progressBar_2.setProperty("value", (freq_ix + 1)/len(self.stations)*100)
+        #print(f"forward progressbar discard annot line , value: {(freq_ix + 1)/len(self.stations)*100}")
+        #self.gui.progressBar_2.setProperty("value", (freq_ix + 1)/len(self.stations)*100)
         return False
 
     def interactive_station_select(self):  #TODO: move to annotation module
@@ -1604,6 +1485,7 @@ class annotate_v(QObject):
         read yaml stations_list.yaml
 
         """
+        print("interactive station_select annotater module")
         self.gui.Annotate_listWidget.clear()
         self.gui.lineEdit.setText('')
         self.gui.lineEdit_TX_Site.setText('')
@@ -1614,14 +1496,14 @@ class annotate_v(QObject):
             status = yaml.safe_load(stream)
             stream.close()
         except:
-            #print("cannot get status")
+            print("interactive stats loop cannot get status. module annotate")
             return False 
         try:
             stream = open(self.m["stations_filename"], "r", encoding="utf8")
             self.stations = yaml.safe_load(stream)
             stream.close()
         except:
-            #print("cannot get stations list")
+            print("interactive stats loop cannot get stations list, module annotator")
             return False
         
         freq_ix = status["freqindex"] # read last frequency index which was treated in interactive list checking
@@ -1631,9 +1513,11 @@ class annotate_v(QObject):
             stream = open(self.m["status_filename"], "w")
             yaml.dump(status, stream)
             stream.close()
+            print("interactive stats loop, freq ix > len, module annotator")
             return False
         plen = int((len(self.stations[freq_ix])-2)/3) #number of station candidates
         self.gui.labelFrequency.setText('f: ' + str(self.stations[freq_ix]['frequency'] + ' kHz'))
+        print(f"forward progressbar interactive stations select, value: {freq_ix/len(self.stations)*100}")
         self.gui.progressBar_2.setProperty("value", freq_ix/len(self.stations)*100)
         #self.gui.lineEdit.setText('Frequency: ' + str(self.stations[freq_ix]['frequency'] + ' kHz'))
         time.sleep(0.01)
@@ -1666,12 +1550,13 @@ class annotate_v(QObject):
 
         """
         #memorize status and advance freq_ix
+        print("LIST CLICKED module annotator")
         try:
             stream = open(self.m["status_filename"], "r")
             status = yaml.safe_load(stream)
             stream.close()
         except:
-            #print("cannot get status")
+            print("LIST clicked, cannot get status, module annotate")
             return False 
         freq_ix = status["freqindex"] # read last frequency index which was treated in interactive list checking
         if freq_ix < len(self.stations):
@@ -1692,7 +1577,6 @@ class annotate_v(QObject):
             self.gui.lineEdit_Country.setAlignment(QtCore.Qt.AlignLeft)
             self.gui.lineEdit_Country.home(True)
             self.current_freq_ix = freq_ix
-
         # end of stationslist reached
             self.gui.pushButtonENTER.setEnabled(True)
         else:
