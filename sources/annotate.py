@@ -231,7 +231,7 @@ class statlst_gen_worker(QtCore.QThread):
                     f.write('  country0: "not identified"\n')
                     f.write('  programme0: "not identified"\n')
                     f.write('  tx-site0: "not identified"\n')
-                print("stationsloop progressvalue emit <<<<<<<<<<<<<<<<<<<<")
+                #print("stationsloop progressvalue emit <<<<<<<<<<<<<<<<<<<<")
                 #self.host.progressvalue = int(progress)*10
                 #self.set_progressvalue(int(progress))
                 #self.set_continue(False)
@@ -751,7 +751,6 @@ class annotate_c(QObject):
             except:
                 #print("cannot get status")
                 return False 
-            
             if status["annotated"] == True:
                 self.m["scan_completed_ref"]()  #TODO: unsaubere Lösung; controller funs should not access GUI functions
             else:
@@ -959,8 +958,10 @@ class annotate_v(QObject):
                 self.gui.labelFrequency.setText(_value[1])
             if  _value[0].find("pushButtonENTERdisable") == 0:
                 self.gui.pushButtonENTER.setEnabled(False)
-
-
+            if  _value[0].find("annotation_deactivate") == 0:
+                self.annotation_deactivate()
+            if  _value[0].find("scan_deactivate") == 0:
+                self.scan_deactivate()
             #handle method
             # if  _value[0].find("plot_spectrum") == 0: #EXAMPLE
             #     self.plot_spectrum(0,_value[1])   #EXAMPLE
@@ -1003,6 +1004,31 @@ class annotate_v(QObject):
         self.gui.lineEdit_Country.setText('')
         self.gui.lineEdit.setStyleSheet("background-color : white")
         self.gui.lineEdit.setFont(QFont('MS Shell Dlg 2', 12))
+        self.gui.Annotate_listWidget.clear()
+        self.gui.pushButtonDiscard.setEnabled(False)
+        self.gui.labelFrequency.setText("Freq:")
+        self.annotation_deactivate()
+        self.scan_deactivate()
+        self.stations_filename = self.m["annotationpath"] + '/stations_list.yaml'
+        if os.path.exists(self.stations_filename) == True:
+            self.scan_completed()
+            try:
+                stream = open(self.status_filename, "r")
+                status = yaml.safe_load(stream)
+                stream.close()
+            except:
+                print("cannot get status")
+                return False 
+            if status["annotated"] == True:
+                self.annotation_completed()
+                self.ui.pushButton_Writeyamlheader.setEnabled(True)
+            else:
+                self.annotation_activate()
+        else:
+            self.scan_activate()
+
+
+
         pass
 
     def cb_numscanchange(self):
@@ -1587,3 +1613,4 @@ class annotate_v(QObject):
             stream.close()
             self.gui.progressBar_2.setProperty("value", 100)
             self.annotation_completed()
+

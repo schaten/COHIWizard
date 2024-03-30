@@ -2250,6 +2250,7 @@ class resample_v(QObject):
         self.m["actionlabel"] = "READY"
         self.updateGUIelements()
 
+
     def enable_resamp_GUI_elemets(self,status):
         """
         enables or disables resampling GUI elements depending on 'status': True or False
