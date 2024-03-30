@@ -6,7 +6,7 @@ import system_module as wsys
 from datetime import datetime
 from datetime import timedelta
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import QObject, pyqtSignal    
+from PyQt5.QtCore import QObject, pyqtSignal, Qt
 
 class timer_worker(QObject):
     """_generates time signals for clock and recording timer_
@@ -166,6 +166,29 @@ class auxiliaries():
         msg.setInformativeText(infotext)
         msg.setWindowTitle("ATTENTION")
         msg.exec_()
+
+
+    def waiting_effect(function):
+        """decorator for changing cursor to hourglass
+        :param : function to be decorated
+        :type : function
+        :raises : none
+        :return: none
+        :rtype: none
+        """
+        def new_function(*args, **kwargs):
+            print(f"args: {args})")
+            QApplication.setOverrideCursor(Qt.BusyCursor)
+            try:
+                retval = function(*args, **kwargs)
+                return retval
+            except Exception as e:
+                print("Error {}".format(e.args[0]))
+                raise e
+            finally:
+                QApplication.restoreOverrideCursor()
+        return new_function
+
 
 #methods for wavheader manipulations 
 class WAVheader_tools():
@@ -414,3 +437,4 @@ class WAVheader_tools():
         # Write data_ckID and data_nChunkSize
         fid.write(pack("<4sl", wavheader['data_ckID'][0:4].encode('ascii'), wavheader['data_nChunkSize']))
         fid.close()
+

@@ -632,6 +632,10 @@ class annotate_c(QObject):
                "peaklocs": peaklocs, "peakprops": peakprops, "databasel": databasel}
         return ret
     
+    @auxi.waiting_effect
+    def mwlistread(self,MWlistname):
+        T = pd.read_excel(MWlistname)
+        return T
 
     def ann_stations(self): #TODO: shift to annotation module, this is a controller method
         """
@@ -685,7 +689,10 @@ class annotate_c(QObject):
 
             #print('read MWLIST table from ' + MWlistname)
             time.sleep(0.01)
-            T = pd.read_excel(MWlistname)
+            T = self.mwlistread(MWlistname)
+            # @auxi.waiting_effect
+            # T = pd.read_excel(MWlistname)
+
             #print("generate annotation basis")
             #self.gui.label.setText("Status: Generate annotation basis") ###################
             self.SigRelay.emit("cexex_annotate",["annotatestatusdisplay","Status: Generate annotation basis"])

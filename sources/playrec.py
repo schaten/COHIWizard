@@ -1480,6 +1480,7 @@ class playrec_v(QObject):
                 self.reset_playerbuttongroup()
                 return False
             self.gui.pushButton_Play.setIcon(QIcon("pause_v4.PNG"))
+            self.gui.pushButton_REC.setEnabled(False)
             self.gui.lineEdit_LO_bias.setEnabled(False)
             if self.m["playthreadActive"] == True:
                 self.playrec_c.playrec_tworker.pausestate = False

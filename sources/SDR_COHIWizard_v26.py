@@ -296,7 +296,7 @@ class WizardGUI(QMainWindow):
 
 
         ### UI MASTER ####################################
-        self.ui.actionFile_open.triggered.connect(self.cb_open_file)
+        self.ui.actionFile_open.triggered.connect(self.cb_butt_openfile)
         self.SigGUIReset.connect(self.reset_GUI)
         self.ui.pushButton_resample_GainOnly.setEnabled(False)
         self.ui.tabWidget.setCurrentIndex(1) #TODO: avoid magic number, unidentified
@@ -437,6 +437,7 @@ class WizardGUI(QMainWindow):
     def generate_canvas(self,dummy,gridref,gridc,gridt,Tabref):
         """
         --> VIEW or auxiliary
+        eher AUXILIARY !
         initialize central Tab management dictionary Tabref
         :param: gridref
         :type: ui.gridLayout_# object from GUI, e.g. self.ui.gridLayout_4 given by QT-designer
@@ -498,7 +499,7 @@ class WizardGUI(QMainWindow):
 
     def setactivity_tabs(self,caller,statuschange,exceptionlist):
         """
-        VIEW
+        CORE VIEW METHOD
         activates or inactivaes all tabs except the caller
         caller can be any tab name
         statuschange: 'activate': activate all tabs except the caller
@@ -535,7 +536,7 @@ class WizardGUI(QMainWindow):
 
     def reset_GUI(self):
         """
-        VIEW
+        CORE VIEW
         TODO: nach den einzelnen Tabs zerlegen
         reset GUI elements to their defaults, re-initialize important variables
         code is executed after new file open
@@ -644,7 +645,10 @@ class WizardGUI(QMainWindow):
         #system_state = sys_state.get_status()
 
 ############################## GENERAL MENU FUNCTIONS  ####################################
+    def cb_butt_openfile(self):
+        self.cb_open_file()
 
+    @auxi.waiting_effect
     def cb_open_file(self):
         """
         VIEW
