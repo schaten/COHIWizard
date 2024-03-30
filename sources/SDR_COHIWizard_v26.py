@@ -256,30 +256,30 @@ class WizardGUI(QMainWindow):
         self.TEST = True    # Test Mode Flag for testing the App, --> playloop  ##NOT USED #TODO:future system status
         #self.CURTIMEINCREMENT = 5 # für playloop >>, << TODO: shift to play<<<<<module once it exists
         self.DATABLOCKSIZE = 1024*32 # für diverse Filereader/writer TODO: occurs in plot spectrum and ANN_Spectrum; must be shifted to the respective modules in future
-        self.DELTAF = 5000 #######minimum peak distance in Hz for peak detector #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
-        self.PEAKWIDTH = 10 ########### minimum peak width in Hz for peak detector #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
+        #self.DELTAF = 5000 #######minimum peak distance in Hz for peak detector #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
+        #self.PEAKWIDTH = 10 ########### minimum peak width in Hz for peak detector #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
         self.PROMINENCE = 15 ######### minimum peak prominence in dB above baseline for peak detector #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
-        self.FILTERKERNEL = 2 ############# length of the moving median filter kernel in % of the spectral span #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
-        self.NUMSNAPS = 5 #############number of segments evaluated for annotation #TODO:occurs in ann-module; must be shifted to the respective module in future
+        #self.FILTERKERNEL = 2 ############# length of the moving median filter kernel in % of the spectral span #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
+        #self.NUMSNAPS = 5 #############number of segments evaluated for annotation #TODO:occurs in ann-module; must be shifted to the respective module in future
         #self.STICHTAG = datetime(2023,2,25,0,0,0) ########### DONE ! TODO: only used in stationsloop of statslist_gen_worker as self.host.STICHTAG, Move to module annotation
         #self.GAINOFFSET = 40 #TODO: move to player module
-        self.autoscan_ix = 0 #TODO:future system state
+        #self.autoscan_ix = 0 #TODO:future system state
         #self.gain = 1 #TODO:future system state
         self.bps = ['8', '16', '24', '32'] #TODO:future system state
         self.standardLO = 1100 #TODO:future system state
-        self.locs_union = [] ##############TODO:future system state
-        self.freq_union = [] #################TODO:future system state
-        self.oldposition = 0 ###################TODO:future system state
+        #self.locs_union = [] ##############TODO:future system state
+        #self.freq_union = [] #################TODO:future system state
+        #self.oldposition = 0 ###################TODO:future system state
         #self.ovwrt_flag = False #TODO:future system state
-        self.autoscanthreadActive = False #TODO:future system state  #remove after implementation of annotator module
-        self.progressvalue = 0 #TODO:future system state
-        self.cohiradia_yamlheader_filename = 'dummy' #################TODO:future system state
-        self.cohiradia_yamltailer_filename = 'dummy' ####################TODO:future system state
-        self.cohiradia_yamlfinal_filename = 'dummy' #####################TODO:future system state
+        #self.autoscanthreadActive = False #TODO:future system state  #remove after implementation of annotator module
+        #self.progressvalue = 0 #TODO:future system state
+        #self.cohiradia_yamlheader_filename = 'dummy' #################TODO:future system state
+        #self.cohiradia_yamltailer_filename = 'dummy' ####################TODO:future system state
+        #self.cohiradia_yamlfinal_filename = 'dummy' #####################TODO:future system state
         self.annotationdir_prefix = 'ANN_' ##################TODO:future system state
-        self.flag_ann_completed = False ###############TODO:future system state
+        #self.flag_ann_completed = False ###############TODO:future system state
         #self.lock_playthreadstart = True #TODO:future system state
-        self.playthreadActive = False #TODO:future system state
+        self.playthreadActive = False #TODO:obsolete after fixing in file open !
         #self.curtime = 0 #TODO:future system state
         #self.timechanged=False #TODO:future system state
         self.position = 0 #TODO:future system state URGENT !!!!!!!!!!!!!!
@@ -345,7 +345,7 @@ class WizardGUI(QMainWindow):
         except:
             #return False
 
-            print("cannot get metadata")
+            print("cannot get config_wizard.yaml metadata")
 
         system_state = sys_state.get_status()    
         system_state["HostAddress"] = self.ui.lineEdit_IPAddress.text() #TODO: Remove after transfer of playrec
@@ -370,11 +370,6 @@ class WizardGUI(QMainWindow):
         self.Tabref={}
         self.init_Tabref()
         self.timeref = datetime.now()    #TODO TODO TODO: remove, no 2 autoscaninstances !
-        # self.autoscanthread = QThread()    #TODO TODO TODO: remove, no 2 autoscaninstances !
-        # self.autoscaninst = autoscan_worker(self)    #TODO TODO TODO: remove, no 2 autoscaninstances !
-        # self.autoscaninst.moveToThread(self.autoscanthread)    #TODO TODO TODO: remove, no 2 autoscaninstances !
-        # #TODO: Implement further slot communicationa shown here
-        # self.autoscaninst.get0_GUI_parameters([self.ui.spinBoxNumScan.value(),self.ui.spinBoxminSNR.value(),[]])    #TODO TODO TODO: remove, no 2 autoscaninstances !
 
         # Create a custom logger
         # Setze den Level des Root-Loggers auf DEBUG
@@ -408,29 +403,6 @@ class WizardGUI(QMainWindow):
             if len(ex.stderr) > 0: 
                 self.soxnotexist = True
         self.logger.info("Init logger in core reached")
-
-    # GENRAL GUI METHODS
-
-    # def togglelogmodus(self):
-    #     """
-    #     ?? general core method ??
-    #     set modus of stdout to either file or console
-    #     :param: npne
-    #     :type: none
-    #     :raises: none
-    #     ...
-    #     :return: none
-    #     :rtype: none
-    #     """
-    #     #TODO
-    #     if self.ui.checkBox_writelog.isChecked:
-    #         system_state["_log"] = True
-    #         self.SigRelay.emit("cm_all_",["_log", True])
-
-    #     else:
-    #         system_state["_log"] = False
-    #         self.SigRelay.emit("cm_all_",["_log", False])
-
 
 ############## CORE VIEW METHOD #################
         
@@ -524,8 +496,6 @@ class WizardGUI(QMainWindow):
         #TODO: change 10-12-2023: since GUI10: self.generate_canvas(self,self.ui.gridLayout_5,[10,0,1,5],[-1,-1,-1,-1],self.Tabref["Resample"])
         self.generate_canvas(self,self.ui.gridLayout_5,[6,0,6,4],[-1,-1,-1,-1],self.Tabref["Resample"])
 
-
-
     def setactivity_tabs(self,caller,statuschange,exceptionlist):
         """
         VIEW
@@ -581,11 +551,11 @@ class WizardGUI(QMainWindow):
         # self.SigGUIReset.connect(self.reset_GUI)
         ##################################################################
 
-        self.autoscan_ix = 0
-        #TODO: remove self.autoscan_active = False
-        self.locs_union = []
-        self.freq_union = []
-        self.oldposition = 0
+        # self.autoscan_ix = 0
+        # #TODO: remove self.autoscan_active = False
+        # self.locs_union = []
+        # self.freq_union = []
+        # self.oldposition = 0
         
         # ###########transfer to tab Annotator
         # if not ('annotate' in sys.modules):
@@ -672,6 +642,1119 @@ class WizardGUI(QMainWindow):
         self.ui.label_Filename_WAVHeader.setText(self.my_filename + self.ext)
         self.ui.label_Filename_Player.setText(self.my_filename + self.ext)
         #system_state = sys_state.get_status()
+
+############################## GENERAL MENU FUNCTIONS  ####################################
+
+    def cb_open_file(self):
+        """
+        VIEW
+        check conditions for proper opening of a new data file; if all conditions met:
+        call FileOpen() for getting the file handling parameters
+        conditions: playthread is not currently active
+
+        returns: True if successful, False if condition not met.        
+        """
+        system_state = sys_state.get_status()
+        #self.SigRelay.emit("cm_playrec",["cbopenfile",self.m["baselineoffset"]])
+        #self.activate_tabs(["View_Spectra","Annotate","Player","YAML_editor","WAV_header","Resample"])
+        self.setactivity_tabs("all","activate",[])
+        self.SigRelay.emit("cm_playrec",["sdr_configparams",system_state["sdr_configparams"]])
+
+        #resample_c.SigUpdateGUI.connect(self.GUI_reset_after_resamp) ###TODO: check, seems not to be active any more
+        self.ui.checkBox_merge_selectall.setChecked(False)
+        if self.playthreadActive == True:   ###TODO TODO TODO: not active, as self.playthreadactive 
+            # is not being served any more in this module ! refer to player if necessary!
+            auxi.standard_errorbox("Player is currently active, no access to data file is possible; Please stop Player before new file access")
+            sys_state.set_status(system_state)
+            return False
+        #self.open_template_flag = False
+        try:
+            stream = open("config_wizard.yaml", "r")
+            self.metadata = yaml.safe_load(stream)
+            stream.close()
+            self.ismetadata = True
+        except:
+            self.ismetadata = False
+            sys_state.set_status(system_state)
+            #return False
+            #print("cannot get metadata")
+        system_state["HostAddress"] = self.ui.lineEdit_IPAddress.text()   ### TODO TODO TODO check if still necesary after transfer to modules playrec and config
+        self.SigRelay.emit("cm_playrec",["HostAddress",system_state["HostAddress"]])
+        configparams = {"ifreq":system_state["ifreq"], "irate":system_state["irate"],
+                            "rates": system_state["rates"], "icorr":system_state["icorr"],
+                            "HostAddress":system_state["HostAddress"], "LO_offset":system_state["LO_offset"]}
+        system_state["sdr_configparams"] = configparams
+
+        self.ui.spinBoxminSNR_ScannerTab.setProperty("value", self.PROMINENCE)    #######TODO: replace or remove
+        
+        if system_state["fileopened"] is True:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Question)
+            msg.setText("open new file")
+            msg.setInformativeText("you are about o open another file. Current file will be closed; Do you want to proceed")
+            msg.setWindowTitle("FILE OPEN")
+            msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+            msg.buttonClicked.connect(self.popup)
+            msg.exec_()
+
+            if self.yesno == "&Yes":
+                if self.FileOpen() is False:
+                    self.SigRelay.emit("cm_all_",["fileopened", False])
+                    return False
+
+        else:
+            if self.FileOpen() is False:
+                system_state["fileopened"] = False #CHECK: obsolete, because self.SigRelay.emit("cm_all_",["fileopened",False]) does the job
+                self.SigRelay.emit("cm_all_",["fileopened",False])
+                #self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
+                sys_state.set_status(system_state)
+                return False
+            else:
+                system_state["fileopened"] = True #CHECK: obsolete, because self.SigRelay.emit("cm_all_",["fileopened",False]) does the job
+                self.SigRelay.emit("cm_all_",["fileopened",True])
+                #self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
+        sys_state.set_status(system_state)
+
+        
+        #TODO: check change 12-01-2024: temporary path is set differently
+        temppath = system_state["temp_directory"]
+        for x in os.listdir(temppath):
+            if x.find("temp_") == 0:
+                try:
+                    os.remove(x)
+                except:
+                    self.logger.debug("res_scheduler terminate: file access to temp file refused")
+
+    ############################## END TAB GENERAL MENUFUNCTIONS ####################################
+
+  
+    # def checkSTEMLABrates(self):        # TODO: this is ratrer a controller method than a GUI method. Transfer to other module
+    #     """
+    #     CONTROLLER
+    #     _checks if the items ifreq, irate and icorr in system_state have the proper values acc. to RFCorder filename convention
+    #     checks if system_state["irate"] has a value out of the values defined for the STEMLAB in system_state["rates"] 
+    #     :param: none
+    #     :type: none
+    #     ...
+    #     :raises TODO [popup error message]: corresponding to different format errors
+    #     ...
+    #     :return: True/False acc to success of the check
+    #     :rtype: bool
+    #     """
+    #     system_state = sys_state.get_status()
+    #     errorf = False
+    #     #check: has been done on 13-12-2023 TODO: replace ifreq by system_state["ifreq"]
+    #     if system_state["ifreq"] < 0 or system_state["ifreq"] > 62500000:
+    #         errorf = True
+    #         errortxt = "center frequency not in range (0 - 62500000) \
+    #                   after _lo\n Probably not a COHIRADIA File"
+
+    #     if system_state["irate"] not in system_state["rates"]:
+    #         errorf = True
+    #         errortxt = "The sample rate of this file is inappropriate for the STEMLAB!\n\
+    #         Probably it is not a COHIRADIA File. \n \n \
+    #         PLEASE USE THE 'Resample' TAB TO CREATE A PLAYABLE FILE ! \n\n \
+    #         SR must be in the set: 20000, 50000, 100000, 250000, 500000, 1250000, 2500000"
+            
+    #     if system_state["icorr"] < -100 or system_state["icorr"] > 100:
+    #         errorf = True
+    #         errortxt = "frequency correction min ppm must be in \
+    #                   the interval (-100 - 100) after _c \n \
+    #                   Probably not a COHIRADIA File "
+
+    #     if errorf:
+    #         auxi.standard_errorbox(errortxt)
+    #         return False
+    #     else:
+    #         return True
+
+
+    def popup(self,i):
+        """
+        """
+        self.yesno = i.text()
+
+    def setstandardpaths(self):  #TODO: shift to general system module ? must be part of the system configuration procedure
+        """
+        CONTROLLER
+        
+        """
+        #TODO TODO TODO: check if the selfs must be selfs !
+        self.annotationpath = self.my_dirname + '/' + self.annotationdir_prefix + system_state["my_filename"]
+        self.stations_filename = self.annotationpath + '/stations_list.yaml'
+        self.status_filename = self.annotationpath + '/status.yaml'
+        self.annotation_filename = self.annotationpath + '/snrannotation.yaml'
+        self.SigRelay.emit("cm_annotate",["annotationpath",self.annotationpath])
+        self.SigRelay.emit("cm_annotate",["stations_filename",self.stations_filename])
+        self.SigRelay.emit("cm_annotate",["status_filename",self.status_filename])
+        self.SigRelay.emit("cm_annotate",["annotation_filename",self.annotation_filename])
+        self.SigRelay.emit("cm_annotate",["annotationdir_prefix",self.annotationdir_prefix])
+        self.SigRelay.emit("cm_all_",["standardpath",self.standardpath])
+        
+        self.cohiradia_metadata_filename = self.annotationpath + '/cohiradia_metadata.yaml' #TODO: needs the variable be 'self' ?
+        self.cohiradia_yamlheader_filename = self.annotationpath + '/cohiradia_metadata_header.yaml' #TODO: needs the variable be 'self' ?
+        self.cohiradia_yamltailer_filename = self.annotationpath + '/cohiradia_metadata_tailer.yaml' #TODO: needs the variable be 'self' ?
+        self.cohiradia_yamlfinal_filename = self.annotationpath + '/COHI_YAML_FINAL.yaml' #TODO: needs the variable be 'self' ?
+        self.SigRelay.emit("cm_yamleditor",["cohiradia_yamlheader_filename",self.cohiradia_yamlheader_filename])
+        self.SigRelay.emit("cm_yamleditor",["cohiradia_yamltailer_filename",self.cohiradia_yamltailer_filename])
+        self.SigRelay.emit("cm_yamleditor",["cohiradia_yamlfinal_filename",self.cohiradia_yamlfinal_filename])
+        self.SigRelay.emit("cm_yamleditor",["cohiradia_metadata_filename",self.cohiradia_metadata_filename])
+        self.SigRelay.emit("cm_annotate",["cohiradia_yamlheader_filename",self.cohiradia_yamlheader_filename])
+        self.SigRelay.emit("cm_annotate",["cohiradia_yamltailer_filename",self.cohiradia_yamltailer_filename])
+        self.SigRelay.emit("cm_annotate",["cohiradia_yamlfinal_filename",self.cohiradia_yamlfinal_filename])
+        self.SigRelay.emit("cm_annotate",["cohiradia_metadata_filename",self.cohiradia_metadata_filename])
+            #self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
+
+            ############################ CURRENT STATE RELAY, CONTINUE FROM HERE
+
+    # def resread_playlist(self): #TODO: not yet used
+    #     """
+    #     VIEW ?
+        
+    #     """    
+    #     playlist = []
+    #     self.ui.listWidget_playlist.clear()
+    #     self.ui.listWidget_sourcelist.clear()
+    #     #preset playlist
+    #     ix = 0
+    #     for x in os.listdir(self.my_dirname):
+    #         if x.endswith(".wav"):
+    #             if x != (system_state["my_filename"] + system_state["ext"]):
+    #                 playlist.append(x) 
+    #                 _item1=self.ui.listWidget_sourcelist.item(ix)
+    #                 _item1.setText(x)
+    #                 fnt = _item1.font()
+    #                 fnt.setPointSize(9)
+    #                 #_item2.setFont(fnt)
+    #                 item = QtWidgets.QListWidgetItem()
+    #                 self.ui.listWidget_sourcelist.addItem(item)
+    #                 ix += 1
+    #             else:
+    #                 self.logger.debug("resread_playlist: automat remove from selectlist: %s", system_state["my_filename"] + system_state["ext"])
+    #     #TODO: erzeuge einen Einag in Playlist    listWidget_playlist
+
+    #@njit
+    def FileOpen(self):   #TODO: shift to general system module ?
+        '''
+        CONTROLLER
+        Purpose: 
+        If self.####### == True:
+            (1) Open data file for read
+            (2) call routine for extraction of recording parameters from filename
+            (3) present recording parameters in info fields
+        Returns: True, if successful, False otherwise
+        '''
+        #TODO: shift action to respective tab machine by: currix = self.ui.tabWidget.currentIndex() self.ui.tabWidget.tabText(currix)
+        system_state = sys_state.get_status()
+        self.SigGUIReset.emit()
+
+        #TODO: replace by RELAY; call this signal only if resample_c is instantiated !
+        #resample_c.SigResampGUIReset.emit() #NECESSARY ? GUIRESET should do the same ? #############################
+        #resample_c.SigTerminate_Finished.connect(self.cb_resample_new)
+        self.ui.pushButton_resample_split2G.clicked.connect(resample_v.cb_split2G_Button)
+        #TODO:  replace by RELAY; call this function only if resample_v is instantiated !
+        resample_v.enable_resamp_GUI_elemets(True)
+        
+        self.SigRelay.emit("cm_all_",["ismetadata",self.ismetadata])
+        if self.ismetadata:
+            self.SigRelay.emit("cm_all_",["metadata",self.metadata])
+
+        filters = "SDR wav files (*.wav);;Raw IQ (*.dat *.raw )"
+        selected_filter = "SDR wav files (*.wav)"
+        if True: #TODO: remove after TESTS change 17-12-2023
+            if self.ismetadata == False:
+                filename =  QtWidgets.QFileDialog.getOpenFileName(self,
+                                                                "Open data file"
+                                                                , self.standardpath, filters, selected_filter)
+            else:
+                filename =  QtWidgets.QFileDialog.getOpenFileName(self,
+                                                                "Open data file"
+                                                                ,self.metadata["last_path"] , filters, selected_filter)
+            system_state["f1"] = filename[0] #TODO: replace by line below:
+            self.SigRelay.emit("cm_all_",["f1", filename[0]])
+        else:
+            pass
+        
+        if not system_state["f1"]:
+            sys_state.set_status(system_state)
+            return False
+        self.logger.info(f'File opened: {system_state["f1"]}')
+        file_stats = os.stat(system_state["f1"])
+        ti_m = os.path.getmtime(system_state["f1"]) 
+        # Converting the time in seconds to a timestamp
+        self.file_mod = datetime.fromtimestamp(ti_m)
+        system_state["sfilesize"] = file_stats.st_size
+        self.my_dirname = os.path.dirname(system_state["f1"])
+        #TODO TODO TODO: replace self.my_filename and self.ext by resp system state entries
+        #self.my_filename, self.ext = os.path.splitext(os.path.basename(system_state["f1"]))
+        system_state["ext"] = Path(system_state["f1"]).suffix
+        system_state["my_filename"] = Path(system_state["f1"]).stem
+        self.SigRelay.emit("cm_all_",["my_dirname", self.my_dirname])
+        self.SigRelay.emit("cm_all_",["ext",system_state["ext"]])
+        self.SigRelay.emit("cm_all_",["my_filename",system_state["my_filename"]])
+        system_state["temp_directory"] = self.my_dirname + "/temp"
+        self.SigRelay.emit("cm_all_",["temp_directory",self.my_dirname + "/temp"])
+
+        if os.path.exists(system_state["temp_directory"]) == False:         #exist yaml file: create from yaml-editor
+            os.mkdir( system_state["temp_directory"])
+
+        if system_state["ext"] == ".dat" or system_state["ext"] == ".raw":
+            self.filetype = "dat"
+            ## TODO: wavheader-Writing zum Button Insert Header connecten
+            self.ui.label_8.setEnabled(True)
+            self.ui.pushButton_InsertHeader.setEnabled(True)   #####TODO shift to WAV editor or send Relay for inactivation via WAV 
+        else:
+            if system_state["ext"] == ".wav":
+                self.filetype = "wav"
+                self.ui.tab_view_spectra.setEnabled(True)  ##########TODO: replace by Tab disable function inactivate/activate_tabs(self,selection)
+                self.ui.tab_annotate.setEnabled(True)  ##########TODO: replace by Tab disable function inactivate/activate_tabs(self,selection)
+                self.ui.label_8.setEnabled(False)
+                self.ui.pushButton_InsertHeader.setEnabled(False)                 #####TODO shift to WAV editor or send Relay for inactivation via WAV 
+            else:
+                auxi.standard_errorbox("no valid data forma, neiter wav, nor dat nor raw !")
+                sys_state.set_status(system_state)
+                return
+
+        if self.filetype == "dat": # namecheck only if dat --> makes void all wav-related operation sin filenameextract
+            if self.dat_extractinfo4wavheader() == False:
+                auxi.standard_errorbox("Unexpected error, dat_extractinfo4wavheader() == False; ")
+                sys_state.set_status(system_state)
+                return False
+                #TODO: dat_extractinfo4wavheader() automatically asks for lacking wav header info, so this exit could be replaced alrady !
+        else:
+            self.wavheader = WAVheader_tools.get_sdruno_header(self,system_state["f1"])
+            if self.wavheader != False:
+                #self.next_filename = system_state["ext"]ract_startstoptimes_auxi(self.wavheader)
+                self.next_filename = waveditor_c.extract_startstoptimes_auxi(self.wavheader)
+            else:
+                auxi.standard_errorbox("File is not recognized as a valid IQ wav file (not auxi/rcvr compatible or not a RIFF file)")
+                sys_state.set_status(system_state)
+                return False
+
+        if self.wavheader['sdrtype_chckID'].find('auxi') > -1 or self.wavheader['sdrtype_chckID'].find('rcvr') > -1: #TODO: CHECK: is this obsolete because of the above quest ?
+            pass
+        else:
+            auxi.standard_errorbox("cannot process wav header, does not contain auxi or rcvr ID")
+            self.sdrtype = 'FALSE'
+            sys_state.set_status(system_state)
+            return False
+        self.SigRelay.emit("cm_waveditor",["filetype",self.filetype])
+        #TODO: mache das konfigurierbar:
+        self.ui.lineEdit_resample_targetnameprefix.setText(system_state["my_filename"])
+        self.setstandardpaths()
+        self.SigRelay.emit("cexex_all_",["reset_GUI",0])
+        self.SigRelay.emit("cm_all_",["wavheader",self.wavheader])
+        #self.showfilename()
+        #self.SigRelay.emit("cexex_all_",["updateGUIelements", 0])
+        #self.SigRelay.emit("cexex_annotate",["annotation_deactivate",0])
+        #self.SigRelay.emit("cexex_annotate",["scan_deactivate",0])
+        #self.SigRelay.emit("cexex_annotate",["reset_GUI",0])
+
+        #self.annotation_deactivate()
+        #self.scan_deactivate()
+        #self.ui.pushButtonDiscard.setEnabled(False)
+
+################TODO:  method initialize listitems, decompose to player and resampler items and encapsulate in the respective tab classes
+        playlist = []
+        #TODO: look if this is the right place or maybe gui_reset
+        #clear playlist
+        self.ui.listWidget_playlist.clear()
+        self.ui.listWidget_sourcelist_2.clear()
+        self.ui.listWidget_sourcelist.clear()
+        self.ui.listWidget_playlist_2.clear()
+        item = QtWidgets.QListWidgetItem()
+        self.ui.listWidget_sourcelist_2.addItem(item)
+        item = QtWidgets.QListWidgetItem()
+        self.ui.listWidget_sourcelist.addItem(item)
+        #preset playlist
+
+        reslist = []
+        resfilelist = [] #TODO: obsolete ?
+        ix = 0
+        for x in os.listdir(self.my_dirname):
+            if x.endswith(".wav"):
+                if True: #x != (system_state["my_filename"] + system_state["ext"]): #TODO: obsolete old form when automatically loading opened file to playlist
+                    resfilelist.append(x) 
+                    _item1=self.ui.listWidget_sourcelist_2.item(ix)
+                    _item1.setText(x)
+                    fnt = _item1.font()
+                    fnt.setPointSize(7)
+                    #_item1.setFont(fnt)
+                    item = QtWidgets.QListWidgetItem()
+                    self.ui.listWidget_sourcelist_2.addItem(item)
+                    _item2=self.ui.listWidget_sourcelist.item(ix)
+                    _item2.setText(x)
+                    fnt = _item2.font()
+                    fnt.setPointSize(7)
+                    #_item2.setFont(fnt)
+                    item = QtWidgets.QListWidgetItem()
+                    self.ui.listWidget_sourcelist.addItem(item)
+                    ix += 1
+
+        #TODO: erzeuge einen Eintrag in Playlist listWidget_playlist
+        if system_state["f1"].endswith(".wav"):
+            item = QtWidgets.QListWidgetItem()
+            self.ui.listWidget_playlist.addItem(item)
+            _item1=self.ui.listWidget_playlist.item(0)
+            _item1.setText(system_state["my_filename"] + system_state["ext"])
+            fnt = _item1.font()
+            fnt.setPointSize(9)
+            playlist.append(system_state["f1"])
+            system_state["playlist"] = playlist
+
+            item = QtWidgets.QListWidgetItem()
+            self.ui.listWidget_playlist_2.addItem(item)
+            _item2=self.ui.listWidget_playlist_2.item(0)
+            #TODO: problematic when invalid wav file (music)
+            _item2.setText(system_state["my_filename"] + system_state["ext"])
+            fnt = _item2.font()
+            fnt.setPointSize(9)
+            reslist.append(system_state["f1"])
+            system_state["reslist"] = reslist
+
+
+        self.ui.listWidget_playlist.setEnabled(False)
+        self.ui.listWidget_sourcelist_2.setEnabled(False)
+        self.ui.listWidget_sourcelist.setEnabled(False)
+        self.ui.listWidget_playlist_2.setEnabled(False)
+
+        #self.ui.listWidget_playlist_2.model().rowsInserted.connect(resample_v.reslist_update) #TODO transfer to resemplar view
+        #self.ui.listWidget_playlist_2.model().rowsRemoved.connect(resample_v.reslist_update) #TODO transfer to resemplar view
+        #self.ui.listWidget_playlist_2.itemChanged.connect(resample_v.reslist_update) #TODO transfer to resemplar view
+        #self.ui.listWidget_playlist_2.itemClicked.connect(resample_v.reslist_itemselected) #TODO transfer to resemplar view
+        
+################TODO: end method initialize listitems
+        
+        if self.wavheader['sdrtype_chckID'].find('rcvr') > -1:
+            self.readoffset = 86
+        else:
+            self.readoffset = 216
+
+        system_state["ifreq"] = self.wavheader['centerfreq'] + system_state["LO_offset"] #ONLY used in player, so shift
+        system_state["irate"] = self.wavheader['nSamplesPerSec'] #ONLY used in palyer, so shift
+        system_state["readoffset"] = self.readoffset   
+        self.SigRelay.emit("cm_all_",["readoffset",system_state["readoffset"]])
+        #self.SigRelay.emit("cm_resample",["readoffset",system_state["readoffset"]])
+        #self.fill_wavtable()
+
+        #generate STM_cont_params for future passage to player_theradworkers instead of push pop strategy
+        #self.STM_cont_params = {"HostAddress": system_state["HostAddress"], "ifreq": system_state["ifreq"],"rates": system_state["rates"], "irate": system_state["irate"], "icorr": system_state["icorr"]}
+        # TODO: rootpath for config file ! 
+        # TODO: append metadata instead of new write
+        self.metadata["last_path"] = self.my_dirname
+        self.metadata["STM_IP_address"] = system_state["HostAddress"] # TODO: reorganize
+        stream = open("config_wizard.yaml", "w") # TODO: reorganize
+        yaml.dump(self.metadata, stream) # TODO: reorganize
+        stream.close() # TODO: reorganize
+
+        system_state["timescaler"] = self.wavheader['nSamplesPerSec']*self.wavheader['nBlockAlign']
+
+        # ##################################HERAUSTRENNEN und nach annotate per Relay
+        # self.stations_filename = self.annotationpath + '/stations_list.yaml'
+        # if os.path.exists(self.stations_filename) == True:
+        #     self.scan_completed()
+        #     try:
+        #         stream = open(self.status_filename, "r")
+        #         status = yaml.safe_load(stream)
+        #         stream.close()
+        #     except:
+        #         #print("cannot get status")
+        #         sys_state.set_status(system_state)
+        #         return False 
+        #     if status["annotated"] == True:
+        #         self.annotation_completed()
+        #         self.ui.pushButton_Writeyamlheader.setEnabled(True)
+        #     else:
+        #         self.annotation_activate()
+        # else:
+        #     self.scan_activate()
+        # ################################## ENDE HERAUSTRENNEN und nach annotate per Relay
+
+        system_state["fileopened"] = True
+        self.SigRelay.emit("cm_all_",["fileopened",True])
+
+        self.ui.spinBoxKernelwidth.setEnabled(True)
+        self.ui.label_6.setText("Baseline Offset:" + str(self.ui.spinBoxminBaselineoffset.value()))
+        self.position = self.ui.horizontalScrollBar_view_spectra.value()
+        #self.lock_playthreadstart = True
+        
+        system_state = sys_state.get_status()#TODO: check: obsolete ! because of Relay !
+        system_state["horzscal"] = self.position #TODO: check: obsolete ! because of Relay !
+        self.SigRelay.emit("cm_all_",["horzscal", self.position])
+        self.SigRelay.emit("cm_view_spectra",["position",self.position])
+
+        #self.SigRelay.emit("cexex_all_",["updateGUIelements", 0]) 
+        #TODO TODO TODO: track multiple calls of plot_spectrum
+        #self.lock_playthreadstart = False
+        #TODO: is that really necessary on each fileopen ? 
+        #self.read_yaml_header(self)
+        resample_v.update_resample_GUI()
+        # TODO: check, added 09-12-2023
+        system_state["playlength"] = self.wavheader['filesize']/self.wavheader['nAvgBytesPerSec']
+        system_state["list_out_files_resampled"] = []
+        #resp = self.sync_tabs(["resample","win","u","list_out_files_resampled",system_state["list_out_files_resampled"]])
+        self.SigRelay.emit("cm_resample",["list_out_files_resampled",system_state["list_out_files_resampled"]])
+        
+        out_dirname = self.my_dirname + '/out'
+        if os.path.exists(out_dirname) == False:         #exist yaml file: create from yaml-editor
+            os.mkdir(out_dirname)
+        self.SigRelay.emit("cm_all_",["out_dirname",out_dirname])
+        #self.SigRelay.emit("cm_all_",["baselineoffset",self.baselineoffset])
+
+        sys_state.set_status(system_state)
+        ##############TODO TODO TODO: intermediate hack for comm with scan worker
+        self.f1 = system_state["f1"]
+        self.readoffset = system_state["readoffset"]
+        self.showfilename()
+        return True
+
+    def dat_extractinfo4wavheader(self):
+        #TODO: erkennt COHIRADIA Namenskonvention nicht, wenn vor den _lo_r_c literalen noch andere _# Felder existieren.  shift to controller module
+        """ 
+        CONTROLLER
+        extract control parameters from dat and raw files if existent (COHIRADIA nameconvention)
+        and generates standard wavheader
+        check for consistency with COHIRADIA file name convention
+        if no wav information present: generate dummy entries for most wavheaderitems and ask for SR and LO
+
+        :param [ParamName]: none
+        :type [ParamName]: none
+        :raises Filename error 1: center frequency offset not integer
+        :raises Filename error 2: filename convention not met, cannot extractplayback/resording parameters
+        :raises Filename error 3: center frequency not in range (0 - 62500000)
+        :raises Filename error 4: sampling rate not in set 20000, 50000, 100000, 250000, 500000, 1250000, 2500000
+        :raises Filename error 5: center frequency offset out of range +/- 100 ppm
+        :raises warning 1: LO frequency not identifiable in wav-filename, default value 1250 kS/s is used
+        :return: Returns: True, if successful, False otherwise (if error exception raised)
+        :rtype: Boolean
+        """
+        system_state = sys_state.get_status()
+        loix = system_state["my_filename"].find('_lo')
+        cix = system_state["my_filename"].find('_c')
+        rateix = system_state["my_filename"].find('_r')
+        icheck = True
+        i_LO_bias = 0 ###TODO: remove, activate ???
+
+        # #TODO: ACTIVATE LObias check code
+        # if self.ui.radioButton_LO_bias.isChecked() is True:
+        #     if (self.ui.lineEdit_LO_bias.text()).isnumeric() == False:
+        #         auxi.standard_errorbox("invalid numeral in center frequency offset field, please enter valid integer value (kHz)")
+        #         return False
+
+        #     LObiasraw = self.ui.lineEdit_LO_bias.text()
+        #     LObias_sign = 1
+
+        #     if LObiasraw[0] == "-":
+        #         LObias_sign = -1
+        #     if LObiasraw.lstrip("-").isnumeric() is True:
+        #         i_LO_bias = LObias_sign*int(LObiasraw.lstrip("-"))
+        #     else:
+        #         auxi.standard_errorbox("invalid numeral in center frequency offset field, please enter valid integer value (kHz)")
+        #         return False
+
+        if rateix == -1 or cix == -1 or loix == -1:
+            icheck = False
+        
+        freq = system_state["my_filename"][loix+3:loix+7]
+        freq = freq + '000'
+        if freq.isdecimal() == False:
+            icheck = False
+
+        rate = system_state["my_filename"][rateix+2:cix]
+        rate = rate + '000'
+        if rate.isdecimal() == False:
+            icheck = False            
+        system_state["icorr"] = int(0)
+        bps = 16
+        #generate standard wavheader
+
+        if icheck == False:
+            freq, done0 = QtWidgets.QInputDialog.getInt(
+                    self, 'Input Dialog', 'Enter center frequency:', self.standardLO)
+            rate_index = 1 #TODO: make system constant
+            rate, done1 = QtWidgets.QInputDialog.getItem(
+                    self, 'Input Dialog', 'Bandwidth', system_state["irates"], rate_index)
+            bps, done2 = QtWidgets.QInputDialog.getItem(
+                    self, 'Input Dialog', 'bits per sample', self.bps, 1)
+
+            #TODO: validity check for freq, maybe warning if rate cancelled and no valid value, check done0, done1
+            system_state["irate"] = 1000*int(rate)
+            system_state["ifreq"] = int(1000*(int(freq) + system_state["LO_offset"]))
+        else:
+            system_state["irate"] = int(rate)
+            system_state["ifreq"] = int(int(freq) + system_state["LO_offset"])  # TODO: LO_bias dazuzählrn system_state["LO_offset"]
+        #TODO: ACTIVATE wav header generator
+        self.wavheader = WAVheader_tools.basic_wavheader(self,system_state["icorr"],int(system_state["irate"]),int(system_state["ifreq"]),int(bps),system_state["sfilesize"],self.file_mod)
+        sys_state.set_status(system_state)
+        return True
+
+    def generate_GUIupdaterlist(self,item):
+        self.GUIupdaterlist.append(item)
+
+    def sendupdateGUIs(self):
+        """  goes through the list of all registered Tabs and calls their GUI-Updatemethod
+        :param : none
+        :type : none
+        :raises [ErrorType]: none
+        :return: none
+        :rtype: none
+        """        
+        for item in self.GUIupdaterlist:
+            item()
+
+    def rxhandler(self,_key,_value):
+        """
+        handles remote calls from other modules via Signal SigRX(_key,_value)
+        :param : _key
+        :type : str
+        :param : _value
+        :type : object
+        :raises [ErrorType]: [ErrorDescription]
+        :return: flag False or True, False on unsuccessful execution
+        :rtype: Boolean
+        """
+        system_state = sys_state.get_status()
+        if _key.find("cm_core") == 0 or _key.find("cm_all_") == 0:
+            #set mdl-value
+            system_state[_value[0]] = _value[1] 
+            #self.m[_value[0]] = _value[1]
+        if _key.find("cui_core") == 0:
+            _value[0](_value[1])    #TODO TODO: still unclear implementation
+        if _key.find("cexex_core") == 0:
+            if  _value[0].find("GUIreset") == 0:
+                self.SigGUIReset.emit()
+            pass
+
+if __name__ == '__main__':
+    print("starting main, initializing GUI, please wait ... ")
+    
+    if hasattr(QtCore.Qt, 'AA_EnableHighDpiScaling'):
+        QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
+    if hasattr(QtCore.Qt, 'AA_UseHighDpiPixmaps'):
+        QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
+
+    app = QApplication([])
+    sys_state = wsys.status()
+    win = WizardGUI()
+    #win.setupUi(MyWizard)
+#    app.aboutToQuit.connect(win.stop_worker)    #graceful thread termination on app exit
+    win.show()
+    stemlabcontrol = StemlabControl() #TODO TODO TODO: remover after transfer of player
+
+    system_state = sys_state.get_status()
+
+    tab_dict ={}
+    #tab_dict["list"] = ["resample","view_spectra","yamleditor","xcore","waveditor"]
+    tab_dict["list"] = ["xcore"]
+
+    if 'resampler_module_v5' in sys.modules:
+        resample_m = rsmp.resample_m() #TODO: wird gui in _m jemals gebraucht ? ich denke nein !
+        resample_c = rsmp.resample_c(resample_m) #TODO: replace sys_state
+        resample_v = rsmp.resample_v(win.ui,resample_c, resample_m) #TODO: replace sys_state
+        tab_dict["list"].append("resample")
+        resample_v.SigActivateOtherTabs.connect(win.setactivity_tabs)
+        resample_c.SigActivateOtherTabs.connect(win.setactivity_tabs)
+
+    else:
+        win.ui.tabWidget.setTabVisible('tab_resample',False)
+
+    if 'view_spectra' in sys.modules:
+        view_spectra_m = vsp.view_spectra_m()
+        view_spectra_c = vsp.view_spectra_c(view_spectra_m)
+        view_spectra_v = vsp.view_spectra_v(win.ui,view_spectra_c,view_spectra_m)
+        tab_dict["list"].append("view_spectra")
+
+    if 'annotate' in sys.modules:
+        win_annOLD = False
+        annotate_m = ann.annotate_m()
+        annotate_c = ann.annotate_c(annotate_m)
+        annotate_v = ann.annotate_v(win.ui,annotate_c,annotate_m)
+        tab_dict["list"].append("annotate")
+    else:
+        win_annOLD = True
+
+    if 'yaml_editor' in sys.modules:
+        yamleditor_m = yed.yamleditor_m()
+        yamleditor_c = yed.yamleditor_c(yamleditor_m)
+        yamleditor_v = yed.yamleditor_v(win.ui,yamleditor_c,yamleditor_m)
+        tab_dict["list"].append("yamleditor")
+    else:
+        page = win.ui.tabWidget.findChild(QWidget, "tab_yamleditor")
+        c_index = win.ui.tabWidget.indexOf(page)
+        win.ui.tabWidget.setTabVisible(c_index,False)
+
+    xcore_m = core_m()
+    xcore_c = core_c(xcore_m)
+    xcore_v = core_v(win.ui,xcore_c,xcore_m)
+
+    if 'waveditor' in sys.modules:
+        waveditor_m = waved.waveditor_m()
+        waveditor_c = waved.waveditor_c(waveditor_m)
+        waveditor_v = waved.waveditor_v(win.ui,waveditor_c,waveditor_m)
+        tab_dict["list"].append("waveditor")
+    else:
+        page = win.ui.tabWidget.findChild(QWidget, "tab_waveditor")
+        c_index = win.ui.tabWidget.indexOf(page)
+        win.ui.tabWidget.setTabVisible(c_index,False)
+
+    if 'configuration' in sys.modules:
+        configuration_m = conf.configuration_m()
+        configuration_c = conf.configuration_c(configuration_m)
+        configuration_v = conf.configuration_v(win.ui,configuration_c,configuration_m)
+    else:
+        page = win.ui.tabWidget.findChild(QWidget, "tab_configuration")
+        c_index = win.ui.tabWidget.indexOf(page)
+        win.ui.tabWidget.setTabVisible(c_index,False)
+        pass
+        #win.ui.tabWidget.setTabVisible('configuration',False)
+
+    if 'playrec' in sys.modules: #and win.OLD is False:
+        playrec_m = playrec.playrec_m()
+        playrec_c = playrec.playrec_c(playrec_m)
+        playrec_v = playrec.playrec_v(win.ui,playrec_c,playrec_m)
+        tab_dict["list"].append("playrec")
+        playrec_v.SigActivateOtherTabs.connect(win.setactivity_tabs)
+        playrec_c.SigActivateOtherTabs.connect(win.setactivity_tabs)
+    # else:   #TODO: activate after all playrec tests
+    #     page = win.ui.tabWidget.findChild(QWidget, "tab_playrec")
+    #     c_index = win.ui.tabWidget.indexOf(page)
+    #     win.ui.tabWidget.setTabVisible(c_index,False)
+
+    #resample_v.SigUpdateOtherGUIs.connect(win.showfilename)
+    #TODO TODO TODO: das muss für alle Tabs gemacht werden
+    #view_spectra_v.SigSyncGUIUpdatelist.connect(win.generate_GUIupdaterlist)
+    resample_v.SigUpdateOtherGUIs.connect(win.sendupdateGUIs)
+    #resample_c.SigUpdateGUIelements.connect(resample_v.updateGUIelements)
+    win.SigUpdateOtherGUIs.connect(view_spectra_v.updateGUIelements)
+
+    #directory of tab objects to be activated ####TODO: simplify to simple list
+    
+
+    #tab_dict["list"] = ["view_spectra","view_spectra"]
+    
+    for tabitem1 in tab_dict["list"]:
+        for tabitem2 in tab_dict["list"]:
+            eval(tabitem1 + "_v.SigRelay.connect(" + tabitem2 + "_v.rxhandler)")
+                ########## TODO: temporary hack for core module, change after last Module change:
+            eval(tabitem1 + "_v.SigRelay.connect(win.rxhandler)" )
+            win.logger.debug(f'File opened: {tabitem1 + "_v.SigRelay.connect(" + tabitem2 + "_v.rxhandler)"}')
+            #print(tabitem1 + "_v.SigRelay.connect(" + tabitem2 + "_v.rxhandler)")
+        eval("win.SigRelay.connect(" + tabitem1 + "_v.rxhandler)" )
+    
+    #######################TODO: CHECK IF STILL NECESSARY #######################
+    for tabitem in tab_dict["list"]:     
+        tab_dict[tabitem + "_m"] = eval(tabitem + "_m") #resample_m     
+        tab_dict[tabitem + "_c"] = eval(tabitem + "_c") #resample_c     
+        tab_dict[tabitem + "_v"] = eval(tabitem + "_v") #resample_v  
+        win.generate_GUIupdaterlist(eval(tabitem + "_v.updateGUIelements"))
+    #make tab dict visible to core module
+    win.tab_dict = tab_dict
+    system_state = sys_state.get_status()
+    system_state["tab_dict"] = tab_dict
+    sys_state.set_status(system_state)
+    ###################CHECK IF STILL NECESSARY END ###########################
+
+    #all tab initializations occur in connect_init() in core module
+    xcore_v.connect_init() 
+    win.SigRelay.emit("cm_all_",["QTMAINWINDOWparent",win])
+    sys.exit(app.exec_())
+
+#TODOs:
+
+    # fix error with SNR calculation: there seems to be no reactio to baselineshifts when calculating the SNR for praks and identifying those above threshold
+    #
+        #################TODO TEST in resample module: implement next line newly with Relay after tarnsfer of wavedit module 
+        #self.gui.fill_wavtable() has already been replaced by Relay
+    #
+    # * Player-Modul Tests und Bugfixing: 0.5h
+    #
+    #    
+    #   UTC Strategie einbauen
+    #
+    # * Annotator Modul übertragen: 40 h
+    #
+    # * // \\ Problem lösen: 2h: in aktuellem Core, Annotator UND waveditor !!!! geht mit Path()
+    #
+    # * Core-Modul umstellen: 5h
+    #
+    # generelles systemkonfigurations-setup: auch für standarpath-Generator: je nach install. Modul !
+    #
+    # * Tabs von nicht importierten Modulen deaktivieren/blinden: 30min
+    #
+    # * Windows Installer mit https://www.pythonguis.com/tutorials/packaging-pyside6-applications-windows-pyinstaller-installforge/ erstellen
+#
+    # * Configuration Tab with: IP address, tempdir, outdir, Recdir, LT/UTC, Logging, (checkboxes for Tab activation): 4h
+
+
+    #
+    #   zerlege plot_spectrum in einen view_spectra spezifischen Teil und einen generellen Spektralplotter, der in einen Canvas das Spektrum eines Datenstrings plottet
+    #       spectrum(canvas_ref,data,*args) in auxiliary Modul
+
+
+
+########################################################################################################
+########################################################################################################
+########################################################################################################
+########################################################################################################
+########################################################################################################
+########################################################################################################
+########################################################################################################
+########################################################################################################
+########################################################################################################
+########################################################################################################
+    
+# class statlst_gen_worker(QtCore.QThread):
+#     __slots__ = ["status_position","T","freq","closed"]
+    
+#     SigProgressBar1 = pyqtSignal()
+#     SigFinished = pyqtSignal()
+
+#     def __init__(self, host_window):
+#         super(statlst_gen_worker, self).__init__()
+#         self.host = host_window
+#         self.__slots__[2] = []
+#         self.__slots__[3] = []
+#         self.mutex = QtCore.QMutex()
+
+#     def set_status_position(self,_value):
+#         self.__slots__[0] = _value
+#     def set_T(self,_value):
+#         self.__slots__[1] = _value
+#     def set_freq(self,_value):
+#         self.__slots__[2] = _value#
+#     def set_closed(self,_value):
+#         self.__slots__[3] = _value                
+#     def get_status_position(self):  ##TODO: obsolete
+#         return(self.__slots__[0])
+    
+#     #@njit
+#     def stationsloop(self):
+#         """[Summary]TODO
+
+#         :param [ParamName]: [ParamDescription], defaults to [DefaultParamVal]
+#         :type [ParamName]: [ParamType](, optional)
+#         ...
+#         :raises [ErrorType]: [ErrorDescription]
+#         ...
+#         :return: [ReturnDescription]
+#         :rtype: [ReturnType]
+#         """
+#         try:
+#             f = open(self.host.stations_filename, 'w', encoding='utf-8')
+#             # Laufe durch alle Peak-Frequenzen des Spektrums mit index ix
+#             #make this a thread
+#             for ix in range(len(self.host.locs_union)):
+#                 progress = np.floor(100*ix/len(self.host.locs_union))
+#                 #print(f"peak index during annotation:{ix}")
+#                 f.write('- frequency: "{}"\n'.format(self.host.annotation["FREQ"][ix]))
+#                 f.write('  snr: "{}"\n'.format(round(self.host.annotation["MSNR"][ix])))
+#                 # locs union enthält nur Frequenzindices, nicht Frequenzen ! ggf. umrechnen !
+#                 # suche für jede freq ix alle MWtabellen-Einträge mit der gleichen Frequenz und sammle die entspr Tabellenindices im array ixf
+#                 ixf = [i for i, x in enumerate(self.__slots__[2]) if np.abs((x - self.host.annotation["FREQ"][ix])) < 1e-6]
+#                 if np.size(ixf) > 0:
+#                     # wenn ixf nicht leer setze Landeszähler ix_c auf 0, initialisiere flag cs auf 'none'
+#                     cs = [] # memory for current country
+#                     sortedtable = [] #Setze sortedtable zurück
+#                     yaml_ix = 0
+#                     for ix2 in ixf:
+#                         #print(ix2)
+#                         # für jeden index ix2 in ixf zum Peak ix prüfe ob es den String 'ex ' in der Stationsspalte der MWTabelle gibt
+#                         if type(self.__slots__[1].station.iloc[ix2]) != str:
+#                             curr_station = 'No Name'
+#                         else:
+#                             curr_station = self.__slots__[1].station.iloc[ix2]
+#                         if type(self.__slots__[1].programme.iloc[ix2]) != str:
+#                             curr_programme = 'No Name'
+#                         else:
+#                             curr_programme = self.__slots__[1].programme.iloc[ix2]
+#                         if type(self.__slots__[1].tx_site.iloc[ix2]) != str:
+#                             curr_tx_site = 'No Name'
+#                         else:
+#                             curr_tx_site = self.__slots__[1].tx_site.iloc[ix2]
+
+#                         if curr_station.find("ex ") == 0:
+#                             stdcheck = True
+#                         else:
+#                             stdcheck = False
+
+#                         # für jeden index ix2 in ixf zum Peak ix prüfe ob es den String 'INACTI' in der Stationsspalte der MWTabelle gibt
+#                         inactcheck = 'INACTI' in curr_station
+#                         # logisches label falls ()'ex ' oder 'INACT') und recording-time > Stichtag der MWTabellen-Erstellung
+#                         # kennzeichnet, wenn ein Sender sicher zum Zeitpunkt der Aufnahme geschlossen war
+#                         auto_closedlabel = (stdcheck or inactcheck) and (self.host.rectime >= self.host.STICHTAG)
+#                         if not ((self.__slots__[3][ix2] - self.host.rectime).days <= 0 or auto_closedlabel):
+#                             #wenn NICHT (geschlossen oder recording-time >= explizite Schließzeit in der Spalte closed) --> Sender ist Kandidat
+#                             # Progeamm und Station aus MWTabelle übernehmen
+#                             # Land country aus MWTabelle übernehmen
+#                             station = '{}{}'.format(curr_programme, curr_station)
+#                             tx_site = curr_tx_site
+#                             country = self.__slots__[1].country.iloc[ix2]
+#                             if country in cs:  # falls cs bereits das aktuelle Land innerhalb der aktuellen Liste ixf der Einträge zu Frequenz ix beinhaltet 
+#                                 cix = [i for i,x in enumerate(cs) if x == country][0]
+#                                 sortedtable[cix]['station' + str(cix)] += station + '; '
+#                                 sortedtable[cix]['tx_site' + str(cix)] += tx_site + '; '
+#                             else:
+#                             # Trag ins dictionary sortedtable die Felder Station, Tx-site und country 
+#                             # als neuen Block ein
+#                                 sortedtable.append({'station' + str(yaml_ix): station + '; ',
+#                                                 'tx_site' + str(yaml_ix): tx_site + '; ',
+#                                                 'country' + str(yaml_ix): country})
+#                                 cs.append(country)  # memorize the entered country
+#                                 yaml_ix += 1
+#                     # for this ixf (i.e. this peak frequency) write all entries of the sorted table
+
+#                     #print(ix2)
+#                     ix2 = -1
+#                     for ix2 in range(len(sortedtable)):
+                        
+#                         country_string = '  country' +str(ix2) + ': "{}"\n'.format(sortedtable[ix2]['country' + str(ix2)])
+#                         programme_string = '  programme' +str(ix2) + ': "{}"\n'.format(sortedtable[ix2]['station' + str(ix2)])
+#                         tx_site_string = '  tx-site' +str(ix2) + ': "{}"\n'.format(sortedtable[ix2]['tx_site' + str(ix2)])
+#                         f.write(country_string)
+#                         f.write(programme_string)
+#                         f.write(tx_site_string)
+#                         time.sleep(0.01)
+#                         #print(ix2)
+#                     # write dummy entry for own editing
+#                     dum_cstr = 'OTHER COUNTRY, Please enter manually'
+#                     dum_pstr = 'OTHER STATION, Please enter manually'
+#                     dum_txstr = 'OTHER TX SITE, Please enter manually'
+#                     ix2 = ix2 + 1
+#                     country_string = '  country' +str(ix2) + ': "{}"\n'.format(dum_cstr)
+#                     programme_string = '  programme' +str(ix2) + ': "{}"\n'.format(dum_pstr)
+#                     tx_site_string = '  tx-site' +str(ix2) + ': "{}"\n'.format(dum_txstr)
+#                     f.write(country_string)
+#                     f.write(programme_string)
+#                     f.write(tx_site_string)
+#                     time.sleep(0.01)
+#                     # item.setText(dum_cstr.strip('\n') + ' | ' + dum_pstr.strip('\n') + ' | ' + dum_txstr.strip('\n'))
+
+#                 else:
+#                     f.write('  country0: "not identified"\n')
+#                     f.write('  programme0: "not identified"\n')
+#                     f.write('  tx-site0: "not identified"\n')
+
+#                 self.host.progressvalue = int(progress)*10
+#                 self.mutex.lock()
+#                 self.SigProgressBar1.emit()
+#                 self.mutex.unlock()
+#                 time.sleep(0.001)
+#         except:
+#             #print("annotation file not yet existent")
+#             #logging.info("annotation file not yet existent")
+#             return False
+
+#         status = {}
+#         status["freqindex"] = 0
+#         status["annotated"] = False
+#         stream = open(self.host.status_filename, "w")
+#         yaml.dump(status, stream)
+#         stream.close()
+
+#         self.host.progressvalue = int(0)
+#         self.SigProgressBar1.emit()
+#         time.sleep(0.001)
+#         self.SigFinished.emit()
+
+# class autoscan_worker(QtCore.QThread):
+#     """[Summary] TODO
+
+#     :param [ParamName]: [ParamDescription], defaults to [DefaultParamVal]
+#     :type [ParamName]: [ParamType](, optional)
+#     ...
+#     :raises [ErrorType]: [ErrorDescription]
+#     ...
+#     :return: [ReturnDescription]
+#     :rtype: [ReturnType]
+#     """
+#     __slots__ = ["GUI_parameters", "continue","pdata","progressvalue","horzscal","filepath","readoffset","wavheader","datablocksize","baselineoffset","unions","annotation_filename","annotation"]
+
+#     SigUpdateUnions = pyqtSignal()
+#     SigUpdateGUI = pyqtSignal()
+#     SigScandeactivate = pyqtSignal()
+#     SigFinished = pyqtSignal()
+#     SigProgressBar = pyqtSignal()
+#     SigStatustable = pyqtSignal()
+#     SigPlotdata = pyqtSignal()
+#     SigAnnSpectrum = pyqtSignal(object)
+#     SigAnnotation = pyqtSignal()
+
+#     def __init__(self, host_window):
+#         super(autoscan_worker, self).__init__()
+#         self.host = host_window
+#         self.locs_union = []
+#         self.freq_union = []
+#         self.slot_0 = []
+#         self.slot_1 = [False]
+#         self.slot_2 = {}
+
+#     def set_GUI_parameters(self,_value):
+#         """TODO
+#         sets __slots__[0]
+#         __slots__[0] has entries: NUMSNAPS, PROMINENCE
+#         """
+#         self.__slots__[0] = _value
+#     def get_GUI_parameters(self):
+#         return(self.__slots__[0])
+#     def set_continue(self,_value):
+#         self.__slots__[1] = _value
+#     def get_continue(self):
+#         return(self.__slots__[1])
+#     def set_pdata(self,_value):
+#         self.__slots__[2] = _value
+#     def get_pdata(self):
+#         return(self.__slots__[2])
+#     def set_progressvalue(self,_value):
+#         self.__slots__[3] = _value
+#     def get_progressvalue(self):
+#         return(self.__slots__[3])
+#     def set_horzscal(self,_value):
+#         self.__slots__[4] = _value
+#     def get_horzscal(self):
+#         return(self.__slots__[4])
+#     def set_filepath(self,_value):
+#         self.__slots__[5] = _value
+#     def get_filepath(self):
+#         return(self.__slots__[5])
+#     def set_readoffset(self,_value):
+#         self.__slots__[6] = _value
+#     def get_readoffset(self):
+#         return(self.__slots__[6])
+#     def set_wavheader(self,_value):
+#         self.__slots__[7] = _value
+#     def get_wavheader(self):
+#         return(self.__slots__[7])
+#     def set_datablocksize(self,_value):
+#         self.__slots__[8] = _value
+#     def get_datablocksize(self):
+#         return(self.__slots__[8])
+#     def set_baselineoffset(self,_value):
+#         self.__slots__[9] = _value
+#     def get_baselineoffset(self):
+#         return(self.__slots__[9])
+#     def set_unions(self,_value):
+#         self.__slots__[10] = _value
+#     def get_unions(self):
+#         return(self.__slots__[10])
+#     def set_annotation_filename(self,_value):
+#         self.__slots__[11] = _value
+#     def get_annotation_filename(self):
+#         return(self.__slots__[11])
+#     def set_annotation(self,_value):
+#         self.__slots__[12] = _value
+#     def get_annotation(self):
+#         return(self.__slots__[12])
+#     #@njit
+#     def autoscan_fun(self):
+#         """
+#         scan through the recording, plot spectra and calculate mean peak info
+#             in tab 'scanner' as well as SNR
+#             Signalling: TODO
+#         :param : none
+#         :type : none
+#         :raises [ErrorType]: TODO [ErrorDescription]
+#         :return: none
+#         :rtype: none
+#         """
+#         self.SigUpdateGUI.emit()
+#         self.SigScandeactivate.emit()
+#         # TODO: CHECK: connect self.scan_deactivate()
+#         self.NUMSNAPS = self.get_GUI_parameters()[0]
+#         self.PROMINENCE = self.get_GUI_parameters()[1]
+#         self.annot = [dict() for x in range(self.NUMSNAPS)]
+#         for self.autoscan_ix in range(self.NUMSNAPS):
+#             self.position = int(np.floor(self.autoscan_ix/self.NUMSNAPS*100))
+#             self.set_progressvalue(self.position)
+#             self.set_continue(False)   ################interchanged
+#             self.SigProgressBar.emit() ################interchanged
+#             # write for confirmation from Progress bar updating
+#             while self.get_continue() == False:  ############ chnage
+#                 time.sleep(0.001)
+#             if False:               # self.autoscan_ix > self.NUMSNAPS-1: TODO check if necessary, remove
+#                 self.autoscan_ix = 0
+#             else:
+#                 wavheader = self.get_wavheader()
+#                 pscale = wavheader['nBlockAlign']
+#                 position = int(np.floor(pscale*np.round(wavheader['data_nChunkSize']*self.position/pscale/100)))
+#                 #ret = self.host.readsegment(position,self.host.DATABLOCKSIZE)#TODO: replace by slots communication  #####CHANGED !!!!!
+#                 BPS = wavheader["nBitsPerSample"]
+#                 ret = auxi.readsegment_new(self,self.get_filepath(),position,self.get_readoffset(), self.get_datablocksize(),BPS,BPS,wavheader["wFormatTag"])#TODO: replace by slots communication
+#                 data = ret["data"]
+#                 if 2*ret["size"]/wavheader["nBlockAlign"] < self.get_datablocksize():
+#                     return False
+#                 #TODO: new invalidity condition, replace/remove old one: 
+#                 # if len(data) == 10:
+#                 #     if np.all(data == np.linspace(0,9,10)):
+#                 #         return False
+#                 self.set_continue(False)
+#                 self.SigAnnSpectrum.emit(data)
+#                 while self.get_continue() == False:
+#                     time.sleep(0.001)
+#                 pdata = self.get_pdata()
+#                 self.set_continue(False)
+#                 self.SigPlotdata.emit()
+#                 # wait until plot has been carried out
+#                 while self.get_continue() == False:
+#                     time.sleep(0.001)
+#                 self.annot[self.autoscan_ix]["FREQ"] = pdata["datax"] 
+#                 self.annot[self.autoscan_ix]["PKS"] = pdata["peaklocs"]
+#                 peaklocs = pdata["peaklocs"]
+#                 datay = pdata["datay"]
+#                 basel = pdata["databasel"] + self.get_baselineoffset()
+#                 self.annot[self.autoscan_ix]["SNR"] = datay[peaklocs] - basel[peaklocs]
+#                 #collect all peaks which have occurred at least once in an array
+#                 self.locs_union = np.union1d(self.locs_union, self.annot[self.autoscan_ix]["PKS"])
+#                 self.freq_union = np.union1d(self.freq_union, self.annot[self.autoscan_ix]["FREQ"][self.annot[self.autoscan_ix]["PKS"]])
+#         # purge self.locs.union and remove elements the frequencies of which are
+#         # within 1 kHz span 
+#         uniquefreqs = pd.unique(np.round(self.freq_union/1000))
+#         xyi, x_ix, y_ix = np.intersect1d(uniquefreqs, np.round(self.freq_union/1000), return_indices=True)
+#         self.locs_union= self.locs_union[y_ix]
+#         self.freq_union = self.freq_union[y_ix]
+#         self.set_unions([self.locs_union,self.freq_union])
+#         self.SigUpdateUnions.emit()
+#         meansnr = np.zeros(len(self.locs_union))
+#         minsnr = 1000*np.ones(len(self.locs_union))
+#         maxsnr = -1000*np.ones(len(self.locs_union))
+#         reannot = {}
+#         for ix in range(self.NUMSNAPS): 
+#             # find indices of current LOCS in the unified LOC vector self.locs_union
+#             sharedvals, ix_un, ix_ann = np.intersect1d(self.locs_union, self.annot[ix]["PKS"], return_indices=True)
+#             # write current SNR to the corresponding places of the self.reannotated matrix
+#             reannot["SNR"] = np.zeros(len(self.locs_union))
+#             reannot["SNR"][ix_un] = self.annot[ix]["SNR"][ix_ann]
+#             #Global Statistics, without consideration whether some peaks vanish or
+#             #appear when running through all values of ix
+#             meansnr = meansnr + reannot["SNR"]
+#             #min and max SNR data are currently not being used.
+#             minsnr = np.minimum(minsnr, reannot["SNR"])
+#             maxsnr = np.maximum(maxsnr, reannot["SNR"])
+
+#         # collect cumulative info in a dictionary and write the info to the annotation yaml file 
+#         self.annotation = {}
+#         self.annotation["MSNR"] = meansnr/self.NUMSNAPS
+#         self.annotation["FREQ"] = np.round(self.freq_union/1000) # signifikante Stellen
+#         yamldata = [dict() for x in range(len(self.annotation["FREQ"]))]
+#         for ix in range(len(self.annotation["FREQ"])):
+#             yamldata[ix]["FREQ:"] = str(self.annotation["FREQ"][ix])
+#             yamldata[ix]["SNR:"] = str(np.floor(self.annotation["MSNR"][ix]))
+        
+#         try:
+#             stream = open(self.get_annotation_filename(), "w")
+#             yaml.dump(yamldata, stream)
+#             stream.close()
+#         except:
+#             print("cannot write annotation yaml, annotation filename not defined")
+#             pass
+#         self.set_annotation(self.annotation)
+#         self.SigAnnotation.emit()
+#         self.set_continue(False)
+#         while self.get_continue() == False:
+#                 time.sleep(0.001)
+#         self.SigFinished.emit()
+
+
+
 
 # ############################## TAB ANNOTATE ####################################
 
@@ -1511,1104 +2594,3 @@ class WizardGUI(QMainWindow):
 
 # ############################## END TAB ANNOTATE ####################################
 
-############################## GENERAL MENU FUNCTIONS  ####################################
-
-    def cb_open_file(self):
-        """
-        VIEW
-        check conditions for proper opening of a new data file; if all conditions met:
-        call FileOpen() for getting the file handling parameters
-        conditions: playthread is not currently active
-
-        returns: True if successful, False if condition not met.        
-        """
-        system_state = sys_state.get_status()
-        #self.SigRelay.emit("cm_playrec",["cbopenfile",self.m["baselineoffset"]])
-        #self.activate_tabs(["View_Spectra","Annotate","Player","YAML_editor","WAV_header","Resample"])
-        self.setactivity_tabs("all","activate",[])
-        self.SigRelay.emit("cm_playrec",["sdr_configparams",system_state["sdr_configparams"]])
-
-        #resample_c.SigUpdateGUI.connect(self.GUI_reset_after_resamp) ###TODO: check, seems not to be active any more
-        self.ui.checkBox_merge_selectall.setChecked(False)
-        if self.playthreadActive == True:
-            auxi.standard_errorbox("Player is currently active, no access to data file is possible; Please stop Player before new file access")
-            sys_state.set_status(system_state)
-            return False
-        #self.open_template_flag = False
-        try:
-            stream = open("config_wizard.yaml", "r")
-            self.metadata = yaml.safe_load(stream)
-            stream.close()
-            self.ismetadata = True
-        except:
-            self.ismetadata = False
-            sys_state.set_status(system_state)
-            #return False
-            #print("cannot get metadata")
-        system_state["HostAddress"] = self.ui.lineEdit_IPAddress.text()   ### TODO TODO TODO check if still necesary after transfer to modules playrec and config
-        self.SigRelay.emit("cm_playrec",["HostAddress",system_state["HostAddress"]])
-        configparams = {"ifreq":system_state["ifreq"], "irate":system_state["irate"],
-                            "rates": system_state["rates"], "icorr":system_state["icorr"],
-                            "HostAddress":system_state["HostAddress"], "LO_offset":system_state["LO_offset"]}
-        system_state["sdr_configparams"] = configparams
-
-        self.ui.spinBoxminSNR_ScannerTab.setProperty("value", self.PROMINENCE)
-        
-        if system_state["fileopened"] is True:
-            msg = QMessageBox()
-            msg.setIcon(QMessageBox.Question)
-            msg.setText("open new file")
-            msg.setInformativeText("you are about o open another file. Current file will be closed; Do you want to proceed")
-            msg.setWindowTitle("FILE OPEN")
-            msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-            msg.buttonClicked.connect(self.popup)
-            msg.exec_()
-
-            if self.yesno == "&Yes":
-                if self.FileOpen() is False:
-                    self.SigRelay.emit("cm_all_",["fileopened", False])
-                    return False
-
-        else:
-            if self.FileOpen() is False:
-                system_state["fileopened"] = False #CHECK: obsolete, because self.SigRelay.emit("cm_all_",["fileopened",False]) does the job
-                self.SigRelay.emit("cm_all_",["fileopened",False])
-                #self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
-                sys_state.set_status(system_state)
-                return False
-            else:
-                system_state["fileopened"] = True #CHECK: obsolete, because self.SigRelay.emit("cm_all_",["fileopened",False]) does the job
-                self.SigRelay.emit("cm_all_",["fileopened",True])
-                #self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
-        sys_state.set_status(system_state)
-
-        
-        #TODO: check change 12-01-2024: temporary path is set differently
-        temppath = system_state["temp_directory"]
-        for x in os.listdir(temppath):
-            if x.find("temp_") == 0:
-                try:
-                    os.remove(x)
-                except:
-                    self.logger.debug("res_scheduler terminate: file access to temp file refused")
-
-    ############################## END TAB GENERAL MENUFUNCTIONS ####################################
-
-  
-
-    def checkSTEMLABrates(self):        # TODO: this is ratrer a controller method than a GUI method. Transfer to other module
-        """
-        CONTROLLER
-        _checks if the items ifreq, irate and icorr in system_state have the proper values acc. to RFCorder filename convention
-        checks if system_state["irate"] has a value out of the values defined for the STEMLAB in system_state["rates"] 
-        :param: none
-        :type: none
-        ...
-        :raises TODO [popup error message]: corresponding to different format errors
-        ...
-        :return: True/False acc to success of the check
-        :rtype: bool
-        """
-        system_state = sys_state.get_status()
-        errorf = False
-        #check: has been done on 13-12-2023 TODO: replace ifreq by system_state["ifreq"]
-        if system_state["ifreq"] < 0 or system_state["ifreq"] > 62500000:
-            errorf = True
-            errortxt = "center frequency not in range (0 - 62500000) \
-                      after _lo\n Probably not a COHIRADIA File"
-
-        if system_state["irate"] not in system_state["rates"]:
-            errorf = True
-            errortxt = "The sample rate of this file is inappropriate for the STEMLAB!\n\
-            Probably it is not a COHIRADIA File. \n \n \
-            PLEASE USE THE 'Resample' TAB TO CREATE A PLAYABLE FILE ! \n\n \
-            SR must be in the set: 20000, 50000, 100000, 250000, 500000, 1250000, 2500000"
-            
-        if system_state["icorr"] < -100 or system_state["icorr"] > 100:
-            errorf = True
-            errortxt = "frequency correction min ppm must be in \
-                      the interval (-100 - 100) after _c \n \
-                      Probably not a COHIRADIA File "
-
-        if errorf:
-            auxi.standard_errorbox(errortxt)
-            return False
-        else:
-            return True
-
-
-    def popup(self,i):
-        """
-        VIEW or CONTROLLER ??
-        
-        """
-        self.yesno = i.text()
-
-    def setstandardpaths(self):  #TODO: shift to general system module ? must be part of the system configuration procedure
-        """
-        CONTROLLER
-        
-        """
-        #TODO TODO TODO: check if the selfs must be selfs !
-        self.annotationpath = self.my_dirname + '/' + self.annotationdir_prefix + system_state["my_filename"]
-        self.stations_filename = self.annotationpath + '/stations_list.yaml'
-        self.status_filename = self.annotationpath + '/status.yaml'
-        self.annotation_filename = self.annotationpath + '/snrannotation.yaml'
-        self.SigRelay.emit("cm_annotate",["annotationpath",self.annotationpath])
-        self.SigRelay.emit("cm_annotate",["stations_filename",self.stations_filename])
-        self.SigRelay.emit("cm_annotate",["status_filename",self.status_filename])
-        self.SigRelay.emit("cm_annotate",["annotation_filename",self.annotation_filename])
-        self.SigRelay.emit("cm_annotate",["annotationdir_prefix",self.annotationdir_prefix])
-        self.SigRelay.emit("cm_all_",["standardpath",self.standardpath])
-        
-        self.cohiradia_metadata_filename = self.annotationpath + '/cohiradia_metadata.yaml'
-        self.cohiradia_yamlheader_filename = self.annotationpath + '/cohiradia_metadata_header.yaml'
-        self.cohiradia_yamltailer_filename = self.annotationpath + '/cohiradia_metadata_tailer.yaml'
-        self.cohiradia_yamlfinal_filename = self.annotationpath + '/COHI_YAML_FINAL.yaml'
-        self.SigRelay.emit("cm_yamleditor",["cohiradia_yamlheader_filename",self.cohiradia_yamlheader_filename])
-        self.SigRelay.emit("cm_yamleditor",["cohiradia_yamltailer_filename",self.cohiradia_yamltailer_filename])
-        self.SigRelay.emit("cm_yamleditor",["cohiradia_yamlfinal_filename",self.cohiradia_yamlfinal_filename])
-        self.SigRelay.emit("cm_yamleditor",["cohiradia_metadata_filename",self.cohiradia_metadata_filename])
-        self.SigRelay.emit("cm_annotate",["cohiradia_yamlheader_filename",self.cohiradia_yamlheader_filename])
-        self.SigRelay.emit("cm_annotate",["cohiradia_yamltailer_filename",self.cohiradia_yamltailer_filename])
-        self.SigRelay.emit("cm_annotate",["cohiradia_yamlfinal_filename",self.cohiradia_yamlfinal_filename])
-        self.SigRelay.emit("cm_annotate",["cohiradia_metadata_filename",self.cohiradia_metadata_filename])
-            #self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
-
-            ############################ CURRENT STATE RELAY, CONTINUE FROM HERE
-
-    def resread_playlist(self): #TODO: not yet used
-        """
-        VIEW ?
-        
-        """    
-        playlist = []
-        self.ui.listWidget_playlist.clear()
-        self.ui.listWidget_sourcelist.clear()
-        #preset playlist
-        ix = 0
-        for x in os.listdir(self.my_dirname):
-            if x.endswith(".wav"):
-                if x != (system_state["my_filename"] + system_state["ext"]):
-                    playlist.append(x) 
-                    _item1=self.ui.listWidget_sourcelist.item(ix)
-                    _item1.setText(x)
-                    fnt = _item1.font()
-                    fnt.setPointSize(9)
-                    #_item2.setFont(fnt)
-                    item = QtWidgets.QListWidgetItem()
-                    self.ui.listWidget_sourcelist.addItem(item)
-                    ix += 1
-                else:
-                    self.logger.debug("resread_playlist: automat remove from selectlist: %s", system_state["my_filename"] + system_state["ext"])
-        #TODO: erzeuge einen Einag in Playlist    listWidget_playlist
-
-    #@njit
-    def FileOpen(self):   #TODO: shift to general system module ?
-        '''
-        CONTROLLER
-        Purpose: 
-        If self.####### == True:
-            (1) Open data file for read
-            (2) call routine for extraction of recording parameters from filename
-            (3) present recording parameters in info fields
-        Returns: True, if successful, False otherwise
-        '''
-        #TODO: shift action to respective tab machine by: currix = self.ui.tabWidget.currentIndex() self.ui.tabWidget.tabText(currix)
-        system_state = sys_state.get_status()
-        self.SigGUIReset.emit()
-
-        #TODO: replace by RELAY; call this signal only if resample_c is instantiated !
-        #resample_c.SigResampGUIReset.emit() #NECESSARY ? GUIRESET should do the same ? #############################
-        #resample_c.SigTerminate_Finished.connect(self.cb_resample_new)
-        self.ui.pushButton_resample_split2G.clicked.connect(resample_v.cb_split2G_Button)
-        #TODO:  replace by RELAY; call this function only if resample_v is instantiated !
-        resample_v.enable_resamp_GUI_elemets(True)
-        
-        self.SigRelay.emit("cm_all_",["ismetadata",self.ismetadata])
-        if self.ismetadata:
-            self.SigRelay.emit("cm_all_",["metadata",self.metadata])
-
-        filters = "SDR wav files (*.wav);;Raw IQ (*.dat *.raw )"
-        selected_filter = "SDR wav files (*.wav)"
-        if True: #TODO: remove after TESTS change 17-12-2023
-            if self.ismetadata == False:
-                filename =  QtWidgets.QFileDialog.getOpenFileName(self,
-                                                                "Open data file"
-                                                                , self.standardpath, filters, selected_filter)
-            else:
-                filename =  QtWidgets.QFileDialog.getOpenFileName(self,
-                                                                "Open data file"
-                                                                ,self.metadata["last_path"] , filters, selected_filter)
-            system_state["f1"] = filename[0] #TODO: replace by line below:
-            self.SigRelay.emit("cm_all_",["f1", filename[0]])
-        else:
-            pass
-        
-        if not system_state["f1"]:
-            sys_state.set_status(system_state)
-            return False
-        self.logger.info(f'File opened: {system_state["f1"]}')
-        file_stats = os.stat(system_state["f1"])
-        ti_m = os.path.getmtime(system_state["f1"]) 
-        # Converting the time in seconds to a timestamp
-        self.file_mod = datetime.fromtimestamp(ti_m)
-        system_state["sfilesize"] = file_stats.st_size
-        self.my_dirname = os.path.dirname(system_state["f1"])
-        #TODO TODO TODO: replace self.my_filename and self.ext by resp system state entries
-        #self.my_filename, self.ext = os.path.splitext(os.path.basename(system_state["f1"]))
-        system_state["ext"] = Path(system_state["f1"]).suffix
-        system_state["my_filename"] = Path(system_state["f1"]).stem
-        self.SigRelay.emit("cm_all_",["my_dirname", self.my_dirname])
-        self.SigRelay.emit("cm_all_",["ext",system_state["ext"]])
-        self.SigRelay.emit("cm_all_",["my_filename",system_state["my_filename"]])
-        system_state["temp_directory"] = self.my_dirname + "/temp"
-        self.SigRelay.emit("cm_all_",["temp_directory",self.my_dirname + "/temp"])
-
-        if os.path.exists(system_state["temp_directory"]) == False:         #exist yaml file: create from yaml-editor
-            os.mkdir( system_state["temp_directory"])
-
-        if system_state["ext"] == ".dat" or system_state["ext"] == ".raw":
-            self.filetype = "dat"
-            ## TODO: wavheader-Writing zum Button Insert Header connecten
-            self.ui.label_8.setEnabled(True)
-            self.ui.pushButton_InsertHeader.setEnabled(True)   #####TODO shift to WAV editor or send Relay for inactivation via WAV 
-        else:
-            if system_state["ext"] == ".wav":
-                self.filetype = "wav"
-                self.ui.tab_view_spectra.setEnabled(True)  ##########TODO: replace by Tab disable function inactivate/activate_tabs(self,selection)
-                self.ui.tab_annotate.setEnabled(True)  ##########TODO: replace by Tab disable function inactivate/activate_tabs(self,selection)
-                self.ui.label_8.setEnabled(False)
-                self.ui.pushButton_InsertHeader.setEnabled(False)                 #####TODO shift to WAV editor or send Relay for inactivation via WAV 
-            else:
-                auxi.standard_errorbox("no valid data forma, neiter wav, nor dat nor raw !")
-                sys_state.set_status(system_state)
-                return
-
-        if self.filetype == "dat": # namecheck only if dat --> makes void all wav-related operation sin filenameextract
-            if self.dat_extractinfo4wavheader() == False:
-                auxi.standard_errorbox("Unexpected error, dat_extractinfo4wavheader() == False; ")
-                sys_state.set_status(system_state)
-                return False
-                #TODO: dat_extractinfo4wavheader() automatically asks for lacking wav header info, so this exit could be replaced alrady !
-        else:
-            self.wavheader = WAVheader_tools.get_sdruno_header(self,system_state["f1"])
-            if self.wavheader != False:
-                #self.next_filename = system_state["ext"]ract_startstoptimes_auxi(self.wavheader)
-                self.next_filename = waveditor_c.extract_startstoptimes_auxi(self.wavheader)
-            else:
-                auxi.standard_errorbox("File is not recognized as a valid IQ wav file (not auxi/rcvr compatible or not a RIFF file)")
-                sys_state.set_status(system_state)
-                return False
-
-        if self.wavheader['sdrtype_chckID'].find('auxi') > -1 or self.wavheader['sdrtype_chckID'].find('rcvr') > -1: #TODO: CHECK: is this obsolete because of the above quest ?
-            pass
-        else:
-            auxi.standard_errorbox("cannot process wav header, does not contain auxi or rcvr ID")
-            self.sdrtype = 'FALSE'
-            sys_state.set_status(system_state)
-            return False
-        self.SigRelay.emit("cm_waveditor",["filetype",self.filetype])
-        #TODO: mache das konfigurierbar:
-        self.ui.lineEdit_resample_targetnameprefix.setText(system_state["my_filename"])
-        self.setstandardpaths()
-        self.SigRelay.emit("cexex_all_",["reset_GUI",0])
-        self.SigRelay.emit("cm_all_",["wavheader",self.wavheader])
-        #self.showfilename()
-        #self.SigRelay.emit("cexex_all_",["updateGUIelements", 0])
-        #self.SigRelay.emit("cexex_annotate",["annotation_deactivate",0])
-        #self.SigRelay.emit("cexex_annotate",["scan_deactivate",0])
-        #self.SigRelay.emit("cexex_annotate",["reset_GUI",0])
-
-        #self.annotation_deactivate()
-        #self.scan_deactivate()
-        #self.ui.pushButtonDiscard.setEnabled(False)
-
-################TODO:  method initialize listitems, decompose to player and resampler items and encapsulate in the respective tab classes
-        playlist = []
-        #TODO: look if this is the right place or maybe gui_reset
-        #clear playlist
-        self.ui.listWidget_playlist.clear()
-        self.ui.listWidget_sourcelist_2.clear()
-        self.ui.listWidget_sourcelist.clear()
-        self.ui.listWidget_playlist_2.clear()
-        item = QtWidgets.QListWidgetItem()
-        self.ui.listWidget_sourcelist_2.addItem(item)
-        item = QtWidgets.QListWidgetItem()
-        self.ui.listWidget_sourcelist.addItem(item)
-        #preset playlist
-
-        reslist = []
-        resfilelist = [] #TODO: obsolete ?
-        ix = 0
-        for x in os.listdir(self.my_dirname):
-            if x.endswith(".wav"):
-                if True: #x != (system_state["my_filename"] + system_state["ext"]): #TODO: obsolete old form when automatically loading opened file to playlist
-                    resfilelist.append(x) 
-                    _item1=self.ui.listWidget_sourcelist_2.item(ix)
-                    _item1.setText(x)
-                    fnt = _item1.font()
-                    fnt.setPointSize(7)
-                    #_item1.setFont(fnt)
-                    item = QtWidgets.QListWidgetItem()
-                    self.ui.listWidget_sourcelist_2.addItem(item)
-                    _item2=self.ui.listWidget_sourcelist.item(ix)
-                    _item2.setText(x)
-                    fnt = _item2.font()
-                    fnt.setPointSize(7)
-                    #_item2.setFont(fnt)
-                    item = QtWidgets.QListWidgetItem()
-                    self.ui.listWidget_sourcelist.addItem(item)
-                    ix += 1
-
-        #TODO: erzeuge einen Eintrag in Playlist listWidget_playlist
-        if system_state["f1"].endswith(".wav"):
-            item = QtWidgets.QListWidgetItem()
-            self.ui.listWidget_playlist.addItem(item)
-            _item1=self.ui.listWidget_playlist.item(0)
-            _item1.setText(system_state["my_filename"] + system_state["ext"])
-            fnt = _item1.font()
-            fnt.setPointSize(9)
-            playlist.append(system_state["f1"])
-            system_state["playlist"] = playlist
-
-            item = QtWidgets.QListWidgetItem()
-            self.ui.listWidget_playlist_2.addItem(item)
-            _item2=self.ui.listWidget_playlist_2.item(0)
-            #TODO: problematic when invalid wav file (music)
-            _item2.setText(system_state["my_filename"] + system_state["ext"])
-            fnt = _item2.font()
-            fnt.setPointSize(9)
-            reslist.append(system_state["f1"])
-            system_state["reslist"] = reslist
-
-
-        self.ui.listWidget_playlist.setEnabled(False)
-        self.ui.listWidget_sourcelist_2.setEnabled(False)
-        self.ui.listWidget_sourcelist.setEnabled(False)
-        self.ui.listWidget_playlist_2.setEnabled(False)
-
-        #self.ui.listWidget_playlist_2.model().rowsInserted.connect(resample_v.reslist_update) #TODO transfer to resemplar view
-        #self.ui.listWidget_playlist_2.model().rowsRemoved.connect(resample_v.reslist_update) #TODO transfer to resemplar view
-        #self.ui.listWidget_playlist_2.itemChanged.connect(resample_v.reslist_update) #TODO transfer to resemplar view
-        #self.ui.listWidget_playlist_2.itemClicked.connect(resample_v.reslist_itemselected) #TODO transfer to resemplar view
-        
-################TODO: end method initialize listitems
-        
-        if self.wavheader['sdrtype_chckID'].find('rcvr') > -1:
-            self.readoffset = 86
-        else:
-            self.readoffset = 216
-
-        system_state["ifreq"] = self.wavheader['centerfreq'] + system_state["LO_offset"] #ONLY used in player, so shift
-        system_state["irate"] = self.wavheader['nSamplesPerSec'] #ONLY used in palyer, so shift
-        system_state["readoffset"] = self.readoffset   
-        self.SigRelay.emit("cm_all_",["readoffset",system_state["readoffset"]])
-        #self.SigRelay.emit("cm_resample",["readoffset",system_state["readoffset"]])
-        #self.fill_wavtable()
-
-        #generate STM_cont_params for future passage to player_theradworkers instead of push pop strategy
-        #self.STM_cont_params = {"HostAddress": system_state["HostAddress"], "ifreq": system_state["ifreq"],"rates": system_state["rates"], "irate": system_state["irate"], "icorr": system_state["icorr"]}
-        # TODO: rootpath for config file ! 
-        # TODO: append metadata instead of new write
-        self.metadata["last_path"] = self.my_dirname
-        self.metadata["STM_IP_address"] = system_state["HostAddress"] # TODO: reorganize
-        stream = open("config_wizard.yaml", "w") # TODO: reorganize
-        yaml.dump(self.metadata, stream) # TODO: reorganize
-        stream.close() # TODO: reorganize
-
-        system_state["timescaler"] = self.wavheader['nSamplesPerSec']*self.wavheader['nBlockAlign']
-
-        # ##################################HERAUSTRENNEN und nach annotate per Relay
-        # self.stations_filename = self.annotationpath + '/stations_list.yaml'
-        # if os.path.exists(self.stations_filename) == True:
-        #     self.scan_completed()
-        #     try:
-        #         stream = open(self.status_filename, "r")
-        #         status = yaml.safe_load(stream)
-        #         stream.close()
-        #     except:
-        #         #print("cannot get status")
-        #         sys_state.set_status(system_state)
-        #         return False 
-        #     if status["annotated"] == True:
-        #         self.annotation_completed()
-        #         self.ui.pushButton_Writeyamlheader.setEnabled(True)
-        #     else:
-        #         self.annotation_activate()
-        # else:
-        #     self.scan_activate()
-        # ################################## ENDE HERAUSTRENNEN und nach annotate per Relay
-
-        system_state["fileopened"] = True
-        self.SigRelay.emit("cm_all_",["fileopened",True])
-
-        self.ui.spinBoxKernelwidth.setEnabled(True)
-        self.ui.label_6.setText("Baseline Offset:" + str(self.ui.spinBoxminBaselineoffset.value()))
-        self.position = self.ui.horizontalScrollBar_view_spectra.value()
-        #self.lock_playthreadstart = True
-        
-        system_state = sys_state.get_status()#TODO: check: obsolete ! because of Relay !
-        system_state["horzscal"] = self.position #TODO: check: obsolete ! because of Relay !
-        self.SigRelay.emit("cm_all_",["horzscal", self.position])
-        self.SigRelay.emit("cm_view_spectra",["position",self.position])
-
-        #self.SigRelay.emit("cexex_all_",["updateGUIelements", 0]) 
-        #TODO TODO TODO: track multiple calls of plot_spectrum
-        #self.lock_playthreadstart = False
-        #TODO: is that really necessary on each fileopen ? 
-        #self.read_yaml_header(self)
-        resample_v.update_resample_GUI()
-        # TODO: check, added 09-12-2023
-        system_state["playlength"] = self.wavheader['filesize']/self.wavheader['nAvgBytesPerSec']
-        system_state["list_out_files_resampled"] = []
-        #resp = self.sync_tabs(["resample","win","u","list_out_files_resampled",system_state["list_out_files_resampled"]])
-        self.SigRelay.emit("cm_resample",["list_out_files_resampled",system_state["list_out_files_resampled"]])
-        
-        out_dirname = self.my_dirname + '/out'
-        if os.path.exists(out_dirname) == False:         #exist yaml file: create from yaml-editor
-            os.mkdir(out_dirname)
-        self.SigRelay.emit("cm_all_",["out_dirname",out_dirname])
-        #self.SigRelay.emit("cm_all_",["baselineoffset",self.baselineoffset])
-
-        sys_state.set_status(system_state)
-        ##############TODO TODO TODO: intermediate hack for comm with scan worker
-        self.f1 = system_state["f1"]
-        self.readoffset = system_state["readoffset"]
-        self.showfilename()
-        return True
-
-    def dat_extractinfo4wavheader(self):
-        #TODO: erkennt COHIRADIA Namenskonvention nicht, wenn vor den _lo_r_c literalen noch andere _# Felder existieren.  shift to controller module
-        """ 
-        CONTROLLER
-        extract control parameters from dat and raw files if existent (COHIRADIA nameconvention)
-        and generates standard wavheader
-        check for consistency with COHIRADIA file name convention
-        if no wav information present: generate dummy entries for most wavheaderitems and ask for SR and LO
-
-        :param [ParamName]: none
-        :type [ParamName]: none
-        :raises Filename error 1: center frequency offset not integer
-        :raises Filename error 2: filename convention not met, cannot extractplayback/resording parameters
-        :raises Filename error 3: center frequency not in range (0 - 62500000)
-        :raises Filename error 4: sampling rate not in set 20000, 50000, 100000, 250000, 500000, 1250000, 2500000
-        :raises Filename error 5: center frequency offset out of range +/- 100 ppm
-        :raises warning 1: LO frequency not identifiable in wav-filename, default value 1250 kS/s is used
-        :return: Returns: True, if successful, False otherwise (if error exception raised)
-        :rtype: Boolean
-        """
-        system_state = sys_state.get_status()
-        loix = system_state["my_filename"].find('_lo')
-        cix = system_state["my_filename"].find('_c')
-        rateix = system_state["my_filename"].find('_r')
-        icheck = True
-        i_LO_bias = 0 ###TODO: remove, activate ???
-
-        # #TODO: ACTIVATE LObias check code
-        # if self.ui.radioButton_LO_bias.isChecked() is True:
-        #     if (self.ui.lineEdit_LO_bias.text()).isnumeric() == False:
-        #         auxi.standard_errorbox("invalid numeral in center frequency offset field, please enter valid integer value (kHz)")
-        #         return False
-
-        #     LObiasraw = self.ui.lineEdit_LO_bias.text()
-        #     LObias_sign = 1
-
-        #     if LObiasraw[0] == "-":
-        #         LObias_sign = -1
-        #     if LObiasraw.lstrip("-").isnumeric() is True:
-        #         i_LO_bias = LObias_sign*int(LObiasraw.lstrip("-"))
-        #     else:
-        #         auxi.standard_errorbox("invalid numeral in center frequency offset field, please enter valid integer value (kHz)")
-        #         return False
-
-        if rateix == -1 or cix == -1 or loix == -1:
-            icheck = False
-        
-        freq = system_state["my_filename"][loix+3:loix+7]
-        freq = freq + '000'
-        if freq.isdecimal() == False:
-            icheck = False
-
-        rate = system_state["my_filename"][rateix+2:cix]
-        rate = rate + '000'
-        if rate.isdecimal() == False:
-            icheck = False            
-        system_state["icorr"] = int(0)
-        bps = 16
-        #generate standard wavheader
-
-        if icheck == False:
-            freq, done0 = QtWidgets.QInputDialog.getInt(
-                    self, 'Input Dialog', 'Enter center frequency:', self.standardLO)
-            rate_index = 1 #TODO: make system constant
-            rate, done1 = QtWidgets.QInputDialog.getItem(
-                    self, 'Input Dialog', 'Bandwidth', system_state["irates"], rate_index)
-            bps, done2 = QtWidgets.QInputDialog.getItem(
-                    self, 'Input Dialog', 'bits per sample', self.bps, 1)
-
-            #TODO: validity check for freq, maybe warning if rate cancelled and no valid value, check done0, done1
-            system_state["irate"] = 1000*int(rate)
-            system_state["ifreq"] = int(1000*(int(freq) + system_state["LO_offset"]))
-        else:
-            system_state["irate"] = int(rate)
-            system_state["ifreq"] = int(int(freq) + system_state["LO_offset"])  # TODO: LO_bias dazuzählrn system_state["LO_offset"]
-        #TODO: ACTIVATE wav header generator
-        self.wavheader = WAVheader_tools.basic_wavheader(self,system_state["icorr"],int(system_state["irate"]),int(system_state["ifreq"]),int(bps),system_state["sfilesize"],self.file_mod)
-        sys_state.set_status(system_state)
-        return True
-
-    def generate_GUIupdaterlist(self,item):
-        self.GUIupdaterlist.append(item)
-
-    def sendupdateGUIs(self):
-        """  goes through the list of all registered Tabs and calls their GUI-Updatemethod
-        :param : none
-        :type : none
-        :raises [ErrorType]: none
-        :return: none
-        :rtype: none
-        """        
-        for item in self.GUIupdaterlist:
-            item()
-
-    def rxhandler(self,_key,_value):
-        """
-        handles remote calls from other modules via Signal SigRX(_key,_value)
-        :param : _key
-        :type : str
-        :param : _value
-        :type : object
-        :raises [ErrorType]: [ErrorDescription]
-        :return: flag False or True, False on unsuccessful execution
-        :rtype: Boolean
-        """
-        system_state = sys_state.get_status()
-        if _key.find("cm_core") == 0 or _key.find("cm_all_") == 0:
-            #set mdl-value
-            system_state[_value[0]] = _value[1] 
-            #self.m[_value[0]] = _value[1]
-        if _key.find("cui_core") == 0:
-            _value[0](_value[1])    #TODO TODO: still unclear implementation
-        if _key.find("cexex_core") == 0:
-            if  _value[0].find("GUIreset") == 0:
-                self.SigGUIReset.emit()
-            pass
-
-if __name__ == '__main__':
-    print("starting main, initializing GUI, please wait ... ")
-    
-    if hasattr(QtCore.Qt, 'AA_EnableHighDpiScaling'):
-        QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
-    if hasattr(QtCore.Qt, 'AA_UseHighDpiPixmaps'):
-        QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
-
-    app = QApplication([])
-    sys_state = wsys.status()
-    win = WizardGUI()
-    #win.setupUi(MyWizard)
-#    app.aboutToQuit.connect(win.stop_worker)    #graceful thread termination on app exit
-    win.show()
-    stemlabcontrol = StemlabControl() #TODO TODO TODO: remover after transfer of player
-
-    system_state = sys_state.get_status()
-
-    tab_dict ={}
-    #tab_dict["list"] = ["resample","view_spectra","yamleditor","xcore","waveditor"]
-    tab_dict["list"] = ["xcore"]
-
-    if 'resampler_module_v5' in sys.modules:
-        resample_m = rsmp.resample_m() #TODO: wird gui in _m jemals gebraucht ? ich denke nein !
-        resample_c = rsmp.resample_c(resample_m) #TODO: replace sys_state
-        resample_v = rsmp.resample_v(win.ui,resample_c, resample_m) #TODO: replace sys_state
-        tab_dict["list"].append("resample")
-        resample_v.SigActivateOtherTabs.connect(win.setactivity_tabs)
-        resample_c.SigActivateOtherTabs.connect(win.setactivity_tabs)
-
-    else:
-        win.ui.tabWidget.setTabVisible('tab_resample',False)
-
-    if 'view_spectra' in sys.modules:
-        view_spectra_m = vsp.view_spectra_m()
-        view_spectra_c = vsp.view_spectra_c(view_spectra_m)
-        view_spectra_v = vsp.view_spectra_v(win.ui,view_spectra_c,view_spectra_m)
-        tab_dict["list"].append("view_spectra")
-
-    if 'annotate' in sys.modules:
-        win_annOLD = False
-        annotate_m = ann.annotate_m()
-        annotate_c = ann.annotate_c(annotate_m)
-        annotate_v = ann.annotate_v(win.ui,annotate_c,annotate_m)
-        tab_dict["list"].append("annotate")
-    else:
-        win_annOLD = True
-
-    if 'yaml_editor' in sys.modules:
-        yamleditor_m = yed.yamleditor_m()
-        yamleditor_c = yed.yamleditor_c(yamleditor_m)
-        yamleditor_v = yed.yamleditor_v(win.ui,yamleditor_c,yamleditor_m)
-        tab_dict["list"].append("yamleditor")
-    else:
-        page = win.ui.tabWidget.findChild(QWidget, "tab_yamleditor")
-        c_index = win.ui.tabWidget.indexOf(page)
-        win.ui.tabWidget.setTabVisible(c_index,False)
-
-    xcore_m = core_m()
-    xcore_c = core_c(xcore_m)
-    xcore_v = core_v(win.ui,xcore_c,xcore_m)
-
-    if 'waveditor' in sys.modules:
-        waveditor_m = waved.waveditor_m()
-        waveditor_c = waved.waveditor_c(waveditor_m)
-        waveditor_v = waved.waveditor_v(win.ui,waveditor_c,waveditor_m)
-        tab_dict["list"].append("waveditor")
-    else:
-        page = win.ui.tabWidget.findChild(QWidget, "tab_waveditor")
-        c_index = win.ui.tabWidget.indexOf(page)
-        win.ui.tabWidget.setTabVisible(c_index,False)
-
-    if 'configuration' in sys.modules:
-        configuration_m = conf.configuration_m()
-        configuration_c = conf.configuration_c(configuration_m)
-        configuration_v = conf.configuration_v(win.ui,configuration_c,configuration_m)
-    else:
-        page = win.ui.tabWidget.findChild(QWidget, "tab_configuration")
-        c_index = win.ui.tabWidget.indexOf(page)
-        win.ui.tabWidget.setTabVisible(c_index,False)
-        pass
-        #win.ui.tabWidget.setTabVisible('configuration',False)
-
-    if 'playrec' in sys.modules: #and win.OLD is False:
-        playrec_m = playrec.playrec_m()
-        playrec_c = playrec.playrec_c(playrec_m)
-        playrec_v = playrec.playrec_v(win.ui,playrec_c,playrec_m)
-        tab_dict["list"].append("playrec")
-        playrec_v.SigActivateOtherTabs.connect(win.setactivity_tabs)
-        playrec_c.SigActivateOtherTabs.connect(win.setactivity_tabs)
-    # else:   #TODO: activate after all playrec tests
-    #     page = win.ui.tabWidget.findChild(QWidget, "tab_playrec")
-    #     c_index = win.ui.tabWidget.indexOf(page)
-    #     win.ui.tabWidget.setTabVisible(c_index,False)
-
-    #resample_v.SigUpdateOtherGUIs.connect(win.showfilename)
-    #TODO TODO TODO: das muss für alle Tabs gemacht werden
-    #view_spectra_v.SigSyncGUIUpdatelist.connect(win.generate_GUIupdaterlist)
-    resample_v.SigUpdateOtherGUIs.connect(win.sendupdateGUIs)
-    #resample_c.SigUpdateGUIelements.connect(resample_v.updateGUIelements)
-    win.SigUpdateOtherGUIs.connect(view_spectra_v.updateGUIelements)
-
-    #directory of tab objects to be activated ####TODO: simplify to simple list
-    
-
-    #tab_dict["list"] = ["view_spectra","view_spectra"]
-    
-    for tabitem1 in tab_dict["list"]:
-        for tabitem2 in tab_dict["list"]:
-            eval(tabitem1 + "_v.SigRelay.connect(" + tabitem2 + "_v.rxhandler)")
-                ########## TODO: temporary hack for core module, change after last Module change:
-            eval(tabitem1 + "_v.SigRelay.connect(win.rxhandler)" )
-            win.logger.debug(f'File opened: {tabitem1 + "_v.SigRelay.connect(" + tabitem2 + "_v.rxhandler)"}')
-            #print(tabitem1 + "_v.SigRelay.connect(" + tabitem2 + "_v.rxhandler)")
-        eval("win.SigRelay.connect(" + tabitem1 + "_v.rxhandler)" )
-    
-    #######################TODO: CHECK IF STILL NECESSARY #######################
-    for tabitem in tab_dict["list"]:     
-        tab_dict[tabitem + "_m"] = eval(tabitem + "_m") #resample_m     
-        tab_dict[tabitem + "_c"] = eval(tabitem + "_c") #resample_c     
-        tab_dict[tabitem + "_v"] = eval(tabitem + "_v") #resample_v  
-        win.generate_GUIupdaterlist(eval(tabitem + "_v.updateGUIelements"))
-    #make tab dict visible to core module
-    win.tab_dict = tab_dict
-    system_state = sys_state.get_status()
-    system_state["tab_dict"] = tab_dict
-    sys_state.set_status(system_state)
-    ###################CHECK IF STILL NECESSARY END ###########################
-
-    #all tab initializations occur in connect_init() in core module
-    xcore_v.connect_init() 
-    win.SigRelay.emit("cm_all_",["QTMAINWINDOWparent",win])
-    sys.exit(app.exec_())
-
-#TODOs:
-
-    # fix error with SNR calculation: there seems to be no reactio to baselineshifts when calculating the SNR for praks and identifying those above threshold
-    #
-        #################TODO TEST in resample module: implement next line newly with Relay after tarnsfer of wavedit module 
-        #self.gui.fill_wavtable() has already been replaced by Relay
-    #
-    # * Player-Modul Tests und Bugfixing: 0.5h
-    #
-    #    
-    #   UTC Strategie einbauen
-    #
-    # * Annotator Modul übertragen: 40 h
-    #
-    # * // \\ Problem lösen: 2h: in aktuellem Core, Annotator UND waveditor !!!! geht mit Path()
-    #
-    # * Core-Modul umstellen: 5h
-    #
-    # generelles systemkonfigurations-setup: auch für standarpath-Generator: je nach install. Modul !
-    #
-    # * Tabs von nicht importierten Modulen deaktivieren/blinden: 30min
-    #
-    # * Windows Installer mit https://www.pythonguis.com/tutorials/packaging-pyside6-applications-windows-pyinstaller-installforge/ erstellen
-#
-    # * Configuration Tab with: IP address, tempdir, outdir, Recdir, LT/UTC, Logging, (checkboxes for Tab activation): 4h
-
-
-    #
-    #   zerlege plot_spectrum in einen view_spectra spezifischen Teil und einen generellen Spektralplotter, der in einen Canvas das Spektrum eines Datenstrings plottet
-    #       spectrum(canvas_ref,data,*args) in auxiliary Modul
-
-
-
-
-# class statlst_gen_worker(QtCore.QThread):
-#     __slots__ = ["status_position","T","freq","closed"]
-    
-#     SigProgressBar1 = pyqtSignal()
-#     SigFinished = pyqtSignal()
-
-#     def __init__(self, host_window):
-#         super(statlst_gen_worker, self).__init__()
-#         self.host = host_window
-#         self.__slots__[2] = []
-#         self.__slots__[3] = []
-#         self.mutex = QtCore.QMutex()
-
-#     def set_status_position(self,_value):
-#         self.__slots__[0] = _value
-#     def set_T(self,_value):
-#         self.__slots__[1] = _value
-#     def set_freq(self,_value):
-#         self.__slots__[2] = _value#
-#     def set_closed(self,_value):
-#         self.__slots__[3] = _value                
-#     def get_status_position(self):  ##TODO: obsolete
-#         return(self.__slots__[0])
-    
-#     #@njit
-#     def stationsloop(self):
-#         """[Summary]TODO
-
-#         :param [ParamName]: [ParamDescription], defaults to [DefaultParamVal]
-#         :type [ParamName]: [ParamType](, optional)
-#         ...
-#         :raises [ErrorType]: [ErrorDescription]
-#         ...
-#         :return: [ReturnDescription]
-#         :rtype: [ReturnType]
-#         """
-#         try:
-#             f = open(self.host.stations_filename, 'w', encoding='utf-8')
-#             # Laufe durch alle Peak-Frequenzen des Spektrums mit index ix
-#             #make this a thread
-#             for ix in range(len(self.host.locs_union)):
-#                 progress = np.floor(100*ix/len(self.host.locs_union))
-#                 #print(f"peak index during annotation:{ix}")
-#                 f.write('- frequency: "{}"\n'.format(self.host.annotation["FREQ"][ix]))
-#                 f.write('  snr: "{}"\n'.format(round(self.host.annotation["MSNR"][ix])))
-#                 # locs union enthält nur Frequenzindices, nicht Frequenzen ! ggf. umrechnen !
-#                 # suche für jede freq ix alle MWtabellen-Einträge mit der gleichen Frequenz und sammle die entspr Tabellenindices im array ixf
-#                 ixf = [i for i, x in enumerate(self.__slots__[2]) if np.abs((x - self.host.annotation["FREQ"][ix])) < 1e-6]
-#                 if np.size(ixf) > 0:
-#                     # wenn ixf nicht leer setze Landeszähler ix_c auf 0, initialisiere flag cs auf 'none'
-#                     cs = [] # memory for current country
-#                     sortedtable = [] #Setze sortedtable zurück
-#                     yaml_ix = 0
-#                     for ix2 in ixf:
-#                         #print(ix2)
-#                         # für jeden index ix2 in ixf zum Peak ix prüfe ob es den String 'ex ' in der Stationsspalte der MWTabelle gibt
-#                         if type(self.__slots__[1].station.iloc[ix2]) != str:
-#                             curr_station = 'No Name'
-#                         else:
-#                             curr_station = self.__slots__[1].station.iloc[ix2]
-#                         if type(self.__slots__[1].programme.iloc[ix2]) != str:
-#                             curr_programme = 'No Name'
-#                         else:
-#                             curr_programme = self.__slots__[1].programme.iloc[ix2]
-#                         if type(self.__slots__[1].tx_site.iloc[ix2]) != str:
-#                             curr_tx_site = 'No Name'
-#                         else:
-#                             curr_tx_site = self.__slots__[1].tx_site.iloc[ix2]
-
-#                         if curr_station.find("ex ") == 0:
-#                             stdcheck = True
-#                         else:
-#                             stdcheck = False
-
-#                         # für jeden index ix2 in ixf zum Peak ix prüfe ob es den String 'INACTI' in der Stationsspalte der MWTabelle gibt
-#                         inactcheck = 'INACTI' in curr_station
-#                         # logisches label falls ()'ex ' oder 'INACT') und recording-time > Stichtag der MWTabellen-Erstellung
-#                         # kennzeichnet, wenn ein Sender sicher zum Zeitpunkt der Aufnahme geschlossen war
-#                         auto_closedlabel = (stdcheck or inactcheck) and (self.host.rectime >= self.host.STICHTAG)
-#                         if not ((self.__slots__[3][ix2] - self.host.rectime).days <= 0 or auto_closedlabel):
-#                             #wenn NICHT (geschlossen oder recording-time >= explizite Schließzeit in der Spalte closed) --> Sender ist Kandidat
-#                             # Progeamm und Station aus MWTabelle übernehmen
-#                             # Land country aus MWTabelle übernehmen
-#                             station = '{}{}'.format(curr_programme, curr_station)
-#                             tx_site = curr_tx_site
-#                             country = self.__slots__[1].country.iloc[ix2]
-#                             if country in cs:  # falls cs bereits das aktuelle Land innerhalb der aktuellen Liste ixf der Einträge zu Frequenz ix beinhaltet 
-#                                 cix = [i for i,x in enumerate(cs) if x == country][0]
-#                                 sortedtable[cix]['station' + str(cix)] += station + '; '
-#                                 sortedtable[cix]['tx_site' + str(cix)] += tx_site + '; '
-#                             else:
-#                             # Trag ins dictionary sortedtable die Felder Station, Tx-site und country 
-#                             # als neuen Block ein
-#                                 sortedtable.append({'station' + str(yaml_ix): station + '; ',
-#                                                 'tx_site' + str(yaml_ix): tx_site + '; ',
-#                                                 'country' + str(yaml_ix): country})
-#                                 cs.append(country)  # memorize the entered country
-#                                 yaml_ix += 1
-#                     # for this ixf (i.e. this peak frequency) write all entries of the sorted table
-
-#                     #print(ix2)
-#                     ix2 = -1
-#                     for ix2 in range(len(sortedtable)):
-                        
-#                         country_string = '  country' +str(ix2) + ': "{}"\n'.format(sortedtable[ix2]['country' + str(ix2)])
-#                         programme_string = '  programme' +str(ix2) + ': "{}"\n'.format(sortedtable[ix2]['station' + str(ix2)])
-#                         tx_site_string = '  tx-site' +str(ix2) + ': "{}"\n'.format(sortedtable[ix2]['tx_site' + str(ix2)])
-#                         f.write(country_string)
-#                         f.write(programme_string)
-#                         f.write(tx_site_string)
-#                         time.sleep(0.01)
-#                         #print(ix2)
-#                     # write dummy entry for own editing
-#                     dum_cstr = 'OTHER COUNTRY, Please enter manually'
-#                     dum_pstr = 'OTHER STATION, Please enter manually'
-#                     dum_txstr = 'OTHER TX SITE, Please enter manually'
-#                     ix2 = ix2 + 1
-#                     country_string = '  country' +str(ix2) + ': "{}"\n'.format(dum_cstr)
-#                     programme_string = '  programme' +str(ix2) + ': "{}"\n'.format(dum_pstr)
-#                     tx_site_string = '  tx-site' +str(ix2) + ': "{}"\n'.format(dum_txstr)
-#                     f.write(country_string)
-#                     f.write(programme_string)
-#                     f.write(tx_site_string)
-#                     time.sleep(0.01)
-#                     # item.setText(dum_cstr.strip('\n') + ' | ' + dum_pstr.strip('\n') + ' | ' + dum_txstr.strip('\n'))
-
-#                 else:
-#                     f.write('  country0: "not identified"\n')
-#                     f.write('  programme0: "not identified"\n')
-#                     f.write('  tx-site0: "not identified"\n')
-
-#                 self.host.progressvalue = int(progress)*10
-#                 self.mutex.lock()
-#                 self.SigProgressBar1.emit()
-#                 self.mutex.unlock()
-#                 time.sleep(0.001)
-#         except:
-#             #print("annotation file not yet existent")
-#             #logging.info("annotation file not yet existent")
-#             return False
-
-#         status = {}
-#         status["freqindex"] = 0
-#         status["annotated"] = False
-#         stream = open(self.host.status_filename, "w")
-#         yaml.dump(status, stream)
-#         stream.close()
-
-#         self.host.progressvalue = int(0)
-#         self.SigProgressBar1.emit()
-#         time.sleep(0.001)
-#         self.SigFinished.emit()
-
-# class autoscan_worker(QtCore.QThread):
-#     """[Summary] TODO
-
-#     :param [ParamName]: [ParamDescription], defaults to [DefaultParamVal]
-#     :type [ParamName]: [ParamType](, optional)
-#     ...
-#     :raises [ErrorType]: [ErrorDescription]
-#     ...
-#     :return: [ReturnDescription]
-#     :rtype: [ReturnType]
-#     """
-#     __slots__ = ["GUI_parameters", "continue","pdata","progressvalue","horzscal","filepath","readoffset","wavheader","datablocksize","baselineoffset","unions","annotation_filename","annotation"]
-
-#     SigUpdateUnions = pyqtSignal()
-#     SigUpdateGUI = pyqtSignal()
-#     SigScandeactivate = pyqtSignal()
-#     SigFinished = pyqtSignal()
-#     SigProgressBar = pyqtSignal()
-#     SigStatustable = pyqtSignal()
-#     SigPlotdata = pyqtSignal()
-#     SigAnnSpectrum = pyqtSignal(object)
-#     SigAnnotation = pyqtSignal()
-
-#     def __init__(self, host_window):
-#         super(autoscan_worker, self).__init__()
-#         self.host = host_window
-#         self.locs_union = []
-#         self.freq_union = []
-#         self.slot_0 = []
-#         self.slot_1 = [False]
-#         self.slot_2 = {}
-
-#     def set_GUI_parameters(self,_value):
-#         """TODO
-#         sets __slots__[0]
-#         __slots__[0] has entries: NUMSNAPS, PROMINENCE
-#         """
-#         self.__slots__[0] = _value
-#     def get_GUI_parameters(self):
-#         return(self.__slots__[0])
-#     def set_continue(self,_value):
-#         self.__slots__[1] = _value
-#     def get_continue(self):
-#         return(self.__slots__[1])
-#     def set_pdata(self,_value):
-#         self.__slots__[2] = _value
-#     def get_pdata(self):
-#         return(self.__slots__[2])
-#     def set_progressvalue(self,_value):
-#         self.__slots__[3] = _value
-#     def get_progressvalue(self):
-#         return(self.__slots__[3])
-#     def set_horzscal(self,_value):
-#         self.__slots__[4] = _value
-#     def get_horzscal(self):
-#         return(self.__slots__[4])
-#     def set_filepath(self,_value):
-#         self.__slots__[5] = _value
-#     def get_filepath(self):
-#         return(self.__slots__[5])
-#     def set_readoffset(self,_value):
-#         self.__slots__[6] = _value
-#     def get_readoffset(self):
-#         return(self.__slots__[6])
-#     def set_wavheader(self,_value):
-#         self.__slots__[7] = _value
-#     def get_wavheader(self):
-#         return(self.__slots__[7])
-#     def set_datablocksize(self,_value):
-#         self.__slots__[8] = _value
-#     def get_datablocksize(self):
-#         return(self.__slots__[8])
-#     def set_baselineoffset(self,_value):
-#         self.__slots__[9] = _value
-#     def get_baselineoffset(self):
-#         return(self.__slots__[9])
-#     def set_unions(self,_value):
-#         self.__slots__[10] = _value
-#     def get_unions(self):
-#         return(self.__slots__[10])
-#     def set_annotation_filename(self,_value):
-#         self.__slots__[11] = _value
-#     def get_annotation_filename(self):
-#         return(self.__slots__[11])
-#     def set_annotation(self,_value):
-#         self.__slots__[12] = _value
-#     def get_annotation(self):
-#         return(self.__slots__[12])
-#     #@njit
-#     def autoscan_fun(self):
-#         """
-#         scan through the recording, plot spectra and calculate mean peak info
-#             in tab 'scanner' as well as SNR
-#             Signalling: TODO
-#         :param : none
-#         :type : none
-#         :raises [ErrorType]: TODO [ErrorDescription]
-#         :return: none
-#         :rtype: none
-#         """
-#         self.SigUpdateGUI.emit()
-#         self.SigScandeactivate.emit()
-#         # TODO: CHECK: connect self.scan_deactivate()
-#         self.NUMSNAPS = self.get_GUI_parameters()[0]
-#         self.PROMINENCE = self.get_GUI_parameters()[1]
-#         self.annot = [dict() for x in range(self.NUMSNAPS)]
-#         for self.autoscan_ix in range(self.NUMSNAPS):
-#             self.position = int(np.floor(self.autoscan_ix/self.NUMSNAPS*100))
-#             self.set_progressvalue(self.position)
-#             self.set_continue(False)   ################interchanged
-#             self.SigProgressBar.emit() ################interchanged
-#             # write for confirmation from Progress bar updating
-#             while self.get_continue() == False:  ############ chnage
-#                 time.sleep(0.001)
-#             if False:               # self.autoscan_ix > self.NUMSNAPS-1: TODO check if necessary, remove
-#                 self.autoscan_ix = 0
-#             else:
-#                 wavheader = self.get_wavheader()
-#                 pscale = wavheader['nBlockAlign']
-#                 position = int(np.floor(pscale*np.round(wavheader['data_nChunkSize']*self.position/pscale/100)))
-#                 #ret = self.host.readsegment(position,self.host.DATABLOCKSIZE)#TODO: replace by slots communication  #####CHANGED !!!!!
-#                 BPS = wavheader["nBitsPerSample"]
-#                 ret = auxi.readsegment_new(self,self.get_filepath(),position,self.get_readoffset(), self.get_datablocksize(),BPS,BPS,wavheader["wFormatTag"])#TODO: replace by slots communication
-#                 data = ret["data"]
-#                 if 2*ret["size"]/wavheader["nBlockAlign"] < self.get_datablocksize():
-#                     return False
-#                 #TODO: new invalidity condition, replace/remove old one: 
-#                 # if len(data) == 10:
-#                 #     if np.all(data == np.linspace(0,9,10)):
-#                 #         return False
-#                 self.set_continue(False)
-#                 self.SigAnnSpectrum.emit(data)
-#                 while self.get_continue() == False:
-#                     time.sleep(0.001)
-#                 pdata = self.get_pdata()
-#                 self.set_continue(False)
-#                 self.SigPlotdata.emit()
-#                 # wait until plot has been carried out
-#                 while self.get_continue() == False:
-#                     time.sleep(0.001)
-#                 self.annot[self.autoscan_ix]["FREQ"] = pdata["datax"] 
-#                 self.annot[self.autoscan_ix]["PKS"] = pdata["peaklocs"]
-#                 peaklocs = pdata["peaklocs"]
-#                 datay = pdata["datay"]
-#                 basel = pdata["databasel"] + self.get_baselineoffset()
-#                 self.annot[self.autoscan_ix]["SNR"] = datay[peaklocs] - basel[peaklocs]
-#                 #collect all peaks which have occurred at least once in an array
-#                 self.locs_union = np.union1d(self.locs_union, self.annot[self.autoscan_ix]["PKS"])
-#                 self.freq_union = np.union1d(self.freq_union, self.annot[self.autoscan_ix]["FREQ"][self.annot[self.autoscan_ix]["PKS"]])
-#         # purge self.locs.union and remove elements the frequencies of which are
-#         # within 1 kHz span 
-#         uniquefreqs = pd.unique(np.round(self.freq_union/1000))
-#         xyi, x_ix, y_ix = np.intersect1d(uniquefreqs, np.round(self.freq_union/1000), return_indices=True)
-#         self.locs_union= self.locs_union[y_ix]
-#         self.freq_union = self.freq_union[y_ix]
-#         self.set_unions([self.locs_union,self.freq_union])
-#         self.SigUpdateUnions.emit()
-#         meansnr = np.zeros(len(self.locs_union))
-#         minsnr = 1000*np.ones(len(self.locs_union))
-#         maxsnr = -1000*np.ones(len(self.locs_union))
-#         reannot = {}
-#         for ix in range(self.NUMSNAPS): 
-#             # find indices of current LOCS in the unified LOC vector self.locs_union
-#             sharedvals, ix_un, ix_ann = np.intersect1d(self.locs_union, self.annot[ix]["PKS"], return_indices=True)
-#             # write current SNR to the corresponding places of the self.reannotated matrix
-#             reannot["SNR"] = np.zeros(len(self.locs_union))
-#             reannot["SNR"][ix_un] = self.annot[ix]["SNR"][ix_ann]
-#             #Global Statistics, without consideration whether some peaks vanish or
-#             #appear when running through all values of ix
-#             meansnr = meansnr + reannot["SNR"]
-#             #min and max SNR data are currently not being used.
-#             minsnr = np.minimum(minsnr, reannot["SNR"])
-#             maxsnr = np.maximum(maxsnr, reannot["SNR"])
-
-#         # collect cumulative info in a dictionary and write the info to the annotation yaml file 
-#         self.annotation = {}
-#         self.annotation["MSNR"] = meansnr/self.NUMSNAPS
-#         self.annotation["FREQ"] = np.round(self.freq_union/1000) # signifikante Stellen
-#         yamldata = [dict() for x in range(len(self.annotation["FREQ"]))]
-#         for ix in range(len(self.annotation["FREQ"])):
-#             yamldata[ix]["FREQ:"] = str(self.annotation["FREQ"][ix])
-#             yamldata[ix]["SNR:"] = str(np.floor(self.annotation["MSNR"][ix]))
-        
-#         try:
-#             stream = open(self.get_annotation_filename(), "w")
-#             yaml.dump(yamldata, stream)
-#             stream.close()
-#         except:
-#             print("cannot write annotation yaml, annotation filename not defined")
-#             pass
-#         self.set_annotation(self.annotation)
-#         self.SigAnnotation.emit()
-#         self.set_continue(False)
-#         while self.get_continue() == False:
-#                 time.sleep(0.001)
-#         self.SigFinished.emit()
