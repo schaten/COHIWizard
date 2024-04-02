@@ -765,6 +765,7 @@ class WizardGUI(QMainWindow):
         :rtype: none
         """ 
         #self.SigRelay.emit("cm_all_",["prominence",self.PROMINENCE])
+        pass
         self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
         #TODO TODO TODO: remove the following after change to all new modules and Relay
         self.my_dirname = os.path.dirname(self.m["f1"])
