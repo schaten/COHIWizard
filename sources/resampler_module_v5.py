@@ -66,6 +66,7 @@ class resample_m(QObject):
         self.logger.addHandler(debug_handler)
 
         self.logger.debug('Init logger in resampler reached')
+        pass
 
 
 #TODO: TESTEN durch mal eine ausgewählte system_state Variable
