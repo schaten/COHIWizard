@@ -59,7 +59,7 @@ from auxiliaries import WAVheader_tools
 from auxiliaries import auxiliaries as auxi
 from auxiliaries import timer_worker as tw
 from PyQt5.QtCore import QObject, QThread, pyqtSignal, QMutex       #TODO: OBSOLETE
-import system_module as wsys
+import system_module as wsys   #####TODO KIPP: remove this module
 import resampler_module_v5 as rsmp
 import view_spectra as vsp
 import annotate as ann
@@ -108,7 +108,7 @@ class core_v(QObject):
     SigUpdateGUI = pyqtSignal(object)
     SigRelay = pyqtSignal(str,object)
 
-    def __init__(self, gui, core_c, core_m): 
+    def __init__(self, gui, core_c, core_m): #TODO KIPP: def __init__(self, core_c, core_m):
         super().__init__()
 
         #viewvars = {}
@@ -128,7 +128,7 @@ class core_v(QObject):
         if self.timethread.isRunning():
             self.timethreaddActive = True #TODO:future system state
         
-    def connect_init(self): #being called from __main__
+    def connect_init(self): #being called from xcore_v and ??? __main__ ???
         self.SigRelay.emit("cm_all_",["emergency_stop",False])
         self.SigRelay.emit("cm_all_",["fileopened",False])
         self.SigRelay.emit("cm_all_",["Tabref",win.Tabref])
@@ -236,10 +236,14 @@ class core_v(QObject):
             
         self.SigRelay.emit("cexex_all_",["timertick",0])
 
+#TODO KIPP: class core_v(QObject):
 class WizardGUI(QMainWindow):
-    #TODO: make this the core_view method
+
+    __slots__ = ["viewvars"]
+
+    #TODO KIPP: SigUpdateGUI = pyqtSignal(object)
     SigToolbar = pyqtSignal()
-    SigUpdateGUI = pyqtSignal()
+    SigUpdateGUI = pyqtSignal() #TODO KIPP: remove
     SigGP = pyqtSignal()
     SigProgress = pyqtSignal()
     SigGUIReset = pyqtSignal()
@@ -248,11 +252,29 @@ class WizardGUI(QMainWindow):
     SigUpdateOtherGUIs = pyqtSignal()
     SigRelay = pyqtSignal(str,object)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, **kwargs): #TODO KIPP: def __init__(self, core_c, core_m):
+        super().__init__(*args, **kwargs) #TODO KIPP: super().__init__()
         print("Initializing GUI, please wait....")
 
-        self.OLD = True
+        ############NEW AFTER KIPP
+        #TODO KIPP: ##############################
+        # self.m = core_m.mdl
+        # self.c = core_c
+        # self.gui = gui #gui_state["gui_reference"]#system_state["gui_reference"]
+        # self.timethread = QThread()
+        # self.timertick = tw()
+        # self.timertick.moveToThread(self.timethread)
+        # self.timethread.started.connect(self.timertick.tick)
+        # self.timertick.SigFinished.connect(self.timethread.quit)
+        # self.timertick.SigFinished.connect(self.timertick.deleteLater)
+        # self.timethread.finished.connect(self.timethread.deleteLater)
+        # self.timertick.SigTick.connect(self.updatetimer)
+        # self.timethread.start()
+        # if self.timethread.isRunning():
+        #     self.timethreaddActive = True #TODO:future system state
+        ##END TODO KIPP #############################
+
+        self.OLD = True #TODO KIPP: remove
         self.TEST = True    # Test Mode Flag for testing the App, --> playloop  ##NOT USED #TODO:future system status
         #self.CURTIMEINCREMENT = 5 # für playloop >>, << TODO: shift to play<<<<<module once it exists
         self.DATABLOCKSIZE = 1024*32 # für diverse Filereader/writer TODO: occurs in plot spectrum and ANN_Spectrum; must be shifted to the respective modules in future
@@ -404,7 +426,114 @@ class WizardGUI(QMainWindow):
                 self.soxnotexist = True
         self.logger.info("Init logger in core reached")
 
-############## CORE VIEW METHOD #################
+############## TODO KIPP:  #################
+    def connect_init(self): #being called from xcore_v and ??? __main__ ???
+        self.SigRelay.emit("cm_all_",["emergency_stop",False])
+        self.SigRelay.emit("cm_all_",["fileopened",False])
+        self.SigRelay.emit("cm_all_",["Tabref",win.Tabref])
+        self.SigRelay.emit("cm_resample",["rates",self.m["rates"]])
+        self.SigRelay.emit("cm_resample",["irate",self.m["irate"]])
+        self.SigRelay.emit("cm_playrec",["rates",self.m["rates"]])
+        self.SigRelay.emit("cm_playrec",["irate",self.m["irate"]])
+        self.SigRelay.emit("cm_resample",["reslist_ix",self.m["reslist_ix"]]) #TODO check: maybe local in future !
+        self.SigRelay.emit("cm_playrec",["Obj_stemlabcontrol",stemlabcontrol])
+        self.SigRelay.emit("cm_configuration",["tablist",tab_dict["list"]])
+        self.SigRelay.emit("cexex_configuration",["updateGUIelements",0])
+        self.SigRelay.emit("cm_playrec",["sdr_configparams",self.m["sdr_configparams"]])
+        self.SigRelay.emit("cm_playrec",["HostAddress",self.m["HostAddress"]])
+
+    #TODO KIPP: rxhandler mit eigenem handler verschmelzen
+    # def rxhandler(self,_key,_value):
+    #     """
+    #     handles remote calls from other modules via Signal SigRX(_key,_value)
+    #     :param : _key
+    #     :type : str
+    #     :param : _value
+    #     :type : object
+    #     :raises [ErrorType]: [ErrorDescription]
+    #     :return: none
+    #     :rtype: none
+    #     """
+    #     if _key.find("cm_xcore") == 0 or _key.find("cm_all_") == 0:
+    #         #set mdl-value
+    #         self.m[_value[0]] = _value[1]
+    #         self.m = sys_state.get_status()    
+    #         self.m[_value[0]] = _value[1]
+    #         sys_state.set_status(self.m)
+
+    #     if _key.find("cui_xcore") == 0:
+    #         _value[0](_value[1]) #STILL UNCLEAR
+    #     if _key.find("cexex_xcore") == 0  or _key.find("cexex_all_") == 0:
+    #         if  _value[0].find("updateGUIelements") == 0:
+    #             self.updateGUIelements()
+    #         if  _value[0].find("updatetimer") == 0:
+    #             self.updatetimer()
+    #         if  _value[0].find("stoptick") == 0:
+    #             self.timertick.stoptick()
+    #         #handle method
+    #         # if  _value[0].find("plot_spectrum") == 0: #EXAMPLE
+    #         #     self.plot_spectrum(0,_value[1])   #EXAMPLE
+
+    def updateGUIelements(self):
+        """
+        updates GUI elements , usually triggered by a Signal SigTabsUpdateGUIs to which 
+        this method is connected in the __main__ of the core module
+        :param : none
+        :type : none
+        :raises [ErrorType]: [ErrorDescription]
+        :return: flag False or True, False on unsuccessful execution
+        :rtype: Boolean
+        """
+        print("core: updateGUIelements")
+        #self.gui.DOSOMETHING
+
+    # # def update_GUI(self,_key): #TODO TODO: is this method still needed ? reorganize. gui-calls should be avoided, better only signalling and gui must call the routenes itself
+    # #     print(" view spectra updateGUI: new updateGUI in view spectra module reached")
+    # #     self.SigUpdateGUI.disconnect(self.update_GUI)
+    # #     if _key.find("ext_update") == 0:
+    # #         pass
+    # #     self.SigUpdateGUI.connect(self.update_GUI)
+        
+        
+    def updatetimer(self):
+        """
+        updates timer functions
+        shows date and time
+        changes between UTC and local time
+        manages recording timer
+        :param: none
+        :type: none
+        ...
+        :raises: none
+        ...
+        :return: none
+        :rtype: none
+        """
+        if self.ui.checkBox_UTC.isChecked():
+            self.UTC = True #TODO:future system state
+        else:
+            self.UTC = False
+        if self.ui.checkBox_TESTMODE.isChecked():
+            self.TEST = True #TODO:future system state
+        else:
+            self.TEST = False
+
+        if self.UTC:
+            dt_now = datetime.now(ndatetime.timezone.utc)
+            self.ui.label_showdate.setText(
+                dt_now.strftime('%Y-%m-%d'))
+            self.ui.label_showtime.setText(
+                dt_now.strftime('%H:%M:%S'))
+        else:
+            dt_now = datetime.now()
+            self.ui.label_showdate.setText(
+                dt_now.strftime('%Y-%m-%d'))
+            self.ui.label_showtime.setText(
+                dt_now.strftime('%H:%M:%S'))
+            
+        self.SigRelay.emit("cexex_all_",["timertick",0])
+
+########### END TODO KIPP ##########################        
         
     def GUI_reset_status(self):
         self.m = {}
@@ -660,9 +789,10 @@ class WizardGUI(QMainWindow):
         #self.SigRelay.emit("cm_playrec",["cbopenfile",self.m["baselineoffset"]])
         #self.activate_tabs(["View_Spectra","Annotate","Player","YAML_editor","WAV_header","Resample"])
         self.setactivity_tabs("all","activate",[])
-        self.SigRelay.emit("cm_playrec",["sdr_configparams",self.m["sdr_configparams"]])
-        #TEST TEST TEST
-        self.ui.checkBox_merge_selectall.setChecked(False) #TODO: obsolete weil im Reset des resample tool ?
+        #self.SigRelay.emit("cm_playrec",["sdr_configparams",self.m["sdr_configparams"]])         #TODO TODO TODO TEST TEST TEST: configparams not initiated here any more; change 02-04-2024
+        #TODO TODO TODO TEST TEST TEST: configparams not initiated here any more; change 02-04-2024
+        #self.ui.checkBox_merge_selectall.setChecked(False)  #TODO TODO TODO TEST TEST TEST: configparams not initiated here any more; change 02-04-2024
+
         if self.m["playthreadActive"] == True:
         #if self.playthreadActive == True:   ###TODO TODO TODO: not active, as self.playthreadactive 
             # is not being served any more in this module ! refer to player if necessary!
@@ -677,20 +807,19 @@ class WizardGUI(QMainWindow):
             self.ismetadata = True
         except:
             self.ismetadata = False
-            sys_state.set_status(self.m) #ismetadata wird in FileOpen() an alle anderen module relayed
+            #sys_state.set_status(self.m) #ismetadata wird in FileOpen() an alle anderen module relayed
             #return False
-            #print("cannot get metadata")
+            print("cannot get metadata")
 
-
-        #
+        # TODO TODO TODO: Hostaddress is part of the config menu !
         self.m["HostAddress"] = self.ui.lineEdit_IPAddress.text()   ### TODO TODO TODO check if still necesary after transfer to modules playrec and config
         self.SigRelay.emit("cm_playrec",["HostAddress",self.m["HostAddress"]])
         configparams = {"ifreq":self.m["ifreq"], "irate":self.m["irate"],
                             "rates": self.m["rates"], "icorr":self.m["icorr"],
                             "HostAddress":self.m["HostAddress"], "LO_offset":self.m["LO_offset"]}
-        self.m["sdr_configparams"] = configparams
+        #self.m["sdr_configparams"] = configparams #TODO TODO TODO check after change 02-04-2024probably unused
 
-        self.ui.spinBoxminSNR_ScannerTab.setProperty("value", self.PROMINENCE)    #######TODO: replace or remove
+        #self.ui.spinBoxminSNR_ScannerTab.setProperty("value", self.PROMINENCE)    #######TODO: replace or remove
         
         if self.m["fileopened"] is True:
             msg = QMessageBox()
@@ -706,29 +835,27 @@ class WizardGUI(QMainWindow):
                 if self.FileOpen() is False:
                     self.SigRelay.emit("cm_all_",["fileopened", False])
                     return False
-
         else:
             if self.FileOpen() is False:
-                self.m["fileopened"] = False #CHECK: obsolete, because self.SigRelay.emit("cm_all_",["fileopened",False]) does the job
+                #self.m["fileopened"] = False #CHECK: obsolete, because self.SigRelay.emit("cm_all_",["fileopened",False]) does the job
                 self.SigRelay.emit("cm_all_",["fileopened",False])
                 #self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
-                sys_state.set_status(self.m)
+                #sys_state.set_status(self.m) #TODO: remove after change to core module
                 return False
             else:
-                self.m["fileopened"] = True #CHECK: obsolete, because self.SigRelay.emit("cm_all_",["fileopened",False]) does the job
+                #self.m["fileopened"] = True #CHECK: obsolete, because self.SigRelay.emit("cm_all_",["fileopened",False]) does the job
                 self.SigRelay.emit("cm_all_",["fileopened",True])
                 #self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
         sys_state.set_status(self.m)
 
-        
-        #TODO: check change 12-01-2024: temporary path is set differently
-        temppath = self.m["temp_directory"]
-        for x in os.listdir(temppath):
-            if x.find("temp_") == 0:
-                try:
-                    os.remove(x)
-                except:
-                    self.logger.debug("res_scheduler terminate: file access to temp file refused")
+        #TODO: TODO TODO check : remover
+        # temppath = self.m["temp_directory"]
+        # for x in os.listdir(temppath):
+        #     if x.find("temp_") == 0:
+        #         try:
+        #             os.remove(x)
+        #         except:
+        #             self.logger.debug("res_scheduler terminate: file access to temp file refused")
 
     ############################## END TAB GENERAL MENUFUNCTIONS ####################################
 
@@ -1239,18 +1366,23 @@ if __name__ == '__main__':
         QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
 
     app = QApplication([])
-    sys_state = wsys.status()
-    win = WizardGUI()
-    #win.setupUi(MyWizard)
+    xcore_m = core_m()
+    xcore_c = core_c(xcore_m)
+    sys_state = wsys.status() #####TODO KIPP: remove this module
+    win = WizardGUI() #####TODO KIPP: remove this module
+    #TODO KIPP: xcore_v = core_v(xcore_c,xcore_m) # self.ui wird in xcore_v gestartet 
+
 #    app.aboutToQuit.connect(win.stop_worker)    #graceful thread termination on app exit
     win.show()
-    stemlabcontrol = StemlabControl() #TODO TODO TODO: remover after transfer of player
+    ##TODO KIPP: xcore_v.show()
+    stemlabcontrol = StemlabControl() #TODO KIPP:  #TODO TODO TODO: remover after transfer of player
 
-    win.m = sys_state.get_status()
+    win.m = sys_state.get_status() #TODO KIPP: remove completely
 
     tab_dict ={}
     #tab_dict["list"] = ["resample","view_spectra","yamleditor","xcore","waveditor"]
     tab_dict["list"] = ["xcore"]
+    xcore_v = core_v(win.ui,xcore_c,xcore_m) # TODO KIPP: remove
 
     if 'resampler_module_v5' in sys.modules:
         resample_m = rsmp.resample_m() #TODO: wird gui in _m jemals gebraucht ? ich denke nein !
@@ -1262,6 +1394,7 @@ if __name__ == '__main__':
 
     else:
         win.ui.tabWidget.setTabVisible('tab_resample',False)
+        #TODO KIPP: xcore_v.ui.tabWidget.setTabVisible('tab_resample',False)
 
     if 'view_spectra' in sys.modules:
         view_spectra_m = vsp.view_spectra_m()
@@ -1270,13 +1403,13 @@ if __name__ == '__main__':
         tab_dict["list"].append("view_spectra")
 
     if 'annotate' in sys.modules:
-        win_annOLD = False
+        win_annOLD = False  #TODO KIPP: remove
         annotate_m = ann.annotate_m()
         annotate_c = ann.annotate_c(annotate_m)
         annotate_v = ann.annotate_v(win.ui,annotate_c,annotate_m)
         tab_dict["list"].append("annotate")
-    else:
-        win_annOLD = True
+    else:  #TODO KIPP: remove
+        win_annOLD = True  #TODO KIPP: remove
 
     if 'yaml_editor' in sys.modules:
         yamleditor_m = yed.yamleditor_m()
@@ -1287,10 +1420,8 @@ if __name__ == '__main__':
         page = win.ui.tabWidget.findChild(QWidget, "tab_yamleditor")
         c_index = win.ui.tabWidget.indexOf(page)
         win.ui.tabWidget.setTabVisible(c_index,False)
-
-    xcore_m = core_m()
-    xcore_c = core_c(xcore_m)
-    xcore_v = core_v(win.ui,xcore_c,xcore_m)
+        #TODO KIPP: xcore_v.ui.tabWidget.setTabVisible(c_index,False)
+ 
 
     if 'waveditor' in sys.modules:
         waveditor_m = waved.waveditor_m()
@@ -1301,6 +1432,7 @@ if __name__ == '__main__':
         page = win.ui.tabWidget.findChild(QWidget, "tab_waveditor")
         c_index = win.ui.tabWidget.indexOf(page)
         win.ui.tabWidget.setTabVisible(c_index,False)
+        #TODO KIPP: xcore_v.ui.tabWidget.setTabVisible(c_index,False)
 
     if 'configuration' in sys.modules:
         configuration_m = conf.configuration_m()
@@ -1310,6 +1442,7 @@ if __name__ == '__main__':
         page = win.ui.tabWidget.findChild(QWidget, "tab_configuration")
         c_index = win.ui.tabWidget.indexOf(page)
         win.ui.tabWidget.setTabVisible(c_index,False)
+        #TODO KIPP: xcore_v.ui.tabWidget.setTabVisible(c_index,False)
         pass
         #win.ui.tabWidget.setTabVisible('configuration',False)
 
@@ -1331,6 +1464,7 @@ if __name__ == '__main__':
     resample_v.SigUpdateOtherGUIs.connect(win.sendupdateGUIs)
     #resample_c.SigUpdateGUIelements.connect(resample_v.updateGUIelements)
     win.SigUpdateOtherGUIs.connect(view_spectra_v.updateGUIelements)
+    #TODO KIPP: xcore_v.SigUpdateOtherGUIs.connect(view_spectra_v.updateGUIelements)
 
     #directory of tab objects to be activated ####TODO: simplify to simple list
     
@@ -1343,8 +1477,9 @@ if __name__ == '__main__':
                 ########## TODO: temporary hack for core module, change after last Module change:
             eval(tabitem1 + "_v.SigRelay.connect(win.rxhandler)" )
             win.logger.debug(f'File opened: {tabitem1 + "_v.SigRelay.connect(" + tabitem2 + "_v.rxhandler)"}')
+            #TODO KIPP: xcore_v.logger.debug(f'File opened: {tabitem1 + "_v.SigRelay.connect(" + tabitem2 + "_v.rxhandler)"}')
             #print(tabitem1 + "_v.SigRelay.connect(" + tabitem2 + "_v.rxhandler)")
-        eval("win.SigRelay.connect(" + tabitem1 + "_v.rxhandler)" )
+        eval("win.SigRelay.connect(" + tabitem1 + "_v.rxhandler)" ) #TODO KIPP: remove completely ?
     
     #######################TODO: CHECK IF STILL NECESSARY #######################
     for tabitem in tab_dict["list"]:     
@@ -1352,16 +1487,22 @@ if __name__ == '__main__':
         tab_dict[tabitem + "_c"] = eval(tabitem + "_c") #resample_c     
         tab_dict[tabitem + "_v"] = eval(tabitem + "_v") #resample_v  
         win.generate_GUIupdaterlist(eval(tabitem + "_v.updateGUIelements"))
+        #TODO KIPP: xcore_v.generate_GUIupdaterlist(eval(tabitem + "_v.updateGUIelements"))
     #make tab dict visible to core module
     win.tab_dict = tab_dict
     win.m = sys_state.get_status()
     win.m["tab_dict"] = tab_dict
-    sys_state.set_status(win.m)
+    #TODO KIPP: xcore_v.tab_dict = tab_dict
+    #TODO KIPP: xcore_v.m = sys_state.get_status()
+    #TODO KIPP: xcore_v.m["tab_dict"] = tab_dict
+    sys_state.set_status(win.m) #TODO KIPP: remove
+
     ###################CHECK IF STILL NECESSARY END ###########################
 
     #all tab initializations occur in connect_init() in core module
     xcore_v.connect_init() 
     win.SigRelay.emit("cm_all_",["QTMAINWINDOWparent",win])
+    #TODO KIPP: xcore_v.SigRelay.emit("cm_all_",["QTMAINWINDOWparent",xcore_v])
     sys.exit(app.exec_())
 
 #TODOs:

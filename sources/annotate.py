@@ -909,6 +909,7 @@ class annotate_v(QObject):
         self.gui.pushButtonENTER.setEnabled(False)
         self.gui.progressBar_2.setProperty("value", 0)
         self.gui.Annotate_listWidget.clear()
+        self.gui.spinBoxminSNR_ScannerTab.setProperty("value", self.m["PROMINENCE"]) #TODO TODO TODO: check after remove from MainWizard
         self.m["baselineoffset"] = self.gui.spinBoxminBaselineoffset.value()  ##########TODO: introduce separate GUI element because this one belongs to view_spectra
         self.m["NumScan"] = self.gui.spinBoxNumScan.value()
         self.m["minSNR"] = self.gui.spinBoxminSNR.value()
