@@ -436,6 +436,7 @@ class playrec_c(QObject):
         self.m["playlist_ix"] = 0
         self.logger = playrec_m.logger
         self.RecBitsPerSample = 16 #Default 16 bit recording, may be changed in the future
+        
         #self.SigRelay.connect()
 
     def checkSTEMLABrates(self):        # TODO: this is ratrer a controller method than a GUI method. Transfer to other module
@@ -613,6 +614,7 @@ class playrec_c(QObject):
         self.playthread.start()
         if self.playthread.isRunning():
             self.m["playthreadActive"] = True
+            self.SigRelay.emit("cm_all_",["playthreadActive",self.m["playthreadActive"]])
             #self.setactivity_tabs("Player","inactivate",[]) #TODO remove after tests
             self.SigActivateOtherTabs.emit("Player","inactivate",[])
             self.logger.info("playthread started in playthread_threadstarter = play_tstarter() (threadstarter)")
@@ -786,6 +788,7 @@ class playrec_c(QObject):
                 self.m["playlist_ix"] += 1 #TODO: aktuell Hack, um bei erstem File keine Doppelabspielung zu triggern
             if self.m["playlist_ix"] < self.m["playlist_len"]: #TODO check if indexing is correct
                 self.m["playthreadActive"] = False
+                self.SigRelay.emit("cm_all_",["playthreadActive",self.m["playthreadActive"]])
                 self.SigRelay.emit("cexex_playrec",["listhighlighter",self.m["playlist_ix"]])
                 self.logger.debug("EOF manager: playlist index: %i", self.m['playlist_ix'])
                 self.logger.info("fetch next list file")
@@ -1663,6 +1666,7 @@ class playrec_v(QObject):
         self.gui.Label_Recindicator.setEnabled(False)
         self.gui.Label_Recindicator.setStyleSheet(('background-color: rgb(255,255,255)'))
         self.m["playthreadActive"] = False
+        self.SigRelay.emit("cm_all_",["playthreadActive",self.m["playthreadActive"]])
         #self.activate_tabs(["View_Spectra","Annotate","Resample","YAML_editor","WAV_header"])
         #self.setactivity_tabs("Player","activate",[])
         self.SigActivateOtherTabs.emit("Player","activate",[])
@@ -1708,6 +1712,10 @@ class playrec_v(QObject):
         :return: _False if error, True on succes_
         :rtype: _Boolean_
         """        
+        scal_NEW = True
+        a = 7/86
+        c = 8/86
+        b = (86 -7 -8)/86
         if self.m["TEST"]:
             return
         self.m["gain"] = self.playrec_c.playrec_tworker.get_6()
@@ -1733,33 +1741,69 @@ class playrec_v(QObject):
             auxi.standard_errorbox("wFormatTag is neither 1 nor 3; unsupported Format, this file cannot be processed")
             #sys_state.set_status(system_state)
             return False
-        av = np.abs(cv)/scl  #TODO rescale according to scaler from formattag:
-        vol = np.mean(av)
-        # make vol a dB value and rescale to 1000
-        # 900 = 0 dB
-        # 1000 = overload und mache Balken rot
-        # min Anzeige = 1 entspricht -100 dB
-        refvol = 0.5
-        dBvol = 20*np.log10(vol/refvol)
-        dispvol = min(dBvol + 80, 100)
-        if np.any(np.isnan(dispvol)):
-            return
-        self.gui.progressBar_volume.setValue(int(np.floor(dispvol*10))) 
-        if dispvol > 80:
-            self.gui.progressBar_volume.setStyleSheet("QProgressBar::chunk "
-                    "{"
-                        "background-color: red;"
-                    "}")
-        elif dispvol < 30:
-            self.gui.progressBar_volume.setStyleSheet("QProgressBar::chunk "
-                    "{"
-                        "background-color: yellow;"
-                    "}")           
+ 
+        if scal_NEW:
+            span = 80
+            refvol = 0.71
+            vol = 1.5*np.std(cv)/scl/refvol
+            dBvol = 20*np.log10(vol)
+            rawvol = c + b + dBvol/span*b
+            if dBvol > 0:
+              dispvol = min(100, rawvol*100)
+            elif (dBvol < 0) and (dBvol > -span):
+              dispvol = rawvol*100
+            elif dBvol < -span:
+              dispvol = c*0.8*100
+            if np.any(np.isnan(dispvol)):
+                return
+            print(f"vol: {vol} dB: {dBvol} std: {np.std(cv)/scl} dispvol: {dispvol} rv: {np.std(cv)/scl}")
+            self.gui.progressBar_volume.setValue(int(np.floor(dispvol*10))) 
+            if dBvol > -7:
+                self.gui.progressBar_volume.setStyleSheet("QProgressBar::chunk "
+                        "{"
+                            "background-color: red;"
+                        "}")
+            elif dBvol < -70:
+                self.gui.progressBar_volume.setStyleSheet("QProgressBar::chunk "
+                        "{"
+                            "background-color: yellow;"
+                        "}")           
+            else:
+                self.gui.progressBar_volume.setStyleSheet("QProgressBar::chunk "
+                        "{"
+                            "background-color: green;"
+                        "}")
         else:
-            self.gui.progressBar_volume.setStyleSheet("QProgressBar::chunk "
-                    "{"
-                        "background-color: green;"
-                    "}")
+            av = np.abs(cv)/scl  #TODO rescale according to scaler from formattag
+            refvol = 0.5
+            vol = np.mean(av)/refvol
+            # make vol a dB value and rescale to 1000
+            # 900 = 0 dB
+            # 1000 = overload und mache Balken rot
+            # min Anzeige = 1 entspricht -100 dB
+            dBvol = 20*np.log10(vol)
+            dispvol = min(dBvol + 80, 100)
+            if np.any(np.isnan(dispvol)):
+                return
+            self.gui.progressBar_volume.setValue(int(np.floor(dispvol*10))) 
+            if dispvol > 80:
+                self.gui.progressBar_volume.setStyleSheet("QProgressBar::chunk "
+                        "{"
+                            "background-color: red;"
+                        "}")
+            elif dispvol < 30:
+                self.gui.progressBar_volume.setStyleSheet("QProgressBar::chunk "
+                        "{"
+                            "background-color: yellow;"
+                        "}")           
+            else:
+                self.gui.progressBar_volume.setStyleSheet("QProgressBar::chunk "
+                        "{"
+                            "background-color: green;"
+                        "}")
+
+
+
 
     def updatecurtime(self,increment):             #increment current time in playtime window and update statusbar
         """

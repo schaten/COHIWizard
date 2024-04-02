@@ -1749,6 +1749,7 @@ class resample_v(QObject):
         self.gui.listWidget_playlist_2.clear()
         self.gui.listWidget_sourcelist_2.clear()
         self.gui.label_Filename_resample.setText('')
+        self.gui.checkBox_merge_selectall.setChecked(False)
 
 
     def set_viewvars(self,_value):
