@@ -161,10 +161,24 @@ class waveditor_v(QObject):
                 self.updateGUIelements()
             if  _value[0].find("activate_WAVEDIT") == 0:
                 self.activate_WAVEDIT()
+            if  _value[0].find("activate_insertheader") == 0:
+                self.activate_insertheader(_value[1])
+            if  _value[0].find("logfilehandler") == 0:
+                self.logfilehandler(_value[1])
+            if  _value[0].find("reset_GUI") == 0:
+                self.reset_GUI()
             #handle method
             # if  _value[0].find("plot_spectrum") == 0: #EXAMPLE
             #     self.plot_spectrum(0,_value[1])   #EXAMPLE
 
+    def activate_insertheader(self,_value):
+        if _value:
+            self.gui.label_8.setEnabled(True)
+            self.gui.pushButton_InsertHeader.setEnabled(True)
+        else:
+            self.gui.label_8.setEnabled(False)
+            self.gui.pushButton_InsertHeader.setEnabled(False)
+        
     def activate_WAVEDIT(self):
         #self.show()
         if self.gui.radioButton_WAVEDIT.isChecked() is True:
@@ -207,6 +221,9 @@ class waveditor_v(QObject):
 
     def reset_GUI(self):
         self.clear_WAVwidgets()
+        self.gui.radioButton_WAVEDIT.setChecked(False)
+        self.gui.label_8.setEnabled(False)
+
     
     def popup(self,i):
         """
@@ -398,7 +415,14 @@ class waveditor_v(QObject):
             WAVheader_tools.write_sdruno_header(self,wav_filename,self.m["wavheader"],self.m["ovwrt_flag"])
         #sys_state.set_status(system_state)
 
-
+    def logfilehandler(self,_value):
+        if _value is False:
+            self.logger.debug("waveditor: INACTIVATE LOGGING")
+            self.logger.setLevel(logging.ERROR)
+            self.logger.debug("view spectra: INACTIVATE LOGGING after NOTSET")
+        else:
+            self.logger.debug("waveditor: REACTIVATE LOGGING")
+            self.logger.setLevel(logging.DEBUG)
 
 
 

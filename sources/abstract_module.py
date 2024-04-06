@@ -114,9 +114,20 @@ class abstract_module_v(QObject):
                 self.updateGUIelements()
             if  _value[0].find("reset_GUI") == 0:
                 self.reset_GUI()
+            if  _value[0].find("logfilehandler") == 0:
+                self.logfilehandler(_value[1])
             #handle method
             # if  _value[0].find("plot_spectrum") == 0: #EXAMPLE
             #     self.plot_spectrum(0,_value[1])   #EXAMPLE
+                
+    def logfilehandler(self,_value):
+        if _value is False:
+            self.logger.debug("abstract module: INACTIVATE LOGGING")
+            self.logger.setLevel(logging.ERROR)
+        else:
+            self.logger.debug("abstract module: REACTIVATE LOGGING")
+            self.logger.setLevel(logging.DEBUG)
+
 
     def updateGUIelements(self):
         """

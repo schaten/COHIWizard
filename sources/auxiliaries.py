@@ -73,6 +73,7 @@ class auxiliaries():
         """
         ##print(f"read segment reached, position: {position}")
         #data = np.empty(DATABLOCKSIZE, dtype=np.int16) #TODO: DATABLOCKSIZE dynamisch anpassen !
+        ret = {}
         fid = open(filepath, 'rb')
         if wFormatTag == 1:
             scl = int(2**int(sBPS-1))-1   #if self.wavheader['nBitsPerSample'] 2147483648 8388608 32767
@@ -141,8 +142,10 @@ class auxiliaries():
             wsys.WIZ_auxiliaries.standard_errorbox("no encodings except 16, 24 and 32 bits are supported")
             #return invalid
             size = -1
+            ret["data"] = []
+            ret["size"] = size
+            return(ret)
         fid.close()
-        ret = {}
         ret["data"] = data
         ret["size"] = size
         # duration = wavheader['data_nChunkSize']/pscale/wavheader['nSamplesPerSec']

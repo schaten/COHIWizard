@@ -6196,27 +6196,27 @@ Tracking</string>
          <rect>
           <x>460</x>
           <y>60</y>
-          <width>351</width>
+          <width>711</width>
           <height>80</height>
          </rect>
         </property>
         <layout class="QFormLayout" name="formLayout">
          <item row="0" column="0">
-          <widget class="QRadioButton" name="radioButton">
+          <widget class="QRadioButton" name="radioButtonpushButton_write_logfile">
            <property name="text">
             <string>Write Logfile</string>
            </property>
           </widget>
          </item>
          <item row="1" column="0">
-          <widget class="QPushButton" name="pushButton_2">
+          <widget class="QPushButton" name="pushButton_config_recordingpath">
            <property name="text">
             <string>Edit Recording path</string>
            </property>
           </widget>
          </item>
          <item row="1" column="1">
-          <widget class="QLineEdit" name="lineEdit_3"/>
+          <widget class="QLineEdit" name="lineEdit_config_recordingpath"/>
          </item>
         </layout>
        </widget>

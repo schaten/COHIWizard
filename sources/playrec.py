@@ -133,8 +133,8 @@ class playrec_worker(QObject):
         timescaler = self.__slots__[1]
         TEST = self.__slots__[2]
         modality = self.__slots__[3]
-        self.set_6(1)
-        self.gain = self.__slots__[6]
+        #self.set_6(1)
+        self.gain = self.get_6()
         #TODO: self.fmtscl = self.__slots__[7] #scaler for data format        
         self.stopix = False
         position = 1
@@ -309,8 +309,8 @@ class playrec_worker(QObject):
         RECSEC = self.timescaler*2 ###TODO TODO TODO check if this is still appropriate; has to do with Bytes per sample (nBytesAlign)
         self.TEST = self.__slots__[2]
         self.modality = self.__slots__[3]
-        self.set_6(1)
-        self.gain = self.__slots__[6]
+        #self.set_6(1)
+        #self.gain = self.get_6()
         #TODO: self.fmtscl = self.__slots__[7] #scaler for data format        
         self.fileHandle = open(self.f1, 'ab') #TODO check if append mode is appropriate
         #print(f"filehandle for set_4: {self.fileHandle} of file {self.f1} ")
@@ -588,6 +588,8 @@ class playrec_c(QObject):
         self.playrec_tworker.set_2(self.m["TEST"])
         self.playrec_tworker.set_3(self.m["modality"])
         self.playrec_tworker.set_6(self.m["gain"])
+        self.logger.debug("set tworker gain to: %f",self.m["gain"])
+        #print(f"gain: {self.m['gain']}")
         format = [self.m["wavheader"]["wFormatTag"], self.m["wavheader"]['nBlockAlign'], self.m["wavheader"]['nBitsPerSample']]
         self.playrec_tworker.set_7(format)
         
@@ -615,8 +617,6 @@ class playrec_c(QObject):
         if self.playthread.isRunning():
             self.m["playthreadActive"] = True
             self.SigRelay.emit("cm_all_",["playthreadActive",self.m["playthreadActive"]])
-            #self.setactivity_tabs("Player","inactivate",[]) #TODO remove after tests
-            self.SigActivateOtherTabs.emit("Player","inactivate",[])
             self.logger.info("playthread started in playthread_threadstarter = play_tstarter() (threadstarter)")
             # TODO replace playthreadflag by not self.playthread.isFinished()
             return True
@@ -667,7 +667,7 @@ class playrec_c(QObject):
         """
         total, used, free = shutil.disk_usage(_dir)
         if free < expected_filesize:
-            print(f"not enough diskspace for this process, please free at least {expected_filesize - free} bytes")
+            #print(f"not enough diskspace for this process, please free at least {expected_filesize - free} bytes")
             auxi.standard_errorbox(f"not enough diskspace for this process, please free at least {expected_filesize - free} bytes")
             return False
         else:
@@ -912,7 +912,7 @@ class playrec_c(QObject):
             self.stemlabcontrol.sdrserverstop()
         self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
         self.SigRelay.emit("cexex_playrec",["reset_playerbuttongoup",0])
-        self.SigRelay.emit("cexex_playrec",["reset_GUI",0])
+        self.SigRelay.emit("cexex_all_",["reset_GUI",0])
         #self.SigRelay.emit("cexex_win",["reset_GUI",0]) #TODO remove after tests, may not be connected with _c
         #print("STOP pressed")
 
@@ -1102,8 +1102,26 @@ class playrec_v(QObject):
             self.ismetadata = True
             if 'STM_IP_address' in self.metadata.keys():
                 self.gui.lineEdit_IPAddress.setText(self.metadata["STM_IP_address"]) #TODO: Remove after transfer of playrec
+                self.m["STM_IP_address"] = self.metadata["STM_IP_address"] #TODO: Remove after transfer of playrec
         except:
+            self.m["STM_IP_address"] = self.gui.lineEdit_IPAddress.text()
+            self.logger.error("reset_gui: cannot get metadata")
             pass
+
+        # try:
+        #     stream = open("config_wizard.yaml", "r")
+        #     self.metadata = yaml.safe_load(stream)
+        #     if 'STM_IP_address' in self.metadata.keys():
+        #         self.gui.lineEdit_IPAddress.setText(self.metadata["STM_IP_address"]) #TODO: Remove after transfer of playrec
+        #         self.gui.Conf_lineEdit_IPAddress.setText(self.metadata["STM_IP_address"]) #TODO TODO TODO: reorganize and shift to config module
+        #         self.SigRelay.emit("cm_playrec",["STM_IP_address",self.metadata["STM_IP_address"]]) #TODO: Remove after transfer of playrec
+        #     stream.close()
+        # except:
+        #     self.logger.error("reset_gui: cannot get metadata")
+        # return True
+
+
+
 
     def preset_SR_LO(self):
         text = self.gui.comboBox_playrec_targetSR_2.currentText()
@@ -1234,18 +1252,6 @@ class playrec_v(QObject):
         self.gui.lineEdit_IPAddress.setText(self.m["STM_IP_address"])
         self.gui.label_Filename_Player.setText(self.m["my_filename"] + self.m["ext"])
 
-    # def update_GUI(self,_key): #TODO TODO: is this method still needed ? reorganize. gui-calls should be avoided, better only signalling and gui must call the routenes itself
-    #     print(" view spectra updateGUI: new updateGUI in view spectra module reached")
-    #     self.SigUpdateGUI.disconnect(self.update_GUI)
-    #     if _key.find("ext_update") == 0:
-    #         #update resampler gui with all elements
-    #         #TODO: fetch model values and re-fill all tab fields
-    #         print("playrec update_GUI reached")
-    #         pass
-    #     #other key possible: "none"
-    #     #DO SOMETHING
-    #     self.SigUpdateGUI.connect(self.update_GUI)
-
     def reset_GUI(self):
         self.gui.listWidget_playlist.clear()
         self.gui.listWidget_sourcelist.clear()
@@ -1253,6 +1259,43 @@ class playrec_v(QObject):
         self.SigRelay.emit("cexex_view_spectra",["reset_GUI",0])
         self.SigRelay.emit("cexex_resample",["reset_GUI",0])
         self.gui.label_Filename_Player.setText('')
+  
+    def addplaylistitem(self):
+        item = QtWidgets.QListWidgetItem()
+        self.gui.listWidget_sourcelist.addItem(item)
+
+    def fillplaylist(self):
+        playlist = []
+        #resfilelist = [] #TODO: obsolete ?
+        ix = 0
+        for x in os.listdir(self.m["my_dirname"]):
+            if x.endswith(".wav"):
+                if True: #x != (self.m["my_filename"] + self.m["ext"]): #TODO: obsolete old form when automatically loading opened file to playlist
+                    #resfilelist.append(x) #TODO: used ?????????
+                    _item=self.gui.listWidget_sourcelist.item(ix)
+                    _item.setText(x)
+                    fnt = _item.font()
+                    fnt.setPointSize(11)
+                    _item.setFont(fnt)
+                    item = QtWidgets.QListWidgetItem()
+                    self.gui.listWidget_sourcelist.addItem(item)
+                    ix += 1
+        #erzeuge einen Eintrag in Playlist listWidget_playlist
+        if self.m["f1"].endswith(".wav"):
+            item = QtWidgets.QListWidgetItem()
+            self.gui.listWidget_playlist.addItem(item)
+            _item=self.gui.listWidget_playlist.item(0)
+            _item.setText(self.m["my_filename"] + self.m["ext"])
+            fnt = _item.font()
+            fnt.setPointSize(11)
+            _item.setFont(fnt)
+            playlist.append(self.m["f1"])
+            self.m["playlist"] = playlist
+
+        self.gui.listWidget_playlist.setEnabled(False)
+        self.gui.listWidget_sourcelist.setEnabled(False)
+
+
 
     def rxhandler(self,_key,_value):
         """
@@ -1298,7 +1341,21 @@ class playrec_v(QObject):
                 self.countdown()
             if  _value[0].find("indicate_bufoverflow") == 0:
                 self.indicate_bufoverflow()
-                                
+            if  _value[0].find("addplaylistitem") == 0:
+                self.addplaylistitem()
+            if  _value[0].find("fillplaylist") == 0:
+                self.fillplaylist()            
+            if  _value[0].find("logfilehandler") == 0:
+                self.logfilehandler(_value[1])
+
+    def logfilehandler(self,_value):
+        if _value is False:
+            self.logger.debug("playrec: INACTIVATE LOGGING")
+            self.logger.setLevel(logging.ERROR)
+            self.logger.debug("view spectra: INACTIVATE LOGGING after NOTSET")
+        else:
+            self.logger.debug("playrec: REACTIVATE LOGGING")
+            self.logger.setLevel(logging.DEBUG)
 
     def jump_to_position(self):
         """
@@ -1375,49 +1432,9 @@ class playrec_v(QObject):
         if self.m["playthreadActive"] is False:
             return False
         self.m["gain"] = 10**((self.gui.verticalSlider_Gain.value() - self.GAINOFFSET)/20)
-        #print(f"self.gain in cb:  {self.gain}")
+        self.logger.debug("cb_setgain, gain: %f",self.m["gain"])
         self.playrec_c.playrec_tworker.set_6(self.m["gain"])   #############TODO TODO TODO
-        #print(self.gain)
-        #TODO: display gain value somewhere
-
-
-    # def updatetimer(self): TODO: remove after tests
-    #     """
-    #     VIEW: cb of Tab player
-    #     updates timer functions
-    #     shows date and time
-    #     changes between UTC and local time
-    #     manages recording timer
-    #     :param: none
-    #     :type: none
-    #     ...
-    #     :raises: none
-    #     ...
-    #     :return: none
-    #     :rtype: none
-    #     """
-    #     if self.gui.checkBox_UTC.isChecked():
-    #         self.UTC = True #TODO:future system state
-    #     else:
-    #         self.UTC = False
-    #     if self.gui.checkBox_TESTMODE.isChecked():
-    #         self.TEST = True #TODO:future system state
-    #     else:
-    #         self.TEST = False
-
-    #     if self.UTC:
-    #         dt_now = datetime.now(ndatetime.timezone.utc)
-    #         self.gui.label_showdate.setText(
-    #             dt_now.strftime('%Y-%m-%d'))
-    #         self.gui.label_showtime.setText(
-    #             dt_now.strftime('%H:%M:%S'))
-    #     else:
-    #         dt_now = datetime.now()
-    #         self.gui.label_showdate.setText(
-    #             dt_now.strftime('%Y-%m-%d'))
-    #         self.gui.label_showtime.setText(
-    #             dt_now.strftime('%H:%M:%S'))
-
+        print(f"cab_set gain gain: {self.m['gain']}")
     def popup(self,i):
         """    
         """
@@ -1719,6 +1736,8 @@ class playrec_v(QObject):
         if self.m["TEST"]:
             return
         self.m["gain"] = self.playrec_c.playrec_tworker.get_6()
+        print(f"get gain in showRFdata gain: {self.m['gain']}")
+        self.logger.debug("get from tworker gain to showRFdata: %f",self.m["gain"])
         data = self.playrec_c.playrec_tworker.get_5()
         #tracking error detector removed, appears in old main module
         s = len(data)
@@ -1756,7 +1775,7 @@ class playrec_v(QObject):
               dispvol = c*0.8*100
             if np.any(np.isnan(dispvol)):
                 return
-            print(f"vol: {vol} dB: {dBvol} std: {np.std(cv)/scl} dispvol: {dispvol} rv: {np.std(cv)/scl}")
+            #print(f"vol: {vol} dB: {dBvol} std: {np.std(cv)/scl} dispvol: {dispvol} rv: {np.std(cv)/scl}")
             self.gui.progressBar_volume.setValue(int(np.floor(dispvol*10))) 
             if dBvol > -7:
                 self.gui.progressBar_volume.setStyleSheet("QProgressBar::chunk "

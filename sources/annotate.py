@@ -650,7 +650,7 @@ class annotate_c(QObject):
         :rtype: Boolean
         """
         #self.m = sys_state.get_status()
-
+        time.sleep(1)
         self.stations_filename = self.m["annotationpath"] + '/stations_list.yaml'
         if os.path.exists(self.stations_filename) == False:
 
@@ -970,9 +970,21 @@ class annotate_v(QObject):
                 self.annotation_deactivate()
             if  _value[0].find("scan_deactivate") == 0:
                 self.scan_deactivate()
+            if  _value[0].find("logfilehandler") == 0:
+                self.logfilehandler(_value[1])
             #handle method
             # if  _value[0].find("plot_spectrum") == 0: #EXAMPLE
             #     self.plot_spectrum(0,_value[1])   #EXAMPLE
+                
+    def logfilehandler(self,_value):
+        if _value is False:
+            self.logger.debug("annotate: INACTIVATE LOGGING")
+            self.logger.setLevel(logging.ERROR)
+            self.logger.debug("view spectra: INACTIVATE LOGGING after NOTSET")
+        else:
+            self.logger.debug("annotate: REACTIVATE LOGGING")
+            self.logger.setLevel(logging.DEBUG)
+
                 
     def annotatestatusdisplay(self,dispstring):
         self.gui.label.setText(dispstring)
@@ -1002,23 +1014,8 @@ class annotate_v(QObject):
         :rtype: Boolean
         """
         print("annotate: updateGUIelements")
-        #self.gui.DOSOMETHING
-
-
-    def reset_GUI(self):
-        self.gui.lineEdit.setFont(QFont('MS Shell Dlg 2', 12))
-        self.gui.lineEdit.setText('')
-        self.gui.lineEdit_TX_Site.setText('')
-        self.gui.lineEdit_Country.setText('')
-        self.gui.lineEdit.setStyleSheet("background-color : white")
-        self.gui.lineEdit.setFont(QFont('MS Shell Dlg 2', 12))
-        self.gui.Annotate_listWidget.clear()
-        self.gui.pushButtonDiscard.setEnabled(False)
-        self.gui.labelFrequency.setText("Freq:")
-        self.annotation_deactivate()
-        self.scan_deactivate()
-        self.stations_filename = self.m["annotationpath"] + '/stations_list.yaml'
-        if os.path.exists(self.stations_filename) == True:
+        self.gui.label_Filename_Annotate.setText(self.m["my_filename"] + self.m["ext"])
+        if (os.path.exists(self.stations_filename) == True):
             self.scan_completed()
             try:
                 stream = open(self.status_filename, "r")
@@ -1032,12 +1029,48 @@ class annotate_v(QObject):
                 self.ui.pushButton_Writeyamlheader.setEnabled(True)
             else:
                 self.annotation_activate()
-        else:
+        elif self.m["fileopened"]:
             self.scan_activate()
+        else:
+            pass
 
 
+        #self.gui.DOSOMETHING
 
-        pass
+
+    def reset_GUI(self):
+        self.gui.lineEdit.setFont(QFont('MS Shell Dlg 2', 12))
+        self.gui.lineEdit.setText('')
+        self.gui.lineEdit_TX_Site.setText('')
+        self.gui.lineEdit_Country.setText('')
+        self.gui.lineEdit.setStyleSheet("background-color : white")
+        self.gui.lineEdit.setFont(QFont('MS Shell Dlg 2', 12))
+        self.gui.Annotate_listWidget.clear()
+        self.gui.pushButtonDiscard.setEnabled(False)
+        self.gui.labelFrequency.setText("Freq:")
+        self.gui.label_Filename_Annotate.setText('')
+        self.annotation_deactivate()
+        self.scan_deactivate()
+        self.stations_filename = self.m["annotationpath"] + '/stations_list.yaml'
+        if (os.path.exists(self.stations_filename) == True) and self.m["fileopened"]:
+            self.scan_completed()
+            try:
+                stream = open(self.status_filename, "r")
+                status = yaml.safe_load(stream)
+                stream.close()
+            except:
+                print("cannot get status")
+                return False 
+            if status["annotated"] == True:
+                self.annotation_completed()
+                self.ui.pushButton_Writeyamlheader.setEnabled(True)
+            else:
+                self.annotation_activate()
+        elif self.m["fileopened"]:
+            self.scan_activate()
+        else:
+            pass
+
 
     def cb_numscanchange(self):
         self.m["NumScan"] = self.gui.spinBoxNumScan.value()

@@ -160,6 +160,17 @@ class view_spectra_v(QObject):
                 self.logger.debug("call updateGUIelements")
             if  _value[0].find("reset_GUI") == 0:
                 self.reset_GUI()
+            if  _value[0].find("logfilehandler") == 0:
+                self.logfilehandler(_value[1])
+
+    def logfilehandler(self,_value):
+        if _value is False:
+            self.logger.debug("view spectra: INACTIVATE LOGGING")
+            self.logger.setLevel(logging.ERROR)
+            self.logger.debug("view spectra: INACTIVATE LOGGING after NOTSET")
+        else:
+            self.logger.debug("view spectra: REACTIVATE LOGGING")
+            self.logger.setLevel(logging.DEBUG)
 
 
     def updateGUIelements(self):
@@ -203,8 +214,9 @@ class view_spectra_v(QObject):
         self.m["Tabref"]["View_Spectra"]["ax"].clear()
         self.m["Tabref"]["View_Spectra"]["canvas"].draw()
         self.gui.label_Filename_ViewSpectra.setText("")
-        
+        self.gui.lineEdit_evaltime.setText("")
 
+        
         pass
 
     def cb_plot_spectrum(self):
