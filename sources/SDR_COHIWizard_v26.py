@@ -30,6 +30,7 @@ Created on Sa Dec 08 2023
 """
 import sys
 import os
+import time
 import subprocess
 import datetime as ndatetime
 from datetime import datetime
@@ -152,8 +153,16 @@ class core_v(QMainWindow):
         #         self.SigRelay.emit("cm_playrec",["STM_IP_address",self.metadata["STM_IP_address"]])
         #         ################################################################################
         except:
-            print("cannot get config_wizard.yaml metadata")
-    
+            print("cannot get config_wizard.yaml metadata, write a new initial config file")
+            self.metadata["last_path"] = os.getcwd()
+            self.metadata["STM_IP_address"] = "000.000.000.000"
+            auxi.standard_infobox("configuration file does not yet exist, a basic file will be generated. Please configure the STEMLAB IP address before using the Player")
+            #self.metadata["recording_path"] = self.m["recording_path"]
+            stream = open("config_wizard.yaml", "w")
+            yaml.dump(self.metadata, stream)
+            stream.close()
+
+        ###TODO: re-organize, there should be no access to gui elements of other modules
         self.m["HostAddress"] = self.gui.lineEdit_IPAddress.text() #TODO: Remove after transfer of playrec
         configparams = {"ifreq":self.m["ifreq"], "irate":self.m["irate"],
                             "rates": self.m["rates"], "icorr":self.m["icorr"],
@@ -558,7 +567,7 @@ class core_v(QMainWindow):
     #@njit
     def FileOpen(self):   #TODO: shift to controller, decompose in small submethods
         '''
-        CONTROLLER
+        CONTROLLER ?
         Purpose: 
         If self.####### == True:
             (1) Open data file for read
@@ -568,12 +577,11 @@ class core_v(QMainWindow):
         '''
     
         #TODO: TODO TODO replace by RELAY; call this signal only if resample_c is instantiated !
-        self.gui.pushButton_resample_split2G.clicked.connect(resample_v.cb_split2G_Button)
+        #self.gui.pushButton_resample_split2G.clicked.connect(resample_v.cb_split2G_Button) TODO: check after transfer 09-04-2024
         #TODO TODO TODO:  replace by RELAY; call this function only if resample_v is instantiated !
         #resample_v.enable_resamp_GUI_elemets(True)
         #TODO: could be an update action of the resampler ?
         self.SigRelay.emit("cexex_resample",["enable_resamp_GUI_elements",True])
-
         #placed here because first defined only in init __method__ ?
         self.SigRelay.emit("cm_all_",["ismetadata",self.ismetadata])
         # if self.ismetadata:
@@ -613,7 +621,7 @@ class core_v(QMainWindow):
         if os.path.exists(self.m["temp_directory"]) == False:         #TODO: ? maybe settable in configuration ? create from yaml-editor
             os.mkdir( self.m["temp_directory"])
 
-#################################TODO TODO TODO re-write all the following:
+#################################TODO TODO TODO CHECK all the following; It is not clear, if a dat file cannot be directly resampled - the wav header is generated anyway
         if self.m["ext"] == ".dat" or self.m["ext"] == ".raw":
             self.filetype = "dat"
             self.SigRelay.emit("cexex_waveditor",["activate_insertheader",True])
@@ -625,8 +633,9 @@ class core_v(QMainWindow):
         else:
             if self.m["ext"] == ".wav":
                 self.filetype = "wav"
-                self.gui.tab_view_spectra.setEnabled(True)  ##########TODO: replace by Tab disable function inactivate/activate_tabs(self,selection)
-                self.gui.tab_annotate.setEnabled(True)  ##########TODO: replace by Tab disable function inactivate/activate_tabs(self,selection)
+                #TODO tests: following 2 lines removed 6-04-2024
+                #self.gui.tab_view_spectra.setEnabled(True)  ##########TODO: replace by Tab disable function inactivate/activate_tabs(self,selection)
+                #self.gui.tab_annotate.setEnabled(True)  ##########TODO: replace by Tab disable function inactivate/activate_tabs(self,selection)
                 self.SigRelay.emit("cexex_waveditor",["activate_insertheader",False])
                 self.setactivity_tabs("Resample","activate",[])
                 ## TODO: remove after Tests 03-04-2024
@@ -635,7 +644,6 @@ class core_v(QMainWindow):
             else:
                 auxi.standard_errorbox("no valid data forma, neiter wav, nor dat nor raw !")
                 return
-#################################### END
 
         #### Generate wavheader and distribute to all modules
         if self.filetype == "dat": # namecheck only if dat --> makes void all wav-related operation sin filenameextract
@@ -645,10 +653,14 @@ class core_v(QMainWindow):
                 #TODO: dat_extractinfo4wavheader() automatically asks for lacking wav header info, so this exit could be replaced alrady !
             auxi.standard_infobox("dat file cannot be resampled. If you wish to resample, please convert to wav file first (Tab WAV Header)")
 
+#################################### END
+
         else:
             self.wavheader = WAVheader_tools.get_sdruno_header(self,self.m["f1"])
             if self.wavheader != False:
-                self.next_filename = waveditor_c.extract_startstoptimes_auxi(self.wavheader)
+                pass
+                #TODO tests: following line removed 6-04-2024, remove self.nextfilename
+                #self.next_filename = waveditor_c.extract_startstoptimes_auxi(self.wavheader)
             else:
                 auxi.standard_errorbox("File is not recognized as a valid IQ wav file (not auxi/rcvr compatible or not a RIFF file)")
                 return False
@@ -711,7 +723,7 @@ class core_v(QMainWindow):
 
         #TODO TODO TODO: track multiple calls of plot_spectrum
         #TODO: is that really necessary on each fileopen ? 
-        resample_v.update_resample_GUI() ##########################################################################################
+        #resample_v.update_resample_GUI() ##########################################################################################
         self.m["playlength"] = self.wavheader['filesize']/self.wavheader['nAvgBytesPerSec']
         self.m["list_out_files_resampled"] = []
         self.SigRelay.emit("cm_resample",["list_out_files_resampled",self.m["list_out_files_resampled"]])
@@ -725,15 +737,6 @@ class core_v(QMainWindow):
         self.readoffset = self.m["readoffset"]
         #self.showfilename()  ##TODO replace showfilename
         self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
-        #TODO TODO TODO: remove the following after change to all new modules and Relay
-        # self.my_dirname = os.path.dirname(self.m["f1"])
-        # self.my_filename, self.ext = os.path.splitext(os.path.basename(self.m["f1"]))
-        # #self.gui.label_Filename_Annotate.setText(self.my_filename + self.ext)
-        # self.gui.label_Filename_WAVHeader.setText(self.my_filename + self.ext)
-        # self.gui.label_Filename_Player.setText(self.my_filename + self.ext)
-
-
-
 
         return True
 
@@ -957,6 +960,7 @@ if __name__ == '__main__':
     for tabitem1 in tab_dict["list"]:
         for tabitem2 in tab_dict["list"]:
             eval(tabitem1 + "_v.SigRelay.connect(" + tabitem2 + "_v.rxhandler)")
+            #eval(tabitem1 + "_c.SigRelay.connect(" + tabitem2 + "_v.rxhandler)")
             xcore_v.logger.debug(f'File opened: {tabitem1 + "_v.SigRelay.connect(" + tabitem2 + "_v.rxhandler)"}')
     
     #######################TODO: CHECK IF STILL NECESSARY #######################
@@ -973,7 +977,7 @@ if __name__ == '__main__':
 
     #all tab initializations occur in connect_init() in core module
     xcore_v.connect_init() 
-    
+    #xcore_v.setstandardpaths()
     xcore_v.SigRelay.emit("cm_exex",["updateGUIelements",0])
     sys.exit(app.exec_())
 

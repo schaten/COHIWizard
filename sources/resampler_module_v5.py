@@ -435,14 +435,14 @@ class res_workers(QObject):
         self.set_ret(self.ret)
         time.sleep(1)
         #print(f"sox return value: {process}")
-        print(f"sox return value: {self.ret}")
+        #print(f"sox return value: {self.ret}")
         targetfilename = self.get_tfname()
         expected_filesize = self.get_expfs()
-        print(f"soxwriter targetfilename: {targetfilename}, exp filesize: {expected_filesize}")
+        #print(f"soxwriter targetfilename: {targetfilename}, exp filesize: {expected_filesize}")
         #print(expected_filesize)
         #self.SigStarted.emit()
         if os.path.exists(targetfilename) == True:
-            print("soxwriter: temp file has been created")
+            #print("soxwriter: temp file has been created")
             file_stats = os.stat(targetfilename)
             rf = np.floor(100*file_stats.st_size/expected_filesize)
             if np.isnan(rf):
@@ -455,27 +455,27 @@ class res_workers(QObject):
             loop_ix = 0
             deltaold = 0
             #Bedingung: Delta size 
-            print(f"soxwriter: initial ret.poll output (sox acive on None ?): {self.ret.poll()}")
+            #print(f"soxwriter: initial ret.poll output (sox acive on None ?): {self.ret.poll()}")
 
             while (file_stats.st_size < (expected_filesize)) and (loop_ix < 20) and (self.stopix is False):  #HACK TODO: analyze why expected filesize is by > 1000 smaller than the one produced by sox 
                 delta = file_stats.st_size - expected_filesize
                 # if sox has finished but expected filesize is not reached, wait 20 cycles and then terminate
                 if (deltaold == delta) and file_stats.st_size >0:
                     loop_ix += 1
-                    print(f"soxwriter: ret.poll output (sox acive ?): {self.ret.poll()}")
+                    #print(f"soxwriter: ret.poll output (sox acive ?): {self.ret.poll()}")
                     #print(f"soxloop deltacount (break at 20): {loop_ix}")
                 deltaold = delta
                 try:
                     file_stats = os.stat(targetfilename)
                     rf = np.floor(100*file_stats.st_size/expected_filesize)
                     if np.isnan(rf):
-                        print("soxwriter ERROR ________________soxwriter progress exception, set progress zero")
+                        #print("soxwriter ERROR ________________soxwriter progress exception, set progress zero")
                         rel_finish = int(5)
                     else:
                         rel_finish = int(rf)
                     #print("resampling process running")
                     time.sleep(0.5)
-                    print(f"soxwriter: bytes resampled: {file_stats.st_size} / {expected_filesize}, stopix: {self.stopix}, loopix: {loop_ix}")
+                    #print(f"soxwriter: bytes resampled: {file_stats.st_size} / {expected_filesize}, stopix: {self.stopix}, loopix: {loop_ix}")
                     progress = rel_finish
                     if not progress > 0:
                         progress = 5
@@ -490,29 +490,29 @@ class res_workers(QObject):
                         #print("NOW UPDATE STATUSBAR#############################################################################")
                         #self.mutex.unlock()
                 except:
-                    print("soxwriter_ temp file not found, proceeding without progress update")
+                    #print("soxwriter_ temp file not found, proceeding without progress update")
                     loop_ix = 3
                 if self.stopix is True:
                     #self.ret.terminate()
                     while self.ret.poll() is None:
-                        print("***soxwriter>>>>>>>>>killing process")
+                        #print("***soxwriter>>>>>>>>>killing process")
                         self.ret.kill()
                         time.sleep(1)
-                    print("********_____________soxwriter: terminate sox process on cancel")
+                    #print("********_____________soxwriter: terminate sox process on cancel")
 
         else:
             print(f"ERROR: no file {targetfilename} created")
-        print("soxwriter: success")
+        #print("soxwriter: success")
         time.sleep(0.5)
-        print("#############sox_worker wait for termination of sox")
+        #print("#############sox_worker wait for termination of sox")
         if self.ret.poll() is None:
             stdout, stderr = self.ret.communicate()
-        print("#############sox_worker as sox_writer finished##############")
+        #print("#############sox_worker as sox_writer finished##############")
         self.SigFinished.emit()
 
     def soxworker_terminate(self):
         #self.stopix = False
-        print("********************* ______________ terminate sox process now")
+        #print("********************* ______________ terminate sox process now")
         self.stopix = True
 
 
@@ -520,21 +520,21 @@ class res_workers(QObject):
         self.stopix = False
         DATABLOCKSIZE = 1024*4*256
         INCREMENT = 1000000
-        print("#############LOshifter_worker started##############")
+        #print("#############LOshifter_worker started##############")
         targetfilename = self.get_tfname()
         try:
             target_fileHandle = open(targetfilename, 'ab')
         except:
-            print("LOshifter worker: cannot open resampling temp file")
+            #print("LOshifter worker: cannot open resampling temp file")
             return False
         sourcefilename = self.get_sfname()
         try:
             source_fileHandle = open(sourcefilename, 'rb')
         except:
-            print("LOshifter worker: cannot open resampling source file")
+            #print("LOshifter worker: cannot open resampling source file")
             return False
         startoffset = self.get_starttrim()
-        print(f"LOshifter worker startoffset (bytes): {startoffset}")
+        #print(f"LOshifter worker startoffset (bytes): {startoffset}")
         readoffset = self.get_readoffset()
         source_fileHandle.seek(readoffset+startoffset, 1) #TODO: check if offset larger than filesize
         expected_filesize = self.get_expfs()
@@ -557,10 +557,10 @@ class res_workers(QObject):
   
         dt = 1/sSR
         segment_tstart = 0
-        print(f"LOshifter worker targetfilename: {targetfilename}, exp filesize: {expected_filesize}")
+        #print(f"LOshifter worker targetfilename: {targetfilename}, exp filesize: {expected_filesize}")
         #print(expected_filesize)
         if os.path.exists(targetfilename) == True:
-            print("LOshift worker: target file has been found")
+            #print("LOshift worker: target file has been found")
             file_stats = os.stat(targetfilename)
             progress_old = 0
             fsize_old = 0
@@ -605,8 +605,8 @@ class res_workers(QObject):
                 if self.stopix is True:
                     break
         else:
-            print("LOshift worker: target file has not been found")
-            print(f"LOshift worker:ERROR: no file {targetfilename} created")
+            #print("LOshift worker: target file has not been found")
+            rint(f"LOshift worker:ERROR: no file {targetfilename} created")
             #print("success")
             time.sleep(0.1)
         source_fileHandle.close()    
@@ -644,7 +644,6 @@ class resample_c(QObject):
     def __init__(self, resample_m):
         super().__init__()
         self.m = resample_m.mdl
-        print(f'__init__ resampler: {self.m["sample"]}')
         self.MAX_GAP = 300 # seconds allowable between two subsequent source files
         self.CHUNKSIZE = 1024**2 # data chunk size for reading/writing files
         #TODO: check condition early
@@ -660,6 +659,7 @@ class resample_c(QObject):
         self.m["last_system_time"] = time.time()
         self.m["clearlist"] = False
         self.logger = resample_m.logger
+        self.logger.debug(f'__init__ resampler: {self.m["sample"]}')
 
     def set_LOvars(self,_value): #TODO seems unused, remove ?
         self.__slots__[0] = _value
@@ -707,7 +707,7 @@ class resample_c(QObject):
         """
         total, used, free = shutil.disk_usage(_dir)
         if free < expected_filesize:
-            print(f"not enough diskspace for this process, please free at least {expected_filesize - free} bytes")
+            self.logger.debug(f"not enough diskspace for this process, please free at least {expected_filesize - free} bytes")
             auxi.standard_errorbox(f"not enough diskspace for this process, please free at least {expected_filesize - free} bytes")
             return False
         else:
@@ -795,7 +795,7 @@ class resample_c(QObject):
         #self.SigRelay.emit("cm_all_",["wavheader",self.wavheader])
         if self.m["merge2G_deleteoriginal"]:
             for input_file in input_file_list:
-                print(f"remove {input_file} if exists")
+                self.logger.debug(f"remove {input_file} if exists")
                 if os.path.exists(input_file) == True:
                     os.remove(input_file)
         self.m["clearlist"] = True
@@ -824,9 +824,10 @@ class resample_c(QObject):
         #print("resampler merg2G_cleanup before SigSyncTabs")
         self.logger.debug("resampler merg2G_cleanup before SigSyncTabs")
         #self.SigSyncTabs.emit(["test","resample","a","fileopened",False])
-        self.SigRelay.emit("cm_all_",["fileopened",False])
+        self.SigRelay.emit("cm_all_",["fileopened",False])  #TODO TODO TODO: das geht nicht
         self.m["list_out_files_resampled"] = []
         self.SigResampGUIReset.emit()
+        self.SigRelay.emit("cexex_resample",["relay_toall_reset_GUI",0])
 
     def LOshifter_new(self):
         """configures and starts LO shifting thread
@@ -1045,7 +1046,7 @@ class resample_c(QObject):
         #gui = self.m["gui_reference"]
         self.m["emergency_stop"] = True
 
-        print(f"soxerrorhandler errorstring: {errorstring}")
+        self.logger.debug(f"soxerrorhandler errorstring: {errorstring}")
         #self.sys_state.set_status(self.m)
         self.Sigincrscheduler.emit()
         auxi.standard_errorbox("Error produced by SOX, probably due to inconsistent cutting times; process terminated")
@@ -1075,16 +1076,16 @@ class resample_c(QObject):
         time.sleep(0.1)
         self.Sigincrscheduler.connect(self.res_scheduler)
         if self.m["accomp_label"] == True:
-            print("accomplish reached twice: return without action")
+            self.logger.debug("accomplish reached twice: return without action")
             return
         self.m["accomp_label"] = True
-        print("accomplish_resampling: soxstring thread finished")
+        self.logger.debug("accomplish_resampling: soxstring thread finished")
         target_fn = self.m["source_fn"]  #TODO: define im GUI_Hauptprogramm bzw. im scheduler
         self.m["progress"] = 0
         self.SigUpdateGUIelements.emit() #TODO replace by Relay method ?
         #gui.ui.progressBar_resample.setProperty("value", 0) #TODO: shift to a resample.view method, replace by signalling ?
         #self.soxthreadActive = False  #TODO: check is obsolete
-        print(f"accomplish reached, target_fn: {target_fn}")
+        self.logger.debug(f"accomplish reached, target_fn: {target_fn}")
         if os.path.exists(target_fn) == True:
             file_stats = os.stat(target_fn)
         else:
@@ -1107,29 +1108,29 @@ class resample_c(QObject):
         #if new_name exists --> delete
         newname = self.m["new_name"]
         if os.path.exists(newname) == True:  ## TODO CHECK IF TRY
-            print("accomplish remove newname")
+            self.logger.debug("accomplish remove newname")
             os.remove(self.m["new_name"])
-        print(f"accomplisher: new name: {newname}")
-        print(f"accomplisher: target_fn: {target_fn}")
+        self.logger.debug(f"accomplisher: new name: {newname}")
+        self.logger.debug(f"accomplisher: target_fn: {target_fn}")
         # Renaming the file
         #TODO: make try ! and repeat if fail until temp file is accessible
         exitcount = 0
         while True:
             try:
-                print ("accomplish: try shutil")
+                self.logger.debug ("accomplish: try shutil")
                 shutil.move(target_fn, self.m["new_name"])
                 break
             except:
                 exitcount += 1
                 time.sleep(2)
-                print(f"accomplish_resampling: access to {target_fn} not possible retry after 2 s")
+                self.logger.debug(f"accomplish_resampling: access to {target_fn} not possible retry after 2 s")
                 if exitcount > 20:
-                    print("accomplish impossible, give up")
+                    self.logger.debug("accomplish impossible, give up")
                     return False
         #shutil.move(target_fn, self.m["new_name"]) #TODO. cannot shift last temp file to external directory (ext. harddisk)
         self.m["t_wavheader"] = tgt_wavheader
         #self.sys_state.set_status(system_state)
-        print("accomplish leave after signalling to scheduler")   
+        self.logger.debug("accomplish leave after signalling to scheduler")   
         self.Sigincrscheduler.emit()
 
     
@@ -1149,14 +1150,14 @@ class resample_c(QObject):
             self.SigProgress.emit()
             sch[cnt]["action"] = 'terminate'
             #TODO: besser: cnt auf length(sch) setzen
-            print(f"emergency exit, length (sch) = {len(sch)}")
+            self.logger.debug(f"emergency exit, length (sch) = {len(sch)}")
             cnt = len(sch) - 1
             sch[cnt]["action"] = 'terminate'#Obsolete, remove after tests
 
         self.Sigincrscheduler.disconnect(self.res_scheduler)##############TODOTODOTODO
-        print("res_scheduler: reached scheduler")
+        self.logger.debug("res_scheduler: reached scheduler")
         tests = sch[cnt]["action"]
-        print(f"res_scheduler: count: {cnt}, sch.action: {tests}")
+        self.logger.debug(f"res_scheduler: count: {cnt}, sch.action: {tests}")
         schedule_objdict = self.m["schedule_objdict"]
         self.m["actionlabel"] = sch[cnt]["actionlabel"]
         self.m["sSR"] = sch[cnt]["sSR"]
@@ -1175,17 +1176,17 @@ class resample_c(QObject):
         if cnt > 0:
             self.m["source_fn"] = self.m["temp_directory"] + "/temp_" + str(cnt-1) + '.dat' #<<< NEW vs LOshifter : filename automatism
 
-        print(f'res_scheduler: targetfilename: {self.m["target_fn"]}')
-        print(f'res_scheduler: sourcefilename: {self.m["source_fn"]}')
+        self.logger.debug(f'res_scheduler: targetfilename: {self.m["target_fn"]}')
+        self.logger.debug(f'res_scheduler: sourcefilename: {self.m["source_fn"]}')
         if cnt > 1:
             remfile = self.m["temp_directory"] + "/temp_" + str(cnt-2) + '.dat'
             #remove old temp file
             if os.path.exists(remfile) == True:
-                print("new accomplish: remfile: " + remfile)
+                self.logger.debug("new accomplish: remfile: " + remfile)
                 try:
                     os.remove(remfile)
                 except:
-                    print("cannot remove temp file on exception (maybe emergency exit)")
+                    self.logger.debug("cannot remove temp file on exception (maybe emergency exit)")
 
         if sch[cnt]["blinkstate"]:
             self.m["res_blinkstate"] = True
@@ -1194,7 +1195,7 @@ class resample_c(QObject):
             
         self.m["r_sch_counter"] += 1
         if sch[cnt]["action"].find('terminate') == 0:
-            print("res_scheduler:  start termination")
+            self.logger.debug("res_scheduler:  start termination")
             self.m["r_sch_counter"] = 0 #terminate schedule, reset counter
             #self.sys_state.set_status(system_state)
             # self.SigSyncTabs.emit(["resample","resample","u","actionlabelbg",'lightgray'])
@@ -1224,7 +1225,7 @@ class resample_c(QObject):
                     try:
                         os.remove(x)
                     except:
-                        print("res_scheduler terminate: file access to temp file refused")
+                        self.logger.debug("res_scheduler terminate: file access to temp file refused")
             self.SigUpdateGUIelements.emit()
             #self.SigTerminate_Finished.connect(gui.cb_resample_new)  # TODO: muss resample_v.cb_resample_new sein
             self.SigTerminate_Finished.connect(self.m["_ref_cb_resample"])
@@ -1237,14 +1238,14 @@ class resample_c(QObject):
         #self.sys_state.set_status(system_state)
 
         if sch[cnt]["action"].find('resample') == 0:
-            print("res_scheduler: : resample rechaed, emit signal resample")
+            self.logger.debug("res_scheduler: : resample rechaed, emit signal resample")
             schedule_objdict["signal"]["resample"].connect(schedule_objdict["connect"]["resample"])
             schedule_objdict["signal"]["resample"].emit()
             time.sleep(0.01)
             #schedule_objdict["signal"]["resample"].disconnect(schedule_objdict["connect"]["resample"])
             pass
         if sch[cnt]["action"].find('accomplish') == 0:
-            #print("res_scheduler: accomplish rechaed, emit signal accomplish")
+            #self.logger.debug("res_scheduler: accomplish rechaed, emit signal accomplish")
             #self.SigSyncTabs.emit(["resample","resample","u","label36text",'FINALIZE'])
 
             #gui.ui.label_36.setText('FINALIZE') #TODO: shift to a resample.view method, treat in a different manner: model variable change and then update signal
@@ -1255,12 +1256,12 @@ class resample_c(QObject):
             time.sleep(0.01)
             #schedule_objdict["signal"]["accomplish"].disconnect(schedule_objdict["connect"]["accomplish"])
         if sch[cnt]["action"].find('LOshift') == 0:
-            print("res_scheduler: LOshift rechaed, emit signal LOshift")
+            self.logger.debug("res_scheduler: LOshift rechaed, emit signal LOshift")
             #TODO: gleicher Aufruf wie in 'resample':
             schedule_objdict["signal"]["LOshift"].connect(schedule_objdict["connect"]["LOshift"])
             schedule_objdict["signal"]["LOshift"].emit()
         if sch[cnt]["action"].find('progress') == 0:
-            print("res_scheduler:  progressupdate rechaed, no action")
+            self.logger.debug("res_scheduler:  progressupdate rechaed, no action")
 
     def schedule_A(self):
         """_definition of schedule for simple resampling without LO shift
@@ -1272,7 +1273,7 @@ class resample_c(QObject):
         :return: none
         :rtype: none
         """
-        print("start define resampling schedule A, no LOshift, pure resampling")
+        self.logger.debug("start define resampling schedule A, no LOshift, pure resampling")
 
         #system_state = self.sys_state.get_status()
         self.m["r_sch_counter"] = 0
@@ -1338,7 +1339,7 @@ class resample_c(QObject):
         :return: none
         :rtype: none
         """
-        print("start define resampling schedule B, with LOshift")
+        self.logger.debug("start define resampling schedule B, with LOshift")
 
         #system_state = self.sys_state.get_status()
         self.m["r_sch_counter"] = 0
@@ -1416,7 +1417,7 @@ class resample_c(QObject):
         :return: none
         :rtype: none
         """
-        print("start define resampling schedule B24, 24bit LOSHift with resampling")
+        self.logger.debug("start define resampling schedule B24, 24bit LOSHift with resampling")
 
         #system_state = self.sys_state.get_status()
         self.m["r_sch_counter"] = 0
@@ -1541,11 +1542,10 @@ class resample_v(QObject):
         self.m["blinking"] = False
         self.m["position"] = 0
         self.logger = resample_m.logger
-        resample_c.SigRelay.connect(self.rxhandler)
+        self.resample_c.SigRelay.connect(self.rxhandler)
+        self.resample_c.SigRelay.connect(self.SigRelay.emit)
         self.gui = gui #gui_state["gui_reference"]#system_state["gui_reference"]
-
         self.init_resample_ui() #TODO TODO TODO: activate after tests
-
         self.gui.radioButton_resgain.setChecked(False)
         self.gui.label_8.setEnabled(False)  #TODO: maybe remove, Unidentified
         self.gui.pushButton_resample_cancel.clicked.connect(self.resample_c.cancel_resampling) #TODO: shift to a resample.view method
@@ -1573,7 +1573,7 @@ class resample_v(QObject):
             #print("sox FAIL")
             self.logger.error("sox FAIL")
             print(ex.stderr, file=sys.stderr, end='', flush=True)
-            print(ex.stdout, file=sys.stdout, end='', flush=True)
+            #print(ex.stdout, file=sys.stdout, end='', flush=True)
             if len(ex.stderr) > 0: 
                 self.soxnotexist = True
 
@@ -1590,7 +1590,7 @@ class resample_v(QObject):
         #schedule_objdict["connect"]["updateGUI"] = self.update_GUI
         schedule_objdict["signal"]["cancel"] = self.SigCancel
         self.m["schedule_objdict"] = schedule_objdict
-        self.updateGUIelements()
+        #self.updateGUIelements()
 
     def init_resample_ui(self):
         """
@@ -1620,6 +1620,7 @@ class resample_v(QObject):
         self.gui.lineEdit_resample_Gain.setEnabled(True)
         self.gui.radioButton_resgain.setEnabled(True)
         self.gui.label_Filename_resample.setText('')
+        self.gui.pushButton_resample_split2G.clicked.connect(self.cb_split2G_Button)
         #self.gui.checkBox_writelog.clicked.connect(self.togglelogmodus) #TODO TODO TODO: logfilemodus anders implementieren
 
     def rxhandler(self,_key,_value):
@@ -1653,6 +1654,8 @@ class resample_v(QObject):
                 self.fillplaylist()      
             if  _value[0].find("logfilehandler") == 0:
                 self.logfilehandler(_value[1])
+            if  _value[0].find("relay_toall_reset_GUI") == 0:
+                self.SigRelay.emit("cexex_all_",["reset_GUI",0])
 
     def logfilehandler(self,_value):
         if _value is False:
@@ -1687,7 +1690,7 @@ class resample_v(QObject):
         if ctrl.find("cancel_resampling"):
             self.gui.pushButton_resample_cancel.clicked.connect(self.resample_c.cancel_resampling)
         else:
-            print("error in resample_v, ext_meth_connect ")
+            self.logger.debug("error in resample_v, ext_meth_connect ")
             self.logger.error("error in resample_v, ext_meth_connect ")
 
     def GUI_reset_status(self):
@@ -1727,6 +1730,8 @@ class resample_v(QObject):
         self.gui.label_36.setStyleSheet("background-color: " + self.m["actionlabelbg"])
         self.gui.label_36.setFont(QFont('arial',self.m["label36Font"]))
         self.gui.label_36.setText(self.m["actionlabel"])
+        self.gui.lineEdit_resample_targetLO.setText(str((self.m["wavheader"]["centerfreq"]/1000)))
+
         self.gui.progressBar_resample.setProperty("value", self.m["progress"])
         if self.m["emergency_stop"]:
             self.GUI_reset_status()
@@ -2331,6 +2336,7 @@ class resample_v(QObject):
         self.gui.radioButton_advanced_sampling.setEnabled(status)
         self.gui.pushButton_resample_resample.setEnabled(status)
         self.gui.pushButton_resample_split2G.setEnabled(status)
+        
         #self.gui.pushButton_resample_GainOnly.setEnabled(status)
         self.gui.lineEdit_resample_targetnameprefix.setEnabled(status)
 
@@ -2344,7 +2350,7 @@ class resample_v(QObject):
         :return: [ReturnDescription]
         :rtype: [ReturnType]
         """
-        print("resampler_module_5 toggle_gain reached")
+        self.logger.debug("resampler_module_5 toggle_gain reached")
         #system_state = self.sys_state.get_status() #TODO: --> self.gui
         #gui = system_state["gui_reference"]
         if self.gui.radioButton_resgain.isChecked():
@@ -2470,7 +2476,7 @@ class resample_v(QObject):
             #print("emergency stop in cb_resample")
             self.logger.warning("emergency stop in cb_resample")
             self.m["reslist_ix"] = 0
-            print("resamle list has been terminated, reset counter and exit event loop")
+            self.logger.debug("resamle list has been terminated, reset counter and exit event loop")
             self.gui.listWidget_playlist_2.clear()
             self.gui.listWidget_sourcelist_2.clear()
             time.sleep(0.1)
@@ -2511,16 +2517,16 @@ class resample_v(QObject):
         reslist_len = self.gui.listWidget_playlist_2.count()
         if reslist_len > 0: #file list has at least one entry
             if self.m["reslist_ix"] < reslist_len:    #file list not yet finished
-                print(f"cb_resample: reslist index: {self.m['reslist_ix']}")
+                self.logger.debug(f"cb_resample: reslist index: {self.m['reslist_ix']}")
                 lw = self.gui.listWidget_playlist_2
-                print("cb_resample: fetch next reslist file")
+                self.logger.debug("cb_resample: fetch next reslist file")
                 item = lw.item(self.m["reslist_ix"])
                 item.setBackground(QtGui.QColor("lightgreen"))  #TODO: shift to resampler view
                 self.m["my_filename"], self.m["ext"] = os.path.splitext(item.text())
                 #TODO: entrypoint f cutstop, cutstart:
                 #(1) cut first file: copy from fseek (cutstart) to cutstop
                 self.m["f1"] = self.m["my_dirname"] + '/' + item.text()
-                print(f'cb_resample: file: {self.m["f1"]}')
+                self.logger.debug(f'cb_resample: file: {self.m["f1"]}')
                 self.m["wavheader"] = WAVheader_tools.get_sdruno_header(self,self.m["f1"])
                 #set filename in all other tabs: CHECK: maybe necessary in view spectra but not necessarily in others ?
                 #self.SigSyncTabs.emit(["dum","resample","a","my_filename",self.m["my_filename"]])
@@ -2602,7 +2608,7 @@ class resample_v(QObject):
 
         #TODO TODO TODO: Abfragen, ob genug Speicherplatz für temp und Zielfiles
         if self.m["wavheader"]['sdrtype_chckID'].find('auxi') == -1:
-            print("resampling of rcvr and dat format not yet fully tested, may be problematic")
+            self.logger.debug("resampling of rcvr and dat format not yet fully tested, may be problematic")
             #TODO: untersuchen, wie rcvr hier zu machen ist; an sich sollte das kein Problem sein, da ja der wavheader ohnehin bereits auf auxi umgeschrieben ist
             #return False          
         #self.SigActivateOtherTabs.emit("Resample","inactivate",["View spectra"]) #TODO: necessary ? has been done at the beginning already
@@ -2616,17 +2622,17 @@ class resample_v(QObject):
         if abs(self.m["fshift"]) > 1e-5: #LOShift wanted
             if self.m["wavheader"]['nBitsPerSample'] == 24:
                 self.resample_c.schedule_B24()
-                print("generate schedule for 24 LOshifting")
+                self.logger.debug("generate schedule for 24 LOshifting")
             else:
                 if self.m["tSR"] > self.m["wavheader"]["nSamplesPerSec"]:
-                    print("generate schedule for 32/16 LOshifting with upsampling")
+                    self.logger.debug("generate schedule for 32/16 LOshifting with upsampling")
                     self.resample_c.schedule_B24()
                 else:
-                    print("generate schedule for 32/16 LOshifting with downsampling")
+                    self.logger.debug("generate schedule for 32/16 LOshifting with downsampling")
                     self.resample_c.schedule_B()
         else: #no LOShift
             self.resample_c.schedule_A()
-            print("generate schedule for simple resampling")
+            self.logger.debug("generate schedule for simple resampling")
 
         #generate intermediate names for the resampled files (raw size)
         new_name = self.m["out_dirname"] + '/' + self.m["my_filename"] +'_resamp_' + str(SDRUno_suffix) + '_' + str(int(self.m["tLO"]/1000)) + 'kHz.wav'

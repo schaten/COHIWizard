@@ -242,8 +242,8 @@ class statlst_gen_worker(QtCore.QThread):
                 # while self.get_continue() == False:
                 #     time.sleep(0.001)
         except:
-            print("annotation file not yet existent")
-            #logging.info("annotation file not yet existent")
+            #print("annotation file not yet existent")
+            self.logging.info("annotation file not yet existent")
             return False
 
         status = {}
@@ -273,7 +273,7 @@ class autoscan_worker(QtCore.QThread):
     """
     __slots__ = ["GUI_parameters", "continue","pdata","progressvalue","horzscal",
              "filepath","readoffset","wavheader","datablocksize","baselineoffset",
-             "unions","annotation_filename","annotation"]
+             "unions","annotation_filename","annotation","errormsg"]
 
     SigUpdateUnions = pyqtSignal()
     SigUpdateGUI = pyqtSignal()
@@ -283,6 +283,7 @@ class autoscan_worker(QtCore.QThread):
     SigStatustable = pyqtSignal()
     SigPlotdata = pyqtSignal()
     SigAnnSpectrum = pyqtSignal(object)
+    SigError = pyqtSignal(object)
     SigAnnotation = pyqtSignal()
 
 
@@ -350,6 +351,10 @@ class autoscan_worker(QtCore.QThread):
         self.__slots__[12] = _value
     def get_annotation(self):
         return(self.__slots__[12])
+    def set_errormsg(self,_value):
+        self.__slots__[13] = _value
+    def get_errormsg(self):
+        return(self.__slots__[13])
 
     #@njit
     def autoscan_fun(self):
@@ -378,14 +383,24 @@ class autoscan_worker(QtCore.QThread):
             # wait for confirmation from Progress bar updating
             #print(f"annotate autoscan fu reached, position: {self.position}")
             while self.get_continue() == False:
+                #print("waitloop")
                 time.sleep(0.01)
+            #print("post waitloop")
             wavheader = self.get_wavheader()
             pscale = wavheader['nBlockAlign']
-            position = int(np.floor(pscale*np.round(wavheader['data_nChunkSize']*self.position/pscale/100)))
+            file_stats = os.stat(self.get_filepath())
+            
+            corrchunksize = min(wavheader['data_nChunkSize'],file_stats.st_size - self.get_readoffset())
+            #position = int(np.floor(pscale*np.round(wavheader['data_nChunkSize']*self.position/pscale/100)))
+            position = int(np.floor(pscale*np.round(corrchunksize*self.position/pscale/100)))
             BPS = wavheader["nBitsPerSample"]
+            #print(f'pre readsegment: fp: {self.get_filepath()},p: {position},ro: {self.get_readoffset()}, dbs: {self.get_datablocksize()},bps: {BPS},whfmttg: {wavheader["wFormatTag"]}')
             ret = auxi.readsegment_new(self,self.get_filepath(),position,self.get_readoffset(), self.get_datablocksize(),BPS,BPS,wavheader["wFormatTag"])#TODO: replace by slots communication
             data = ret["data"]
             if 2*ret["size"]/wavheader["nBlockAlign"] < self.get_datablocksize(): #TODO: replace by slots communication
+                print(f"size false condition: retsize: {ret['size']}, bBlockAlign: {wavheader['nBlockAlign']}, datablocksize: {self.get_datablocksize()}")
+                self.SigError.emit("wavheader error")
+                self.SigFinished.emit()
                 return False
             #TODO: new invalidity condition, replace/remove old one: 
             # if len(data) == 10:
@@ -393,6 +408,7 @@ class autoscan_worker(QtCore.QThread):
             #         return False
             self.set_continue(False)
             self.SigAnnSpectrum.emit(data)
+            #print("sleep before continue 1")
             while self.get_continue() == False:
                 time.sleep(0.001)
             self.SigAnnSpectrum.emit(data)
@@ -400,6 +416,7 @@ class autoscan_worker(QtCore.QThread):
             self.set_continue(False)
             self.SigPlotdata.emit()
             # wait until plot has been carried out
+            #print("sleep before continue 2")
             while self.get_continue() == False:
                 time.sleep(0.001)
             self.annot[self.autoscan_ix]["FREQ"] = pdata["datax"] 
@@ -437,6 +454,7 @@ class autoscan_worker(QtCore.QThread):
             #min and max SNR data are currently not being used.
             minsnr = np.minimum(minsnr, reannot["SNR"])
             maxsnr = np.maximum(maxsnr, reannot["SNR"])
+            #print("annotate worker findpeak")
 
         # collect cumulative info in a dictionary and write the info to the annotation yaml file 
         self.annotation = {}
@@ -462,7 +480,7 @@ class autoscan_worker(QtCore.QThread):
         while self.get_continue() == False:
                 time.sleep(0.001)
         self.SigFinished.emit()
-        print("+++++++++++++++++++++++++++++          leave autoscan thread")
+        print("++    leave autoscan thread")
 
 
 class annotate_m(QObject):
@@ -519,6 +537,7 @@ class annotate_c(QObject):
         self.m["PROMINENCE"] = 15 # minimum peak prominence in dB above baseline for peak detector #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
         self.m["FILTERKERNEL"] = 2 # length of the moving median filter kernel in % of the spectral span #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
         self.STICHTAG = datetime(2023,2,25,0,0,0)
+        self.m["scanerror"] = False
 
     def autoscan(self):
         """
@@ -534,7 +553,7 @@ class annotate_c(QObject):
         self.autoscanthread = QThread()
         self.autoscaninst = autoscan_worker(self)
         self.autoscaninst.moveToThread(self.autoscanthread)
-        self.SigRelay.emit("cexex_annotate",["getGUIvalues",0])
+        self.SigRelay.emit("cexex_annotate",["getGUIvalues",0])  
         time.sleep(0.001)
         self.autoscaninst.set_GUI_parameters([self.m["NumScan"],self.m["minSNR"],[]])
         self.autoscaninst.set_filepath(self.m["f1"])
@@ -544,6 +563,7 @@ class annotate_c(QObject):
         self.autoscaninst.set_baselineoffset(self.m["baselineoffset"])
         self.autoscaninst.set_annotation_filename(self.m["annotation_filename"])
         self.autoscanthread.started.connect(self.autoscaninst.autoscan_fun)
+        self.autoscaninst.SigError.connect(self.errorsigtoannstations)
         self.autoscaninst.SigFinished.connect(self.ann_stations)
         self.autoscaninst.SigFinished.connect(self.autoscanthread.quit)
         self.autoscaninst.SigFinished.connect(self.autoscaninst.deleteLater)
@@ -557,6 +577,10 @@ class annotate_c(QObject):
         self.autoscanthread.start()
         if self.autoscanthread.isRunning():
             self.autoscanthreadActive = True
+            print("scanthread started")
+
+    def errorsigtoannstations(self):
+        self.m["scanerror"] = True
 
     def annotationset(self):
         self.annotation = self.autoscaninst.get_annotation()
@@ -567,6 +591,7 @@ class annotate_c(QObject):
         [self.locs_union,self.freq_union] =self.autoscaninst.get_unions()
 
     def annspectrumhandler(self,data):
+        print("annspectrumhandler reached")
         pdata = self.ann_spectrum(data)
         self.autoscaninst.set_pdata(pdata)
         self.autoscaninst.set_continue(True)
@@ -637,9 +662,8 @@ class annotate_c(QObject):
         T = pd.read_excel(MWlistname)
         return T
 
-    def ann_stations(self): #TODO: shift to annotation module, this is a controller method
+    def ann_stations(self):
         """
-        CONTROLLER
         read MWLIST and collect stations info in dictionary, initialize yamlheader, starts statlst_gen_worker for stationslist generation, 
             finally calls interactive_station_select()
             depends on: statlst_gen_worker, Progressbarupdate(), csan_completed(), write_yaml_header(), interactive_station_select(), annotation_completed()
@@ -650,11 +674,13 @@ class annotate_c(QObject):
         :rtype: Boolean
         """
         #self.m = sys_state.get_status()
-        time.sleep(1)
+        time.sleep(0.1)
+        if self.m["scanerror"]:
+            auxi.standard_errorbox("Error during scan procedure, maybe wav header of file is corrupt or wrong entire (chunksize ?)")
+            return False
         self.stations_filename = self.m["annotationpath"] + '/stations_list.yaml'
         if os.path.exists(self.stations_filename) == False:
-
-            # read Annotation_basis table from mwlist.org
+            # read Annotation_basis table from mwlist.org   
             self.SigRelay.emit("cexex_annotate",["annotatestatusdisplay","Status: read MWList table for annotation"])
             filters ="MWList files (*.xlsx)"
             selected_filter = "MWList files (*.xlsx)"
@@ -694,7 +720,7 @@ class annotate_c(QObject):
             # T = pd.read_excel(MWlistname)
 
             #print("generate annotation basis")
-            #self.gui.label.setText("Status: Generate annotation basis") ###################
+            #self.gui.label.setText("Status: Generate annotation basis") 
             self.SigRelay.emit("cexex_annotate",["annotatestatusdisplay","Status: Generate annotation basis"])
 
             freq = [] # column with all tabulated frequencies in MWtabelle
@@ -748,7 +774,6 @@ class annotate_c(QObject):
     #     self.merge2G_thread.finished.connect(self.merge2G_thread.deleteLater)
     #     self.merge2G_thread.finished.connect(lambda: self.merge2G_cleanup(input_file_list))
 
-
         else:
             self.m["scan_completed_ref"]()  #TODO: unsaubere Lösung; controller funs should not access GUI functions
             try:
@@ -767,12 +792,13 @@ class annotate_c(QObject):
                     self.stations = yaml.safe_load(stream)
                     stream.close()
                 except:
-                    print("cannot get stations list")
+                    #print("cannot get stations list")
                     return False
                 ######################################## GUI UPDATE AND GUI RESET RELAY ##############################################################################################
                 #self.gui.labelFrequency.setText('Frequency: ' + str(self.stations[freq_ix]['frequency'] + ' kHz'))
                 self.SigRelay.emit("cexex_annotate",["labelFrequencySetText",'Frequency: ' + str(self.stations[freq_ix]['frequency'] + ' kHz')])
-                self.SigRelay.emit("cexex_annotate",["reset_GUI",0])
+                self.SigRelay.emit("cexex_annotate",["ann_upd_GUI",0])
+
                 # self.gui.lineEdit.setFont(QFont('MS Shell Dlg 2', 12))
                 # self.gui.lineEdit.setText('')
                 # self.gui.lineEdit_TX_Site.setText('')
@@ -836,13 +862,13 @@ class annotate_c(QObject):
         read yaml stations_list.yaml
 
         """
-        print("discard reached")
+        #print("discard reached")
         try:
             stream = open(self.m["status_filename"], "r")
             status = yaml.safe_load(stream)
             stream.close()
         except:
-            print("discard cannot write to yaml")
+            #print("discard cannot write to yaml")
             return False 
         freq_ix = status["freqindex"] # read last frequency index which was treated in interactive list checking
         #Discard this frequency, advance freq counter, do not write to cohiradia annotation
@@ -972,6 +998,8 @@ class annotate_v(QObject):
                 self.scan_deactivate()
             if  _value[0].find("logfilehandler") == 0:
                 self.logfilehandler(_value[1])
+            if  _value[0].find("ann_upd_GUI") == 0:
+                self.ann_upd_GUI()
             #handle method
             # if  _value[0].find("plot_spectrum") == 0: #EXAMPLE
             #     self.plot_spectrum(0,_value[1])   #EXAMPLE
@@ -1013,7 +1041,7 @@ class annotate_v(QObject):
         :return: flag False or True, False on unsuccessful execution
         :rtype: Boolean
         """
-        print("annotate: updateGUIelements")
+        #print("annotate: updateGUIelements")
         self.gui.label_Filename_Annotate.setText(self.m["my_filename"] + self.m["ext"])
         if (os.path.exists(self.stations_filename) == True):
             self.scan_completed()
@@ -1022,7 +1050,7 @@ class annotate_v(QObject):
                 status = yaml.safe_load(stream)
                 stream.close()
             except:
-                print("cannot get status")
+                #print("update GUI elements: cannot get status")
                 return False 
             if status["annotated"] == True:
                 self.annotation_completed()
@@ -1044,14 +1072,25 @@ class annotate_v(QObject):
         self.gui.lineEdit_TX_Site.setText('')
         self.gui.lineEdit_Country.setText('')
         self.gui.lineEdit.setStyleSheet("background-color : white")
-        self.gui.lineEdit.setFont(QFont('MS Shell Dlg 2', 12))
+        #self.gui.lineEdit.setFont(QFont('MS Shell Dlg 2', 12))
         self.gui.Annotate_listWidget.clear()
         self.gui.pushButtonDiscard.setEnabled(False)
         self.gui.labelFrequency.setText("Freq:")
         self.gui.label_Filename_Annotate.setText('')
+                # self.gui.lineEdit.setFont(QFont('MS Shell Dlg 2', 12))
+                # self.gui.lineEdit.setText('')
+                # self.gui.lineEdit_TX_Site.setText('')
+                # self.gui.lineEdit_Country.setText('')
+                # self.gui.lineEdit.setStyleSheet("background-color : white")
+                # self.gui.lineEdit.setFont(QFont('MS Shell Dlg 2', 12))
+
         self.annotation_deactivate()
         self.scan_deactivate()
-        self.stations_filename = self.m["annotationpath"] + '/stations_list.yaml'
+        try:
+            self.stations_filename = self.m["annotationpath"] + '/stations_list.yaml'
+        except:
+            #print("no annotationspath, ignore")
+            return False
         if (os.path.exists(self.stations_filename) == True) and self.m["fileopened"]:
             self.scan_completed()
             try:
@@ -1059,7 +1098,7 @@ class annotate_v(QObject):
                 status = yaml.safe_load(stream)
                 stream.close()
             except:
-                print("cannot get status")
+                #print("reset GUI: cannot get status")
                 return False 
             if status["annotated"] == True:
                 self.annotation_completed()
@@ -1218,7 +1257,7 @@ class annotate_v(QObject):
         # #send continue flag to autoscan task
         # if self.autoscanthreadActive == True:
         #     self.annotate_c.autoscaninst.set_1(True)
-        print("Progressbarupdate")
+        #print("Progressbarupdate")
         self.gui.progressBar_2.setProperty("value", int(self.annotate_c.autoscaninst.get_progressvalue()))
         #send continue flag to autoscan task
         if self.annotate_c.autoscanthreadActive == True:
@@ -1233,7 +1272,7 @@ class annotate_v(QObject):
         # #send continue flag to autoscan task
         # if self.autoscanthreadActive == True:
         #     self.annotate_c.autoscaninst.set_1(True)
-        print("Progressbarupdate 2 222222222222222")
+        #print("Progressbarupdate 2 222222222222222")
         self.gui.progressBar_2.setProperty("value", int(self.annotate_c.statlst_geninst.get_progressvalue()))
         #send continue flag to autoscan task
         if self.annotate_c.statlst_genthreadActive == True:
@@ -1286,6 +1325,7 @@ class annotate_v(QObject):
         if self.autoscanthreadActive == True:
             self.annotate_c.autoscaninst.set_continue(True)
 
+
 #########################????????????????????????####################
 
         # self.autoscanthread = QThread()
@@ -1305,8 +1345,6 @@ class annotate_v(QObject):
 
 ############################## TAB ANNOTATE ####################################
 
-
-
     def scanupdateGUI(self):
         """_summary_
         VIEW
@@ -1318,63 +1356,24 @@ class annotate_v(QObject):
         self.gui.lineEdit.setStyleSheet("background-color : yellow")
         self.gui.lineEdit.setFont(QFont('MS Shell Dlg 2', 12))
 
-            
-    def status_writetableread(self):
-        """
-        VIEW
-        _summary_
-        """
-        self.gui.progressBar_2.setProperty("value", int(0))
-        self.gui.label.setText("Status: read MWList table for annotation")
-        #send continue flag to autoscan task
-        if self.autoscanthreadActive == True:
-            self.annotate_c.autoscaninst.set_continue(True)
-
-    def autoscan_finished(self):
-        """
-        VIEW
-        _summary_
-        """
-        self.gui.horizontalScrollBar_view_spectra.setEnabled(True)
+    def ann_upd_GUI(self):
+        self.gui.lineEdit.setFont(QFont('MS Shell Dlg 2', 12))
         self.gui.lineEdit.setText('')
         self.gui.lineEdit_TX_Site.setText('')
         self.gui.lineEdit_Country.setText('')
         self.gui.lineEdit.setStyleSheet("background-color : white")
         self.gui.lineEdit.setFont(QFont('MS Shell Dlg 2', 12))
-        self.autoscanthreadActive = True
-        if self.gui.radioButton_plotpreview.isChecked() is True:
-            plt.close()
-
-
-    def scanplot(self):
-        """
-        VIEW
-        _summary_
-        """
-        #TODO: only execute if Preview_plot == True   radioButton_plotpreview
-        if self.gui.radioButton_plotpreview.isChecked() is True:
-            plt.close()
-            plt.cla()
-            autoscan_ret = self.annotate_c.autoscaninst.get_GUI_parameters()
-            pdata = autoscan_ret[2]
-            #self.__slots__[0][2] = pdata
-            plt.plot(pdata["datax"],pdata["datay"])
-            plt.xlabel("frequency (Hz)")
-            plt.ylabel("peak amplitude (dB)")
-            plt.show()
-            plt.pause(1)
-        #send continue flag to autoscan task
-        if self.autoscanthreadActive == True:
-            self.annotate_c.autoscaninst.set_continue(True)
+            
 
     #@njit
-    def interactive_station_select(self):  #TODO: move to annotation module
+    def interactive_station_select(self):
         """
         TODO: write text
         read yaml stations_list.yaml
 
         """
-        print("interactive station select annotator module")
+        #print("interactive station select annotator module")
+        #self.gui.lineEdit.setStyleSheet("background-color : white")
         self.gui.Annotate_listWidget.clear()
         self.gui.lineEdit.setText('')
         self.gui.lineEdit_TX_Site.setText('')
@@ -1437,7 +1436,7 @@ class annotate_v(QObject):
 
         """
         #memorize status and advance freq_ix
-        print("list clicked annotator module")
+        #print("list clicked annotator module")
         try:
             stream = open(self.m["status_filename"], "r")
             status = yaml.safe_load(stream)
@@ -1483,14 +1482,14 @@ class annotate_v(QObject):
 
         """
         #self.gui.lineEdit.setEnabled(False)
-        print('Editline copy to metadata file, module annotator')
+        #print('Editline copy to metadata file, module annotator')
         self.gui.pushButtonENTER.setEnabled(False)
         try:
             stream = open(self.m["status_filename"], "r")
             status = yaml.safe_load(stream)
             stream.close()
         except:
-            print("enterlineannotation cannot get status")
+            #print("enterlineannotation cannot get status")
             return False
         
         freq_ix = status["freqindex"]
@@ -1525,13 +1524,13 @@ class annotate_v(QObject):
         read yaml stations_list.yaml
 
         """
-        print("DISCARD annotatemodule")
+        #print("DISCARD annotatemodule")
         try:
             stream = open(self.m["status_filename"], "r")
             status = yaml.safe_load(stream)
             stream.close()
         except:
-            print("stream not iopened DISCARD annotatemodule")
+            #print("stream not iopened DISCARD annotatemodule")
             return False 
         freq_ix = status["freqindex"] # read last frequency index which was treated in interactive list checking
         #Discard this frequency, advance freq counter, do not write to cohiradia annotation
@@ -1546,112 +1545,4 @@ class annotate_v(QObject):
         #self.gui.progressBar_2.setProperty("value", (freq_ix + 1)/len(self.stations)*100)
         return False
 
-    def interactive_station_select(self):  #TODO: move to annotation module
-        """
-        CONTROLLER
-        read yaml stations_list.yaml
-
-        """
-        print("interactive station_select annotater module")
-        self.gui.Annotate_listWidget.clear()
-        self.gui.lineEdit.setText('')
-        self.gui.lineEdit_TX_Site.setText('')
-        self.gui.lineEdit_Country.setText('')
-        ### reading again the yaml is inefficient: could be passed from ann_stations
-        try:
-            stream = open(self.m["status_filename"], "r")
-            status = yaml.safe_load(stream)
-            stream.close()
-        except:
-            print("interactive stats loop cannot get status. module annotate")
-            return False 
-        try:
-            stream = open(self.m["stations_filename"], "r", encoding="utf8")
-            self.stations = yaml.safe_load(stream)
-            stream.close()
-        except:
-            print("interactive stats loop cannot get stations list, module annotator")
-            return False
-        
-        freq_ix = status["freqindex"] # read last frequency index which was treated in interactive list checking
-        if freq_ix >= len(self.stations):
-            self.annotation_completed()
-            status["annotated"] = True
-            stream = open(self.m["status_filename"], "w")
-            yaml.dump(status, stream)
-            stream.close()
-            print("interactive stats loop, freq ix > len, module annotator")
-            return False
-        plen = int((len(self.stations[freq_ix])-2)/3) #number of station candidates
-        self.gui.labelFrequency.setText('f: ' + str(self.stations[freq_ix]['frequency'] + ' kHz'))
-        print(f"forward progressbar interactive stations select, value: {freq_ix/len(self.stations)*100}")
-        self.gui.progressBar_2.setProperty("value", freq_ix/len(self.stations)*100)
-        #self.gui.lineEdit.setText('Frequency: ' + str(self.stations[freq_ix]['frequency'] + ' kHz'))
-        time.sleep(0.01)
-        
-        for ix2 in range(plen):
-            country_string = self.stations[freq_ix]['country' + str(ix2)]
-            programme_string = self.stations[freq_ix]['programme' + str(ix2)]
-            tx_site_string = self.stations[freq_ix]['tx-site' + str(ix2)]
-            item = QtWidgets.QListWidgetItem()
-            self.gui.Annotate_listWidget.addItem(item)
-            item = self.gui.Annotate_listWidget.item(ix2)
-            item.setText(country_string.strip('\n') + ' | ' + programme_string.strip('\n') + ' | ' + tx_site_string.strip('\n'))
-            time.sleep(0.01)
-        #add dummy line in list for selecting own entry
-        # item = QtWidgets.QListWidgetItem()
-        # self.gui.Annotate_listWidget.addItem(item)
-        # item = self.gui.Annotate_listWidget.item(ix2+1)
-        # dum_cstr = 'OTHER COUNTRY, Please enter manually'
-        # dum_pstr = 'OTHER STATION, Please enter manually'
-        # dum_txstr = 'OTHER TX SITE, Please enter manually'
-        # item.setText(dum_cstr.strip('\n') + ' | ' + dum_pstr.strip('\n') + ' | ' + dum_txstr.strip('\n'))
-        # time.sleep(0.01)
-        self.gui.pushButtonDiscard.setEnabled(True)
-
-
-    def cb_ListClicked(self,item):
-        """
-        VIEW OR CONTROLLER ???
-        read yaml stations_list.yaml
-
-        """
-        #memorize status and advance freq_ix
-        print("LIST CLICKED module annotator")
-        try:
-            stream = open(self.m["status_filename"], "r")
-            status = yaml.safe_load(stream)
-            stream.close()
-        except:
-            print("LIST clicked, cannot get status, module annotate")
-            return False 
-        freq_ix = status["freqindex"] # read last frequency index which was treated in interactive list checking
-        if freq_ix < len(self.stations):
-            #read index of clicked row and fetch associated content from stations list
-            cr_ix = self.gui.Annotate_listWidget.currentRow()
-            Ecountry_string = self.stations[freq_ix]['country' + str(cr_ix)]
-            Eprogramme_string = self.stations[freq_ix]['programme' + str(cr_ix)]
-            Etx_site_string = self.stations[freq_ix]['tx-site' + str(cr_ix)]
-            self.gui.labelFrequency.setText('f: ' + str(self.stations[freq_ix]['frequency']) + ' kHz')
-
-            self.gui.lineEdit.setText(Eprogramme_string)
-            self.gui.lineEdit.setAlignment(QtCore.Qt.AlignLeft)
-            self.gui.lineEdit.home(True)
-            self.gui.lineEdit_TX_Site.setText(Etx_site_string)
-            self.gui.lineEdit_TX_Site.setAlignment(QtCore.Qt.AlignLeft)
-            self.gui.lineEdit_TX_Site.home(True)
-            self.gui.lineEdit_Country.setText(Ecountry_string)
-            self.gui.lineEdit_Country.setAlignment(QtCore.Qt.AlignLeft)
-            self.gui.lineEdit_Country.home(True)
-            self.current_freq_ix = freq_ix
-        # end of stationslist reached
-            self.gui.pushButtonENTER.setEnabled(True)
-        else:
-            status["freqindex"] = freq_ix
-            status["annotated"] = True
-            stream = open(self.m["status_filename"], "w")
-            yaml.dump(status, stream)
-            stream.close()
-            self.gui.progressBar_2.setProperty("value", 100)
-            self.annotation_completed()
-
+ 

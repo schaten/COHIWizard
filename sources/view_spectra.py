@@ -65,6 +65,7 @@ class view_spectra_c(QObject):
 
     SigAny = pyqtSignal()
     SigCancel = pyqtSignal()
+    SigRelay = pyqtSignal(str,object)
     #SigDisplaySpectrum = pyqtSignal(object,object)
 
     def __init__(self, view_spectra_m):

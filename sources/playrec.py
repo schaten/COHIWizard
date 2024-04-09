@@ -466,6 +466,7 @@ class playrec_c(QObject):
             PLEASE USE THE 'Resample' TAB TO CREATE A PLAYABLE FILE ! \n\n \
             SR must be in the set: 20000, 50000, 100000, 250000, 500000, 1250000, 2500000"
             
+
         if self.m["icorr"] < -100 or self.m["icorr"] > 100:
             self.m["errorf"] = True
             errortxt = "frequency correction min ppm must be in \
@@ -473,7 +474,8 @@ class playrec_c(QObject):
                       Probably not a COHIRADIA File "
             
         if self.m["errorf"]:
-            auxi.standard_errorbox(errortxt)            
+            auxi.standard_errorbox(errortxt)
+            self.SigRelay.emit("cexex_all_",["reset_GUI",0])     ###TODO geht nicht
             return False
         else:
             return True
@@ -616,7 +618,7 @@ class playrec_c(QObject):
         self.playthread.start()
         if self.playthread.isRunning():
             self.m["playthreadActive"] = True
-            self.SigRelay.emit("cm_all_",["playthreadActive",self.m["playthreadActive"]])
+            self.SigRelay.emit("cm_all_",["playthreadActive",self.m["playthreadActive"]])  ###TODO: geht nicht
             self.logger.info("playthread started in playthread_threadstarter = play_tstarter() (threadstarter)")
             # TODO replace playthreadflag by not self.playthread.isFinished()
             return True
@@ -703,7 +705,7 @@ class playrec_c(QObject):
         self.playthread.quit()
         self.playthread.wait()
         #time.sleep(0.1)
-        self.SigRelay.emit("cm_all_",["fileopened",False])
+        self.SigRelay.emit("cm_all_",["fileopened",False])   ####TODO geht nicht
         if self.m["stopstate"]:
             self.logger.info("EOF-manager: player has been stopped")
             file_stats = os.stat(self.m["f1"])
@@ -749,7 +751,7 @@ class playrec_c(QObject):
         time.sleep(0.1)
         prfilehandle.close()
         self.m["fileopened"] = False #OBSOLETE ?
-        self.SigRelay.emit("cm_all_",["fileopened",False])
+        self.SigRelay.emit("cm_all_",["fileopened",False]) ####TODO geht nicht
         if self.m["stopstate"] == True:
             self.logger.info("EOF-manager: player has been stopped")
             time.sleep(0.5)
@@ -757,20 +759,22 @@ class playrec_c(QObject):
         if (os.path.isfile(self.m["my_dirname"] + '/' + self.m["wavheader"]['nextfilename']) == True and self.m["wavheader"]['nextfilename'] != "" ):
             # play next file in nextfile-list
             self.m["f1"] = self.m["my_dirname"] + '/' + self.m["wavheader"]['nextfilename']
+            self.m["my_filename"] = Path(self.m["f1"]).stem
+            ####TODO geht nicht
             self.SigRelay.emit("cm_all_",["f1",self.m["my_dirname"] + '/' + self.m["wavheader"]['nextfilename']])
-            self.SigRelay.emit("cm_all_",["my_filename",self.m["my_filename"]])
+            self.SigRelay.emit("cm_all_",["my_filename",self.m["my_filename"]])####TODO geht nicht
             self.m["wavheader"] = WAVheader_tools.get_sdruno_header(self,self.m["f1"])
             time.sleep(0.1)
             self.play_tstarter()
             time.sleep(0.1)
             self.m["fileopened"] = True
-            self.SigRelay.emit("cm_all_",["fileopened",True])
+            self.SigRelay.emit("cm_all_",["fileopened",True])####TODO geht nicht
             #TODO: self.my_filename + self.ext müssen updated werden, übernehmen aus open file
-            self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
+            self.SigRelay.emit("cexex_all_",["updateGUIelements",0])####TODO geht nicht
             self.SigRelay.emit("cexex_playrec",["updateotherGUIelements",0])
-
             self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
             self.logger.info("fetch nextfile")
+            print(f"playrec namechange after nextfile test, filename: {self.m['my_filename']}")
         elif self.m["Buttloop_pressed"]:
             time.sleep(0.1)
             #("restart same file in endless loop")
@@ -780,7 +784,7 @@ class playrec_c(QObject):
             time.sleep(0.1)
             self.logger.info("playthread active: %s", self.m["playthreadActive"])
             self.m["fileopened"] = True
-            self.SigRelay.emit("cm_all_",["fileopened",True])
+            self.SigRelay.emit("cm_all_",["fileopened",True])####TODO geht nicht
             self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
         elif self.m["playlist_len"] > 0:
             if self.m["playlist_ix"] == 0:
@@ -788,7 +792,7 @@ class playrec_c(QObject):
                 self.m["playlist_ix"] += 1 #TODO: aktuell Hack, um bei erstem File keine Doppelabspielung zu triggern
             if self.m["playlist_ix"] < self.m["playlist_len"]: #TODO check if indexing is correct
                 self.m["playthreadActive"] = False
-                self.SigRelay.emit("cm_all_",["playthreadActive",self.m["playthreadActive"]])
+                self.SigRelay.emit("cm_all_",["playthreadActive",self.m["playthreadActive"]])####TODO geht nicht
                 self.SigRelay.emit("cexex_playrec",["listhighlighter",self.m["playlist_ix"]])
                 self.logger.debug("EOF manager: playlist index: %i", self.m['playlist_ix'])
                 self.logger.info("fetch next list file")
@@ -804,10 +808,10 @@ class playrec_c(QObject):
                     self.SigRelay.emit("cm_all_",["wavheader",self.m["wavheader"]])
                     self.SigRelay.emit("cm_all_",["my_filename",self.m["my_filename"]])
                     ####TODO: maybe the following is obsolete:
-                    statefileopened = self.m["fileopened"]
+                    #statefileopened = self.m["fileopened"]
                     self.SigRelay.emit("cm_all_",["fileopened",True])
                     self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
-                    self.SigRelay.emit("cm_all_",["fileopened",statefileopened])
+                    #self.SigRelay.emit("cm_all_",["fileopened",statefileopened])
                     ##################################################################
                     #self.SigRelay.emit("cexex_playrec",["updateotherGUIelements",0])
 
@@ -1246,10 +1250,10 @@ class playrec_v(QObject):
         :return: flag False or True, False on unsuccessful execution
         :rtype: Boolean
         """
-        #print("playrec: updateGUIelements")
         self.gui.checkBox_UTC.clicked.connect(self.toggleUTC)
         self.gui.checkBox_TESTMODE.clicked.connect(self.toggleTEST)
         self.gui.lineEdit_IPAddress.setText(self.m["STM_IP_address"])
+        print(f"update filename in display: {self.m['my_filename']}")
         self.gui.label_Filename_Player.setText(self.m["my_filename"] + self.m["ext"])
 
     def reset_GUI(self):
@@ -1498,6 +1502,7 @@ class playrec_v(QObject):
             self.m["irate"] = self.m["wavheader"]['nSamplesPerSec']
             if not self.playrec_c.checkSTEMLABrates():
                 self.reset_playerbuttongroup()
+                self.SigRelay.emit("cexex_all_",["reset_GUI",0])
                 return False
             self.gui.pushButton_Play.setIcon(QIcon("pause_v4.PNG"))
             self.gui.pushButton_REC.setEnabled(False)
@@ -1572,6 +1577,9 @@ class playrec_v(QObject):
         else:
             self.m["recording_path"] = self.metadata["recording_path"]
         self.logger.debug("playrec recording button recording path: %s", self.m["recording_path"])
+        self.SigRelay.emit("cm_all_",["recording_path",self.m["recording_path"]])
+        self.SigRelay.emit("cexex_configuration",["updateGUIelements",0])
+
 
     def numeraltest(self,_item,lo_bound,hi_bound,errortextsource):
         """
@@ -1723,20 +1731,24 @@ class playrec_v(QObject):
 
     def showRFdata(self):
         """_take over datasegment from player loop worker and caluclate from there the signal volume and present it in the volume indicator
-        read gain value and present it in the player Tab
-        read data segment and correlate with previous one --> detect tracking errors and correct them_
+        read gain value and present it in the player Tab on the 'progressbar' Widget 'progressBar_volume'
+        Parameters: a = length form top to 0dB tick
+        b = length between -80 and 0 dB ticks
+        c = length between bottom and -80dB tick
+        a+b+c = total length of the indicator and hence of the progress-bar volume 
         GUI Element
         :return: _False if error, True on succes_
         :rtype: _Boolean_
-        """        
+        """
         scal_NEW = True
+        # geometry scaling; absolute numbers are not relevant, only relative lengths
         a = 7/86
         c = 8/86
         b = (86 -7 -8)/86
         if self.m["TEST"]:
             return
         self.m["gain"] = self.playrec_c.playrec_tworker.get_6()
-        print(f"get gain in showRFdata gain: {self.m['gain']}")
+        #print(f"get gain in showRFdata gain: {self.m['gain']}")
         self.logger.debug("get from tworker gain to showRFdata: %f",self.m["gain"])
         data = self.playrec_c.playrec_tworker.get_5()
         #tracking error detector removed, appears in old main module
@@ -1874,7 +1886,13 @@ class playrec_v(QObject):
             if increment != -1 and increment != 1 or self.m["timechanged"] == True:
                 if self.m["fileopened"] is True:
                     #print(f'increment curtime cond seek cur file open: {system_state["f1"]}')
-                    self.prfilehandle = self.playrec_c.playrec_tworker.get_4()
+                    try:
+                        self.prfilehandle = self.playrec_c.playrec_tworker.get_4()
+                    except:
+                         auxi.standard_errorbox("Cannot activate background thread (tworker), maybe STEMLAB is not connected")
+                         self.SigRelay.emit("cexex_all_",["reset_GUI",0])
+                         self.SigRelay.emit("cm_all_",["fileopened",False]) ###TODO: Test after 09-04-2024 !
+                         return False
                     try:
                         self.prfilehandle.seek(int(position), 0) #TODO: Anpassen an andere Fileformate
                     except:

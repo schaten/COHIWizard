@@ -84,7 +84,8 @@ class abstract_module_v(QObject):
         self.gui = gui #gui_state["gui_reference"]#system_state["gui_reference"]
         self.logger = abstract_module_m.logger
         self.abstract_module_c.SigRelay.connect(self.rxhandler)
-        self.init_abstract_module_ui()
+        self.abstract_module_c.SigRelay.connect(self.SigRelay.emit)
+        self.init_abstractmodule_ui()
         self.abstract_module_c.SigRelay.connect(self.SigRelay.emit)
 
     def init_abstractmodule_ui(self):

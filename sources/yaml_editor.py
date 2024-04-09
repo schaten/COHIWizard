@@ -55,6 +55,7 @@ class  yamleditor_c(QObject):
     __slots__ = ["contvars"]
 
     SigAny = pyqtSignal()
+    SigRelay = pyqtSignal(str,object)
 
     def __init__(self, yamleditor_m): #TODO: remove gui
         super().__init__()
