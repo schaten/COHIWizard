@@ -250,6 +250,8 @@ class waveditor_v(QObject):
         self.gui.tableWidget_3.item(1, 0).setText("")
         self.gui.tableWidget_3.item(0, 0).setText("")
         self.gui.tableWidget_3.item(3, 0).setText("")
+        self.gui.tableWidget_3.item(4, 0).setText("")
+        self.gui.tableWidget_3.item(5, 0).setText("")
         self.gui.label_Filename_WAVHeader.setText('') #shift to wav editor Tab reset
 
     def overwrite_header(self):
@@ -338,7 +340,11 @@ class waveditor_v(QObject):
         self.gui.tableWidget_3.item(2, 0).setText(start_str)
         self.gui.tableWidget_3.item(1, 0).setText(str(self.m["wavheader"]['sdrtype_chckID']))
         self.gui.tableWidget_3.item(0, 0).setText(str(self.m["wavheader"]['nextfilename']))
-        self.gui.tableWidget_3.item(3, 0).setText(str(self.m["wavheader"]['data_ckID']))
+        
+        duration = (self.m["wavheader"]["stoptime_dt"] - self.m["wavheader"]["starttime_dt"]).seconds
+        self.gui.tableWidget_3.item(4, 0).setText(str(duration))
+        duration_bytes = self.m["wavheader"]['data_nChunkSize'] / self.m["wavheader"]['nBlockAlign'] / self.m["wavheader"]['nSamplesPerSec']
+        self.gui.tableWidget_3.item(5, 0).setText(str(duration_bytes))
 
     def check_consistency(self,item,dtype,label):
         typetab = {"long": [-2147483648, 2147483647], "ulong": [0, 4294967295], 

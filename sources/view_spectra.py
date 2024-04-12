@@ -118,7 +118,7 @@ class view_spectra_v(QObject):
         self.gui.spinBoxminPeakDistance.valueChanged.connect(self.minPeakDistanceupdate)
         self.gui.spinBoxminSNR_ScannerTab.valueChanged.connect(self.minSNRupdate_ScannerTab)
         self.gui.spinBoxKernelwidth.valueChanged.connect(self.setkernelwidth)
-        self.gui.spinBoxKernelwidth.setEnabled(False)
+        self.gui.spinBoxKernelwidth.setEnabled(True)
         self.gui.spinBoxKernelwidth.setProperty("value", self.m["filterkernel"])
         self.gui.spinBoxminBaselineoffset.setProperty("value", 0)#TODO: avoid magic number
         self.gui.spinBoxminBaselineoffset.valueChanged.connect(self.set_baselineoffset)

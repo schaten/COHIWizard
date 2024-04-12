@@ -829,6 +829,7 @@ class resample_c(QObject):
         self.SigResampGUIReset.emit()
         self.SigRelay.emit("cexex_resample",["relay_toall_reset_GUI",0])
 
+
     def LOshifter_new(self):
         """configures and starts LO shifting thread
         :param: none
@@ -1561,7 +1562,7 @@ class resample_v(QObject):
         #self.resample_c.SigUpdateGUI.connect(self.update_GUI)
         self.resample_c.SigResampGUIReset.connect(self.reset_resamp_GUI_elemets)
         self.resample_c.SigUpdateGUIelements.connect(self.updateGUIelements)
-
+        self.gui.pushButton_resample_GainOnly.setEnabled(False)
         #check if sox is installed so as to throw an error message on resampling, if not
         self.soxlink = "https://sourceforge.net/projects/sox/files/sox/14.4.2/"
         self.soxlink_altern = "https://sourceforge.net/projects/sox"
@@ -2564,18 +2565,24 @@ class resample_v(QObject):
                         #call resample_c method for merging
                         self.resample_c.merge2G_new(self.m["list_out_files_resampled"])
                 #regardless whether automerge or not, enable GUI, reset GUI, disable fileopened, update other GUIs
-                self.enable_resamp_GUI_elemets(True)
-                self.m["fileopened"] = False
-                #self.SigSyncTabs.emit(["dum", "resample", "a", "fileopened", False])
-                self.SigRelay.emit("cm_all_",["fileopened", self.m["fileopened"]])
-                self.SigUpdateOtherGUIs.emit()
-                self.SigActivateOtherTabs.emit("Resample","activate",[])
-                self.gui.listWidget_playlist_2.itemChanged.connect(self.reslist_update)
-                if not self.gui.checkBox_AutoMerge2G.isChecked():
-                    self.reset_GUI()
-                self.m["list_out_files_resampled"] = []
-                self.SigRelay.emit("cexex_all_",["reset_GUI",0])
+                else:
+                    self.enable_resamp_GUI_elemets(True)
+                    self.m["fileopened"] = False
+                    #self.SigSyncTabs.emit(["dum", "resample", "a", "fileopened", False])
+                    self.SigRelay.emit("cm_all_",["fileopened", self.m["fileopened"]])
+                    self.SigUpdateOtherGUIs.emit()
+                    self.SigActivateOtherTabs.emit("Resample","activate",[])
+                    self.gui.listWidget_playlist_2.itemChanged.connect(self.reslist_update)
+                    if not self.gui.checkBox_AutoMerge2G.isChecked():
+                        self.reset_GUI()
+                    self.m["list_out_files_resampled"] = []
+                    self.SigRelay.emit("cexex_all_",["reset_GUI",0])
                 #self.resample_c.SigTerminate_Finished.disconnect(self.cb_resample_new)
+
+                #                 self.SigUpdateOtherGUIs.emit()
+                self.gui.listWidget_playlist_2.itemChanged.connect(self.reslist_update)
+                #                 if not self.gui.checkBox_AutoMerge2G.isChecked():
+                #                     self.reset_GUI()
                 return
         else: #file list is empty
             auxi.standard_errorbox("No files to be resampled have been selected; please drag items to the 'selected file' area")

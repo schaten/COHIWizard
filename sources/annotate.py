@@ -1043,6 +1043,7 @@ class annotate_v(QObject):
         """
         #print("annotate: updateGUIelements")
         self.gui.label_Filename_Annotate.setText(self.m["my_filename"] + self.m["ext"])
+        self.gui.label_6.setText("Baseline Offset:" + str(self.gui.spinBoxminBaselineoffset.value())) #TODO: not ent. clean, access of gui element of another tab
         if (os.path.exists(self.stations_filename) == True):
             self.scan_completed()
             try:

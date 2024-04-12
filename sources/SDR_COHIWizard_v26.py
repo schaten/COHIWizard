@@ -4,7 +4,6 @@
 #self.menubar = QtWidgets.QMenuBar(MainWindow)
 #pyinstaller --icon=COHIWizard_ico4.ico –F SDR_COHIWizard_v26.py
 #pyuic5 -x  COHIWizard_GUI_v10.ui -o COHIWizard_GUI_v10.py
-#TODO: shift action to respective tab machine by: currix = self.gui.tabWidget.currentIndex() self.gui.tabWidget.tabText(currix)
 # For reducing to RFCorder: place the following just before the line with 
 #check if sox is installed so as to throw an error message on resampling, if not
 #        self.soxlink = "https://sourceforge.net/projects/sox/files/sox/14.4.2/"
@@ -23,6 +22,7 @@
         # self.gui.lineEdit_resample_targetLO.setEnabled(False)
         # self.gui.actionOverwrite_header.setVisible(False)
 # Start-Tab setzen:self.gui.tabWidget.setCurrentIndex(1) #TODO: avoid magic number, unidentified
+
 """
 Created on Sa Dec 08 2023
 
@@ -56,8 +56,14 @@ import yaml_editor as yed
 import waveditor as waved
 from stemlab_control import StemlabControl
 import playrec
-import configuration as conf
+#import configuration as conf
 
+class starter(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.gui= MyWizard()
+        self.gui.setupUi(self)
+        self.gui.tableWidget_basisfields.verticalHeader().setVisible(True)
 
 class core_m(QObject):
     def __init__(self):
@@ -67,6 +73,28 @@ class core_m(QObject):
         self.mdl = {}
         self.mdl["sample"] = 0
         self.mdl["_log"] = False
+        # Create a custom logger
+        logging.getLogger().setLevel(logging.DEBUG)
+        # Erstelle einen Logger mit dem Modul- oder Skriptnamen
+        self.logger = logging.getLogger(__name__)
+        # Create handlers
+        # Create handlers
+        warning_handler = logging.StreamHandler()
+        debug_handler = logging.FileHandler("system_log.log")
+        warning_handler.setLevel(logging.WARNING)
+        debug_handler.setLevel(logging.DEBUG)
+
+        # Create formatters and add it to handlers
+        warning_format = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+        debug_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        warning_handler.setFormatter(warning_format)
+        debug_handler.setFormatter(debug_format)
+
+        # Add handlers to the logger
+        self.logger.addHandler(warning_handler)
+        self.logger.addHandler(debug_handler)
+        self.logger.debug('Init logger in configuration method reached')
+
 
 class core_c(QObject):
     """_view method
@@ -80,8 +108,80 @@ class core_c(QObject):
         super().__init__()
 
         self.m = core_m.mdl
+        self.logger = core_m.logger
 
-class core_v(QMainWindow):
+
+    def recording_path_checker(self):
+        """
+        checks, if recording path exists in config_wizard.yaml and if the path exists
+        if not: ask for target pathname and store in config.wizard.yaml
+        param: none
+        type: none
+        :raises [none]: [none]
+        :return: none
+        :rtype: none
+        """         
+        self.standardpath = os.getcwd()  #TODO: this is a core variable in core model
+        try:
+            stream = open("config_wizard.yaml", "r")
+            self.metadata = yaml.safe_load(stream)
+            stream.close()
+            self.ismetadata = True
+        except:
+            self.ismetadata = False
+        recfail = False
+        if "recording_path" not in self.metadata:
+            recfail = True
+            auxi.standard_infobox("recordingpath does not exist, please define later")
+            return False
+        elif not os.path.isdir(self.metadata["recording_path"]):
+            recfail = True
+        if recfail:
+            options = QFileDialog.Options()
+            options |= QFileDialog.ShowDirsOnly
+            self.m["recording_path"] = ""
+            while len(self.m["recording_path"]) < 1:
+                try:
+                    self.m["recording_path"] = QFileDialog.getExistingDirectory(self.m["QTMAINWINDOWparent"], "Select Recording Directory", options=options)
+                except:
+                    return
+                if len(self.m["recording_path"]) < 1:
+                    auxi.standard_errorbox("Recording path must be defined, please define it by clicking OK !")
+            self.logger.debug("playrec recording path: %s", self.m["recording_path"])
+            self.metadata["recording_path"] = self.m["recording_path"]
+            stream = open("config_wizard.yaml", "w")
+            yaml.dump(self.metadata, stream)
+            stream.close()
+        else:
+            self.m["recording_path"] = self.metadata["recording_path"]
+        self.logger.debug("playrec recording button recording path: %s", self.m["recording_path"])
+        self.SigRelay.emit("cm_all_",["recording_path",self.m["recording_path"]])
+
+    def recording_path_setter(self):
+        """
+        checks, if recording path exists in config_wizard.yaml and if the path exists
+        if not: ask for target pathname and store in config.wizard.yaml
+        param: none
+        type: none
+        :raises [none]: [none]
+        :return: none
+        :rtype: none
+        """         
+        options = QFileDialog.Options()
+        options |= QFileDialog.ShowDirsOnly
+        self.m["recording_path"] = QFileDialog.getExistingDirectory(self.m["QTMAINWINDOWparent"], "Select Recording Directory", options=options)
+        self.logger.debug("playrec recording path: %s", self.m["recording_path"])
+        self.metadata["recording_path"] = self.m["recording_path"]
+        stream = open("config_wizard.yaml", "w")
+        yaml.dump(self.metadata, stream)
+        stream.close()
+        self.m["recording_path"] = self.metadata["recording_path"]
+        self.logger.debug("playrec recording button recording path: %s", self.m["recording_path"])
+        #print("core_c send recordingpath to all")
+        self.SigRelay.emit("cm_all_",["recording_path",self.m["recording_path"]])        
+        self.SigRelay.emit("cexex_xcore",["updateGUIelements",0])
+
+class core_v(QObject):
 
     __slots__ = ["viewvars"]
 
@@ -97,47 +197,37 @@ class core_v(QMainWindow):
     SigUpdateOtherGUIs = pyqtSignal()
     SigRelay = pyqtSignal(str,object)
 
-    def __init__(self, core_c, core_m):
+    def __init__(self, gui, core_c, core_m):
         super().__init__()
         print("Initializing GUI, please wait....")
-
         self.m = core_m.mdl
-        self.c = core_c
-        self.timethread = QThread()
-        self.timertick = tw()
-        self.timertick.moveToThread(self.timethread)
-        self.timethread.started.connect(self.timertick.tick)
-        self.timertick.SigFinished.connect(self.timethread.quit)
-        self.timertick.SigFinished.connect(self.timertick.deleteLater)
-        self.timethread.finished.connect(self.timethread.deleteLater)
-        self.timertick.SigTick.connect(self.updatetimer)
-        self.timethread.start()
-        if self.timethread.isRunning():
-            self.timethreaddActive = True #TODO:future system state
-
-        self.OLD = True #TODO KIPP: remove
+        self.core_c = core_c
+        #self.OLD = True #TODO KIPP: remove
         self.TEST = True    # Test Mode Flag for testing the App, --> playloop  ##NOT USED #TODO:future system status
-        self.DATABLOCKSIZE = 1024*32 # für diverse Filereader/writer TODO: occurs in plot spectrum and ANN_Spectrum; must be shifted to the respective modules in future
-        self.PROMINENCE = 15 ######### minimum peak prominence in dB above baseline for peak detector #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
+        #self.DATABLOCKSIZE = 1024*32 # für diverse Filereader/writer TODO: occurs in plot spectrum and ANN_Spectrum; must be shifted to the respective modules in future
+        #self.PROMINENCE = 15 ######### minimum peak prominence in dB above baseline for peak detector #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
         self.bps = ['16', '24', '32'] #TODO:future system state
         self.standardLO = 1100 #TODO:future system state
         self.annotationdir_prefix = 'ANN_' ##################TODO:future system state
         self.position = 0 #TODO:future system state URGENT !!!!!!!!!!!!!!
         self.tab_dict = {}
+
         self.GUIupdaterlist =[]
         # create method which inactivates all tabs except the one which is passed as keyword
         self.GUI_reset_status()
-        self.gui = MyWizard()
-        self.gui.setupUi(self)
-        self.gui.tableWidget_basisfields.verticalHeader().setVisible(True)   
-        ### UI MASTER ####################################
+        self.gui = gui.gui
+        # self.gui = MyWizard()
+        # self.gui.setupUi(self)
+        # self.gui.tableWidget_basisfields.verticalHeader().setVisible(True)   
         self.gui.actionFile_open.triggered.connect(self.cb_open_file)
+        #self.gui.actionfileopen_ref.triggered.connect(self.cb_open_file)
         self.SigGUIReset.connect(self.reset_GUI)
-        self.gui.pushButton_resample_GainOnly.setEnabled(False)
-        self.gui.tabWidget.setCurrentIndex(1) #TODO: avoid magic number, unidentified
 
-        ### END UI MASTER ####################################
 
+        #self.gui.pushButton_resample_GainOnly.setEnabled(False)
+        #self.gui.tabwidget_ref.setCurrentIndex(1) #TODO: avoid magic number, make config issue
+        self.gui.tabWidget.setCurrentIndex(1) #TODO: avoid magic number, make config issue
+        self.gui.playrec_comboBox_startuptab.setCurrentIndex(1)
         self.standardpath = os.getcwd()  #TODO: this is a core variable in core model
         self.metadata = {"last_path": self.standardpath}
         self.ismetadata = False
@@ -146,21 +236,21 @@ class core_v(QMainWindow):
             self.metadata = yaml.safe_load(stream)
             stream.close()
             self.ismetadata = True
-        #     if 'STM_IP_address' in self.metadata.keys():
-        #         self.gui.lineEdit_IPAddress.setText(self.metadata["STM_IP_address"]) #TODO: Remove after transfer of playrec
-        #         self.gui.Conf_lineEdit_IPAddress.setText(self.metadata["STM_IP_address"]) #TODO TODO TODO: reorganize and shift to config module
-        #         ###############NOT ACTIVE BECAUSE INSTANCES NOT YET EXISTANT###################
-        #         self.SigRelay.emit("cm_playrec",["STM_IP_address",self.metadata["STM_IP_address"]])
-        #         ################################################################################
+            if "recording_path" in self.metadata:
+                self.m["recording_path"] = self.metadata["recording_path"]
+            if "startup_tab" in self.metadata:
+                self.gui.playrec_comboBox_startuptab.setCurrentIndex(int(self.metadata["startup_tab"]))
+                self.gui.tabWidget.setCurrentIndex(int(self.metadata["startup_tab"]))
         except:
             print("cannot get config_wizard.yaml metadata, write a new initial config file")
             self.metadata["last_path"] = os.getcwd()
             self.metadata["STM_IP_address"] = "000.000.000.000"
             auxi.standard_infobox("configuration file does not yet exist, a basic file will be generated. Please configure the STEMLAB IP address before using the Player")
-            #self.metadata["recording_path"] = self.m["recording_path"]
+            self.metadata["recording_path"] = self.m["recording_path"]
             stream = open("config_wizard.yaml", "w")
             yaml.dump(self.metadata, stream)
             stream.close()
+
 
         ###TODO: re-organize, there should be no access to gui elements of other modules
         self.m["HostAddress"] = self.gui.lineEdit_IPAddress.text() #TODO: Remove after transfer of playrec
@@ -206,12 +296,30 @@ class core_v(QMainWindow):
             if len(ex.stderr) > 0: 
                 self.soxnotexist = True
         self.logger.info("Init logger in core reached")
+        #self.core_c.SigRelay.connect(self.SigRelay.emit)        
+        self.core_c.SigRelay.connect(self.rxhandler)
+        self.core_c.recording_path_checker()
+        self.gui.playrec_radioButtonpushButton_write_logfile.clicked.connect(self.togglelogfilehandler)
+        self.gui.playrec_radioButtonpushButton_write_logfile.setChecked(True)
+        self.gui.playrec_pushButton_recordingpath.clicked.connect(self.core_c.recording_path_setter)
+        self.gui.playrec_comboBox_startuptab.currentIndexChanged.connect(self.set_startuptab)
+        self.updateGUIelements()
+        self.timethread = QThread()
+        self.timertick = tw()
+        self.timertick.moveToThread(self.timethread)
+        self.timethread.started.connect(self.timertick.tick)
+        self.timertick.SigFinished.connect(self.timethread.quit)
+        self.timertick.SigFinished.connect(self.timertick.deleteLater)
+        self.timethread.finished.connect(self.timethread.deleteLater)
+        self.timertick.SigTick.connect(self.updatetimer)
+        self.timethread.start()
+        if self.timethread.isRunning():
+            self.timethreaddActive = True #TODO:future system state
 
     def connect_init(self):
         self.SigRelay.emit("cm_all_",["emergency_stop",False])
         self.SigRelay.emit("cm_all_",["fileopened",False])
-        #KIPP: self.SigRelay.emit("cm_all_",["Tabref",win.Tabref])
-        self.SigRelay.emit("cm_all_",["Tabref",xcore_v.Tabref])
+        self.SigRelay.emit("cm_all_",["Tabref",self.Tabref])
         self.SigRelay.emit("cm_resample",["rates",self.m["rates"]])
         self.SigRelay.emit("cm_resample",["irate",self.m["irate"]])
         self.SigRelay.emit("cm_playrec",["rates",self.m["rates"]])
@@ -219,10 +327,21 @@ class core_v(QMainWindow):
         self.SigRelay.emit("cm_resample",["reslist_ix",self.m["reslist_ix"]]) #TODO check: maybe local in future !
         self.SigRelay.emit("cm_playrec",["Obj_stemlabcontrol",stemlabcontrol])
         self.SigRelay.emit("cm_configuration",["tablist",tab_dict["list"]])
-        self.SigRelay.emit("cexex_configuration",["updateGUIelements",0])
+        self.SigRelay.emit("cexex_core",["updateGUIelements",0])
         self.SigRelay.emit("cm_playrec",["sdr_configparams",self.m["sdr_configparams"]])
         self.SigRelay.emit("cm_playrec",["HostAddress",self.m["HostAddress"]])
-        self.SigRelay.emit("cm_all_",["QTMAINWINDOWparent",xcore_v])
+        self.core_c.m["QTMAINWINDOWparent"] = gui
+        self.SigRelay.emit("cm_all_",["QTMAINWINDOWparent",gui])
+        pass
+
+
+    def togglelogfilehandler(self):
+        if self.gui.playrec_radioButtonpushButton_write_logfile.isChecked():
+            self.logger.setLevel(logging.NOTSET)
+            self.SigRelay.emit("cexex_all_",["logfilehandler",False])
+        else:
+            self.logger.setLevel(logging.DEBUG)
+            self.SigRelay.emit("cexex_all_",["logfilehandler",True])
 
     def updateGUIelements(self):
         """
@@ -234,7 +353,21 @@ class core_v(QMainWindow):
         :return: flag False or True, False on unsuccessful execution
         :rtype: Boolean
         """
-        print("core: updateGUIelements")
+        try:
+            self.gui.playrec_lineEdit_recordingpath.setText(self.m["recording_path"])
+        except:
+            self.core_c.recording_path_checker()
+            #self.configuration_c.recording_path_setter()
+        # for count, ele in enumerate(self.m["tablist"]):
+        #     self.gui.checkboxlist.append(QtWidgets.QCheckBox(self.gui.gridLayoutWidget_6))
+        #     self.gui.checkboxlist[count].setObjectName("checkBox" + self.m["tablist"][count])
+        #     self.gui.gridLayout_config.addWidget(self.gui.checkboxlist[count], count+2, 0, 1, 1)
+        #     self.gui.checkboxlist[count].setText(self.m["tablist"][count])
+        #     self.gui.checkboxlist[count].setChecked(True)
+        #     #self.gui.checkboxlist[count].clicked.connect(self.manage_tabcheck(count))
+        #     tabname = "tab_" + self.m["tablist"][count]
+        #     page = self.gui.tabWidget.findChild(QWidget, tabname)
+        #     self.tabindexdict[tabname] = self.gui.tabWidget.indexOf(page)
         #self.gui.DOSOMETHING
         
     def updatetimer(self):
@@ -328,7 +461,7 @@ class core_v(QMainWindow):
         gridref.addWidget(canvas,gridc[0],gridc[1],gridc[2],gridc[3])
         ax = figure.add_subplot(111)
         if gridt[0] >= 0:
-            toolbar = NavigationToolbar(canvas, self)
+            toolbar = NavigationToolbar(canvas, gui)
             gridref.addWidget(toolbar,gridt[0],gridt[1],gridt[2],gridt[3])
         Tabref["ax"] = ax
         Tabref["canvas"] = canvas
@@ -385,8 +518,6 @@ class core_v(QMainWindow):
         :rtype: boolean
         """
         for i in range(self.gui.tabWidget.count()):
-            #self.gui.tab_3.objectName()
-            #self.gui.tabWidget.indexOf(self.gui.tab_3)
             if statuschange.find("inactivate") == 0:
                 if (self.gui.tabWidget.tabText(i).find(caller) == 0) and (self.gui.tabWidget.tabText(i) not in exceptionlist):
                     self.gui.tabWidget.widget(i).setEnabled(False)
@@ -396,10 +527,6 @@ class core_v(QMainWindow):
             else:
                 return False
         return True
-            #self.gui.tabWidget.tabText(i).setEnabled(True)
-        #    if self.tabWidget.tabText(i) == "product add":
-        #        self.tabWidget.setCurrentIndex(i)
-        #TODO: shift action to respective tab machine by: currix = self.gui.tabWidget.currentIndex() self.gui.tabWidget.tabText(currix)
 
     def reset_GUI(self):
         """
@@ -413,61 +540,28 @@ class core_v(QMainWindow):
         :return: True after completion, False if status-yaml not accessible
         :rtype: boolean
         """
-        ########################TODO: change mode: make reset functions  for each tab which are just registered with the signal 
-        # self.SigGUIReset
-        # like:
-        # self.SigGUIReset.connect(self.reset_GUI)
-        ##################################################################
 
-        #self.gui.tab_view_spectra.setEnabled(True)  ###Check if necessary
-        #self.gui.pushButton_InsertHeader.setEnabled(False)   #####TODO shift to WAV editor or send Relay for inactivation via WAV 
-        #self.gui.label_8.setEnabled(False)
-        # self.gui.label_36.setText('READY')
-        # self.gui.label_36.setFont(QFont('arial',12))
-        # self.gui.label_36.setStyleSheet("background-color: lightgray")
-        #self.gui.radioButton_WAVEDIT.setChecked(False) #########?? TODO OBSOLETE HERE ?
-        #self.activate_WAVEDIT() # to wav editor Tab reset
         self.SigRelay.emit("cexex_waveditor",["activate_WAVEDIT",0])
-        # self.Tabref["View_Spectra"]["ax"].clear() #############shift to Plot spectrum Tab reset
-        # self.Tabref["View_Spectra"]["canvas"].draw() ############shift to Plot spectrum Tab reset
-        # self.Tabref["Resample"]["ax"].clear() #############shift to Resampler Tab reset
-        # self.gui.listWidget_sourcelist.clear() ############### shift to resampler Tab
-        # self.Tabref["Resample"]["canvas"].draw() #shift to Resampler Tab reset
-        # self.gui.label_Filename_Annotate.setText('') #shift to Annotator Tab reset
-        # self.gui.listWidget_playlist.clear() #TODO: shift to Player Tab reset after splitting
-        # self.gui.listWidget_sourcelist.clear() #TODO: shift to Player Tab reset after splitting
 
-        # try:
-        #     stream = open("config_wizard.yaml", "r")
-        #     self.metadata = yaml.safe_load(stream)
-        #     if 'STM_IP_address' in self.metadata.keys():
-        #         self.gui.lineEdit_IPAddress.setText(self.metadata["STM_IP_address"]) #TODO: Remove after transfer of playrec
-        #         self.gui.Conf_lineEdit_IPAddress.setText(self.metadata["STM_IP_address"]) #TODO TODO TODO: reorganize and shift to config module
-        #         self.SigRelay.emit("cm_playrec",["STM_IP_address",self.metadata["STM_IP_address"]]) #TODO: Remove after transfer of playrec
-        #     stream.close()
-        # except:
-        #     self.logger.error("reset_gui: cannot get metadata")
-        # return True
+#     def showfilename(self):
+#         """_updates the name of currenly loaded data file in all instances of filename labels_
+#         :param : none if old system, args[0] = string with filename to be displayed 
+#         :type : none if old system, str else
+#         '''
+#         :raises [ErrorType]: [ErrorDescription]
+#         '''
+#         :return: none
+#         :rtype: none
+#         """ 
+#         # self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
+#         # #TODO TODO TODO: remove the following after change to all new modules and Relay
+#         # self.my_dirname = os.path.dirname(self.m["f1"])
+#         # self.my_filename, self.ext = os.path.splitext(os.path.basename(self.m["f1"]))
+#         # #self.gui.label_Filename_Annotate.setText(self.my_filename + self.ext)
+#         # self.gui.label_Filename_WAVHeader.setText(self.my_filename + self.ext)
+#         # self.gui.label_Filename_Player.setText(self.my_filename + self.ext)
 
-    def showfilename(self):
-        """_updates the name of currenly loaded data file in all instances of filename labels_
-        :param : none if old system, args[0] = string with filename to be displayed 
-        :type : none if old system, str else
-        '''
-        :raises [ErrorType]: [ErrorDescription]
-        '''
-        :return: none
-        :rtype: none
-        """ 
-        # self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
-        # #TODO TODO TODO: remove the following after change to all new modules and Relay
-        # self.my_dirname = os.path.dirname(self.m["f1"])
-        # self.my_filename, self.ext = os.path.splitext(os.path.basename(self.m["f1"]))
-        # #self.gui.label_Filename_Annotate.setText(self.my_filename + self.ext)
-        # self.gui.label_Filename_WAVHeader.setText(self.my_filename + self.ext)
-        # self.gui.label_Filename_Player.setText(self.my_filename + self.ext)
-
-############################## GENERAL MENU FUNCTIONS  ####################################
+# ############################## GENERAL MENU FUNCTIONS  ####################################
 
     def cb_open_file(self):
         """
@@ -478,6 +572,7 @@ class core_v(QMainWindow):
 
         returns: True if successful, False if condition not met.        
         """
+        
         self.setactivity_tabs("all","activate",[])
         #self.SigRelay.emit("cm_playrec",["sdr_configparams",self.m["sdr_configparams"]])         #TODO TODO TODO TEST TEST TEST: configparams not initiated here any more; change 02-04-2024
         #TODO TODO TODO TEST TEST TEST: configparams not initiated here any more; change 02-04-2024
@@ -527,34 +622,32 @@ class core_v(QMainWindow):
             else:
                 self.SigRelay.emit("cm_all_",["fileopened",True])
 
-    ############################## END TAB GENERAL MENUFUNCTIONS ####################################
-
     def popup(self,i):
         """
         """
         self.yesno = i.text()
 
-    def setstandardpaths(self):  #TODO: shift to general system module ? must be part of the system configuration procedure
+    def setstandardpaths(self):  #TODO: shift to controller and general system module ? must be part of the system configuration procedure
         """
         CONTROLLER
         
         """
         #TODO TODO TODO: check if the selfs must be selfs !
-        self.annotationpath = self.my_dirname + '/' + self.annotationdir_prefix + self.m["my_filename"]
-        self.stations_filename = self.annotationpath + '/stations_list.yaml'
-        self.status_filename = self.annotationpath + '/status.yaml'
-        self.annotation_filename = self.annotationpath + '/snrannotation.yaml'
-        self.SigRelay.emit("cm_annotate",["annotationpath",self.annotationpath])
+        self.m["annotationpath"] = self.my_dirname + '/' + self.annotationdir_prefix + self.m["my_filename"]
+        self.stations_filename = self.m["annotationpath"] + '/stations_list.yaml'
+        self.status_filename = self.m["annotationpath"] + '/status.yaml'
+        self.annotation_filename = self.m["annotationpath"] + '/snrannotation.yaml'
+        self.SigRelay.emit("cm_annotate",["annotationpath",self.m["annotationpath"]])
         self.SigRelay.emit("cm_annotate",["stations_filename",self.stations_filename])
         self.SigRelay.emit("cm_annotate",["status_filename",self.status_filename])
         self.SigRelay.emit("cm_annotate",["annotation_filename",self.annotation_filename])
         self.SigRelay.emit("cm_annotate",["annotationdir_prefix",self.annotationdir_prefix])
         self.SigRelay.emit("cm_all_",["standardpath",self.standardpath])
         
-        self.cohiradia_metadata_filename = self.annotationpath + '/cohiradia_metadata.yaml' #TODO: needs the variable be 'self' ?
-        self.cohiradia_yamlheader_filename = self.annotationpath + '/cohiradia_metadata_header.yaml' #TODO: needs the variable be 'self' ?
-        self.cohiradia_yamltailer_filename = self.annotationpath + '/cohiradia_metadata_tailer.yaml' #TODO: needs the variable be 'self' ?
-        self.cohiradia_yamlfinal_filename = self.annotationpath + '/COHI_YAML_FINAL.yaml' #TODO: needs the variable be 'self' ?
+        self.cohiradia_metadata_filename = self.m["annotationpath"] + '/cohiradia_metadata.yaml' #TODO: needs the variable be 'self' ?
+        self.cohiradia_yamlheader_filename = self.m["annotationpath"] + '/cohiradia_metadata_header.yaml' #TODO: needs the variable be 'self' ?
+        self.cohiradia_yamltailer_filename = self.m["annotationpath"] + '/cohiradia_metadata_tailer.yaml' #TODO: needs the variable be 'self' ?
+        self.cohiradia_yamlfinal_filename = self.m["annotationpath"] + '/COHI_YAML_FINAL.yaml' #TODO: needs the variable be 'self' ?
         self.SigRelay.emit("cm_yamleditor",["cohiradia_yamlheader_filename",self.cohiradia_yamlheader_filename])
         self.SigRelay.emit("cm_yamleditor",["cohiradia_yamltailer_filename",self.cohiradia_yamltailer_filename])
         self.SigRelay.emit("cm_yamleditor",["cohiradia_yamlfinal_filename",self.cohiradia_yamlfinal_filename])
@@ -563,6 +656,17 @@ class core_v(QMainWindow):
         self.SigRelay.emit("cm_annotate",["cohiradia_yamltailer_filename",self.cohiradia_yamltailer_filename])
         self.SigRelay.emit("cm_annotate",["cohiradia_yamlfinal_filename",self.cohiradia_yamlfinal_filename])
         self.SigRelay.emit("cm_annotate",["cohiradia_metadata_filename",self.cohiradia_metadata_filename])
+
+    def set_startuptab(self):
+        curix = self.gui.playrec_comboBox_startuptab.currentIndex()
+        print(f"startuptab set: {curix}")
+        #write to yaml
+        self.metadata["startup_tab"] = str(curix)
+        # self.metadata["STM_IP_address"] = self.m["HostAddress"]
+        stream = open("config_wizard.yaml", "w")
+        yaml.dump(self.metadata, stream)
+        stream.close()
+        pass
 
     #@njit
     def FileOpen(self):   #TODO: shift to controller, decompose in small submethods
@@ -581,6 +685,7 @@ class core_v(QMainWindow):
         #TODO TODO TODO:  replace by RELAY; call this function only if resample_v is instantiated !
         #resample_v.enable_resamp_GUI_elemets(True)
         #TODO: could be an update action of the resampler ?
+
         self.SigRelay.emit("cexex_resample",["enable_resamp_GUI_elements",True])
         #placed here because first defined only in init __method__ ?
         self.SigRelay.emit("cm_all_",["ismetadata",self.ismetadata])
@@ -592,11 +697,11 @@ class core_v(QMainWindow):
         filters = "SDR wav files (*.wav);;Raw IQ (*.dat *.raw )"
         selected_filter = "SDR wav files (*.wav)"
         if self.ismetadata == False:
-            filename =  QtWidgets.QFileDialog.getOpenFileName(self,
+            filename =  QtWidgets.QFileDialog.getOpenFileName(gui,
                                                             "Open data file"
                                                             , self.standardpath, filters, selected_filter)
         else:
-            filename =  QtWidgets.QFileDialog.getOpenFileName(self,
+            filename =  QtWidgets.QFileDialog.getOpenFileName(gui,
                                                             "Open data file"
                                                             ,self.metadata["last_path"] , filters, selected_filter)
         #self.m["f1"] = filename[0] #TODO: replace by line below:  TODO check after change 02-04-2024
@@ -623,7 +728,7 @@ class core_v(QMainWindow):
 
 #################################TODO TODO TODO CHECK all the following; It is not clear, if a dat file cannot be directly resampled - the wav header is generated anyway
         if self.m["ext"] == ".dat" or self.m["ext"] == ".raw":
-            self.filetype = "dat"
+            filetype = "dat"
             self.SigRelay.emit("cexex_waveditor",["activate_insertheader",True])
             self.setactivity_tabs("Resample","inactivate",[])
 
@@ -632,7 +737,7 @@ class core_v(QMainWindow):
             # self.gui.pushButton_InsertHeader.setEnabled(True)   #####TODO shift to WAV editor or send Relay for inactivation via WAV 
         else:
             if self.m["ext"] == ".wav":
-                self.filetype = "wav"
+                filetype = "wav"
                 #TODO tests: following 2 lines removed 6-04-2024
                 #self.gui.tab_view_spectra.setEnabled(True)  ##########TODO: replace by Tab disable function inactivate/activate_tabs(self,selection)
                 #self.gui.tab_annotate.setEnabled(True)  ##########TODO: replace by Tab disable function inactivate/activate_tabs(self,selection)
@@ -646,7 +751,7 @@ class core_v(QMainWindow):
                 return
 
         #### Generate wavheader and distribute to all modules
-        if self.filetype == "dat": # namecheck only if dat --> makes void all wav-related operation sin filenameextract
+        if filetype == "dat": # namecheck only if dat --> makes void all wav-related operation sin filenameextract
             if self.dat_extractinfo4wavheader() == False:
                 auxi.standard_errorbox("Unexpected error, dat_extractinfo4wavheader() == False; ")
                 return False
@@ -664,16 +769,15 @@ class core_v(QMainWindow):
             else:
                 auxi.standard_errorbox("File is not recognized as a valid IQ wav file (not auxi/rcvr compatible or not a RIFF file)")
                 return False
-
         if self.wavheader['sdrtype_chckID'].find('auxi') > -1 or self.wavheader['sdrtype_chckID'].find('rcvr') > -1: #TODO: CHECK: is this obsolete because of the above quest ?
             pass
         else:
             auxi.standard_errorbox("cannot process wav header, does not contain auxi or rcvr ID")
             self.sdrtype = 'FALSE'
             return False
-        self.SigRelay.emit("cm_waveditor",["filetype",self.filetype])
+        self.SigRelay.emit("cm_waveditor",["filetype",filetype])
 
-        #TODO: mache das konfigurierbar:
+        #TODO: mache das konfigurierbar und Teil des resamplers:
         self.gui.lineEdit_resample_targetnameprefix.setText(self.m["my_filename"])
         # self.SigRelay.emit("cexex_all_",["reset_GUI",0])
         self.SigRelay.emit("cm_all_",["wavheader",self.wavheader])
@@ -701,10 +805,10 @@ class core_v(QMainWindow):
 
         #save metadata
         self.metadata["last_path"] = self.my_dirname
-        # self.metadata["STM_IP_address"] = self.m["HostAddress"] # TODO: reorganize
-        stream = open("config_wizard.yaml", "w") # TODO: reorganize
-        yaml.dump(self.metadata, stream) # TODO: reorganize
-        stream.close() # TODO: reorganize
+        # self.metadata["STM_IP_address"] = self.m["HostAddress"]
+        stream = open("config_wizard.yaml", "w")
+        yaml.dump(self.metadata, stream)
+        stream.close()
 
 
         self.m["timescaler"] = self.wavheader['nSamplesPerSec']*self.wavheader['nBlockAlign']
@@ -714,10 +818,10 @@ class core_v(QMainWindow):
 ##############################  TODO following: shift all GUI operations to modules GUI_updaters and Relay updatesignal
 
 
-        self.gui.spinBoxKernelwidth.setEnabled(True)
-        self.gui.label_6.setText("Baseline Offset:" + str(self.gui.spinBoxminBaselineoffset.value()))
+        # self.gui.spinBoxKernelwidth.setEnabled(True) #TODO check inactivation after 09-04-2024
+        #self.gui.label_6.setText("Baseline Offset:" + str(self.gui.spinBoxminBaselineoffset.value())) #TODO check inactivation after 09-04-2024
         self.position = self.gui.horizontalScrollBar_view_spectra.value()
-        self.m["horzscal"] = self.position #TODO: check: obsolete ! because of Relay !
+        self.m["horzscal"] = self.position #TODO: check: obsolete ! because of Relay ! shift to View spectra module
         self.SigRelay.emit("cm_all_",["horzscal", self.position])
         self.SigRelay.emit("cm_view_spectra",["position",self.position])
 
@@ -727,16 +831,16 @@ class core_v(QMainWindow):
         self.m["playlength"] = self.wavheader['filesize']/self.wavheader['nAvgBytesPerSec']
         self.m["list_out_files_resampled"] = []
         self.SigRelay.emit("cm_resample",["list_out_files_resampled",self.m["list_out_files_resampled"]])
-        
-        out_dirname = self.my_dirname + '/out'
+        out_dirname = self.my_dirname + '/out'  #TODO TODO TODO should only be created if really necessary for resampling !
         if os.path.exists(out_dirname) == False:         #exist yaml file: create from yaml-editor
             os.mkdir(out_dirname)
         self.SigRelay.emit("cm_all_",["out_dirname",out_dirname])
         ##############TODO TODO TODO: intermediate hack for comm with scan worker
         self.f1 = self.m["f1"]
         self.readoffset = self.m["readoffset"]
-        #self.showfilename()  ##TODO replace showfilename
         self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
+
+
 
         return True
 
@@ -873,12 +977,14 @@ if __name__ == '__main__':
         QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
 
     app = QApplication([])
+    gui = starter()
+    gui.show()
+
     xcore_m = core_m()
     xcore_c = core_c(xcore_m)
-    xcore_v = core_v(xcore_c,xcore_m) # self.gui wird in xcore_v gestartet 
+    xcore_v = core_v(gui,xcore_c,xcore_m) # self.gui wird in xcore_v gestartet 
 
 #    app.aboutToQuit.connect(win.stop_worker)    #graceful thread termination on app exit
-    xcore_v.show()
     stemlabcontrol = StemlabControl()#TODO TODO TODO remove after transfer to playrec ??????????????????????
     tab_dict ={}
     tab_dict["list"] = ["xcore"]
@@ -956,7 +1062,9 @@ if __name__ == '__main__':
     resample_v.SigUpdateOtherGUIs.connect(xcore_v.sendupdateGUIs)    
     #resample_c.SigUpdateGUIelements.connect(resample_v.updateGUIelements)
     xcore_v.SigUpdateOtherGUIs.connect(view_spectra_v.updateGUIelements)
-    
+    xcore_v.gui.playrec_comboBox_startuptab.addItems(tab_dict["list"])
+    xcore_v.gui.playrec_comboBox_startuptab.setEnabled(True)
+
     for tabitem1 in tab_dict["list"]:
         for tabitem2 in tab_dict["list"]:
             eval(tabitem1 + "_v.SigRelay.connect(" + tabitem2 + "_v.rxhandler)")
@@ -986,21 +1094,10 @@ if __name__ == '__main__':
     #
     # fix error with SNR calculation: there seems to be no reactio to baselineshifts when calculating the SNR for praks and identifying those above threshold
     #
-        #################TODO TEST in resample module: implement next line newly with Relay after tarnsfer of wavedit module 
-        #self.gui.fill_wavtable() has already been replaced by Relay
-    #  
-    #   UTC Strategie einbauen
-    #
-    #
     # * // \\ Problem lösen: 2h: in aktuellem Core, Annotator UND waveditor !!!! geht mit Path()
-
-    # generelles systemkonfigurations-setup: auch für standarpath-Generator: je nach install. Modul !
     #
-    # * Tabs von nicht importierten Modulen deaktivieren/blinden: 30min
     #
     # * Windows Installer mit https://www.pythonguis.com/tutorials/packaging-pyside6-applications-windows-pyinstaller-installforge/ erstellen
-#
-    # * Configuration Tab with: IP address, tempdir, outdir, Recdir, LT/UTC, Logging, (checkboxes for Tab activation): 4h
-    #
+
     #   zerlege plot_spectrum in einen view_spectra spezifischen Teil und einen generellen Spektralplotter, der in einen Canvas das Spektrum eines Datenstrings plottet
     #       spectrum(canvas_ref,data,*args) in auxiliary Modul
