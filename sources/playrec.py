@@ -1742,9 +1742,9 @@ class playrec_v(QObject):
         """
         scal_NEW = True
         # geometry scaling; absolute numbers are not relevant, only relative lengths
-        a = 7/86
-        c = 8/86
-        b = (86 -7 -8)/86
+        a = 10/139.5 #7/86  
+        c = 16.5/139.5 #8/86
+        b = (139.5 - 10 -16.5)/139.5 #(86 -7 -8)/86
         if self.m["TEST"]:
             return
         self.m["gain"] = self.playrec_c.playrec_tworker.get_6()
