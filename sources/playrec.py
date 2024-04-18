@@ -683,7 +683,7 @@ class playrec_c(QObject):
         :rtype: Boolean
         """
         dt_now = datetime.now()
-        self.m["f1"] = self.m["recording_path"] + "/cohiwizard_" + dt_now.strftime('%Y%m%d') +"_T" + dt_now.strftime('%H%M%S')
+        self.m["f1"] = self.m["recording_path"] + "/cohiwizard_" + dt_now.strftime('%Y%m%d') +"_" + dt_now.strftime('%H%M%S')  +"Z"
         self.m["f1"] += "_" + str(int(self.m["ifreq"]/1000)) + "kHz.wav"
         #self.RecBitsPerSample
         creation_date = datetime.now()
@@ -907,7 +907,7 @@ class playrec_c(QObject):
         if self.m["playthreadActive"] is False:
             self.m["fileopened"] = False ###CHECK
             self.SigRelay.emit("cm_all_",["fileopened",False])
-            self.SigRelay.emit("cexex_playrec",["reset_GUI",0]) #TODO remove after tests
+            #self.SigRelay.emit("cexex_playrec",["reset_GUI",0]) #TODO remove after tests
             self.SigRelay.emit("cexex_playrec",["reset_playerbuttongoup",0])
             return
         else:
@@ -1253,7 +1253,7 @@ class playrec_v(QObject):
         self.gui.checkBox_UTC.clicked.connect(self.toggleUTC)
         self.gui.checkBox_TESTMODE.clicked.connect(self.toggleTEST)
         self.gui.lineEdit_IPAddress.setText(self.m["STM_IP_address"])
-        print(f"update filename in display: {self.m['my_filename']}")
+        self.logger.debug(f"update filename in display: {self.m['my_filename']}")
         self.gui.label_Filename_Player.setText(self.m["my_filename"] + self.m["ext"])
 
     def reset_GUI(self):

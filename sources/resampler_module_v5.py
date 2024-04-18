@@ -7,6 +7,8 @@ from PyQt5.QtCore import *
 from PyQt5 import QtGui
 import datetime as ndatetime
 import logging
+import signal
+import psutil
 import os 
 import subprocess
 import shutil
@@ -84,7 +86,7 @@ class res_workers(QObject):
         :return: none
         :rtype: none
     """
-    __slots__ = ["soxstring", "ret","tfname","expfs","progress","sfilename","readoffset","readsegmentfn","sSR","centershift","sBPS","tBPS","wFormatTag", "inputfilelist", "sttime_atrim", "merge_delorig","maxgap","starttrim","stoptrim"]
+    __slots__ = ["soxstring", "ret","tfname","expfs","progress","sfilename","readoffset","readsegmentfn","sSR","centershift","sBPS","tBPS","wFormatTag", "inputfilelist", "sttime_atrim", "merge_delorig","maxgap","starttrim","stoptrim","logger"]
 
     SigFinished = pyqtSignal()
     SigPupdate = pyqtSignal()
@@ -181,6 +183,10 @@ class res_workers(QObject):
         self.__slots__[17] = _value
     def get_stoptrim(self):
         return(self.__slots__[17])   
+    def set_logger(self,_value):
+        self.__slots__[18] = _value
+    def get_logger(self):
+        return(self.__slots__[18])   
 
     def merge2G_worker(self):  # 2 GB in Bytes
         """worker for merging all files in system_state["list_out_files_resampled"]
@@ -192,10 +198,7 @@ class res_workers(QObject):
         :return: none
         :rtype: none
         """
-        #system_state = self.sys_state.get_status()
-        #gui = system_state["gui_reference"]
-        #wavheader = system_state["t_wavheader"]
-
+        self.logger = self.get_logger()
         self.stopix = False
         output_file_prefix = self.get_tfname()
         current_output_file_index = 1
@@ -204,8 +207,8 @@ class res_workers(QObject):
         MAX_TARGETFILE_SIZE = int(2**31)
         MAX_GAP = self.get_maxgap()
         input_file_list = self.get_inputfilelist()
-        print("merge2G: start merging files")
-        #self.logger.debug("merge2G: start merging files")
+        self.logger.debug("#################_______________merge2G: start merging files")
+        #self.logger.debug("merge2G worker: start merging files")
 
         maxprogress = 100
         lenlist = len(input_file_list)
@@ -214,14 +217,13 @@ class res_workers(QObject):
         #TODO: Entrypoint für zu wählenden Ausgangsfilenamen über getter/setter, wie oben
         basename = self.get_ret()
         self.set_progress(1)
-        print(f'merge2G init progress: {1}')
-        #self.logger.debug("merge2G init progress: 1")
+        self.logger.debug(f'#################_______________merge2G init progress: {1}')
+        #self.logger.debug("merge2G worker init progress: 1")
         self.SigPupdate.emit()
-
 
         with open(current_output_file_path, 'wb') as current_output_file:
             # Schreibe die ersten 216 Bytes mit Nullen
-            print(f"merge2G: generate outputfile {current_output_file_path}")
+            self.logger.debug(f"merge2G: generate outputfile {current_output_file_path}")
             current_output_file.write(b'\x00' * 216)
             current_output_file_size = 216
             firstpass = True
@@ -231,7 +233,7 @@ class res_workers(QObject):
                 list_ix += 1
                 progress = list_ix/lenlist*maxprogress
                 self.set_progress(progress)
-                print(f'merge2G progress: {progress}')
+                self.logger.debug(f'merge2G progress: {progress}')
                 self.SigPupdate.emit()
                 #resample_v.updateprogress_resampling(self)
                 time.sleep(0.1)
@@ -254,7 +256,7 @@ class res_workers(QObject):
                     #TODO: send signal for finishing !
                     if gap > MAX_GAP:
                         exitcount = 0
-                        print(f"Merge2G: gap is greater than max tolreable amount, gap = {gap}")
+                        self.logger.error(f"#################_______________Merge2G: gap is greater than max tolreable amount, gap = {gap}")
                         #auxi.standard_errorbox(f"gap is greater than max tolreable amount !, gap = {gap}")
                         self.SigMergeerror.emit(f"Merge2G: gap is greater than max tolreable amount, gap = {gap}")
                         self.SigFinishedmerge2G.emit()
@@ -262,27 +264,27 @@ class res_workers(QObject):
                             exitcount += 1
                             self.SigFinishedmerge2G.emit()
                             time.sleep(1)
-                            print("endless loop finish gap > MAX_GAP")
+                            self.logger.error("#################_______________Merge2G endless loop finish gap > MAX_GAP")
                             if exitcount > 5:
-                                print("mission impossible, give up")
+                                self.logger.debug("#################_______________mission impossible, give up")
                                 return False
                         #return(False) ## TODO: stürzt ab, wenn return
                     gap_bytes = int(np.ceil(gap * wavheader["nAvgBytesPerSec"]/2)*2)
                     WRITEGAP = True
                 elif gap < 0:
-                    print(f"merge2G, gap is negative, error !, gap = {gap}")
+                    self.logger.error(f"#################_______________merge2G, gap is negative, error !, gap = {gap}")
                     auxi.standard_errorbox(f"Merge2G: gap is negative, error !, gap = {gap}")
                     return(False)
 
                 with open(input_file, 'rb') as input_file:
-                    print(f"next input file: {input_file} ")
+                    self.logger.debug(f"next input file: {input_file} ")
                     fillchunk = bytes([0x00] * self.CHUNKSIZE)
                     while True:
                         if self.stopix is True:
-                            print("***merge2G worker cancel merging process")
+                            self.logger.debug("***merge2G worker cancel merging process")
                             input_file.close()
                             time.sleep(1)
-                            print("***merge2G worker input file closed")
+                            self.logger.debug("***merge2G worker input file closed")
                             self.SigFinishedmerge2G.emit()
                             return()
 
@@ -308,14 +310,14 @@ class res_workers(QObject):
                         if not data_chunk:
                             firstsource = False
                             if list_ix > (lenlist-1):
-                                print(f"merge2G: last write file reached, ix = {lenlist}")
+                                self.logger.debug(f"merge2G: last write file reached, ix = {lenlist}")
                                 #write last wavheader
                                 duration = (current_output_file_size - 216)/wavheader["nAvgBytesPerSec"]
                                 #TODO: this is wrong except for the last file! must be the stoptime of the last output file
                                 if firstpass:
                                     firstpass = False
                                     stt = stt = self.get_sttime_atrim()
-                                    print(f"merge2G: last == first write file reached, ix = 0")
+                                    self.logger.debug(f"merge2G: last == first write file reached, ix = 0")
                                     wavheader['starttime_dt'] = stt
                                     wavheader['starttime'] = [stt.year, stt.month, 0, stt.day, stt.hour, stt.minute, stt.second, int(stt.microsecond/1000)] 
                                 else:
@@ -352,7 +354,7 @@ class res_workers(QObject):
                                         time.sleep(0.5)
                                 # if jx == 10:
                                 #     auxi.standard_errorbox("The output file was written, but the temp file could not be renamed for unknown reason . Please repeat the merging process")                                    
-                            print("break merget2Gworker")
+                            self.logger.debug("break merget2Gworker")
                             break
 
                         # check if output file exceeds maximum size
@@ -423,15 +425,18 @@ class res_workers(QObject):
                         # write data to target file: if last file: nextfile = ''
                         current_output_file.write(data_chunk)
                         current_output_file_size += len(data_chunk)
-        print("merge2G: merge files done")
+        self.logger.debug("#################_______________merge2G: merge files done")
         self.SigFinishedmerge2G.emit()
 
     def sox_writer(self):
-
-        print("#############sox_worker as sox_writer started##############")
+        #self.logger = self.get_logger()
+        print("********__________sox_worker as sox_writer started")
         self.stopix = False
         soxstring = self.get_soxstring()
+        #self.ret = subprocess.Popen(soxstring, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell = True, start_new_session=True)
         self.ret = subprocess.Popen(soxstring, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell = True)
+        #self.logger.debug(f"********__________sox_worker as sox_writer started, process nr: {self.ret}")
+        print(f" ________ sox worker poll at init: poll: {self.ret.poll()}")
         self.set_ret(self.ret)
         time.sleep(1)
         #print(f"sox return value: {process}")
@@ -441,12 +446,19 @@ class res_workers(QObject):
         #print(f"soxwriter targetfilename: {targetfilename}, exp filesize: {expected_filesize}")
         #print(expected_filesize)
         #self.SigStarted.emit()
+        #extract process id of running sox process
+        self.mutex.lock()
+        tlr = subprocess.run('tasklist /NH | findstr /B /I sox', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell = True)
+        output_lines = tlr.stdout.decode('cp1252').splitlines()
+        pids = [line.split()[1] for line in output_lines]        
+        print(f"________ sox writer process ids: {pids}")
+        self.mutex.unlock()
         if os.path.exists(targetfilename) == True:
             #print("soxwriter: temp file has been created")
             file_stats = os.stat(targetfilename)
             rf = np.floor(100*file_stats.st_size/expected_filesize)
             if np.isnan(rf):
-                print("soxwriter ERROR ________________soxwriter progress exception, set progress zero")
+                #self.logger.error("soxwriter ERROR ________________filesize contains NaN, soxwriter progress exception, set progress zero")
                 rel_finish = int(5)
             else:
                 rel_finish = int(rf)
@@ -490,24 +502,41 @@ class res_workers(QObject):
                         #print("NOW UPDATE STATUSBAR#############################################################################")
                         #self.mutex.unlock()
                 except:
-                    #print("soxwriter_ temp file not found, proceeding without progress update")
+                    #self.logger.debug("********__________ soxwriter_ temp file not found, proceeding without progress update")
                     loop_ix = 3
                 if self.stopix is True:
                     #self.ret.terminate()
                     while self.ret.poll() is None:
-                        #print("***soxwriter>>>>>>>>>killing process")
-                        self.ret.kill()
-                        time.sleep(1)
-                    #print("********_____________soxwriter: terminate sox process on cancel")
+                        self.mutex.lock()
+                        #self.logger.debug("********__________>>>>>>>>>killing process")
+                        print("********__________soxwriter>>>>>>>>>killing process")
+                        #Get the process and its children
+                        parent = psutil.Process(self.ret.pid)
+                        children = parent.children(recursive=True)
+                        # Terminate the process and its children
+                        for child in children:
+                            child.terminate()
+                        print(f" poll: {self.ret.poll()}")
+                        self.mutex.unlock()
+                        parent.wait(timeout=5)
+                        print(f" poll: {self.ret.poll()}")
+                    #self.logger.debug("********__________soxwriter: terminate sox process on cancel")
 
         else:
-            print(f"ERROR: no file {targetfilename} created")
+            pass
+            #self.logger.error(f"ERROR: no file {targetfilename} created")
         #print("soxwriter: success")
         time.sleep(0.5)
+
+        # filterByPid = "PID eq %s" % pid
+        # pidStr = str(pid)
+        # commandArguments = ['cmd', '/c', "tasklist", "/FI", filterByPid, "|", "findstr",  pidStr ]
+
+
         #print("#############sox_worker wait for termination of sox")
         if self.ret.poll() is None:
             stdout, stderr = self.ret.communicate()
-        #print("#############sox_worker as sox_writer finished##############")
+        #self.logger.debug("********__________    sox_worker as sox_writer finished      ##############")
         self.SigFinished.emit()
 
     def soxworker_terminate(self):
@@ -606,7 +635,7 @@ class res_workers(QObject):
                     break
         else:
             #print("LOshift worker: target file has not been found")
-            rint(f"LOshift worker:ERROR: no file {targetfilename} created")
+            print(f"LOshift worker:ERROR: no file {targetfilename} created")
             #print("success")
             time.sleep(0.1)
         source_fileHandle.close()    
@@ -658,6 +687,7 @@ class resample_c(QObject):
         self.m["resampling_gain"] = 0
         self.m["last_system_time"] = time.time()
         self.m["clearlist"] = False
+        self.m["cancelflag"] = False
         self.logger = resample_m.logger
         self.logger.debug(f'__init__ resampler: {self.m["sample"]}')
 
@@ -746,6 +776,7 @@ class resample_c(QObject):
         self.merge2G_worker.set_maxgap(self.MAX_GAP)
         self.merge2G_worker.set_readsegment(auxi.readsegment_new)
         self.merge2G_worker.set_ret(self.m["basename"])
+        self.merge2G_worker.set_logger(self.logger)
         self.merge2G_worker.set_sttime_atrim(self.m["starttime_after_trim"])
         self.merge2G_thread.started.connect(self.merge2G_worker.merge2G_worker)
         #self.merge2G_worker.SigPupdate.connect(lambda: resample_v.updateprogress_resampling(self)) #TODO: check if lambda call is appropriate.
@@ -779,6 +810,53 @@ class resample_c(QObject):
     def mergeerrorhandler(self,_str):
         auxi.standard_errorbox(_str)
 
+    def cleanup(self):
+        """Handle the process after either xoxworker or LOSHworker have finished. 2 cases:
+            self.m["emergency_stop"] is set because of 'cancel' operation: 
+                terminate all and reset all GUIs
+                reactivate normal state
+                fileopened = false and Relay to all other tabs
+            else: (normal operation):
+                hand over to scheduler by signalling
+        :param: none
+        :type: none
+        ...
+        :raises: none
+        ...
+        :return: none 
+        :rtype: none
+        """
+        time.sleep(1)
+        if self.m["emergency_stop"]:
+            self.Sigincrscheduler.disconnect(self.res_scheduler)
+            #self.m["emergency_stop"] = False
+            self.m["clearlist"] = True
+            #print("resampler sox_cleanup after cancel and emergency stop")
+            self.logger.debug("resampler cleanup after cancel and emergency stop, trigger = either sox or LOSHifter")
+            self.SigUpdateGUIelements.emit()
+            self.m["progress_source"] = "normal"
+            self.m["progress"] = 0
+            self.m["blinkstate"] = False
+            self.m["actionlabel"] = "JOB DONE"
+            self.m["actionlabelbg"] = "lightgray"
+            #print("resampler merg2G_cleanup before SigProgress")
+            self.m["blinking"] = False
+            self.SigProgress.emit() #TODO ZODO TODO: no reaction !
+            self.SigActivateOtherTabs.emit("Resample","activate",[])
+            #Therefore send a signal Siginactivate_except("resample") with the parameter indicating which tab should not be inactivated
+            #The inactivation of the rest should be done by core.view
+            self.m["fileopened"] = False
+            self.SigRelay.emit("cm_all_",["fileopened",False])  #TODO TODO TODO: das geht nicht
+            self.m["list_out_files_resampled"] = []
+            self.SigResampGUIReset.emit()
+            self.SigRelay.emit("cexex_resample",["relay_toall_reset_GUI",0])
+            self.m["cancelflag"] = False
+            #TODO TODO TODO: close and cleaup all temporary files in /out and /temp
+
+        else:
+            self.logger.debug("cleanup: increment scheduler , NO emergency stop, tiggered either by sox or LOSHifter")
+            self.Sigincrscheduler.emit()
+
     def merge2G_cleanup(self,input_file_list):
         """cleanup temp files after merge2G thread has finished
         :param: none
@@ -789,10 +867,11 @@ class resample_c(QObject):
         :return: none 
         :rtype: none
         """
-        #system_state = self.sys_state.get_status()
-        #gui = self.sys_state["gui_reference"]
-        #self.SigSyncTabs.emit(["_test", "resample", "a", "_teststatus", True])
-        #self.SigRelay.emit("cm_all_",["wavheader",self.wavheader])
+        if self.m["emergency_stop"]:
+            #self.m["emergency_stop"] = False
+            self.m["cancelflag"] = False
+
+            
         if self.m["merge2G_deleteoriginal"]:
             for input_file in input_file_list:
                 self.logger.debug(f"remove {input_file} if exists")
@@ -800,13 +879,8 @@ class resample_c(QObject):
                     os.remove(input_file)
         self.m["clearlist"] = True
         #print("resampler merg2G_cleanup before SigUpdateGUIelements")
-        self.logger.debug("resampler merg2G_cleanup before SigUpdateGUIelements")
+        self.logger.debug("merg2G_cleanup before SigUpdateGUIelements")
         self.SigUpdateGUIelements.emit()
-        # gui.ui.listWidget_playlist_2.clear() #TODO: shift to a resample.view method
-        # gui.ui.listWidget_sourcelist_2.clear() #TODO: shift to a resample.view method
-        # gui.clear_WAVwidgets() #TODO: shift to a view method
-        #gui.ui.label_36.setStyleSheet("background-color: lightgray") #TODO: shift to a resample.view method
-        #TODO: check if signalling is preferrable, see other instances !
 
         self.m["progress_source"] = "normal"
         self.m["progress"] = 0
@@ -814,7 +888,7 @@ class resample_c(QObject):
         self.m["actionlabel"] = "JOB DONE"
         self.m["actionlabelbg"] = "lightgray"
         #print("resampler merg2G_cleanup before SigProgress")
-        self.logger.debug("resampler merg2G_cleanup before SigProgress")
+        self.logger.debug("merg2G_cleanup before SigProgress")
         self.m["blinking"] = False
         self.SigProgress.emit()
         self.SigActivateOtherTabs.emit("Resample","activate",[])
@@ -822,7 +896,7 @@ class resample_c(QObject):
         #The inactivation of the rest should be done by core.view
         self.m["fileopened"] = False
         #print("resampler merg2G_cleanup before SigSyncTabs")
-        self.logger.debug("resampler merg2G_cleanup before SigSyncTabs")
+        self.logger.debug("merg2G_cleanup before SigSyncTabs")
         #self.SigSyncTabs.emit(["test","resample","a","fileopened",False])
         self.SigRelay.emit("cm_all_",["fileopened",False])  #TODO TODO TODO: das geht nicht
         self.m["list_out_files_resampled"] = []
@@ -846,8 +920,7 @@ class resample_c(QObject):
         schedule_objdict["signal"]["LOshift"].disconnect(schedule_objdict["connect"]["LOshift"])
         #TODO: activate cancellation, once cancel_method has been adapted: 
 
-        self.SigConnectExternalMethods.emit("cancel_resampling")
-        #gui.ui.pushButton_resample_cancel.clicked.connect(self.cancel_resampling) #TODO: shift to a resample.view method
+        #self.SigConnectExternalMethods.emit("cancel_resampling")
         source_fn = self.m["source_fn"]  #TODO: define im GUI_Hauptprogramm bzw. im scheduler
         target_fn = self.m["target_fn"]
         self.m["progress_source"] = "sox"  #TODO: muss geändert werden ist das überhaupt nötig ?
@@ -881,18 +954,21 @@ class resample_c(QObject):
         self.LOsh_worker.set_wFormatTag(self.m["wFormatTag"])
         self.LOsh_worker.set_centershift(self.m["fshift"])
         self.LOsh_worker.set_expfs(expected_filesize)
+        self.LOsh_worker.set_logger(self.logger)
         #self.LOsh_worker.set_readsegment(gui.readsegment_new)  #TODO: readsegment should be part of an aux module rather than gui (== core)
         self.LOsh_worker.set_readsegment(auxi.readsegment_new)
         self.LOsh_worker.set_sBPS(self.m["sBPS"])
         self.LOshthread.started.connect(self.LOsh_worker.LO_shifter_worker)
         self.Sigincrscheduler.connect(self.res_scheduler)
-        self.LOsh_worker.SigFinishedLOshifter.connect(lambda: self.Sigincrscheduler.emit())
+        #self.LOsh_worker.SigFinishedLOshifter.connect(lambda: self.Sigincrscheduler.emit()): --> cleanup()
         #z.B. schreibe die Referenz auf signal_state, damit sie der Scheduler dort abholen kann, schedule[n].["startsignal"] = diese Referenz
         #self.LOsh_worker.SigPupdate.connect(lambda: resample_v.updateprogress_resampling(self)) #TODO: eher aus der Klasse view, könnte auch ausserhalb geschehen
         self.LOsh_worker.SigPupdate.connect(self.PupdateSignalHandler)
         self.LOsh_worker.SigFinishedLOshifter.connect(self.LOshthread.quit)
         self.LOsh_worker.SigFinishedLOshifter.connect(self.LOsh_worker.deleteLater)
         self.LOshthread.finished.connect(self.LOshthread.deleteLater)
+        self.LOshthread.finished.connect(lambda: self.cleanup())
+
         self.m["calling_worker"] = self.LOsh_worker 
         self.m["last_system_time"] = time.time()
 
@@ -918,24 +994,34 @@ class resample_c(QObject):
     def cancel_resampling(self):
         #TODO check how to handle and delete after change to model
         #schedule_objdict = self.m["schedule_objdict"]
-        for i in range(10):
-            self.logger.debug("*********______________cancel_resamp reached")
+        self.SigDisconnectExternalMethods.emit("cancel_resampling")
+        if self.m["cancelflag"]:
+            self.logger.debug("cancel_resampling:**** suppressed because cancelflag ___cancel_resamp reached")
+            return
+        self.m["cancelflag"] = True
+        time.sleep(0.001)
+        for i in range(5):
+            self.logger.debug("**** 5 x BLOCK *****___cancel_resamp reached")
         self.m["emergency_stop"] = True
+        print(f"Cance_resamapling: emergency stop: {self.m['emergency_stop']}")
+        self.logger.debug("Cance_resamapling: emergency stop: %s", self.m['emergency_stop'])
         try:
             self.sox_worker.soxworker_terminate()
         except:
+            self.logger.debug("cancel resampling: sox worker could not be terminated, prob. not sox process")
             pass
         try:
             self.LOsh_worker.soxworker_terminate()
         except:
+            self.logger.debug("cancel resampling: LOsh worker could not be terminated, prob. not LOsh process")
             pass
         try:
             self.merge2G_worker.soxworker_terminate()
         except:
+            self.logger.debug("cancel resampling: Merge2G worker could not be terminated, prob. not Metge2G process")
             pass
         #TODO: activate signalling method, but no success so far: schedule_objdict["signal"]["cancel"].emit()
-        self.SigDisconnectExternalMethods.emit("cancel_resampling")
-        #gui.ui.pushButton_resample_cancel.clicked.disconnect(self.cancel_resampling)  #TODO: shift to a resample.view method, probably via signalling
+
 
 
     def resample(self):
@@ -1001,6 +1087,16 @@ class resample_c(QObject):
         self.m["res_blinkstate"] = True
         self.m["blinking"] = True
         self.m["progress_source"] = "sox" #TODO rename sox reference to something more general: worker ?????
+
+        # tlr = subprocess.run('tasklist /NH | findstr /B /I win', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell = True)
+    
+        # # Byte-String in einen normalen String umwandeln und in Zeilen aufteilen
+        # output_lines = tlr.stdout.decode('cp1252').splitlines()
+        
+        # # Extrahiere PID aus jeder Zeile und füge sie zur Liste hinzu
+        # pids = [line.split()[1] for line in output_lines]
+        #print(f"________ sox writer process ids: {pids}")
+
         self.logger.debug("method resample: set flags just before soxthread")
         self.soxthread = QThread(parent = self)
         self.sox_worker = res_workers()
@@ -1008,6 +1104,7 @@ class resample_c(QObject):
         self.sox_worker.moveToThread(self.soxthread)
         self.sox_worker.set_soxstring(soxstring)
         self.sox_worker.set_ret("")
+        self.sox_worker.set_logger(self.logger)
         self.sox_worker.set_tfname(target_fn )
         self.sox_worker.set_expfs(expected_filesize)
         self.soxthread.started.connect(self.sox_worker.sox_writer)
@@ -1016,7 +1113,7 @@ class resample_c(QObject):
         schedule_objdict["signal"]["cancel"].connect(lambda: self.sox_worker.soxworker_terminate())
 
         self.Sigincrscheduler.connect(self.res_scheduler)
-        self.sox_worker.SigFinished.connect(lambda: self.Sigincrscheduler.emit())
+        #self.sox_worker.SigFinished.connect(lambda: self.Sigincrscheduler.emit()) --> shifted to cleanup
         self.sox_worker.SigSoxerror.connect(self.Soxerrorhandler)
         #z.B. schreibe die Referenz auf signal_state, damit sie der Scheduler dort abholen kann, schedule[n].["startsignal"] = diese Referenz
         #self.sox_worker.SigPupdate.connect(lambda: resample_v.updateprogress_resampling(self)) #TODO: eher aus der Klasse view, könnte auch ausserhalb geschehen
@@ -1024,15 +1121,17 @@ class resample_c(QObject):
         self.sox_worker.SigFinished.connect(self.soxthread.quit)
         self.sox_worker.SigFinished.connect(self.sox_worker.deleteLater)
         self.soxthread.finished.connect(self.soxthread.deleteLater)
+        self.soxthread.finished.connect(lambda: self.cleanup())
+
 
         self.m["calling_worker"] = self.sox_worker 
-        self.logger.debug("method resample:soxthread starting now ###########################")
+        self.logger.debug("################ method resample:soxthread starting now ###########################")
         self.soxthread.start()
         if self.soxthread.isRunning():
-            self.logger.debug("method resample:soxthread started")
+            self.logger.debug("################ method resample:soxthread started")
         time.sleep(1) # wait state so that the soxworker has already opened the file
-        self.logger.debug("method resample: resampler 1s sleep phase over")
-        self.logger.debug("method resample: about to leave resampler")
+        self.logger.debug("############### method resample: resampler 1s sleep phase over")
+        self.logger.debug("############### method resample: about to leave resample = soxworker starter")
         #self.sys_state.set_status(self.m)
 
     def PupdateSignalHandler(self):
@@ -1252,6 +1351,7 @@ class resample_c(QObject):
             #gui.ui.label_36.setText('FINALIZE') #TODO: shift to a resample.view method, treat in a different manner: model variable change and then update signal
             #self.sys_state.set_status(self.m) #TODO: shift to a resample.view method, treat in a different manner: model variable change and then update signal
             #TODO: gleicher Aufruf wie in 'resample':
+            self.logger.debug("res_scheduler accomplish reached")
             schedule_objdict["signal"]["accomplish"].connect(schedule_objdict["connect"]["accomplish"])
             schedule_objdict["signal"]["accomplish"].emit()
             time.sleep(0.01)
@@ -1522,11 +1622,13 @@ class resample_v(QObject):
     #     super().__init__(*args, **kwargs)
         viewvars = {}
         self.set_viewvars(viewvars)
+
         self.m = resample_m.mdl
         self.resample_c = resample_c #resample_c can now be used as instance of the resampler controller for signallng
         #self.sys_state = wsys.status() #TEST: commented out 09-01-2024
         #self.sys_state = gui_state
         #system_state = self.sys_state.get_status()
+        self.m["cancelflag"] = False
         self.m["reslistdoubleemit_ix"] = False
         self.m["starttrim"] = False
         self.m["stoptrim"] = False
@@ -1541,7 +1643,9 @@ class resample_v(QObject):
         self.m["res_blinkstate"] = False
         self.m["emergency_stop"] = False
         self.m["blinking"] = False
-        self.m["position"] = 0
+        # self.m["position"] = 0 #TODO remove after tests
+        self.m["spectrum_position"] = 0
+        self.m["list_out_files_resampled"] = []
         self.logger = resample_m.logger
         self.resample_c.SigRelay.connect(self.rxhandler)
         self.resample_c.SigRelay.connect(self.SigRelay.emit)
@@ -1558,7 +1662,7 @@ class resample_v(QObject):
         self.gui.checkBox_merge_selectall.setEnabled(False)
         #self.sys_state.set_status(system_state)
         self.DATABLOCKSIZE = 1024*32
-        self.gui.pushButton_resample_cancel.clicked.connect(self.resample_c.cancel_resampling) #TODO: shift to a resample.view method
+        #self.gui.pushButton_resample_cancel.clicked.connect(self.resample_c.cancel_resampling) #TODO: shift to a resample.view method
         #self.resample_c.SigUpdateGUI.connect(self.update_GUI)
         self.resample_c.SigResampGUIReset.connect(self.reset_resamp_GUI_elemets)
         self.resample_c.SigUpdateGUIelements.connect(self.updateGUIelements)
@@ -1609,8 +1713,8 @@ class resample_v(QObject):
         self.gui.timeEdit_resample_startcut.setEnabled(False)
         self.gui.pushButton_resample_resample.clicked.connect(self.cb_Butt_resample)
         self.gui.comboBox_resample_targetSR.setCurrentIndex(5)
-        self.gui.comboBox_resample_targetSR.currentIndexChanged.connect(lambda: self.plot_spectrum_resample(self.m["position"]))
-        self.gui.lineEdit_resample_targetLO.textChanged.connect(lambda: self.plot_spectrum_resample(self.m["position"]))
+        self.gui.comboBox_resample_targetSR.currentIndexChanged.connect(lambda: self.plot_spectrum_resample(self.m["spectrum_position"]))
+        self.gui.lineEdit_resample_targetLO.textChanged.connect(lambda: self.plot_spectrum_resample(self.m["spectrum_position"]))
         self.gui.radioButton_advanced_sampling.clicked.connect(lambda: self.toggle_advanced_sampling())
         self.gui.radioButton_resgain.clicked.connect(lambda: self.toggle_gain())
         self.gui.lineEdit_resample_targetLO.textChanged.connect(lambda: self.reformat_targetLOpalette)
@@ -1674,21 +1778,21 @@ class resample_v(QObject):
 
     def cb_Butt_resample(self):
         try:
-            self.ui.listWidget_playlist_2.itemChanged.disconnect(self.reslist_update)
+            self.ui.listWidget_playlist_2.itemChanged.disconnect(self.reslist_update) #?redundant? is called in cb_resample
         except:
             pass
         self.cb_resample()
-        self.gui.radioButton_advanced_sampling.setChecked(False)
+        #self.gui.radioButton_advanced_sampling.setChecked(False)
 
     def ext_meth_disconnect(self,ctrl):
-        if ctrl.find("cancel_resampling"):
+        if ctrl.find("cancel_resampling") == 0:
             self.gui.pushButton_resample_cancel.clicked.disconnect(self.resample_c.cancel_resampling)
         else:
             #print("error in resample_v, ext_meth_disconnect ")
             self.logger.error("error in resample_v, ext_meth_disconnect ")
 
     def ext_meth_connect(self,ctrl):
-        if ctrl.find("cancel_resampling"):
+        if ctrl.find("cancel_resampling") == 0:
             self.gui.pushButton_resample_cancel.clicked.connect(self.resample_c.cancel_resampling)
         else:
             self.logger.debug("error in resample_v, ext_meth_connect ")
@@ -1696,7 +1800,7 @@ class resample_v(QObject):
 
     def GUI_reset_status(self):
         self.m["resampling_gain"] = 0
-        self.m["emergency_stop"] = False
+        #self.m["emergency_stop"] = False
         self.m["timescaler"] = 0
         self.m["fileopened"] = False
         #self.SigSyncTabs(["dum","resample","a","fileopened",False])
@@ -1714,6 +1818,7 @@ class resample_v(QObject):
         self.m["temp_LOerror"] = False
         self.m["starttrim"] = False
         self.m["stoptrim"] = False
+        self.gui.pushButton_resample_cancel.clicked.connect(self.resample_c.cancel_resampling)
 
     def updateGUIelements(self):
         """
@@ -1731,7 +1836,7 @@ class resample_v(QObject):
         self.gui.label_36.setStyleSheet("background-color: " + self.m["actionlabelbg"])
         self.gui.label_36.setFont(QFont('arial',self.m["label36Font"]))
         self.gui.label_36.setText(self.m["actionlabel"])
-        self.gui.lineEdit_resample_targetLO.setText(str((self.m["wavheader"]["centerfreq"]/1000)))
+        
 
         self.gui.progressBar_resample.setProperty("value", self.m["progress"])
         if self.m["emergency_stop"]:
@@ -1750,8 +1855,12 @@ class resample_v(QObject):
         #updateprogress_resampling
         self.updateprogress_resampling()
         self.gui.label_Filename_resample.setText(self.m["my_filename"] + self.m["ext"])
+        if (not self.gui.radioButton_advanced_sampling.isChecked()) and (len(self.m["my_filename"]) > 0):
+            self.gui.lineEdit_resample_targetnameprefix.setText(self.m["my_filename"])
+            self.gui.lineEdit_resample_targetLO.setText(str((self.m["wavheader"]["centerfreq"]/1000)))
         #TODO TODO TODO: update plot spectrum
-        self.plot_spectrum_resample(0)
+        #self.plot_spectrum_resample(0)
+        self.plot_spectrum_resample(self.m["spectrum_position"])
 
     def reset_GUI(self):
         """
@@ -1765,9 +1874,12 @@ class resample_v(QObject):
         :return: True after completion, False if status-yaml not accessible
         :rtype: boolean
         """
+        self.m["cancelflag"] = False
         self.m["actionlabelbg"] ="lightgray"
         self.m["label36Font"] = 12
         self.m["actionlabel"] = "READY"
+        self.m["emergency_stop"] = False
+        self.logger.debug("reset_GUI, emergency stop = False")
         #self.updateGUIelements()
         self.m["Tabref"]["Resample"]["ax"].clear()
         self.m["Tabref"]["Resample"]["canvas"].draw()
@@ -1781,6 +1893,7 @@ class resample_v(QObject):
         self.gui.label_36.setText('')
         self.gui.label_36.setFont(QFont('arial',12))
         self.gui.label_36.setStyleSheet("background-color: lightgray")
+        self.gui.radioButton_advanced_sampling.setChecked(False)
 
     def addplaylistitem(self):
         item = QtWidgets.QListWidgetItem()
@@ -2012,7 +2125,7 @@ class resample_v(QObject):
 
     def plot_spectrum_resample(self,position):
         """assign a plot window and a toolbar to the tab 'resample' and plot data from currently loaded file at position 'position'
-        :param : position
+        :param : position: fractional position between 0 and 1
         :type : int
         :raises [ErrorType]: [ErrorDescription]
         :return: flag False or True, False on unsuccessful execution
@@ -2028,12 +2141,16 @@ class resample_v(QObject):
         else:
             #data = self.readsegment() ##TODO: position ist die des scrollbars im View spectra tab, das ist etwas unschön. Man sollte auch hier einen scrollbar haben, der mit dem anderen synchronisiert wird
             pscale = self.m["wavheader"]['nBlockAlign']
-            position = int(np.floor(pscale*np.round(self.m["wavheader"]['data_nChunkSize']*self.m["horzscal"]/pscale/1000)))
+            #TODO TODO TODO: Problem: position wird hier überschrieben durch die Byte-Position im zu lesenden File
+            #hier wird horzscal übergeben, was irgend woanders erzeugt wird hier wird der horzscal Wert aus dem view_spectra übernommen
+            fposition = int(np.floor(pscale*np.round(self.m["wavheader"]['data_nChunkSize']*position/pscale/1000)))
+
+            #fposition = int(np.floor(pscale*np.round(self.m["wavheader"]['data_nChunkSize']*self.m["horzscal"]/pscale/1000)))
             #ret = self.gui.readsegment(position,self.DATABLOCKSIZE)  ##TODO: position ist die des scrollbars im View spectra tab, das ist etwas unschön. Man sollte auch hier einen scrollbar haben, der mit dem anderen synchronisiert wird
             #NEW 08-12-2023 #######################TODO###################### tBPS not yet clear
             #ret = self.gui.readsegment_new(system_state["f1"],position,self.DATABLOCKSIZE,self.m["wavheader"]["nBitsPerSample"],
             #                         32,self.m["wavheader"]["wFormatTag"]) #TODO: replace by line below
-            ret = auxi.readsegment_new(self,self.m["f1"],position,self.m["readoffset"],self.DATABLOCKSIZE,self.m["wavheader"]["nBitsPerSample"],
+            ret = auxi.readsegment_new(self,self.m["f1"],fposition,self.m["readoffset"],self.DATABLOCKSIZE,self.m["wavheader"]["nBitsPerSample"],
                                       32,self.m["wavheader"]["wFormatTag"])
             ####################################################################################
             data = ret["data"]
@@ -2472,8 +2589,8 @@ class resample_v(QObject):
         self.gui.pushButton_resample_GainOnly.setEnabled(False)
         self.enable_resamp_GUI_elemets(False)
         #stop if exception (e.g. cancellation)
-        if self.m["emergency_stop"] is True:
-            self.m["emergency_stop"] = False
+        if self.m["emergency_stop"]:
+            #self.m["emergency_stop"] = False
             #print("emergency stop in cb_resample")
             self.logger.warning("emergency stop in cb_resample")
             self.m["reslist_ix"] = 0
@@ -2483,8 +2600,9 @@ class resample_v(QObject):
             time.sleep(0.1)
             self.m["fileopened"] = False
             self.gui.listWidget_playlist_2.itemChanged.connect(self.reslist_update)
-            self.gui.SigGUIReset.emit()
+            #self.gui.SigGUIReset.emit()
             self.m["list_out_files_resampled"] = []
+            self.GUI_reset_status()
             return False
         #check for sox as a prerequisite
         if self.soxnotexist:
@@ -2514,6 +2632,7 @@ class resample_v(QObject):
         self.m["starttrim"] = False
         self.m["stoptrim"] = False
 
+        self.gui.pushButton_resample_cancel.clicked.connect(self.resample_c.cancel_resampling)
         #loop through file list to be resampled
         reslist_len = self.gui.listWidget_playlist_2.count()
         if reslist_len > 0: #file list has at least one entry
@@ -2552,7 +2671,7 @@ class resample_v(QObject):
                 time.sleep(0.1)
                 # start mege2G if checked 
                 if self.gui.checkBox_AutoMerge2G.isChecked():
-                    if not self.m["emergency_stop"]:
+                    if not self.m["emergency_stop"]: #TODO ? redundant ? has been checked earlier
                         self.m["merge2G_deleteoriginal"] = True
                         self.m["merge2G_gainenable"] = False
                         #TODO: check new worker based implementation

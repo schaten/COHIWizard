@@ -108,6 +108,7 @@ class view_spectra_v(QObject):
         self.m["reslistdoubleemit_ix"] = False
         self.m["starttrim"] = False
         self.m["stoptrim"] = False
+        self.m["spectrum_position"] = 0
         self.gui = gui #gui_state["gui_reference"]#system_state["gui_reference"]
         #self.SigUpdateGUI.connect(self.update_GUI) #TODO: remove after tests
         self.SigRX.connect(self.rxhandler)
@@ -189,7 +190,7 @@ class view_spectra_v(QObject):
         self.logger.debug("view spectra: updateGUIelements")
         self.gui.label_Filename_ViewSpectra.setText(self.m["my_filename"] + self.m["ext"])
         dummy = 0
-        self.plot_spectrum(dummy,self.m["position"])
+        self.plot_spectrum(dummy,self.m["spectrum_position"])
         self.logger.debug("view spectra: emit baselineoffset %i", self.m["baselineoffset"])
         self.SigRelay.emit("cm_xcore",["baselineoffset",self.m["baselineoffset"]])
 
@@ -225,6 +226,7 @@ class view_spectra_v(QObject):
         self.SigRelay.emit("cm_resample",["spectrum_position",position])
         self.SigRelay.emit("cm_view_spectra",["position",position])
         self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
+        self.SigRelay.emit("cexex_resample",["updateGUIelements",0])
         self.plot_spectrum(0,position)
         self.logger.debug("cb_plot_spectrum in module view_spectra reached")
 
