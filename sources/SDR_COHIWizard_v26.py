@@ -233,8 +233,8 @@ class core_v(QObject):
         #self.gui.tabwidget_ref.setCurrentIndex(1) #TODO: avoid magic number, make config issue
 
         ###TODO: re-organize, there should be no access to gui elements of other modules
-        self.gui.tabWidget.setCurrentIndex(1) #TODO: avoid magic number, make config issue
-        self.gui.playrec_comboBox_startuptab.setCurrentIndex(1)
+        self.gui.tabWidget.setCurrentIndex(0) #TODO: avoid magic number, make config issue
+        self.gui.playrec_comboBox_startuptab.setCurrentIndex(0)
         self.standardpath = os.getcwd()  #TODO: this is a core variable in core model
         self.metadata = {"last_path": self.standardpath}
         self.ismetadata = False
@@ -993,19 +993,6 @@ if __name__ == '__main__':
     tab_dict["list"] = ["xcore"]
     tab_dict["tabname"] = ["xcore"]
 
-    #tabselector = {}
-    #tabselector["xcore"] = 
-
-    # tabselector = [""] * len(tab_dict["tabname"])
-    # for _ct,_name in enumerate(tab_dict["tabname"]):
-    #     try:
-    #         _key = [k for k,v in xcore_v.tab_names.items() if v == 'xcore'][0]
-    #         tabselector[_key] = 'xcore' 
-    #     except:
-    #         pass
-
-
-
     if 'resampler_module_v5' in sys.modules:
         resample_m = rsmp.resample_m() #TODO: wird gui in _m jemals gebraucht ? ich denke nein !
         resample_c = rsmp.resample_c(resample_m) #TODO: replace sys_state
@@ -1014,7 +1001,6 @@ if __name__ == '__main__':
         tab_dict["tabname"].append("Resample")
         resample_v.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
         resample_c.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
-
 
     else:
         xcore_v.gui.tabWidget.setTabVisible('tab_resample',False)
@@ -1100,7 +1086,10 @@ if __name__ == '__main__':
 
     xcore_v.gui.playrec_comboBox_startuptab.addItems(tabselector)
     xcore_v.gui.playrec_comboBox_startuptab.setEnabled(True)
-    xcore_v.gui.playrec_comboBox_startuptab.setCurrentIndex(int(xcore_v.metadata["startup_tab"]))
+    try:
+        xcore_v.gui.playrec_comboBox_startuptab.setCurrentIndex(int(xcore_v.metadata["startup_tab"]))
+    except:
+        xcore_v.logger.error("startup Tab not defined in configuration file config_wizard.yaml")
     xcore_v.gui.playrec_comboBox_startuptab.currentIndexChanged.connect(xcore_v.set_startuptab)
 
 
@@ -1129,8 +1118,6 @@ if __name__ == '__main__':
     sys.exit(app.exec_())
 
 #TODOs:
-    # Bei Autoload Tab stimmt die Numerierung nicht
-    #
     # file open muss in den Controller
     #
     # shift access to xcore_v in __main__ ti special initializer method in xcore_v, which is started by a single call in __main__

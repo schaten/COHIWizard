@@ -242,43 +242,26 @@ class view_spectra_v(QObject):
         :return: flag False or True, False on unsuccessful execution
         :rtype: Boolean
         """
-        #test TODO: remove after tests
-        #system_state = sys_state.get_status()
-        #testirate = system_state["irate"]
-        #print(f"TEST TEST TEST: plot_spectrum testirate:{testirate}")
-        #sys_state.set_status(system_state)
-        #print("view_spectra plot_spectum reached")
         self.logger.debug("view_spectra plot_spectum reached")
         if self.m["fileopened"] is False:
-            #sys_state.set_status(system_state)
             return(False)
         else:
             #print('plot spectrum')
             self.m["horzscal"] = position
-            #syncdict = ["resample", "win", "u", "horzscal", position]
-            ########################################## EINZIGES VERBLEIBENDES RÄTSEL
-            #zu ersetzen durch 
-            #self.SigSyncTabs.emit(syncdict)
-            #print(f"scrollbar value:{system_state["horzscal"]}")
             
             # read datablock corresponding to current sliderposition
-            #TODO: correct 32 bit case if wFormatTag != 3
+            #TODO TODO TODO: correct 32 bit case if wFormatTag != 3
             #print("plot spectrum reached, start readsegment")
-            #self.m["wavheader"] = WAVheader_tools.get_sdruno_header(self,self.m["f1"])
             #print("-------------> before pscale")
             pscale = self.m["wavheader"]['nBlockAlign']
             #print(f"---> wavheader: {self.m['wavheader']} pscale: {pscale} horzscal: {self.m['horzscal']}")
             position = int(np.floor(pscale*np.round(self.m["wavheader"]['data_nChunkSize']*self.m["horzscal"]/pscale/1000)))
-            #ret = auxi.readsegment_new(position,self.DATABLOCKSIZE)
-
-            #ret = auxi.readsegment_new(self.m["f1"],position,self.DATABLOCKSIZE,self.m["wavheader"]["nBitsPerSample"],32,self.m["wavheader"]["wFormatTag"])
             if self.m["wavheader"]['sdrtype_chckID'].find('rcvr') > -1:
                 self.readoffset = 86
             else:
                 self.readoffset = 216
             ret = auxi.readsegment_new(self,self.m["f1"],position,self.readoffset,self.DATABLOCKSIZE,self.m["wavheader"]["nBitsPerSample"],
                                       32,self.m["wavheader"]["wFormatTag"])
-            ####################################################################################
             data = ret["data"]
             if 2*ret["size"]/self.m["wavheader"]["nBlockAlign"] < self.DATABLOCKSIZE:
                 #sys_state.set_status(system_state)
@@ -291,7 +274,6 @@ class view_spectra_v(QObject):
                 realindex = np.arange(0,self.DATABLOCKSIZE,2)
                 imagindex = np.arange(1,self.DATABLOCKSIZE,2)
                 #calculate spectrum and shift/rescale appropriately
-                #trace = np.abs(data[realindex]+1j*data[imagindex])
                 trace = np.real(data[realindex]+1j*data[imagindex])
 
                 trace = trace * np.power(10,self.m["resampling_gain"]/20)
@@ -328,9 +310,6 @@ class view_spectra_v(QObject):
             #display ev<luation time
             displtime = str(self.m["wavheader"]['starttime_dt'] + (self.m["wavheader"]['stoptime_dt']-self.m["wavheader"]['starttime_dt'])*self.m["horzscal"]/1000)
             self.gui.lineEdit_evaltime.setText('Evaluation time: '+ displtime + ' UTC')
-            #self.plotcompleted = True
-        #sys_state.set_status(system_state)
-
         return(True)
     
     def ann_spectrum(self,dummy,data):      #TODO: This is a controller method, should be transferred to an annotation module
@@ -389,7 +368,6 @@ class view_spectra_v(QObject):
         dist = np.floor(np.maximum(self.m["deltaf"]/self.m["wavheader"]['nSamplesPerSec']*N,100))
         wd = np.floor(self.m["peakwidth"]/self.m["wavheader"]['nSamplesPerSec']*N)
         #print(f"peakwidth: {wd}")
-
         peaklocs, peakprops = sig.find_peaks(datay_filt,
                         prominence=(self.m["prominence"],None), distance=dist, width = wd)
         ret = {"datax": datax, "datay": datay, "datay_filt": datay_filt,

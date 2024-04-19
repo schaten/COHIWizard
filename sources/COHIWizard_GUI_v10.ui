@@ -87,7 +87,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <property name="iconSize">
        <size>
@@ -1715,6 +1715,9 @@ UFL</string>
              </disabled>
             </palette>
            </property>
+           <property name="toolTip">
+            <string>chose preferred tab which should be shown on next startup</string>
+           </property>
            <property name="autoFillBackground">
             <bool>true</bool>
            </property>
@@ -1821,6 +1824,9 @@ UFL</string>
               </colorrole>
              </disabled>
             </palette>
+           </property>
+           <property name="toolTip">
+            <string>Select Tab with which the COHIWizard should start up next time</string>
            </property>
            <property name="autoFillBackground">
             <bool>true</bool>
@@ -2421,7 +2427,7 @@ UFL</string>
             </font>
            </property>
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Width of the band to be recorded, Sampling rate&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string/>
            </property>
            <property name="autoFillBackground">
             <bool>true</bool>
@@ -2558,7 +2564,7 @@ UFL</string>
             <bool>true</bool>
            </property>
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;pick the width of the band to be recorded, Sampling rate&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>select bandwidth</string>
            </property>
            <property name="currentIndex">
             <number>5</number>
@@ -2603,7 +2609,7 @@ UFL</string>
          <item row="9" column="13">
           <widget class="QLineEdit" name="lineEdit_playrec_LO">
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;enter central frequency of the band here in integer kHz&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>enter LO frequency here (kHz)</string>
            </property>
            <property name="autoFillBackground">
             <bool>true</bool>
@@ -2862,7 +2868,7 @@ UFL</string>
             </font>
            </property>
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Width of the band to be recorded, Sampling rate&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>Select Recording bandwidth from dropdown list</string>
            </property>
            <property name="autoFillBackground">
             <bool>true</bool>
@@ -2953,7 +2959,7 @@ UFL</string>
             </font>
            </property>
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;central frequency of the band, = Local Oscillator&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>set center frequency in kHz (LO)</string>
            </property>
            <property name="autoFillBackground">
             <bool>true</bool>
@@ -3114,7 +3120,7 @@ UFL</string>
             </palette>
            </property>
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select duration of the recording in HH:MM:SS&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>Duration of the planned recording</string>
            </property>
            <property name="autoFillBackground">
             <bool>true</bool>
@@ -3306,7 +3312,7 @@ UFL</string>
             </font>
            </property>
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p/&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string/>
            </property>
            <property name="autoFillBackground">
             <bool>true</bool>
@@ -3545,7 +3551,7 @@ UFL</string>
             </palette>
            </property>
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Choose preselected AM broadcasting band&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>select bandwidth for a pre-set broadcasting band</string>
            </property>
            <property name="autoFillBackground">
             <bool>true</bool>
@@ -3640,7 +3646,7 @@ UFL</string>
             </palette>
            </property>
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;recording start time&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>Define starting time/date of autostarted recording</string>
            </property>
            <property name="autoFillBackground">
             <bool>true</bool>
@@ -4752,7 +4758,7 @@ UFL</string>
          <item row="17" column="13">
           <widget class="QTimeEdit" name="playrec_RECLENGTH_timeEdit">
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;edit preselected AM broadcasting band&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>enter duration here in HH:MM:SS</string>
            </property>
            <property name="displayFormat">
             <string>HH:mm:ss</string>
@@ -4915,7 +4921,7 @@ UFL</string>
             </font>
            </property>
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;activate autostart timer for recording&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>activate autostart of Recording at the time set in REC Start</string>
            </property>
            <property name="autoFillBackground">
             <bool>true</bool>
@@ -5141,7 +5147,7 @@ UFL</string>
             </palette>
            </property>
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;set autostart date and time for start of the recording&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>enter starting date/time</string>
            </property>
            <property name="displayFormat">
             <string>dd.MM.yyyy HH:mm:ss</string>
@@ -5154,6 +5160,9 @@ UFL</string>
             <font>
              <pointsize>10</pointsize>
             </font>
+           </property>
+           <property name="toolTip">
+            <string>Enter parh for recorded Files here</string>
            </property>
           </widget>
          </item>
@@ -5411,6 +5420,9 @@ UFL</string>
               </colorrole>
              </disabled>
             </palette>
+           </property>
+           <property name="toolTip">
+            <string>Set path for recorded files</string>
            </property>
            <property name="autoFillBackground">
             <bool>true</bool>
@@ -5804,6 +5816,9 @@ UFL</string>
               </colorrole>
              </disabled>
             </palette>
+           </property>
+           <property name="toolTip">
+            <string>Write debug and info messages during runtime to logfile (for advanced error analysis)</string>
            </property>
            <property name="autoFillBackground">
             <bool>true</bool>
@@ -6817,36 +6832,10 @@ UFL</string>
            </property>
           </widget>
          </item>
-         <item row="6" column="7">
-          <widget class="QPushButton" name="pushButtonENTER">
-           <property name="toolTip">
-            <string>Accept and transfer to annotation yaml</string>
-           </property>
-           <property name="text">
-            <string>ENTER</string>
-           </property>
-           <property name="shortcut">
-            <string>Return</string>
-           </property>
-          </widget>
-         </item>
          <item row="5" column="4" colspan="3">
           <widget class="QLineEdit" name="lineEdit_TX_Site">
            <property name="text">
             <string/>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="7">
-          <widget class="QPushButton" name="pushButtonDiscard">
-           <property name="toolTip">
-            <string>ignore current table and proceed to next frequency</string>
-           </property>
-           <property name="text">
-            <string>Discard</string>
-           </property>
-           <property name="shortcut">
-            <string>Alt+Right</string>
            </property>
           </widget>
          </item>
@@ -6922,6 +6911,45 @@ UFL</string>
            </property>
            <property name="text">
             <string>min SNR (dB)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="7">
+          <widget class="QPushButton" name="pushButtonENTER">
+           <property name="toolTip">
+            <string>Accept and transfer to annotation yaml</string>
+           </property>
+           <property name="text">
+            <string>ENTER</string>
+           </property>
+           <property name="shortcut">
+            <string>Return</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="7">
+          <widget class="QPushButton" name="pushButtonDiscard">
+           <property name="toolTip">
+            <string>ignore current table and proceed to next frequency</string>
+           </property>
+           <property name="text">
+            <string>Discard</string>
+           </property>
+           <property name="shortcut">
+            <string>Alt+Right</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="7">
+          <widget class="QPushButton" name="annotate_pushButtonBack">
+           <property name="toolTip">
+            <string>Go back one frequency</string>
+           </property>
+           <property name="text">
+            <string>&lt; Back</string>
+           </property>
+           <property name="shortcut">
+            <string>Return</string>
            </property>
           </widget>
          </item>
@@ -9222,7 +9250,7 @@ UFL</string>
      <x>0</x>
      <y>0</y>
      <width>1439</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
