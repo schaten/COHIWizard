@@ -771,6 +771,7 @@ class annotate_c(QObject):
             self.SigRelay.emit("cexex_annotate",["interactive_station_select",0])
 
     def cb_backinfrequency(self):
+        self.gui.annotate_pushButtonBack.setEnabled(False)
         try:
             stream = open(self.m["status_filename"], "r")
             status = yaml.safe_load(stream)
@@ -790,7 +791,7 @@ class annotate_c(QObject):
         stream.close()
         self.gui.progressBar_2.setProperty("value", (freq_ix + 1)/len(self.stations)*100) #############################
         self.gui.Annotate_listWidget.clear() ####################################################
-        self.enterlinetoannotation()
+        self.gui.annotate_pushButtonBack.setEnabled(False)
 
 
     def enterlinetoannotation(self):
@@ -835,6 +836,7 @@ class annotate_c(QObject):
         self.gui.progressBar_2.setProperty("value", (freq_ix + 1)/len(self.stations)*100) ##############################################################################################
         self.gui.Annotate_listWidget.clear() ##############################################################################################
         self.SigRelay.emit("cexex_annotate",["interactive_station_select",0])
+        self.gui.annotate_pushButtonBack.setEnabled(True)
         #self.interactive_station_select()
 
     def discard_annot_line(self):
@@ -930,6 +932,7 @@ class annotate_v(QObject):
         self.gui.Annotate_listWidget.itemClicked.connect(self.cb_ListClicked)
         self.gui.spinBoxNumScan.valueChanged.connect(self.cb_numscanchange) 
         self.gui.spinBoxminSNR.valueChanged.connect(self.cb_minSNRchange)
+        self.gui.annotate_pushButtonBack.setEnabled(False)
         self.gui.annotate_pushButtonBack.clicked.connect(self.cb_backinfrequency)  ####TODO TODO TODO in future must be the controller method
         #self.gui.lineEdit.returnPressed.connect(self.enterlinetoannotation)
         #self.gui.pushButton_ScanAnn.clicked.connect(self.listclick_test)
@@ -1447,6 +1450,7 @@ class annotate_v(QObject):
         read yaml stations_list.yaml
 
         """
+        self.gui.annotate_pushButtonBack.setEnabled(False)
         try:
             stream = open(self.m["status_filename"], "r")
             status = yaml.safe_load(stream)
@@ -1512,6 +1516,7 @@ class annotate_v(QObject):
         #self.gui.progressBar_2.setProperty("value", (freq_ix + 1)/len(self.stations)*100)
         self.gui.Annotate_listWidget.clear()
         self.interactive_station_select()
+        self.gui.annotate_pushButtonBack.setEnabled(True)
 
     def discard_annot_line(self):
         """

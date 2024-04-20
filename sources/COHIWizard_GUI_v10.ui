@@ -87,7 +87,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>5</number>
       </property>
       <property name="iconSize">
        <size>
@@ -6942,14 +6942,22 @@ UFL</string>
          </item>
          <item row="4" column="7">
           <widget class="QPushButton" name="annotate_pushButtonBack">
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
            <property name="toolTip">
-            <string>Go back one frequency</string>
+            <string>Add a station to the last frequency (e.g. interference)</string>
+           </property>
+           <property name="autoFillBackground">
+            <bool>true</bool>
            </property>
            <property name="text">
-            <string>&lt; Back</string>
+            <string>Add station to last F</string>
            </property>
            <property name="shortcut">
-            <string>Return</string>
+            <string>Alt+Left</string>
            </property>
           </widget>
          </item>
@@ -8728,27 +8736,27 @@ UFL</string>
               <colorrole role="Button">
                <brush brushstyle="SolidPattern">
                 <color alpha="255">
-                 <red>255</red>
-                 <green>170</green>
-                 <blue>0</blue>
+                 <red>206</red>
+                 <green>206</green>
+                 <blue>206</blue>
                 </color>
                </brush>
               </colorrole>
               <colorrole role="Light">
                <brush brushstyle="SolidPattern">
                 <color alpha="255">
-                 <red>255</red>
-                 <green>170</green>
-                 <blue>0</blue>
+                 <red>206</red>
+                 <green>206</green>
+                 <blue>206</blue>
                 </color>
                </brush>
               </colorrole>
               <colorrole role="Midlight">
                <brush brushstyle="SolidPattern">
                 <color alpha="255">
-                 <red>255</red>
-                 <green>170</green>
-                 <blue>0</blue>
+                 <red>206</red>
+                 <green>206</green>
+                 <blue>206</blue>
                 </color>
                </brush>
               </colorrole>
@@ -8782,27 +8790,27 @@ UFL</string>
               <colorrole role="Window">
                <brush brushstyle="SolidPattern">
                 <color alpha="255">
-                 <red>255</red>
-                 <green>170</green>
-                 <blue>0</blue>
+                 <red>206</red>
+                 <green>206</green>
+                 <blue>206</blue>
                 </color>
                </brush>
               </colorrole>
               <colorrole role="Shadow">
                <brush brushstyle="SolidPattern">
                 <color alpha="255">
-                 <red>255</red>
-                 <green>170</green>
-                 <blue>0</blue>
+                 <red>206</red>
+                 <green>206</green>
+                 <blue>206</blue>
                 </color>
                </brush>
               </colorrole>
               <colorrole role="Highlight">
                <brush brushstyle="SolidPattern">
                 <color alpha="255">
-                 <red>255</red>
-                 <green>170</green>
-                 <blue>0</blue>
+                 <red>206</red>
+                 <green>206</green>
+                 <blue>206</blue>
                 </color>
                </brush>
               </colorrole>
@@ -8811,27 +8819,27 @@ UFL</string>
               <colorrole role="Button">
                <brush brushstyle="SolidPattern">
                 <color alpha="255">
-                 <red>255</red>
-                 <green>170</green>
-                 <blue>0</blue>
+                 <red>206</red>
+                 <green>206</green>
+                 <blue>206</blue>
                 </color>
                </brush>
               </colorrole>
               <colorrole role="Light">
                <brush brushstyle="SolidPattern">
                 <color alpha="255">
-                 <red>255</red>
-                 <green>170</green>
-                 <blue>0</blue>
+                 <red>206</red>
+                 <green>206</green>
+                 <blue>206</blue>
                 </color>
                </brush>
               </colorrole>
               <colorrole role="Midlight">
                <brush brushstyle="SolidPattern">
                 <color alpha="255">
-                 <red>255</red>
-                 <green>170</green>
-                 <blue>0</blue>
+                 <red>206</red>
+                 <green>206</green>
+                 <blue>206</blue>
                 </color>
                </brush>
               </colorrole>
@@ -8856,27 +8864,27 @@ UFL</string>
               <colorrole role="Base">
                <brush brushstyle="SolidPattern">
                 <color alpha="255">
-                 <red>255</red>
-                 <green>170</green>
-                 <blue>0</blue>
+                 <red>206</red>
+                 <green>206</green>
+                 <blue>206</blue>
                 </color>
                </brush>
               </colorrole>
               <colorrole role="Window">
                <brush brushstyle="SolidPattern">
                 <color alpha="255">
-                 <red>255</red>
-                 <green>170</green>
-                 <blue>0</blue>
+                 <red>206</red>
+                 <green>206</green>
+                 <blue>206</blue>
                 </color>
                </brush>
               </colorrole>
               <colorrole role="Shadow">
                <brush brushstyle="SolidPattern">
                 <color alpha="255">
-                 <red>255</red>
-                 <green>170</green>
-                 <blue>0</blue>
+                 <red>206</red>
+                 <green>206</green>
+                 <blue>206</blue>
                 </color>
                </brush>
               </colorrole>
@@ -8891,6 +8899,17 @@ UFL</string>
               </colorrole>
              </disabled>
             </palette>
+           </property>
+           <property name="font">
+            <font>
+             <kerning>true</kerning>
+            </font>
+           </property>
+           <property name="toolTip">
+            <string>Cancel current operation</string>
+           </property>
+           <property name="autoFillBackground">
+            <bool>true</bool>
            </property>
            <property name="text">
             <string>cancel</string>
@@ -9250,7 +9269,7 @@ UFL</string>
      <x>0</x>
      <y>0</y>
      <width>1439</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

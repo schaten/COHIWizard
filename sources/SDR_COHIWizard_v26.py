@@ -211,7 +211,7 @@ class core_v(QObject):
         self.annotationdir_prefix = 'ANN_' ##################TODO:future system state
         self.position = 0 #TODO:future system state URGENT !!!!!!!!!!!!!!
         self.tab_dict = {}
-
+        self.m["recording_path"] = ""
         self.GUIupdaterlist =[]
         # create method which inactivates all tabs except the one which is passed as keyword
         self.GUI_reset_status()
@@ -253,8 +253,10 @@ class core_v(QObject):
             print("cannot get config_wizard.yaml metadata, write a new initial config file")
             self.metadata["last_path"] = os.getcwd()
             self.metadata["STM_IP_address"] = "000.000.000.000"
+            self.metadata["recording_path"] = ""
             auxi.standard_infobox("configuration file does not yet exist, a basic file will be generated. Please configure the STEMLAB IP address before using the Player")
-            self.metadata["recording_path"] = self.m["recording_path"]
+            
+            #self.metadata["recording_path"] = self.m["recording_path"]
             stream = open("config_wizard.yaml", "w")
             yaml.dump(self.metadata, stream)
             stream.close()
@@ -907,13 +909,14 @@ class core_v(QObject):
         
         #generate standard wavheader
         if icheck == False:
+
             freq, done0 = QtWidgets.QInputDialog.getInt(
-                    self, 'Input Dialog', 'Enter center frequency:', self.standardLO)
+                    gui, 'Input Dialog', 'Enter center frequency:', self.standardLO)
             rate_index = 1 #TODO: make system constant
             rate, done1 = QtWidgets.QInputDialog.getItem(
-                    self, 'Input Dialog', 'Bandwidth', self.m["irates"], rate_index)
+                    gui, 'Input Dialog', 'Bandwidth', self.m["irates"], rate_index)
             bps, done2 = QtWidgets.QInputDialog.getItem(
-                    self, 'Input Dialog', 'bits per sample', self.bps, 0)
+                    gui, 'Input Dialog', 'bits per sample', self.bps, 0)
 
             #TODO: validity check for freq, maybe warning if rate cancelled and no valid value, check done0, done1
             self.m["irate"] = 1000*int(rate)
