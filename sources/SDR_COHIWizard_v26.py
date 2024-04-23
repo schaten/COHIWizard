@@ -832,7 +832,7 @@ class core_v(QObject):
             filetype = "dat"
             self.SigRelay.emit("cexex_waveditor",["activate_insertheader",True])
             #TODO: TRIAL 15_04_2024: remove
-            self.setactivity_tabs("Resample","inactivate",[])
+            self.setactivity_tabs("xcore","inactivate",["Player","WAV Header","YAML editor","Annotate","View spectra"])
 
         else:
             if self.m["ext"] == ".wav":

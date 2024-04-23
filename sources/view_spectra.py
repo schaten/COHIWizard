@@ -345,7 +345,7 @@ class view_spectra_v(QObject):
         #calculate spectrum and shift/rescale appropriately
         spr = np.abs(np.fft.fft((data[realindex]+1j*data[imagindex])))
         N = len(spr)
-        spr = np.fft.fftshift(spr)
+        spr = np.fft.fftshift(spr)/N
         flo = self.m["wavheader"]['centerfreq'] - self.m["wavheader"]['nSamplesPerSec']/2
         fup = self.m["wavheader"]['centerfreq'] + self.m["wavheader"]['nSamplesPerSec']/2
         freq0 = np.linspace(0,self.m["wavheader"]['nSamplesPerSec'],N)
