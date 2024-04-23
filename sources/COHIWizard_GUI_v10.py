@@ -3455,7 +3455,7 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuFile.menuAction())
 
         self.retranslateUi(MainWindow)
-        self.tabWidget.setCurrentIndex(5)
+        self.tabWidget.setCurrentIndex(0)
         self.comboBox_playrec_targetSR_2.setCurrentIndex(0)
         self.comboBox_playrec_targetSR.setCurrentIndex(5)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -3509,7 +3509,7 @@ class Ui_MainWindow(object):
         self.comboBox_playrec_targetSR.setItemText(6, _translate("MainWindow", "2500"))
         self.lineEdit_playrec_LO.setToolTip(_translate("MainWindow", "enter LO frequency here (kHz)"))
         self.lineEdit_IPAddress.setToolTip(_translate("MainWindow", "enter IP address here after activating Button"))
-        self.lineEdit_IPAddress.setText(_translate("MainWindow", "169.254.34.144"))
+        self.lineEdit_IPAddress.setText(_translate("MainWindow", "000.000.000.000"))
         self.label_BW.setToolTip(_translate("MainWindow", "Select Recording bandwidth from dropdown list"))
         self.label_BW.setText(_translate("MainWindow", "Rec Bandwidth (kHz): "))
         self.label_LO.setToolTip(_translate("MainWindow", "set center frequency in kHz (LO)"))

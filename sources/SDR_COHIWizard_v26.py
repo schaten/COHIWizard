@@ -113,7 +113,7 @@ class core_c(QObject):
 
     def recording_path_checker(self):
         """
-        checks, if recording path exists in config_wizard.yaml and if the path exists
+        checks, if recording path exists in config_wizard.yaml and if the path exists in the system
         if not: ask for target pathname and store in config.wizard.yaml
         param: none
         type: none
@@ -124,17 +124,17 @@ class core_c(QObject):
         self.standardpath = os.getcwd()  #TODO: this is a core variable in core model
         try:
             stream = open("config_wizard.yaml", "r")
-            self.metadata = yaml.safe_load(stream)
+            self.m["metadata"] = yaml.safe_load(stream)
             stream.close()
             self.ismetadata = True
         except:
             self.ismetadata = False
         recfail = False
-        if "recording_path" not in self.metadata:
+        if "recording_path" not in self.m["metadata"]:
             recfail = True
             auxi.standard_infobox("recordingpath does not exist, please define later")
             return False
-        elif not os.path.isdir(self.metadata["recording_path"]):
+        elif not os.path.isdir(self.m["metadata"]["recording_path"]):
             recfail = True
         if recfail:
             options = QFileDialog.Options()
@@ -148,14 +148,15 @@ class core_c(QObject):
                 if len(self.m["recording_path"]) < 1:
                     auxi.standard_errorbox("Recording path must be defined, please define it by clicking OK !")
             self.logger.debug("playrec recording path: %s", self.m["recording_path"])
-            self.metadata["recording_path"] = self.m["recording_path"]
+            self.m["metadata"]["recording_path"] = self.m["recording_path"]
             stream = open("config_wizard.yaml", "w")
-            yaml.dump(self.metadata, stream)
+            yaml.dump(self.m["metadata"], stream)
             stream.close()
         else:
-            self.m["recording_path"] = self.metadata["recording_path"]
+            self.m["recording_path"] = self.m["metadata"]["recording_path"]
         self.logger.debug("playrec recording button recording path: %s", self.m["recording_path"])
         self.SigRelay.emit("cm_all_",["recording_path",self.m["recording_path"]])
+        self.SigRelay.emit("cexex_xcore",["updateConfigElements",0])
 
     def recording_path_setter(self):
         """
@@ -171,15 +172,15 @@ class core_c(QObject):
         options |= QFileDialog.ShowDirsOnly
         self.m["recording_path"] = QFileDialog.getExistingDirectory(self.m["QTMAINWINDOWparent"], "Select Recording Directory", options=options)
         self.logger.debug("playrec recording path: %s", self.m["recording_path"])
-        self.metadata["recording_path"] = self.m["recording_path"]
+        self.m["metadata"]["recording_path"] = self.m["recording_path"]
         stream = open("config_wizard.yaml", "w")
-        yaml.dump(self.metadata, stream)
+        yaml.dump(self.m["metadata"], stream)
         stream.close()
-        self.m["recording_path"] = self.metadata["recording_path"]
+        self.m["recording_path"] = self.m["metadata"]["recording_path"] #TODO: check ? obsolete ?
         self.logger.debug("playrec recording button recording path: %s", self.m["recording_path"])
         #print("core_c send recordingpath to all")
         self.SigRelay.emit("cm_all_",["recording_path",self.m["recording_path"]])        
-        self.SigRelay.emit("cexex_xcore",["updateGUIelements",0])
+        self.SigRelay.emit("cexex_xcore",["updateConfigElements",0])
 
 class core_v(QObject):
 
@@ -212,6 +213,7 @@ class core_v(QObject):
         self.position = 0 #TODO:future system state URGENT !!!!!!!!!!!!!!
         self.tab_dict = {}
         self.m["recording_path"] = ""
+
         self.GUIupdaterlist =[]
         # create method which inactivates all tabs except the one which is passed as keyword
         self.GUI_reset_status()
@@ -231,43 +233,60 @@ class core_v(QObject):
 
         #self.gui.pushButton_resample_GainOnly.setEnabled(False)
         #self.gui.tabwidget_ref.setCurrentIndex(1) #TODO: avoid magic number, make config issue
-
+        #self.gui.lineEdit_IPAddress.setInputMask('000.000.000.000')
+        #self.gui.lineEdit_IPAddress.setTabChangesFocus(True)  # Allow Tab key to change focus
+        #self.gui.lineEdit_IPAddress.installEventFilter(self)  # Install event filter
         ###TODO: re-organize, there should be no access to gui elements of other modules
         self.gui.tabWidget.setCurrentIndex(0) #TODO: avoid magic number, make config issue
         self.gui.playrec_comboBox_startuptab.setCurrentIndex(0)
         self.standardpath = os.getcwd()  #TODO: this is a core variable in core model
-        self.metadata = {"last_path": self.standardpath}
+        self.m["metadata"] = {"last_path": self.standardpath}
         self.ismetadata = False
+        self.gui.lineEdit_IPAddress.setInputMask('000.000.000.000')
+        self.gui.lineEdit_IPAddress.setText("000.000.000.000")
+        self.gui.lineEdit_IPAddress.setEnabled(False)
+        self.gui.lineEdit_IPAddress.setReadOnly(True)
+        self.gui.pushButton_IP.clicked.connect(self.editHostAddress)
+        #self.gui.Conf_lineEdit_IPAddress.setEnabled(True)
+        #self.gui.Conf_lineEdit_IPAddress.setReadOnly(False)
+        #self.gui.pushButton_IP.clicked.connect(self.set_IP)
+        self.gui.lineEdit_IPAddress.returnPressed.connect(self.set_IP)
+        self.gui.pushButton_IP.setText("set IP Address")
+        self.gui.pushButton_IP.adjustSize()
+
         try:
             stream = open("config_wizard.yaml", "r")
-            self.metadata = yaml.safe_load(stream)
+            self.m["metadata"] = yaml.safe_load(stream)
             stream.close()
             self.ismetadata = True
-            if "recording_path" in self.metadata:
-                self.m["recording_path"] = self.metadata["recording_path"]
-            if "startup_tab" in self.metadata:
+            if "STM_IP_address" in self.m["metadata"]:
+                self.gui.lineEdit_IPAddress.setText(self.m["metadata"]["STM_IP_address"])
+            if "recording_path" in self.m["metadata"]:
+                self.m["recording_path"] = self.m["metadata"]["recording_path"]
+            if "startup_tab" in self.m["metadata"]:
                 ###TODO: re-organize, there should be no access to gui elements of other modules
-                #self.gui.playrec_comboBox_startuptab.setCurrentIndex(int(self.metadata["startup_tab"]))
-                self.gui.tabWidget.setCurrentIndex(int(self.metadata["startup_tab"]))
+                #self.gui.playrec_comboBox_startuptab.setCurrentIndex(int(self.m["metadata"]["startup_tab"]))
+                self.gui.tabWidget.setCurrentIndex(int(self.m["metadata"]["startup_tab"]))
+                self.gui.playrec_comboBox_startuptab.setCurrentIndex(int(self.m["metadata"]["startup_tab"]))
         except:
             print("cannot get config_wizard.yaml metadata, write a new initial config file")
-            self.metadata["last_path"] = os.getcwd()
-            self.metadata["STM_IP_address"] = "000.000.000.000"
-            self.metadata["recording_path"] = ""
+            self.m["metadata"]["last_path"] = os.getcwd()
+            self.m["metadata"]["STM_IP_address"] = "000.000.000.000"
+            self.m["metadata"]["recording_path"] = ""
             auxi.standard_infobox("configuration file does not yet exist, a basic file will be generated. Please configure the STEMLAB IP address before using the Player")
             
-            #self.metadata["recording_path"] = self.m["recording_path"]
+            #self.m["metadata"]["recording_path"] = self.m["recording_path"]
             stream = open("config_wizard.yaml", "w")
-            yaml.dump(self.metadata, stream)
+            yaml.dump(self.m["metadata"], stream)
             stream.close()
 
         ###TODO: re-organize, there should be no access to gui elements of other modules
         self.m["HostAddress"] = self.gui.lineEdit_IPAddress.text() #TODO: Remove after transfer of playrec
-        configparams = {"ifreq":self.m["ifreq"], "irate":self.m["irate"],
+        self.m["sdr_configparams"] = {"ifreq":self.m["ifreq"], "irate":self.m["irate"],
                             "rates": self.m["rates"], "icorr":self.m["icorr"],
                             "HostAddress":self.m["HostAddress"], "LO_offset":self.m["LO_offset"]}
-        self.m["sdr_configparams"] = configparams
-
+        #self.m["sdr_configparams"] = configparams
+        self.m["f1"] = ""
         self.m["_log"] = False
         self.Tabref={}
         self.init_Tabref()
@@ -307,12 +326,13 @@ class core_v(QObject):
         self.logger.info("core_v Init logger in core reached")
         #self.core_c.SigRelay.connect(self.SigRelay.emit)        
         self.core_c.SigRelay.connect(self.rxhandler)
-        self.core_c.recording_path_checker()
+        #self.core_c.recording_path_checker()
         ###TODO: re-organize, there should be no access to gui elements of other modules
         self.gui.playrec_radioButtonpushButton_write_logfile.clicked.connect(self.togglelogfilehandler)
         self.gui.playrec_radioButtonpushButton_write_logfile.setChecked(True)
         self.gui.playrec_pushButton_recordingpath.clicked.connect(self.core_c.recording_path_setter)
-        self.updateGUIelements()
+        #self.updateGUIelements()
+        self.updateConfigElements()
         self.timethread = QThread()
         self.timertick = tw()
         self.timertick.moveToThread(self.timethread)
@@ -325,6 +345,65 @@ class core_v(QObject):
         if self.timethread.isRunning():
             self.timethreaddActive = True #TODO:future system state
 
+    # def eventFilter(self, source, event):
+    #     if (event.type() == Qt.KeyPress and
+    #         event.key() == Qt.Key_Tab and
+    #         source is self.gui.lineEdit_IPAddress):
+    #         cursor = self.gui.lineEdit_IPAddress.cursorPosition()
+    #         if cursor == 3 or cursor == 7 or cursor == 11:  # Check if cursor is at the end of each field
+    #             self.gui.lineEdit_IPAddress.setCursorPosition(cursor + 1)  # Move cursor to the next field
+    #             return True  # Ignore default Tab key behavior
+    #     return super().eventFilter(source, event)
+
+    def editHostAddress(self):     #TODO Check if this is necessary, rename to cb_.... ! 
+        ''' 
+        Purpose: Callback for edidHostAddress Lineedit item
+        activate Host IP address field and enable saving mode
+        Returns: nothing
+        '''
+        self.gui.lineEdit_IPAddress.setEnabled(True)
+        self.gui.lineEdit_IPAddress.setReadOnly(False)
+        self.gui.pushButton_IP.clicked.connect(self.set_IP)
+        self.gui.pushButton_IP.setText("save IP Address")
+        self.gui.pushButton_IP.adjustSize()
+        self.IP_address_set = False
+
+    def set_IP(self):
+        """ 
+        set IP Address and save to config yaml
+            disable IP address line
+            enable Button for editing address 
+        :param: none
+        :type: none
+        ...
+        :raises warning message: Read error if config_wizard.yaml does not exist
+        ...
+        :return: none
+        :rtype: none
+        """
+
+        self.m["HostAddress"] = self.gui.lineEdit_IPAddress.text()
+
+        print("setIP")
+        try:
+            stream = open("config_wizard.yaml", "r")
+            self.m["metadata"] = yaml.safe_load(stream)
+            stream.close()
+        except:
+            auxi.standard_errorbox("Cannot open Config File")
+            self.logger.error("cannot get metadata")
+            #print("cannot get metadata")
+        self.m["metadata"]["STM_IP_address"] = self.m["HostAddress"]
+        stream = open("config_wizard.yaml", "w")
+        yaml.dump(self.m["metadata"], stream)
+
+        self.gui.lineEdit_IPAddress.setReadOnly(True)
+        self.gui.lineEdit_IPAddress.setEnabled(False)
+        self.gui.pushButton_IP.clicked.connect(self.editHostAddress)
+        self.gui.pushButton_IP.setText("Set IP Address")
+        self.gui.pushButton_IP.adjustSize()
+        self.SigRelay.emit("cm_xcore",["HostAddress",self.m["HostAddress"]])
+
     def connect_init(self):
         self.SigRelay.emit("cm_all_",["emergency_stop",False])
         self.SigRelay.emit("cm_all_",["fileopened",False])
@@ -336,7 +415,7 @@ class core_v(QObject):
         self.SigRelay.emit("cm_resample",["reslist_ix",self.m["reslist_ix"]]) #TODO check: maybe local in future !
         self.SigRelay.emit("cm_playrec",["Obj_stemlabcontrol",stemlabcontrol])
         self.SigRelay.emit("cm_configuration",["tablist",tab_dict["list"]])
-        self.SigRelay.emit("cexex_core",["updateGUIelements",0])
+        #self.SigRelay.emit("cexex_core",["updateGUIelements",0])
         self.SigRelay.emit("cm_playrec",["sdr_configparams",self.m["sdr_configparams"]])
         self.SigRelay.emit("cm_playrec",["HostAddress",self.m["HostAddress"]])
         self.core_c.m["QTMAINWINDOWparent"] = gui
@@ -352,9 +431,21 @@ class core_v(QObject):
             self.logger.setLevel(logging.DEBUG)
             self.SigRelay.emit("cexex_all_",["logfilehandler",True])
 
+
     def updateGUIelements(self):
         """
-        updates GUI elements , usually triggered by a Signal SigTabsUpdateGUIs to which 
+        dummy method, not really used in the core module but pre-configured for sake of compatibility with the general module structure
+        :param : none
+        :type : none
+        :raises [ErrorType]: [ErrorDescription]
+        :return: none
+        :rtype: none
+        """
+        pass
+
+    def updateConfigElements(self):
+        """
+        updates some Configuration elements
         this method is connected in the __main__ of the core module
         :param : none
         :type : none
@@ -418,7 +509,7 @@ class core_v(QObject):
         self.SigRelay.emit("cexex_all_",["timertick",0])
         
     def GUI_reset_status(self):
-        self.m = {}
+        #self.m = {}
         self.m["my_filename"] = ""
         self.m["ext"] = ""
         self.m["annotation_prefix"] = 'ANN_' #TODO: not used anywhere
@@ -528,10 +619,10 @@ class core_v(QObject):
         """
         for i in range(self.gui.tabWidget.count()):
             if statuschange.find("inactivate") == 0:
-                if (self.gui.tabWidget.tabText(i).find(caller) == 0) and (self.gui.tabWidget.tabText(i) not in exceptionlist):
+                if (self.gui.tabWidget.tabText(i).find(caller) != 0) and (self.gui.tabWidget.tabText(i) not in exceptionlist):
                     self.gui.tabWidget.widget(i).setEnabled(False)
             elif statuschange.find("activate") == 0:
-                if (self.gui.tabWidget.tabText(i).find(caller) == 0) and (self.gui.tabWidget.tabText(i) not in exceptionlist):
+                if (self.gui.tabWidget.tabText(i).find(caller) != 0) and (self.gui.tabWidget.tabText(i) not in exceptionlist):
                     self.gui.tabWidget.widget(i).setEnabled(True)
             else:
                 return False
@@ -592,7 +683,7 @@ class core_v(QObject):
             return False
         try:
             stream = open("config_wizard.yaml", "r")
-            self.metadata = yaml.safe_load(stream)
+            self.m["metadata"] = yaml.safe_load(stream)
             stream.close()
             self.ismetadata = True
         except:
@@ -602,7 +693,7 @@ class core_v(QObject):
             return False
 
         # TODO TODO TODO: Hostaddress is part of the config menu !
-        self.m["HostAddress"] = self.gui.lineEdit_IPAddress.text()   ### TODO TODO TODO check if still necesary after transfer to modules playrec and config
+        #self.m["HostAddress"] = self.gui.lineEdit_IPAddress.text()   ### TODO TODO TODO check if still necesary after transfer to modules playrec and config
         self.SigRelay.emit("cm_playrec",["HostAddress",self.m["HostAddress"]])
         # configparams = {"ifreq":self.m["ifreq"], "irate":self.m["irate"],
         #                     "rates": self.m["rates"], "icorr":self.m["icorr"],
@@ -673,10 +764,10 @@ class core_v(QObject):
         curix = self.gui.playrec_comboBox_startuptab.currentIndex()
         print(f"startuptab set: {curix}")
         #write to yaml
-        self.metadata["startup_tab"] = str(curix)
-        # self.metadata["STM_IP_address"] = self.m["HostAddress"]
+        self.m["metadata"]["startup_tab"] = str(curix)
+        # self.m["metadata"]["STM_IP_address"] = self.m["HostAddress"]
         stream = open("config_wizard.yaml", "w")
-        yaml.dump(self.metadata, stream)
+        yaml.dump(self.m["metadata"], stream)
         stream.close()
         pass
 
@@ -695,7 +786,7 @@ class core_v(QObject):
         #TODO: could be an update action of the resampler ?
         self.SigRelay.emit("cexex_resample",["enable_resamp_GUI_elements",True])
         self.SigRelay.emit("cm_all_",["ismetadata",self.ismetadata])
-        self.SigRelay.emit("cm_all_",["metadata",self.metadata])
+        self.SigRelay.emit("cm_all_",["metadata",self.m["metadata"]])
         # file selection menu
         filters = "SDR wav files (*.wav);;Raw IQ (*.dat *.raw )"
         selected_filter = "SDR wav files (*.wav)"
@@ -706,7 +797,7 @@ class core_v(QObject):
         else:
             filename =  QtWidgets.QFileDialog.getOpenFileName(gui,
                                                             "Open data file"
-                                                            ,self.metadata["last_path"] , filters, selected_filter)
+                                                            ,self.m["metadata"]["last_path"] , filters, selected_filter)
 
         self.SigRelay.emit("cm_all_",["f1", filename[0]])
         if not self.m["f1"]:
@@ -730,33 +821,24 @@ class core_v(QObject):
         if os.path.exists(self.m["temp_directory"]) == False:         #TODO: ? maybe settable in configuration ? create from yaml-editor
             os.mkdir( self.m["temp_directory"])
 
-        #TODO The following code prevents that a dat file can be directly resampled
+        #TODO FUTURE The following code prevents that a dat file can be directly resampled
         #This is not a dogma: The file could, in principle. be resampled as a wav header is generated anyway
         #Future releases could allow for direct resampling but then the 'fillplaylist' method of the resampler module needs to allow for the dat fuile to be included in the 
         #resampling playlist (reslist). This requires a re-design of this method
         #Priority is currently low, so dat files cannot be resampled directly at the moment
+        #then dat File must be entered into the resampling list !
 
         if self.m["ext"] == ".dat" or self.m["ext"] == ".raw":
             filetype = "dat"
             self.SigRelay.emit("cexex_waveditor",["activate_insertheader",True])
             #TODO: TRIAL 15_04_2024: remove
             self.setactivity_tabs("Resample","inactivate",[])
-            #TODO: TRIAL: dat File must be entered into the resampling list !
 
-            ## TODO: remove after Tests 03-04-2024
-            # self.gui.label_8.setEnabled(True)   #####TODO shift to WAV editor or send Relay for inactivation via WAV 
-            # self.gui.pushButton_InsertHeader.setEnabled(True)   #####TODO shift to WAV editor or send Relay for inactivation via WAV 
         else:
             if self.m["ext"] == ".wav":
                 filetype = "wav"
-                #TODO tests: following 2 lines removed 6-04-2024
-                #self.gui.tab_view_spectra.setEnabled(True)  ##########TODO: replace by Tab disable function inactivate/activate_tabs(self,selection)
-                #self.gui.tab_annotate.setEnabled(True)  ##########TODO: replace by Tab disable function inactivate/activate_tabs(self,selection)
                 self.SigRelay.emit("cexex_waveditor",["activate_insertheader",False])
                 self.setactivity_tabs("Resample","activate",[])
-                ## TODO: remove after Tests 03-04-2024
-                # self.gui.label_8.setEnabled(False)
-                # self.gui.pushButton_InsertHeader.setEnabled(False) #####TODO shift to WAV editor or send Relay for inactivation via WAV 
             else:
                 auxi.standard_errorbox("no valid data forma, neiter wav, nor dat nor raw !")
                 return
@@ -772,8 +854,6 @@ class core_v(QObject):
             self.wavheader = WAVheader_tools.get_sdruno_header(self,self.m["f1"])
             if self.wavheader != False:
                 pass
-                #TODO tests: following line removed 6-04-2024, remove self.nextfilename
-                #self.next_filename = waveditor_c.extract_startstoptimes_auxi(self.wavheader)
             else:
                 auxi.standard_errorbox("File is not recognized as a valid IQ wav file (not auxi/rcvr compatible or not a RIFF file)")
                 return False
@@ -784,57 +864,38 @@ class core_v(QObject):
             self.sdrtype = 'FALSE'
             return False
         self.SigRelay.emit("cm_waveditor",["filetype",filetype])
-
-        #TODO: mache das targetfilenameprefix KONFIGURIERBAR ???
-        #self.gui.lineEdit_resample_targetnameprefix.setText(self.m["my_filename"])
-        # self.SigRelay.emit("cexex_all_",["reset_GUI",0])
         self.SigRelay.emit("cm_all_",["wavheader",self.wavheader])
 
-        # initialize listitems in tabs with playlists                
+        # build up playlist selectors
         self.SigRelay.emit("cexex_playrec",["addplaylistitem",0])
         self.SigRelay.emit("cexex_playrec",["fillplaylist",0])      
         self.SigRelay.emit("cexex_resample",["addplaylistitem",0])
         self.SigRelay.emit("cexex_resample",["fillplaylist",0])
         self.logger.debug("core_v: wavheader extracted and sent to all modules")
 
-        ### set readoffset and relay to modules: TODO: check if should be translated to modules
+        ### set readoffset and relay to modules: TODO TODO TODO: check if should be translated to modules (dangerous, may affect many instances)
         if self.wavheader['sdrtype_chckID'].find('rcvr') > -1:
             self.m["readoffset"] = 86
         else:
             self.m["readoffset"] = 216
             #TODO TODO: remove self.readoffset from init list after tests
-        self.SigRelay.emit("cm_all_",["readoffset",self.m["readoffset"]])  ###TODO: could be shifted to respective modules
+        self.SigRelay.emit("cm_all_",["readoffset",self.m["readoffset"]])
 
-        #self.m["ifreq"] = self.wavheader['centerfreq'] + self.m["LO_offset"] #ONLY used in player, so shift
-        #TODO check for transfer to modules
+        #TODO TODO TODO check for transfer to modules
         self.m["irate"] = self.wavheader['nSamplesPerSec'] #ONLY used in palyer, so shift
 
-        # TODO: rootpath for config file ! 
-        # TODO: append metadata instead of new write
+        # TODO FUTURE: check for append metadata instead of new write
 
         #save metadata
-        self.metadata["last_path"] = self.my_dirname
+        self.m["metadata"]["last_path"] = self.my_dirname
         stream = open("config_wizard.yaml", "w")
-        yaml.dump(self.metadata, stream)
+        yaml.dump(self.m["metadata"], stream)
         stream.close()
 
         self.m["timescaler"] = self.wavheader['nSamplesPerSec']*self.wavheader['nBlockAlign']
         self.m["fileopened"] = True #check if obsolete because f1 == "" would do the same
         self.SigRelay.emit("cm_all_",["fileopened",True])
 
-##############################  TODO TODO TODO following: shift all GUI operations to modules GUI_updaters and Relay updatesignal
-
-        # self.gui.spinBoxKernelwidth.setEnabled(True) #TODO check inactivation after 09-04-2024
-        #self.gui.label_6.setText("Baseline Offset:" + str(self.gui.spinBoxminBaselineoffset.value())) #TODO check inactivation after 09-04-2024
-        # self.position = self.gui.horizontalScrollBar_view_spectra.value()
-        # self.m["horzscal"] = self.position #TODO: check: obsolete ! because of Relay ! shift to View spectra module
-        # self.SigRelay.emit("cm_all_",["horzscal", self.position])
-        # self.SigRelay.emit("cm_view_spectra",["position",self.position])
-        #resample_v.update_resample_GUI()
-        #self.m["playlength"] = self.wavheader['filesize']/self.wavheader['nAvgBytesPerSec']  #TODO CHECK remove after tests 15-04-2024
-
-        #self.m["list_out_files_resampled"] = [] #TODO CHECK remove after tests 15-04-2024
-        #self.SigRelay.emit("cm_resample",["list_out_files_resampled",self.m["list_out_files_resampled"]]) #TODO CHECK remove after tests 15-04-2024
 
         out_dirname = self.my_dirname + '/out'  #TODO TODO TODO should only be created if really necessary for resampling !
         if os.path.exists(out_dirname) == False:         #exist yaml file: create from yaml-editor
@@ -842,8 +903,6 @@ class core_v(QObject):
         self.SigRelay.emit("cm_all_",["out_dirname",out_dirname])
 
         ##############TODO TODO TODO: intermediate hack for comm with scan worker
-        #self.f1 = self.m["f1"]  #TODO CHECK remove after tests 15-04-2024
-        #self.readoffset = self.m["readoffset"] #TODO CHECK remove after tests 15-04-2024
         self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
 
         #TODO TODO TODO: track multiple calls of plot_spectrum: is that really necessary on each fileopen ? 
@@ -973,6 +1032,9 @@ class core_v(QObject):
                 self.timertick.stoptick()
             if  _value[0].find("reset_GUI") == 0:
                 self.reset_GUI()
+            if  _value[0].find("updateConfigElements") == 0:
+                self.updateConfigElements()
+                
 
 if __name__ == '__main__':
     print("starting main, initializing GUI, please wait ... ")
@@ -1090,7 +1152,7 @@ if __name__ == '__main__':
     xcore_v.gui.playrec_comboBox_startuptab.addItems(tabselector)
     xcore_v.gui.playrec_comboBox_startuptab.setEnabled(True)
     try:
-        xcore_v.gui.playrec_comboBox_startuptab.setCurrentIndex(int(xcore_v.metadata["startup_tab"]))
+        xcore_v.gui.playrec_comboBox_startuptab.setCurrentIndex(int(xcore_v.m["metadata"]["startup_tab"]))
     except:
         xcore_v.logger.error("startup Tab not defined in configuration file config_wizard.yaml")
     xcore_v.gui.playrec_comboBox_startuptab.currentIndexChanged.connect(xcore_v.set_startuptab)
@@ -1107,7 +1169,7 @@ if __name__ == '__main__':
         tab_dict[tabitem + "_m"] = eval(tabitem + "_m") #resample_m     
         tab_dict[tabitem + "_c"] = eval(tabitem + "_c") #resample_c     
         tab_dict[tabitem + "_v"] = eval(tabitem + "_v") #resample_v  
-        xcore_v.generate_GUIupdaterlist(eval(tabitem + "_v.updateGUIelements"))
+        #xcore_v.generate_GUIupdaterlist(eval(tabitem + "_v.updateGUIelements")) #necessary ????????????
     #make tab dict visible to core module
     xcore_v.tab_dict = tab_dict 
     xcore_v.m["tab_dict"] = tab_dict  ###TODO: check if double tabdict in xcore_v is necessary
@@ -1129,7 +1191,7 @@ if __name__ == '__main__':
     #
     # fix error with SNR calculation: there seems to be no reaction to baselineshifts when calculating the SNR for praks and identifying those above threshold
     #
-    # * // \\ Problem lösen: 2h: in aktuellem Core, Annotator UND waveditor !!!! geht mit Path()
+    # * // \\ Problem lösen: 2h: wahrscheinlich nur mehr in waveditor !!!! geht mit Path() und bei nextfile-Policy im Player
     #
     # * Windows Installer mit https://www.pythonguis.com/tutorials/packaging-pyside6-applications-windows-pyinstaller-installforge/ erstellen
     #

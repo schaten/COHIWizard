@@ -1728,6 +1728,9 @@ class resample_v(QObject):
         self.gui.pushButton_resample_split2G.clicked.connect(self.cb_split2G_Button)
         #self.gui.checkBox_writelog.clicked.connect(self.togglelogmodus) #TODO TODO TODO: logfilemodus anders implementieren
 
+        #TODO TODO TODO: mache das targetfilenameprefix KONFIGURIERBAR ???
+
+
     def rxhandler(self,_key,_value):
         """
         handles remote calls from other modules via Signal SigRX(_key,_value)

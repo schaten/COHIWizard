@@ -523,21 +523,22 @@ class playrec_c(QObject):
         self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
         if self.m["f1"] == "":
             return False
-        self.stemlabcontrol.SigError.connect(self.stemlabcontrol_errorhandler) #TODO: is that needed ????
+        self.stemlabcontrol.SigError.connect(self.stemlabcontrol_errorhandler)
         self.stemlabcontrol.SigMessage.connect(self.display_status) #TODO: is that needed ????
         self.stemlabcontrol.set_play()
         self.m["modality"] = "play"
         # start server unless already started
+        self.m["sdr_configparams"] = {"ifreq":self.m["ifreq"], "irate":self.m["irate"],
+                "rates": self.m["rates"], "icorr":self.m["icorr"],
+                "HostAddress":self.m["HostAddress"], "LO_offset":self.m["LO_offset"]}
+
         if self.m["TEST"] is False:
             if self.stemlabcontrol.sdrserverstart(self.m["sdr_configparams"]) is False:
                 self.SigRelay.emit("cexex_playrec",["reset_GUI",0]) #TODO remove after tests
                 self.SigRelay.emit("cexex_playrec",["reset_playerbuttongoup",0])
                 return False
             self.logger.info(f'play_manager configparams: {self.m["sdr_configparams"]}')
-            configparams = {"ifreq":self.m["ifreq"], "irate":self.m["irate"],
-                    "rates": self.m["rates"], "icorr":self.m["icorr"],
-                    "HostAddress":self.m["HostAddress"], "LO_offset":self.m["LO_offset"]}
-            if self.stemlabcontrol.config_socket(configparams):
+            if self.stemlabcontrol.config_socket(self.m["sdr_configparams"]):
                 self.logger.info("playthread now activated in play_manager")
                 self.play_tstarter()
             else:
@@ -634,18 +635,24 @@ class playrec_c(QObject):
         :rtype: Boolean
         """
         #CHECK FOR SUFFICIENT DISK SPACE ON VOLUME
+        self.stemlabcontrol.SigError.connect(self.stemlabcontrol_errorhandler)
         expected_filesize = 2**31
         if self.checkdiskspace(expected_filesize, self.m["recording_path"]) is False:
             return False
         ovwrt_flag = False
         WAVheader_tools.write_sdruno_header(self,self.m["f1"],self.m["wavheader"],ovwrt_flag)
-        if self.m["TEST"] is False:
-            self.stemlabcontrol.sdrserverstart(self.m["sdr_configparams"])
-            self.stemlabcontrol.set_rec()
-            configparams = {"ifreq":self.m["ifreq"], "irate":self.m["irate"],
+        self.m["sdr_configparams"] = {"ifreq":self.m["ifreq"], "irate":self.m["irate"],
                     "rates": self.m["rates"], "icorr":self.m["icorr"],
                     "HostAddress":self.m["HostAddress"], "LO_offset":self.m["LO_offset"]}
-            if self.stemlabcontrol.config_socket(configparams):
+        if self.m["TEST"] is False:
+            if self.stemlabcontrol.sdrserverstart(self.m["sdr_configparams"]) == False:
+                self.cb_Butt_STOP()
+                return False
+            self.stemlabcontrol.set_rec()
+            # configparams = {"ifreq":self.m["ifreq"], "irate":self.m["irate"],
+            #         "rates": self.m["rates"], "icorr":self.m["icorr"],
+            #         "HostAddress":self.m["HostAddress"], "LO_offset":self.m["LO_offset"]}
+            if self.stemlabcontrol.config_socket(self.m["sdr_configparams"]):
                 self.play_tstarter()
             else:
                 return False
@@ -745,6 +752,7 @@ class playrec_c(QObject):
         if self.m["modality"] == "rec":
             return
         #TODO: check why this sequence incl file close needs to be outside the playthred worker; causes some problems
+        
         prfilehandle = self.playrec_tworker.get_4()
         self.playthread.quit()
         self.playthread.wait()
@@ -917,6 +925,8 @@ class playrec_c(QObject):
         self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
         self.SigRelay.emit("cexex_playrec",["reset_playerbuttongoup",0])
         self.SigRelay.emit("cexex_all_",["reset_GUI",0])
+        #TODO TODO TODO: activate other tabs
+        self.SigActivateOtherTabs.emit("Player","activate",[])
         #self.SigRelay.emit("cexex_win",["reset_GUI",0]) #TODO remove after tests, may not be connected with _c
         #print("STOP pressed")
 
@@ -1021,6 +1031,7 @@ class playrec_v(QObject):
         self.GAINOFFSET = 40
         self.gui = gui
         self.playrec_c = playrec_c
+        #self.norepeat = False
         self.m["UTC"] = False
         self.m["TEST"] = False
         self.LO_LOW = 0
@@ -1066,7 +1077,7 @@ class playrec_v(QObject):
         self.gui.lineEdit_LO_bias.setEnabled(False)
         self.gui.lineEdit_LO_bias.setText("0000")
         self.gui.radioButton_LO_bias.setEnabled(True)
-        self.gui.lineEdit_LO_bias.textChanged.connect(self.update_LO_bias)
+        self.gui.lineEdit_LO_bias.textChanged.connect(lambda: self.update_LO_bias("verbose","nochange"))
         self.gui.radioButton_LO_bias.clicked.connect(self.activate_LO_bias)
         self.gui.pushButton_Play.setIcon(QIcon("play_v4.PNG"))
         self.gui.pushButton_Play.clicked.connect(self.cb_Butt_toggleplay)
@@ -1074,11 +1085,12 @@ class playrec_v(QObject):
         self.gui.pushButton_REC.clicked.connect(self.cb_Butt_REC)        
         self.gui.pushButton_act_playlist.clicked.connect(self.cb_Butt_toggle_playlist)
         self.gui.lineEdit_IPAddress.returnPressed.connect(self.set_IP)
-        self.gui.lineEdit_IPAddress.setInputMask('000.000.000.000')
-        self.gui.lineEdit_IPAddress.setText("000.000.000.000")
+        #self.gui.lineEdit_IPAddress.setInputMask('000.000.000.000')
+        #self.gui.lineEdit_IPAddress.setText("000.000.000.000")
         self.gui.lineEdit_IPAddress.setEnabled(False)
         self.gui.lineEdit_IPAddress.setReadOnly(True)
-        #####INFO: IP address validator from Trimmal Software    rx = QRegExp('^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])|rp-[0-9A-Fa-f]{6}\.local$')
+        #####INFO: IP address validator from Trimmal Software    
+        #rx = QRegExp('^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])|rp-[0-9A-Fa-f]{6}\.local$')
         #                                                          self.addrValue.setValidator(QRegExpValidator(rx, self.addrValue))
         #pushButton->setIcon(QIcon(":/on.png"));
         self.gui.pushButton_IP.clicked.connect(self.editHostAddress) #TODO: Remove after transfer
@@ -1252,7 +1264,7 @@ class playrec_v(QObject):
         """
         self.gui.checkBox_UTC.clicked.connect(self.toggleUTC)
         self.gui.checkBox_TESTMODE.clicked.connect(self.toggleTEST)
-        self.gui.lineEdit_IPAddress.setText(self.m["STM_IP_address"])
+        self.gui.lineEdit_IPAddress.setText(self.m["metadata"]["STM_IP_address"])
         self.logger.debug(f"update filename in display: {self.m['my_filename']}")
         self.gui.label_Filename_Player.setText(self.m["my_filename"] + self.m["ext"])
 
@@ -1263,6 +1275,7 @@ class playrec_v(QObject):
         self.SigRelay.emit("cexex_view_spectra",["reset_GUI",0])
         self.SigRelay.emit("cexex_resample",["reset_GUI",0])
         self.gui.label_Filename_Player.setText('')
+        #self.SigActivateOtherTabs.emit("Player","activate",[])
   
     def addplaylistitem(self):
         item = QtWidgets.QListWidgetItem()
@@ -1464,6 +1477,8 @@ class playrec_v(QObject):
         """
         self.playlist_update()
         self.update_LO_bias()
+        #TODO TODO TODO: inactivate other tabs
+        self.SigActivateOtherTabs.emit("Player","inactivate",["View spectra"])
         if self.gui.pushButton_Play.isChecked() == True:
             if not self.m["fileopened"]:
                 if self.gui.radioButton_LO_bias.isChecked() is True:
@@ -1578,7 +1593,7 @@ class playrec_v(QObject):
             self.m["recording_path"] = self.metadata["recording_path"]
         self.logger.debug("playrec recording button recording path: %s", self.m["recording_path"])
         self.SigRelay.emit("cm_all_",["recording_path",self.m["recording_path"]])
-        self.SigRelay.emit("cexex_configuration",["updateGUIelements",0])
+        self.SigRelay.emit("cexex_xcore",["updateConfigElements",0])
 
 
     def numeraltest(self,_item,lo_bound,hi_bound,errortextsource):
@@ -1632,7 +1647,8 @@ class playrec_v(QObject):
         :raises [none]: [none]
         :return: none
         :rtype: none
-        """                
+        """
+        self.SigActivateOtherTabs.emit("Player","inactivate",["View spectra"])
         self.recording_path_checker()
         #   self.gui.pushButton_REC.setIcon(QIcon("pause_v4.PNG"))
         # if len(self.m["recording_path"]) == 0:
@@ -1884,14 +1900,16 @@ class playrec_v(QObject):
                            self.m["wavheader"]['data_nChunkSize'])
             # guarantee integer multiple of nBlockalign, > 0, <= filesize
             if increment != -1 and increment != 1 or self.m["timechanged"] == True:
-                if self.m["fileopened"] is True:
+                if self.m["fileopened"] and self.m["playthreadActive"] is True:
                     #print(f'increment curtime cond seek cur file open: {system_state["f1"]}')
                     try:
                         self.prfilehandle = self.playrec_c.playrec_tworker.get_4()
+                        
                     except:
                          auxi.standard_errorbox("Cannot activate background thread (tworker), maybe STEMLAB is not connected")
                          self.SigRelay.emit("cexex_all_",["reset_GUI",0])
                          self.SigRelay.emit("cm_all_",["fileopened",False]) ###TODO: Test after 09-04-2024 !
+                         print("updatecurtime playrec tworker.get4() not callable")
                          return False
                     try:
                         self.prfilehandle.seek(int(position), 0) #TODO: Anpassen an andere Fileformate
@@ -1925,17 +1943,32 @@ class playrec_v(QObject):
     def update_LO_bias(self,*args):
         """ Purpose: update LO bias setting; 
         check validity of offset value: isnumeric, integer
-        :param [ParamName]: none
-        :type [ParamName]: none
+        *args: optional first argument "verbose": then an errormessage is displayed if LO cannot be changed
+               optional second argument "change" or "unchanged": change means that the buttobgroup checkstatus is not changed in case of an error
+        :param [ParamName]: args
+        :type [ParamName]: str
         :raises none
         :return: True if successful, otherwise False
         :rtype: Boolean
         """
+
         if len(args) > 0:
             errormode = args[0]
-            if self.m["playthreadActive"] and (errormode.find("verbose") == 0):
-                auxi.standard_errorbox("LO bias cannot be changed while file is playing")
-                return False        
+            try:
+                changemod = args[1]
+            except:
+                changemod = "nochange"
+                pass
+            if self.m["playthreadActive"]: # and (not self.norepeat):
+                if errormode.find("verbose") == 0: 
+                    auxi.standard_errorbox("LO bias cannot be changed while file is playing")
+                if changemod.find("change") == 0:
+                    #leave current buttonstate unchanged, because action was triggered by change of checkstatus
+                    #self.norepeat = True
+                    self.toggle_LO_bias()
+                return False
+            # else:
+            #     self.norepeat = False   
         LObiasraw = self.gui.lineEdit_LO_bias.text().lstrip(" ")
         if len(LObiasraw) < 1:
             return False
@@ -1981,7 +2014,28 @@ class playrec_v(QObject):
         else:
             self.gui.lineEdit_LO_bias.setEnabled(False)
             self.gui.lineEdit_LO_bias.setStyleSheet("background-color: white")
-        self.update_LO_bias("verbose")
+        self.update_LO_bias("verbose","change")
+
+    def toggle_LO_bias(self):
+        """ Purpose: toggle status of the radiobuttongoup for LO bias setting; 
+        (1) highlight/unhighligt LO_lineEdit
+        (2) check/uncheck Radiobutton
+        (3) enable/disable LO_lineEdit
+        :param [ParamName]: none
+        :type [ParamName]: none
+        :raises none
+        :return: none
+        :rtype: none
+        """
+        if self.gui.radioButton_LO_bias.isChecked() is True:
+            self.gui.radioButton_LO_bias.setChecked(False)
+            self.gui.lineEdit_LO_bias.setEnabled(False)
+            self.gui.lineEdit_LO_bias.setStyleSheet("background-color: white")
+        else:
+            self.gui.radioButton_LO_bias.setChecked(True)
+            self.gui.lineEdit_LO_bias.setEnabled(True)
+            self.gui.lineEdit_LO_bias.setStyleSheet("background-color: yellow")
+
 
     def editHostAddress(self):     #TODO Check if this is necessary, rename to cb_.... ! 
         ''' 
