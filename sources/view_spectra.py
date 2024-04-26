@@ -113,6 +113,8 @@ class view_spectra_v(QObject):
         #self.SigUpdateGUI.connect(self.update_GUI) #TODO: remove after tests
         self.SigRX.connect(self.rxhandler)
         self.init_view_spectra_ui()
+        #print(f"self: {self}, gui: {gui}")
+        #cref = auxi.generate_canvas(self,self.gui.gridLayout_4,[4,0,1,5],[2,2,2,1],gui) ##gui must be the starter object
 
     def init_view_spectra_ui(self):
         self.gui.spinBoxminPeakwidth.valueChanged.connect(self.minPeakwidthupdate)
@@ -164,6 +166,11 @@ class view_spectra_v(QObject):
                 self.reset_GUI()
             if  _value[0].find("logfilehandler") == 0:
                 self.logfilehandler(_value[1])
+            if  _value[0].find("canvasbuild") == 0:
+                self.canvasbuild(_value[1])
+
+    def canvasbuild(self,gui):
+        self.cref = auxi.generate_canvas(self,self.gui.gridLayout_4,[4,0,1,5],[2,2,2,1],gui)
 
     def logfilehandler(self,_value):
         if _value is False:
@@ -213,11 +220,14 @@ class view_spectra_v(QObject):
 
     def reset_GUI(self):
         #clear canvas
-        self.m["Tabref"]["View_Spectra"]["ax"].clear()
-        self.m["Tabref"]["View_Spectra"]["canvas"].draw()
+        # self.m["Tabref"]["View_Spectra"]["ax"].clear()
+        # self.m["Tabref"]["View_Spectra"]["canvas"].draw()
+        # self.gui.label_Filename_ViewSpectra.setText("")
+        # self.gui.lineEdit_evaltime.setText("")
+        self.cref["ax"].clear()
+        self.cref["canvas"].draw()
         self.gui.label_Filename_ViewSpectra.setText("")
         self.gui.lineEdit_evaltime.setText("")
-
         
         pass
 
@@ -267,7 +277,8 @@ class view_spectra_v(QObject):
                 #sys_state.set_status(system_state)
                 return False
 
-            self.m["Tabref"]["View_Spectra"]["ax"].clear()
+            #self.m["Tabref"]["View_Spectra"]["ax"].clear()
+            self.cref["ax"].clear()
             #print("datalen > 10")
             #print(f"view_spectra plot_spectum, gain: {self.m['resampling_gain']}")
             if self.gui.radioButton_plotraw.isChecked() is True:
@@ -281,9 +292,12 @@ class view_spectra_v(QObject):
                 deltat = 1/self.m["wavheader"]['nSamplesPerSec']
                 time_ = np.linspace(0,N*deltat,N)
 
-                self.m["Tabref"]["View_Spectra"]["ax"].plot(time_,trace, '-')
-                self.m["Tabref"]["View_Spectra"]["ax"].set_xlabel('time (s)')
-                self.m["Tabref"]["View_Spectra"]["ax"].set_ylabel('RFCorder amplitude (V)')
+                # self.m["Tabref"]["View_Spectra"]["ax"].plot(time_,trace, '-')
+                # self.m["Tabref"]["View_Spectra"]["ax"].set_xlabel('time (s)')
+                # self.m["Tabref"]["View_Spectra"]["ax"].set_ylabel('RFCorder amplitude (V)')
+                self.cref["ax"].plot(time_,trace, '-')
+                self.cref["ax"].set_xlabel('time (s)')
+                self.cref["ax"].set_ylabel('RFCorder amplitude (V)')
 
             else:
                 pdata = self.ann_spectrum(0,data)
@@ -295,18 +309,29 @@ class view_spectra_v(QObject):
                 peakprops = pdata["peakprops"]
                 # create axis, clear old one and plot data
 
-                self.m["Tabref"]["View_Spectra"]["ax"].plot(datax,datay, '-')
-                self.m["Tabref"]["View_Spectra"]["ax"].plot(datax[peaklocs], datay[peaklocs], "x")
-                self.m["Tabref"]["View_Spectra"]["ax"].plot(datax,basel, '-', color = "C2")
-                self.m["Tabref"]["View_Spectra"]["ax"].set_xlabel('frequency (Hz)')
-                self.m["Tabref"]["View_Spectra"]["ax"].set_ylabel('amplitude (dB)')
+                self.cref["ax"].plot(datax,datay, '-')
+                self.cref["ax"].plot(datax[peaklocs], datay[peaklocs], "x")
+                self.cref["ax"].plot(datax,basel, '-', color = "C2")
+                self.cref["ax"].set_xlabel('frequency (Hz)')
+                self.cref["ax"].set_ylabel('amplitude (dB)')
                 #     ymax = datay[peaklocs], color = "C1")
-                self.m["Tabref"]["View_Spectra"]["ax"].vlines(x=datax[peaklocs], ymin = basel[peaklocs],
+                self.cref["ax"].vlines(x=datax[peaklocs], ymin = basel[peaklocs],
                     ymax = datay[peaklocs], color = "C1")
-                self.m["Tabref"]["View_Spectra"]["ax"].hlines(y=peakprops["width_heights"], xmin=datax[peakprops["left_ips"].astype(int)],
+                self.cref["ax"].hlines(y=peakprops["width_heights"], xmin=datax[peakprops["left_ips"].astype(int)],
                     xmax=datax[peakprops["right_ips"].astype(int)], color = "C1")
-                
-            self.m["Tabref"]["View_Spectra"]["canvas"].draw()
+
+                # self.m["Tabref"]["View_Spectra"]["ax"].plot(datax,datay, '-')
+                # self.m["Tabref"]["View_Spectra"]["ax"].plot(datax[peaklocs], datay[peaklocs], "x")
+                # self.m["Tabref"]["View_Spectra"]["ax"].plot(datax,basel, '-', color = "C2")
+                # self.m["Tabref"]["View_Spectra"]["ax"].set_xlabel('frequency (Hz)')
+                # self.m["Tabref"]["View_Spectra"]["ax"].set_ylabel('amplitude (dB)')
+                # #     ymax = datay[peaklocs], color = "C1")
+                # self.m["Tabref"]["View_Spectra"]["ax"].vlines(x=datax[peaklocs], ymin = basel[peaklocs],
+                #     ymax = datay[peaklocs], color = "C1")
+                # self.m["Tabref"]["View_Spectra"]["ax"].hlines(y=peakprops["width_heights"], xmin=datax[peakprops["left_ips"].astype(int)],
+                #     xmax=datax[peakprops["right_ips"].astype(int)], color = "C1")
+            self.cref["canvas"].draw()
+            #self.m["Tabref"]["View_Spectra"]["canvas"].draw()
             #display ev<luation time
             displtime = str(self.m["wavheader"]['starttime_dt'] + (self.m["wavheader"]['stoptime_dt']-self.m["wavheader"]['starttime_dt'])*self.m["horzscal"]/1000)
             self.gui.lineEdit_evaltime.setText('Evaluation time: '+ displtime + ' UTC')

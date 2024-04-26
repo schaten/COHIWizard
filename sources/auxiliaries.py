@@ -7,6 +7,8 @@ from datetime import datetime
 from datetime import timedelta
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import QObject, pyqtSignal, Qt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg,  NavigationToolbar2QT as NavigationToolbar
+from matplotlib.figure import Figure
 
 class timer_worker(QObject):
     """_generates time signals for clock and recording timer_
@@ -191,6 +193,39 @@ class auxiliaries():
             finally:
                 QApplication.restoreOverrideCursor()
         return new_function
+    
+    def generate_canvas(self,gridref,gridc,gridt,gui): #TODO: remove unelegant dummy issue
+        """
+        initialize plot canvas
+        :param: gridref
+        :type: ui.gridLayout_# object from GUI, e.g. self.gui.gridLayout_4 given by QT-designer
+        :param: gridc, position of canvas, list with 4 entries: row_index, col_index, line_span, col_span
+        :type: list 
+        :param: gridt, position and span of toolbar with 4 entries: row_index, col_index, line_span, col_span
+                if gridt[0] < 0 --> no toolbar is being assigned
+        :type: list
+        :param: gui
+        :type: Ui_MainWindow (MyWizard) object instantiated by starter method in core program
+        ...
+        :raises: none
+        ...
+        :return: none
+        :rtype: none
+        """
+        cref = {}
+        figure = Figure()
+        canvas = FigureCanvasQTAgg(figure)
+        gridref.addWidget(canvas,gridc[0],gridc[1],gridc[2],gridc[3])
+        ax = figure.add_subplot(111)
+        if gridt[0] >= 0:
+            toolbar = NavigationToolbar(canvas, gui)  
+            ##TODO TODO TODO: in case of transfer to auxi: gui must be reference to the instance of the gui in the class starter
+            gridref.addWidget(toolbar,gridt[0],gridt[1],gridt[2],gridt[3])
+        cref["ax"] = ax
+        cref["canvas"] = canvas
+        cref["ax"].plot([], [])
+        cref["canvas"].draw()
+        return cref
 
 
 #methods for wavheader manipulations 

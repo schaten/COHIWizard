@@ -328,7 +328,7 @@ class res_workers(QObject):
                                 wavheader['filesize'] = current_output_file_size
                                 wavheader['data_nChunkSize'] = wavheader['filesize'] - 208
                                 wavheader['nextfilename'] = ""
-                                WAVheader_tools.write_sdruno_header(self,current_output_file.name,wavheader,True)
+                                WAVheader_tools.write_sdruno_header(self,current_output_file.name,wavheader,True) ##TODO TODO TODO Linux conf: self.m["f1"],self.m["wavheader"] must be in Windows format
                                 #TODO: rename to newfile
                                 nametrunk, extension = os.path.splitext(current_output_file.name)
                                 nametrunk = f"{os.path.dirname(current_output_file_path)}/{basename}_{str(current_output_file_index)}_"
@@ -403,7 +403,7 @@ class res_workers(QObject):
                             next_name = next_nametrunk + str(next_suff) + '_' + str(int(np.round(wavheader["centerfreq"]/1000))) + 'kHz.wav'
                             new_name = nametrunk + str(SDRUno_suff) + '_' + str(int(np.round(wavheader["centerfreq"]/1000))) + 'kHz.wav'
                             wavheader['nextfilename'] = next_name
-                            WAVheader_tools.write_sdruno_header(self,current_output_file.name,wavheader,True)
+                            WAVheader_tools.write_sdruno_header(self,current_output_file.name,wavheader,True) ##TODO TODO TODO Linux conf: self.m["f1"],self.m["wavheader"] must be in Windows format
 
                             while True:
                                 try:
@@ -1203,7 +1203,7 @@ class resample_c(QObject):
         tgt_wavheader['nAvgBytesPerSec'] = int(tgt_wavheader['nSamplesPerSec']*int(self.m["tBPS"]/4))
         ovwrt_flag = True
         time.sleep(1)
-        WAVheader_tools.write_sdruno_header(self,target_fn,tgt_wavheader,ovwrt_flag)
+        WAVheader_tools.write_sdruno_header(self,target_fn,tgt_wavheader,ovwrt_flag) ##TODO TODO TODO Linux conf: self.m["f1"],self.m["wavheader"] must be in Windows format
         time.sleep(5)
         #if new_name exists --> delete
         newname = self.m["new_name"]

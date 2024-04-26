@@ -6,7 +6,8 @@ from PyQt5 import QtGui
 import logging
 import numpy as np
 import os
-from datetime import datetime
+from datetime import datetime, timedelta, date
+#from datetime import timedelta
 import shutil
 from auxiliaries import auxiliaries as auxi
 from auxiliaries import WAVheader_tools
@@ -65,41 +66,41 @@ class waveditor_c(QObject):
         self.m = waveditor_m.mdl
         self.logger = waveditor_m.logger
 
-    def extract_startstoptimes_auxi(self, wavheader): #TODO: move to controller module edit wavheader
-        """_synthetize next filename in the playlist in case the latter cannot be extracted
-        from auxi SDR-wav-header because it is longar than 96 chars_
-        can only be used for SDRUno and RFCorder header
-        CONTROLLER
-        :param : wavheader [dictionary]
-        :type : dictionary
-        :raises [ErrorType]: [ErrorDescription]
-        :return: next_filename
-        :rtype: str
-        """
-        ###TODO error handling
-        ###TODO TODO TODO: check if the following fixes for binary representations are necessary when using UNICODE
-        wavheader['nextfilename'] = (wavheader['nextfilename']).replace('x00','')
-        wavheader['nextfilename'] = (wavheader['nextfilename']).replace("'","")
-        wavheader['nextfilename'] = (wavheader['nextfilename']).replace('b''','')
-        wavheader['nextfilename'] = wavheader['nextfilename'].rstrip(' ')
-        wavheader['nextfilename'] = wavheader['nextfilename'].rstrip('\\')  #####TODO CHECK if odd for LINUX
-        nextfilename = wavheader['nextfilename']
-        nextfilename_purged = nextfilename.replace('/','\\')  #####TODO CHECK if odd for LINUX
-        nextfile_dirname = os.path.dirname(nextfilename_purged)
-        #TODO: nextfilename dirname is frequently 0 --> quest is invalid
-        if len(nextfile_dirname) > 3:
-            if (wavheader['nextfilename'][0:2] == "'\\") is False:  #####TODO CHECK if odd for LINUX
-                self.loopalive = False   ### stop playlist loop  #######################  loop must be handled inside this method !
-                true_nextfilename = ''
-            else:
-                if wavheader['nextfilename'].find('.wav') != -1: ### take next filename from wav header
-                    true_nextfilename, next_ext = os.path.splitext(os.path.basename(nextfilename_purged))
-                else: ### synthetize next filename because wav header string for nextfile longer 92 chars
-                    self.logger.debug("nextfile entry in wavheader invalid, please edit wav header")
-                    true_nextfilename = ''
-                    return true_nextfilename
-                self.loopalive = True
-            return true_nextfilename
+    # def extract_startstoptimes_auxi(self, wavheader): #TODO TODO TODO: check if still necessary: move to controller module edit wavheader
+    #     """_synthetize next filename in the playlist in case the latter cannot be extracted
+    #     from auxi SDR-wav-header because it is longar than 96 chars_
+    #     can only be used for SDRUno and RFCorder header
+    #     CONTROLLER
+    #     :param : wavheader [dictionary]
+    #     :type : dictionary
+    #     :raises [ErrorType]: [ErrorDescription]
+    #     :return: next_filename
+    #     :rtype: str
+    #     """
+    #     ###TODO error handling
+    #     ###TODO TODO TODO: check if the following fixes for binary representations are necessary when using UNICODE
+    #     wavheader['nextfilename'] = (wavheader['nextfilename']).replace('x00','')
+    #     wavheader['nextfilename'] = (wavheader['nextfilename']).replace("'","")
+    #     wavheader['nextfilename'] = (wavheader['nextfilename']).replace('b''','')
+    #     wavheader['nextfilename'] = wavheader['nextfilename'].rstrip(' ')
+    #     wavheader['nextfilename'] = wavheader['nextfilename'].rstrip('\\')  #####TODO CHECK if odd for LINUX
+    #     nextfilename = wavheader['nextfilename']
+    #     nextfilename_purged = nextfilename.replace('/','\\')  #####TODO CHECK if odd for LINUX
+    #     nextfile_dirname = os.path.dirname(nextfilename_purged)
+    #     #TODO: nextfilename dirname is frequently 0 --> quest is invalid
+    #     if len(nextfile_dirname) > 3:
+    #         if (wavheader['nextfilename'][0:2] == "'\\") is False:  #####TODO CHECK if odd for LINUX
+    #             self.loopalive = False   ### stop playlist loop  #######################  loop must be handled inside this method !
+    #             true_nextfilename = ''
+    #         else:
+    #             if wavheader['nextfilename'].find('.wav') != -1: ### take next filename from wav header
+    #                 true_nextfilename, next_ext = os.path.splitext(os.path.basename(nextfilename_purged))
+    #             else: ### synthetize next filename because wav header string for nextfile longer 92 chars
+    #                 self.logger.debug("nextfile entry in wavheader invalid, please edit wav header")
+    #                 true_nextfilename = ''
+    #                 return true_nextfilename
+    #             self.loopalive = True
+    #         return true_nextfilename
         
 
 class waveditor_v(QObject):
@@ -137,8 +138,40 @@ class waveditor_v(QObject):
         self.gui.tableWidget_starttime.setEnabled(False)
         self.gui.tableWidget_3.setEnabled(False)
         self.gui.label_Filename_WAVHeader.setText('')
+        self.gui.pushButton_subtract.clicked.connect(lambda: self.calculate_timediff("subtract"))
+        self.gui.pushButton_add.clicked.connect(lambda: self.calculate_timediff("add"))
         self.clear_WAVwidgets()
 
+    def calculate_timediff(self,_operation):
+        """
+        calculated difference bertween ref and subtr datetimes and prints result in result datetime field
+        :param : none
+        :type : none
+        :raises [ErrorType]: [ErrorDescription]
+        :return: none
+        :rtype: none
+        """
+        if self.m["fileopened"]:
+            self.gui.wavheader_dateTimeEdit_starttime.setDateTime(self.m["wavheader"]["starttime_dt"])
+        else:
+            self.gui.wavheader_dateTimeEdit_starttime.setDateTime(datetime.now())
+        refDateTime = self.gui.wavheader_dateTimeEdit_starttime.dateTime().toPyDateTime()        
+        subTime = self.gui.wavheader_timeEdit_subtr.dateTime().toPyDateTime().time()
+        refTime = refDateTime.time()
+        if _operation.find("subtract") == 0:
+            #resultTime = datetime.combine(date.today(), refTime) - timedelta(hours=subTime.hour, minutes=subTime.minute, seconds=subTime.second)
+            resultTime = datetime.combine(refDateTime.date(), refTime) - timedelta(hours=subTime.hour, minutes=subTime.minute, seconds=subTime.second)
+
+        elif _operation.find("add") == 0:
+            #resultTime = datetime.combine(date.today(), refTime) + timedelta(hours=subTime.hour, minutes=subTime.minute, seconds=subTime.second)
+            resultTime = datetime.combine(refDateTime.date(), refTime) + timedelta(hours=subTime.hour, minutes=subTime.minute, seconds=subTime.second)
+
+        else:
+            self.logger.error("calculate_timediff: unknown operation")
+            return False
+
+        #print(new_datetime.strftime('%Y-%m-%dT%H:%M:%S.%fZ'))
+        self.gui.wavheader_dateTimeEdit_result.setDateTime(resultTime)
 
 
     def rxhandler(self,_key,_value):

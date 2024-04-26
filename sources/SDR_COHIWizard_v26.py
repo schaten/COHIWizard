@@ -56,6 +56,7 @@ import yaml_editor as yed
 import waveditor as waved
 from stemlab_control import StemlabControl
 import playrec
+from ISO_testgui import Ui_ISO_testgui
 #import configuration as conf
 
 class starter(QMainWindow):
@@ -64,6 +65,25 @@ class starter(QMainWindow):
         self.gui= MyWizard()
         self.gui.setupUi(self)
         self.gui.tableWidget_basisfields.verticalHeader().setVisible(True)
+
+# generate with QT Designer a QWidget and call it (objectName): "tab_ISO_testgui" and set windowTitle to ""
+# instantiate starter: 
+# gui = starter()
+# gui is then an object of type QMainWindow and has the GUI gui.gui = MyWizard = class UIMainWindow in COHIWitard_GUI_v10
+# This gui has the method gui.gui.setupUI(gui)
+# setupUI generates an object gui.gui.Tabwidget
+# an individual Tab is created by gui.gui.Tabwidget.addTab(tab_ISO_testgui), where tab_ISO_testgui is of type QtWidgets.QWidget()
+#
+# tab_ISO_testgui = QtWidgets.QWidget()
+# tab_ISO_testgui.setObjectName("tab_ISO_testgui")
+# then call:
+# from ISO_testgui import Ui_ISO_testgui
+
+# tabUI = Ui_ISO_testgui() in __main__
+# tabUI.setupUi(tab_ISO_testgui)
+# gui.gui.tabWidget.addTab(tab_ISO_testgui, "")
+#
+# then access all elements of Ui_ISO_testgui by tabUI.elements
 
 class core_m(QObject):
     def __init__(self):
@@ -204,9 +224,7 @@ class core_v(QObject):
         self.m = core_m.mdl
         self.core_c = core_c
         #self.OLD = True #TODO KIPP: remove
-        self.TEST = True    # Test Mode Flag for testing the App, --> playloop  ##NOT USED #TODO:future system status
-        #self.DATABLOCKSIZE = 1024*32 # für diverse Filereader/writer TODO: occurs in plot spectrum and ANN_Spectrum; must be shifted to the respective modules in future
-        #self.PROMINENCE = 15 ######### minimum peak prominence in dB above baseline for peak detector #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
+        #self.TEST = True    # Test Mode Flag for testing the App, --> playloop  ##NOT USED #TODO:future system status
         self.bps = ['16', '24', '32'] #TODO:future system state
         self.standardLO = 1100 #TODO:future system state
         self.annotationdir_prefix = 'ANN_' ##################TODO:future system state
@@ -488,10 +506,10 @@ class core_v(QObject):
             self.UTC = True #TODO:future system state
         else:
             self.UTC = False
-        if self.gui.checkBox_TESTMODE.isChecked():
-            self.TEST = True #TODO:future system state
-        else:
-            self.TEST = False
+        # if self.gui.checkBox_TESTMODE.isChecked():
+        #     self.TEST = True #TODO:future system state
+        # else:
+        #     self.TEST = False
 
         if self.UTC:
             dt_now = datetime.now(ndatetime.timezone.utc)
@@ -530,11 +548,6 @@ class core_v(QObject):
         self.m["reslist_ix"] = 0
         self.m["list_out_files_resampled"] = []
         self.m["playthreadActive"] = False
-        #self.m["playlist_active"] = False
-        #self.m["progress"] = 0
-        #self.m["temp_LOerror"] = False
-        #self.m["starttrim"] = False
-        #self.m["stoptrim"] = False
 
     def generate_canvas(self,dummy,gridref,gridc,gridt,Tabref): #TODO: remove unelegant dummy issue
         """
@@ -561,13 +574,22 @@ class core_v(QObject):
         gridref.addWidget(canvas,gridc[0],gridc[1],gridc[2],gridc[3])
         ax = figure.add_subplot(111)
         if gridt[0] >= 0:
-            toolbar = NavigationToolbar(canvas, gui)
+            toolbar = NavigationToolbar(canvas, gui)  
+            print(f"generate_canvas: gui = {gui}, self.gui = {self.gui}, gui.gui = {gui.gui}")
+            ##TODO TODO TODO: in case of transfer to auxi: gui must be reference to the instance of the gui in the class starter
+            #probably it must be passed to the parameter list  to be callable from anywhere
+            # gui is of the type Qmainwindow (starter instance) and has the method gui.gui which is the MyWizard instance
+            # Reference to gui must be passed to all tab_modules as m["QMainWindow_reference"]
             gridref.addWidget(toolbar,gridt[0],gridt[1],gridt[2],gridt[3])
         Tabref["ax"] = ax
         Tabref["canvas"] = canvas
         Tabref["ax"].plot([], [])
-        Tabref["canvas"].draw()
+        Tabref["canvas"].draw()  ##TODO TODO TODO: in case of transfer to auxi: Tabref should be returned as return variable
         
+    #TODO TODO TODO Idee: generate_vanvas wird eine auxi-Methode
+    #               im jeweiligen Modul wird creference = generate_canvas_new (self, gridlayout, [],[], gui) aufgerufen
+    #               alle plot-Operationen werden dann auf dieses creference ausgeführt
+
     def init_Tabref(self): #TODO:future system state
         """
         UNKLAR: Definition einer Referenztabelle für das Ansprechen verschiedener TABs und insb CANVAS-Zuweisung
@@ -581,21 +603,20 @@ class core_v(QObject):
         :return: none
         :rtype: none
         """
-        #TODO: Umbenennen der tab-Referenzen nach ordentlichem System, so wie bereits 'tab_resample', nicht 'tab_4'
         # Bei Erweiterungen: für jeden neuen Tab einen neuen Tabref Eintrag generieren, generate_canvas nur wenn man dort einen Canvas will
         #TODO:future system state
         self.Tabref["Player"] = {}
-        self.Tabref["Player"]["tab_reference"] = self.gui.tab_playrec
-        #Tab View spectra
-        self.Tabref["View_Spectra"] = {}
-        self.Tabref["View_Spectra"]["tab_reference"] = self.gui.tab_view_spectra
-        self.generate_canvas(self,self.gui.gridLayout_4,[4,0,1,5],[2,2,2,1],self.Tabref["View_Spectra"])
+        self.Tabref["Player"]["tab_reference"] = self.gui.tab_playrec   ## TODO TODO TODO: never used ! required ?
+        #Tab View spectra TODO TODO TODO: remove after all tests 26-04-2024
+        # self.Tabref["View_Spectra"] = {}
+        # self.Tabref["View_Spectra"]["tab_reference"] = self.gui.tab_view_spectra ## TODO TODO TODO: never used ! required ?
+        # self.generate_canvas(self,self.gui.gridLayout_4,[4,0,1,5],[2,2,2,1],self.Tabref["View_Spectra"])
         #generiert einen Canvas auf den man mit self.Tabref["View_Spectra"]["canvas"] und
         #self.Tabref["View_Spectra"]["ax"] als normale ax und canvas Objekte zugreifen kann
         #wie plot(...), show(), close()
         # Tab Resampler
         self.Tabref["Resample"] = {}
-        self.Tabref["Resample"]["tab_reference"] = self.gui.tab_resample
+        self.Tabref["Resample"]["tab_reference"] = self.gui.tab_resample ## TODO TODO TODO: never used ! required ?
         self.generate_canvas(self,self.gui.gridLayout_5,[6,0,6,4],[-1,-1,-1,-1],self.Tabref["Resample"])
 
     def setactivity_tabs(self,caller,statuschange,exceptionlist):
@@ -1046,7 +1067,22 @@ if __name__ == '__main__':
 
     app = QApplication([])
     gui = starter()
+    print(f"__main__: gui = {gui} gui.gui = {gui.gui}")
     gui.show()
+
+    #TODOTODO TODO: this is an individual entry in __main__ for including anew Tab with an individual GUI ISO_testgui.py/ui
+    tabUI = Ui_ISO_testgui()
+    tab_ISO_testgui = QtWidgets.QWidget()
+    tab_ISO_testgui.setObjectName("tab_ISO_testgui")
+    tab_ISO_testgui.setWindowTitle("BLA")
+    tab_ISO_testgui.setWindowIconText("BLA")
+    # tabUI = Ui_ISO_testgui() in __main__
+    tabUI.setupUi(tab_ISO_testgui)
+
+    a = gui.gui.tabWidget.addTab(tab_ISO_testgui, "")
+    gui.gui.tabWidget.setTabText(a,"ISO")
+    #########################################################################################################################
+    #ZUgriff auf elements of tabUI via tabUI instance ! not gui.gui.
 
     xcore_m = core_m()
     xcore_c = core_c(xcore_m)
@@ -1058,6 +1094,7 @@ if __name__ == '__main__':
     tab_dict["list"] = ["xcore"]
     tab_dict["tabname"] = ["xcore"]
 
+    #TODO TODO TODO: clarify that xcore_v.gui is the same as gui.gui !
     if 'resampler_module_v5' in sys.modules:
         resample_m = rsmp.resample_m() #TODO: wird gui in _m jemals gebraucht ? ich denke nein !
         resample_c = rsmp.resample_c(resample_m) #TODO: replace sys_state
@@ -1179,7 +1216,9 @@ if __name__ == '__main__':
     #all tab initializations occur in connect_init() in core module
     xcore_v.connect_init() 
     #xcore_v.setstandardpaths()
-    xcore_v.SigRelay.emit("cm_exex",["updateGUIelements",0])
+    #xcore_v.SigRelay.emit("cexex_all_",["updateGUIelements",0])
+    #xcore_v.SigRelay.emit("cm_all_",["QMainWindow"],gui)
+    xcore_v.SigRelay.emit("cexex_all_",["canvasbuild",gui])
     sys.exit(app.exec_())
 
 #TODOs:
@@ -1192,6 +1231,14 @@ if __name__ == '__main__':
     # fix error with SNR calculation: there seems to be no reaction to baselineshifts when calculating the SNR for praks and identifying those above threshold
     #
     # * // \\ Problem lösen: 2h: wahrscheinlich nur mehr in waveditor !!!! geht mit Path() und bei nextfile-Policy im Player
+    # Analyse: in wavheadertools wird nextfilename lediglich als utf8 gelesen, also in Windows-Format; falls ein \\ vorkommt, wird es durch ein \ ersetzt (in wavheadertools)
+    # in waveditor kommt es nur in der Methode 'extract_startstoptimes_auxi'vor, die offenbar (TODO check) nirgends mehr verwendet wird
+    # AKTION: Sorge dafür, dass beim Lesen der nextfilenames die Interpretation os-konform erfolgt
+    # AKTION: Sorge dafür dass beim Schreiben immer Windows-Format verwendet wird; Das Wavheadertool 'write_sdruno_header' schreibt dabei nextfilename so wie es als String übergeben wird.
+    # Daher sollte man beim Aufruf dieser Methode immer dafür sorgen, dass das Windows-Format ist
+    # ich habe in allen Modulen die Instanzen eines Schreibeaufrufs mit 
+    ##      TODO TODO TODO Linux conf: self.m["f1"],self.m["wavheader"] must be in Windows format
+    # markiert
     #
     # * Windows Installer mit https://www.pythonguis.com/tutorials/packaging-pyside6-applications-windows-pyinstaller-installforge/ erstellen
     #

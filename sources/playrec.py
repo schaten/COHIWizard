@@ -640,7 +640,7 @@ class playrec_c(QObject):
         if self.checkdiskspace(expected_filesize, self.m["recording_path"]) is False:
             return False
         ovwrt_flag = False
-        WAVheader_tools.write_sdruno_header(self,self.m["f1"],self.m["wavheader"],ovwrt_flag)
+        WAVheader_tools.write_sdruno_header(self,self.m["f1"],self.m["wavheader"],ovwrt_flag) ##TODO TODO TODO Linux conf: self.m["f1"],self.m["wavheader"] must be in Windows format
         self.m["sdr_configparams"] = {"ifreq":self.m["ifreq"], "irate":self.m["irate"],
                     "rates": self.m["rates"], "icorr":self.m["icorr"],
                     "HostAddress":self.m["HostAddress"], "LO_offset":self.m["LO_offset"]}
@@ -690,6 +690,8 @@ class playrec_c(QObject):
         :rtype: Boolean
         """
         dt_now = datetime.now()
+        dt_now = dt_now.astimezone(pytz.utc)
+
         self.m["f1"] = self.m["recording_path"] + "/cohiwizard_" + dt_now.strftime('%Y%m%d') +"_" + dt_now.strftime('%H%M%S')  +"Z"
         self.m["f1"] += "_" + str(int(self.m["ifreq"]/1000)) + "kHz.wav"
         #self.RecBitsPerSample
@@ -723,7 +725,7 @@ class playrec_c(QObject):
         self.m["wavheader"]['stoptime_dt'] = spt
         self.m["wavheader"]['stoptime'] = [spt.year, spt.month, 0, spt.day, spt.hour, spt.minute, spt.second, int(spt.microsecond/1000)] 
         self.m["ovwrt_flag"] = True
-        WAVheader_tools.write_sdruno_header(self,self.m["f1"],self.m["wavheader"],self.m["ovwrt_flag"])
+        WAVheader_tools.write_sdruno_header(self,self.m["f1"],self.m["wavheader"],self.m["ovwrt_flag"]) ##TODO TODO TODO Linux conf: self.m["f1"],self.m["wavheader"] must be in Windows format
         if not self.m["stopstate"]:
             f1old = self.m["f1"]
             wavheader_old = self.m["wavheader"]
@@ -732,7 +734,7 @@ class playrec_c(QObject):
             self.generate_recfilename()
             #wavheader_old['nextfilename'] = self.m["f1"]
             wavheader_old['nextfilename'] = Path(self.m["f1"]).name
-            WAVheader_tools.write_sdruno_header(self,f1old,wavheader_old,self.m["ovwrt_flag"])
+            WAVheader_tools.write_sdruno_header(self,f1old,wavheader_old,self.m["ovwrt_flag"]) ##TODO TODO TODO Linux conf: self.m["f1"],self.m["wavheader"] must be in Windows format
             self.recordingsequence()
 
     def EOF_manager(self):
