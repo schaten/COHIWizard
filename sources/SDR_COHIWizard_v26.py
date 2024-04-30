@@ -30,13 +30,13 @@ Created on Sa Dec 08 2023
 """
 import sys
 import os
-import time
+#import time
 import subprocess
 import datetime as ndatetime
 from datetime import datetime
 from pathlib import Path, PureWindowsPath
-import numpy as np
-from PyQt5 import QtWidgets, QtCore, QtGui
+#import numpy as np
+from PyQt5 import QtWidgets, QtCore#, QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
@@ -48,7 +48,7 @@ from COHIWizard_GUI_v10 import Ui_MainWindow as MyWizard
 from auxiliaries import WAVheader_tools
 from auxiliaries import auxiliaries as auxi
 from auxiliaries import timer_worker as tw
-from PyQt5.QtCore import QObject, QThread, pyqtSignal, QMutex       #TODO: OBSOLETE
+from PyQt5.QtCore import QObject, QThread, pyqtSignal#, QMutex       #TODO: OBSOLETE
 import resampler_module_v5 as rsmp
 import view_spectra as vsp
 import annotate as ann
@@ -56,12 +56,16 @@ import yaml_editor as yed
 import waveditor as waved
 from stemlab_control import StemlabControl
 import playrec
-from ISO_testgui import Ui_ISO_testgui
-#import configuration as conf
+#from ISO_testgui import Ui_ISO_testgui
+from icons import Logos
 
 class starter(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.splash = SplashScreen()
+        self.splash.setFocus()
+        self.splash.show()
+
         self.gui= MyWizard()
         self.gui.setupUi(self)
         self.gui.tableWidget_basisfields.verticalHeader().setVisible(True)
@@ -220,6 +224,9 @@ class core_v(QObject):
 
     def __init__(self, gui, core_c, core_m):
         super().__init__()
+        # self.splash = SplashScreen()
+        # self.splash.setFocus()
+        # self.splash.show()
         print("Initializing GUI, please wait....")
         self.m = core_m.mdl
         self.core_c = core_c
@@ -306,8 +313,8 @@ class core_v(QObject):
         #self.m["sdr_configparams"] = configparams
         self.m["f1"] = ""
         self.m["_log"] = False
-        self.Tabref={}
-        self.init_Tabref()
+        # self.Tabref={}
+        # self.init_Tabref()
         self.timeref = datetime.now()    #TODO TODO TODO: remove, no 2 autoscaninstances !
 
         # Create a custom logger
@@ -425,7 +432,7 @@ class core_v(QObject):
     def connect_init(self):
         self.SigRelay.emit("cm_all_",["emergency_stop",False])
         self.SigRelay.emit("cm_all_",["fileopened",False])
-        self.SigRelay.emit("cm_all_",["Tabref",self.Tabref])
+        #self.SigRelay.emit("cm_all_",["Tabref",self.Tabref])
         self.SigRelay.emit("cm_resample",["rates",self.m["rates"]])
         self.SigRelay.emit("cm_resample",["irate",self.m["irate"]])
         self.SigRelay.emit("cm_playrec",["rates",self.m["rates"]])
@@ -549,48 +556,48 @@ class core_v(QObject):
         self.m["list_out_files_resampled"] = []
         self.m["playthreadActive"] = False
 
-    def generate_canvas(self,dummy,gridref,gridc,gridt,Tabref): #TODO: remove unelegant dummy issue
-        """
-        --> VIEW or auxiliary
-        eher AUXILIARY !
-        initialize central Tab management dictionary Tabref
-        :param: gridref
-        :type: ui.gridLayout_# object from GUI, e.g. self.gui.gridLayout_4 given by QT-designer
-        :param: gridc, position of canvas, list with 4 entries: row_index, col_index, line_span, col_span
-        :type: list 
-        :param: gridt, position and span of toolbar with 4 entries: row_index, col_index, line_span, col_span
-                if gridt[0] < 0 --> no toolbar is being assigned
-        :type: list
-        :param: Tabref["name"], name = name of tab
-        :type: dict["name"]
-        ...
-        :raises: none
-        ...
-        :return: none
-        :rtype: none
-        """
-        figure = Figure()
-        canvas = FigureCanvasQTAgg(figure)
-        gridref.addWidget(canvas,gridc[0],gridc[1],gridc[2],gridc[3])
-        ax = figure.add_subplot(111)
-        if gridt[0] >= 0:
-            toolbar = NavigationToolbar(canvas, gui)  
-            print(f"generate_canvas: gui = {gui}, self.gui = {self.gui}, gui.gui = {gui.gui}")
-            ##TODO TODO TODO: in case of transfer to auxi: gui must be reference to the instance of the gui in the class starter
-            #probably it must be passed to the parameter list  to be callable from anywhere
-            # gui is of the type Qmainwindow (starter instance) and has the method gui.gui which is the MyWizard instance
-            # Reference to gui must be passed to all tab_modules as m["QMainWindow_reference"]
-            gridref.addWidget(toolbar,gridt[0],gridt[1],gridt[2],gridt[3])
-        Tabref["ax"] = ax
-        Tabref["canvas"] = canvas
-        Tabref["ax"].plot([], [])
-        Tabref["canvas"].draw()  ##TODO TODO TODO: in case of transfer to auxi: Tabref should be returned as return variable
+    # def generate_canvas(self,dummy,gridref,gridc,gridt,Tabref): #TODO: remove unelegant dummy issue
+    #     """
+    #     --> VIEW or auxiliary
+    #     eher AUXILIARY !
+    #     initialize central Tab management dictionary Tabref
+    #     :param: gridref
+    #     :type: ui.gridLayout_# object from GUI, e.g. self.gui.gridLayout_4 given by QT-designer
+    #     :param: gridc, position of canvas, list with 4 entries: row_index, col_index, line_span, col_span
+    #     :type: list 
+    #     :param: gridt, position and span of toolbar with 4 entries: row_index, col_index, line_span, col_span
+    #             if gridt[0] < 0 --> no toolbar is being assigned
+    #     :type: list
+    #     :param: Tabref["name"], name = name of tab
+    #     :type: dict["name"]
+    #     ...
+    #     :raises: none
+    #     ...
+    #     :return: none
+    #     :rtype: none
+    #     """
+    #     figure = Figure()
+    #     canvas = FigureCanvasQTAgg(figure)
+    #     gridref.addWidget(canvas,gridc[0],gridc[1],gridc[2],gridc[3])
+    #     ax = figure.add_subplot(111)
+    #     if gridt[0] >= 0:
+    #         toolbar = NavigationToolbar(canvas, gui)  
+    #         print(f"generate_canvas: gui = {gui}, self.gui = {self.gui}, gui.gui = {gui.gui}")
+    #         ##TODO TODO TODO: in case of transfer to auxi: gui must be reference to the instance of the gui in the class starter
+    #         #probably it must be passed to the parameter list  to be callable from anywhere
+    #         # gui is of the type Qmainwindow (starter instance) and has the method gui.gui which is the MyWizard instance
+    #         # Reference to gui must be passed to all tab_modules as m["QMainWindow_reference"]
+    #         gridref.addWidget(toolbar,gridt[0],gridt[1],gridt[2],gridt[3])
+    #     Tabref["ax"] = ax
+    #     Tabref["canvas"] = canvas
+    #     Tabref["ax"].plot([], [])
+    #     Tabref["canvas"].draw()  ##TODO TODO TODO: in case of transfer to auxi: Tabref should be returned as return variable
         
-    #TODO TODO TODO Idee: generate_vanvas wird eine auxi-Methode
-    #               im jeweiligen Modul wird creference = generate_canvas_new (self, gridlayout, [],[], gui) aufgerufen
-    #               alle plot-Operationen werden dann auf dieses creference ausgeführt
+    # #TODO TODO TODO Idee: generate_vanvas wird eine auxi-Methode
+    # #               im jeweiligen Modul wird creference = generate_canvas_new (self, gridlayout, [],[], gui) aufgerufen
+    # #               alle plot-Operationen werden dann auf dieses creference ausgeführt
 
-    def init_Tabref(self): #TODO:future system state
+    def init_Tabref(self): #TODO TODO TODO:remove after all tests
         """
         UNKLAR: Definition einer Referenztabelle für das Ansprechen verschiedener TABs und insb CANVAS-Zuweisung
         könnte auch im Datenmodul residieren
@@ -605,8 +612,8 @@ class core_v(QObject):
         """
         # Bei Erweiterungen: für jeden neuen Tab einen neuen Tabref Eintrag generieren, generate_canvas nur wenn man dort einen Canvas will
         #TODO:future system state
-        self.Tabref["Player"] = {}
-        self.Tabref["Player"]["tab_reference"] = self.gui.tab_playrec   ## TODO TODO TODO: never used ! required ?
+        # self.Tabref["Player"] = {}
+        # self.Tabref["Player"]["tab_reference"] = self.gui.tab_playrec   ## TODO TODO TODO: never used ! required ?
         #Tab View spectra TODO TODO TODO: remove after all tests 26-04-2024
         # self.Tabref["View_Spectra"] = {}
         # self.Tabref["View_Spectra"]["tab_reference"] = self.gui.tab_view_spectra ## TODO TODO TODO: never used ! required ?
@@ -615,13 +622,12 @@ class core_v(QObject):
         #self.Tabref["View_Spectra"]["ax"] als normale ax und canvas Objekte zugreifen kann
         #wie plot(...), show(), close()
         # Tab Resampler
-        self.Tabref["Resample"] = {}
-        self.Tabref["Resample"]["tab_reference"] = self.gui.tab_resample ## TODO TODO TODO: never used ! required ?
-        self.generate_canvas(self,self.gui.gridLayout_5,[6,0,6,4],[-1,-1,-1,-1],self.Tabref["Resample"])
+        # self.Tabref["Resample"] = {}
+        # self.Tabref["Resample"]["tab_reference"] = self.gui.tab_resample ## TODO TODO TODO: never used ! required ?
+        # self.generate_canvas(self,self.gui.gridLayout_5,[6,0,6,4],[-1,-1,-1,-1],self.Tabref["Resample"])
 
     def setactivity_tabs(self,caller,statuschange,exceptionlist):
         """
-        CORE VIEW METHOD
         activates or inactivaes all tabs except the caller
         caller can be any tab name
         statuschange: 'activate': activate all tabs except the caller
@@ -651,8 +657,6 @@ class core_v(QObject):
 
     def reset_GUI(self):
         """
-        CORE VIEW
-        TODO: nach den einzelnen Tabs zerlegen
         reset GUI elements to their defaults, re-initialize important variables
         code is executed after new file open
         :param none
@@ -661,28 +665,7 @@ class core_v(QObject):
         :return: True after completion, False if status-yaml not accessible
         :rtype: boolean
         """
-
         self.SigRelay.emit("cexex_waveditor",["activate_WAVEDIT",0])
-
-#     def showfilename(self):
-#         """_updates the name of currenly loaded data file in all instances of filename labels_
-#         :param : none if old system, args[0] = string with filename to be displayed 
-#         :type : none if old system, str else
-#         '''
-#         :raises [ErrorType]: [ErrorDescription]
-#         '''
-#         :return: none
-#         :rtype: none
-#         """ 
-#         # self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
-#         # #TODO TODO TODO: remove the following after change to all new modules and Relay
-#         # self.my_dirname = os.path.dirname(self.m["f1"])
-#         # self.my_filename, self.ext = os.path.splitext(os.path.basename(self.m["f1"]))
-#         # #self.gui.label_Filename_Annotate.setText(self.my_filename + self.ext)
-#         # self.gui.label_Filename_WAVHeader.setText(self.my_filename + self.ext)
-#         # self.gui.label_Filename_Player.setText(self.my_filename + self.ext)
-
-# ############################## GENERAL MENU FUNCTIONS  ####################################
 
     def cb_open_file(self):
         """
@@ -955,23 +938,6 @@ class core_v(QObject):
         icheck = True
         i_LO_bias = 0 ###TODO: remove, activate ???
 
-        # #TODO: ACTIVATE LObias check code
-        # if self.gui.radioButton_LO_bias.isChecked() is True:
-        #     if (self.gui.lineEdit_LO_bias.text()).isnumeric() == False:
-        #         auxi.standard_errorbox("invalid numeral in center frequency offset field, please enter valid integer value (kHz)")
-        #         return False
-
-        #     LObiasraw = self.gui.lineEdit_LO_bias.text()
-        #     LObias_sign = 1
-
-        #     if LObiasraw[0] == "-":
-        #         LObias_sign = -1
-        #     if LObiasraw.lstrip("-").isnumeric() is True:
-        #         i_LO_bias = LObias_sign*int(LObiasraw.lstrip("-"))
-        #     else:
-        #         auxi.standard_errorbox("invalid numeral in center frequency offset field, please enter valid integer value (kHz)")
-        #         return False
-
         if rateix == -1 or cix == -1 or loix == -1:
             icheck = False
         
@@ -1055,7 +1021,30 @@ class core_v(QObject):
                 self.reset_GUI()
             if  _value[0].find("updateConfigElements") == 0:
                 self.updateConfigElements()
-                
+
+class SplashScreen(QWidget):
+    """This class provides a simple splash screen for the application.
+    It shows the logo of the application for 2 seconds and then closes itself.
+    """
+    def __init__(self):
+        super().__init__()
+        #logger.debug("Showing Splash Screen")
+
+        self.main_layout = QHBoxLayout()
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+
+        self.logo = Logos.Logo_full()
+        self.logo_label = QLabel()
+        self.logo_label.setPixmap(self.logo.pixmap(self.logo.availableSizes()[0]))
+        self.logo_label.setStyleSheet("border: 0px solid green")
+
+        self.main_layout.addWidget(self.logo_label)
+        self.setLayout(self.main_layout)
+
+        self.timer = QTimer()
+        self.timer.singleShot(4000, self.close)
+        
+        # Set window properties
 
 if __name__ == '__main__':
     print("starting main, initializing GUI, please wait ... ")
@@ -1071,16 +1060,16 @@ if __name__ == '__main__':
     gui.show()
 
     #TODOTODO TODO: this is an individual entry in __main__ for including anew Tab with an individual GUI ISO_testgui.py/ui
-    tabUI = Ui_ISO_testgui()
-    tab_ISO_testgui = QtWidgets.QWidget()
-    tab_ISO_testgui.setObjectName("tab_ISO_testgui")
-    tab_ISO_testgui.setWindowTitle("BLA")
-    tab_ISO_testgui.setWindowIconText("BLA")
-    # tabUI = Ui_ISO_testgui() in __main__
-    tabUI.setupUi(tab_ISO_testgui)
+    # tabUI = Ui_ISO_testgui()
+    # tab_ISO_testgui = QtWidgets.QWidget()
+    # tab_ISO_testgui.setObjectName("tab_ISO_testgui")
+    # tab_ISO_testgui.setWindowTitle("BLA")
+    # tab_ISO_testgui.setWindowIconText("BLA")
+    # # tabUI = Ui_ISO_testgui() in __main__
+    # tabUI.setupUi(tab_ISO_testgui)
 
-    a = gui.gui.tabWidget.addTab(tab_ISO_testgui, "")
-    gui.gui.tabWidget.setTabText(a,"ISO")
+    # a = gui.gui.tabWidget.addTab(tab_ISO_testgui, "")
+    # gui.gui.tabWidget.setTabText(a,"ISO")
     #########################################################################################################################
     #ZUgriff auf elements of tabUI via tabUI instance ! not gui.gui.
 
@@ -1146,17 +1135,17 @@ if __name__ == '__main__':
         c_index = xcore_v.gui.tabWidget.indexOf(page)
         xcore_v.gui.tabWidget.setTabVisible(c_index,False)
 
-    if 'configuration' in sys.modules:
-        configuration_m = conf.configuration_m()
-        configuration_c = conf.configuration_c(configuration_m)
-        configuration_v = conf.configuration_v(xcore_v.gui,configuration_c,configuration_m)
-        tab_dict["list"].append("configuration")
-        tab_dict["tabname"].append("Configuration")
-    else:
-        page = xcore_v.gui.tabWidget.findChild(QWidget, "tab_configuration")
-        c_index = xcore_v.gui.tabWidget.indexOf(page)
-        xcore_v.gui.tabWidget.setTabVisible(c_index,False)
-        pass
+    # if 'configuration' in sys.modules:
+    #     configuration_m = conf.configuration_m()
+    #     configuration_c = conf.configuration_c(configuration_m)
+    #     configuration_v = conf.configuration_v(xcore_v.gui,configuration_c,configuration_m)
+    #     tab_dict["list"].append("configuration")
+    #     tab_dict["tabname"].append("Configuration")
+    # else:
+    #     page = xcore_v.gui.tabWidget.findChild(QWidget, "tab_configuration")
+    #     c_index = xcore_v.gui.tabWidget.indexOf(page)
+    #     xcore_v.gui.tabWidget.setTabVisible(c_index,False)
+    #     pass
 
     if 'playrec' in sys.modules: #and win.OLD is False:
         playrec_m = playrec.playrec_m()
@@ -1218,11 +1207,14 @@ if __name__ == '__main__':
     #xcore_v.setstandardpaths()
     #xcore_v.SigRelay.emit("cexex_all_",["updateGUIelements",0])
     #xcore_v.SigRelay.emit("cm_all_",["QMainWindow"],gui)
-    xcore_v.SigRelay.emit("cexex_all_",["canvasbuild",gui])
+    xcore_v.SigRelay.emit("cexex_all_",["canvasbuild",gui])   # communicate reference to gui instance to all modules which instanciate a canvas with auxi.generate_canvas(self,gridref,gridc,gridt,gui)
     sys.exit(app.exec_())
 
 #TODOs:
     # file open muss in den Controller
+    #
+    # replace Tabref and all its references by new canvasbuilder generate_canvas(self,gridref,gridc,gridt,gui)
+    # last affected module: resampler
     #
     # shift access to xcore_v in __main__ ti special initializer method in xcore_v, which is started by a single call in __main__
     #
