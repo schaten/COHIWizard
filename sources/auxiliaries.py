@@ -1,7 +1,7 @@
 from struct import pack, unpack
 import numpy as np
 import time
-import system_module as wsys
+#import system_module as wsys
 #from SDR_wavheadertools_v2 import WAVheader_tools
 from datetime import datetime
 from datetime import timedelta
@@ -9,6 +9,34 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import QObject, pyqtSignal, Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg,  NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
+
+    
+class WIZ_auxiliaries():
+    """contains many auxiliariy methods fo the COHIWizard
+    :return: _description_
+    :rtype: _type_
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.dummy = True
+        # Constants
+        #self.status = {}    # Test Mode Flag for testing the App without a
+
+    def standard_errorbox(errortext):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Critical)
+        msg.setText("Error")
+        msg.setInformativeText(errortext)
+        msg.setWindowTitle("Error")
+        msg.exec_()
+
+    def standard_infobox(infotext):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Information)
+        msg.setText("ATTENTION")
+        msg.setInformativeText(infotext)
+        msg.setWindowTitle("ATTENTION")
+        msg.exec_()
 
 class timer_worker(QObject):
     """_generates time signals for clock and recording timer_
@@ -78,7 +106,7 @@ class auxiliaries():
         ret = {}
         fid = open(filepath, 'rb')
         if wFormatTag == 1:
-            scl = int(2**int(sBPS-1))-1   #if self.wavheader['nBitsPerSample'] 2147483648 8388608 32767
+            scl = int(2**int(sBPS-1))-1   #if self.wavheader['nBitsPerSample'] 2147483648 8388608 32767 127
         else:
             scl = 1
         if sBPS == 16:
@@ -98,7 +126,7 @@ class auxiliaries():
                 else:
                     data = dataraw.astype(np.float16)/scl
             else:
-                wsys.WIZ_auxiliaries.standard_errorbox("unsupported Format Tag (wFormatTag): value other than 1 or 3 encountered")
+                WIZ_auxiliaries.standard_errorbox("unsupported Format Tag (wFormatTag): value other than 1 or 3 encountered")
                 size = -1
             fid.close()
         elif sBPS == 32:
@@ -120,7 +148,7 @@ class auxiliaries():
                     data = ((dataraw/scl)>>16).astype(np.float16)
                 size = fid.readinto(dataraw)
             else:
-                wsys.WIZ_auxiliaries.standard_errorbox("Unsupported FormatTag (wFormatTag): value other than 1 or 3 encountered")
+                WIZ_auxiliaries.standard_errorbox("Unsupported FormatTag (wFormatTag): value other than 1 or 3 encountered")
                 size = -1
             fid.close()
         elif sBPS == 24:   #This mode is useful ONLY for general short reading purposes (plotting) NOT for LOshifting !
@@ -140,8 +168,33 @@ class auxiliaries():
                     else:
                         data[lauf] = dataraw[0]
                     size += 3
+        elif sBPS == 8:
+            fid.seek(readoffset+position, 0)
+            if wFormatTag == 3: # read 16bit float
+                WIZ_auxiliaries.standard_errorbox("unsupported Format Tag 3 with 8 bit data")
+                size = -1
+                ret["data"] = []
+                ret["size"] = size
+                return(ret)
+                # dataraw = np.empty(DATABLOCKSIZE, dtype=np.float16)
+                # size = fid.readinto(dataraw)
+                # if tBPS == 32: #write 32 bit float
+                #     data = dataraw.astype(np.float32)
+                # else: # write to 16bit float
+                #     data = dataraw.astype(np.float16)
+            elif wFormatTag == 1: # read int8
+                dataraw = np.empty(DATABLOCKSIZE, dtype=np.uint8)
+                size = fid.readinto(dataraw)
+                if tBPS == 32:
+                    data = dataraw.astype(np.float32)/scl
+                else:
+                    data = dataraw.astype(np.float16)/scl
+            else:
+                WIZ_auxiliaries.standard_errorbox("unsupported Format Tag (wFormatTag): value other than 1 or 3 encountered")
+                size = -1
+            fid.close()
         else:
-            wsys.WIZ_auxiliaries.standard_errorbox("no encodings except 16, 24 and 32 bits are supported")
+            WIZ_auxiliaries.standard_errorbox("no encodings except 8 (integer), 16, 24 and 32 bits are supported")
             #return invalid
             size = -1
             ret["data"] = []

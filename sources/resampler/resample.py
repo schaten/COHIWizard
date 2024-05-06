@@ -15,7 +15,7 @@ import shutil
 from PyQt5 import QtWidgets
 from matplotlib.patches import Rectangle
 #from SDR_wavheadertools_v2 import WAVheader_tools
-import system_module as wsys
+#import system_module as wsys
 from auxiliaries import auxiliaries as auxi
 from auxiliaries import WAVheader_tools
 
@@ -587,7 +587,7 @@ class res_workers(QObject):
         dt = 1/sSR
         segment_tstart = 0
         #print(f"LOshifter worker targetfilename: {targetfilename}, exp filesize: {expected_filesize}")
-        #print(expected_filesize)
+        print(expected_filesize)
         if os.path.exists(targetfilename) == True:
             #print("LOshift worker: target file has been found")
             file_stats = os.stat(targetfilename)
@@ -642,6 +642,7 @@ class res_workers(QObject):
         target_fileHandle.close()
         print("#############Loshifter_worker finished##############")
         time.sleep(1)
+        print("#############Loshifter_worker finished after sleep##############")
         self.SigFinishedLOshifter.emit()
 
 class resample_c(QObject):
@@ -958,6 +959,7 @@ class resample_c(QObject):
         #self.LOsh_worker.set_readsegment(gui.readsegment_new)  #TODO: readsegment should be part of an aux module rather than gui (== core)
         self.LOsh_worker.set_readsegment(auxi.readsegment_new)
         self.LOsh_worker.set_sBPS(self.m["sBPS"])
+        print(f"LOshifter new: set sBPS: {self.m['sBPS']}")
         self.LOshthread.started.connect(self.LOsh_worker.LO_shifter_worker)
         self.Sigincrscheduler.connect(self.res_scheduler)
         #self.LOsh_worker.SigFinishedLOshifter.connect(lambda: self.Sigincrscheduler.emit()): --> cleanup()
@@ -965,9 +967,11 @@ class resample_c(QObject):
         #self.LOsh_worker.SigPupdate.connect(lambda: resample_v.updateprogress_resampling(self)) #TODO: eher aus der Klasse view, könnte auch ausserhalb geschehen
         self.LOsh_worker.SigPupdate.connect(self.PupdateSignalHandler)
         self.LOsh_worker.SigFinishedLOshifter.connect(self.LOshthread.quit)
+        self.LOsh_worker.SigFinishedLOshifter.connect(lambda: print("LOshworker SigFinished emitted, LOshthread quit started"))
         self.LOsh_worker.SigFinishedLOshifter.connect(self.LOsh_worker.deleteLater)
         self.LOshthread.finished.connect(self.LOshthread.deleteLater)
         self.LOshthread.finished.connect(lambda: self.cleanup())
+        self.LOshthread.finished.connect(lambda: print("LOshthread finished; Cleanup must have been launched"))
 
         self.m["calling_worker"] = self.LOsh_worker 
         self.m["last_system_time"] = time.time()
@@ -1054,7 +1058,10 @@ class resample_c(QObject):
         tSR = self.m["tSR"]  #TODO: define im GUI_Hauptprogramm bzw. im scheduler
         self.m["progress_source"] = "sox"  #TODO: solve double function in better datacommunication structure
         if self.m['wFormatTag'] == 1:
-            wFormatTag_TYPE = "signed-integer"
+            if  self.m["sBPS"] > 8:
+                wFormatTag_TYPE = "signed-integer"
+            else:
+                wFormatTag_TYPE = "unsigned-integer"
         elif self.m['wFormatTag']  == 3:
             wFormatTag_TYPE = "floating-point"
         else:
@@ -1138,6 +1145,7 @@ class resample_c(QObject):
         progress = self.m["calling_worker"].get_progress()
         self.m["progress"] = progress
         self.m["progress_source"] = "normal"
+        self.logger.debug(f"PupdateSiganlHandler: progress: {progress}, emit SigUpdateGUIelements")
         self.SigUpdateGUIelements.emit() #TODO replace by Relay method ?
 
     def Soxerrorhandler(self,errorstring):
@@ -1652,7 +1660,7 @@ class resample_v(QObject):
         self.gui = gui #gui_state["gui_reference"]#system_state["gui_reference"]
         self.init_resample_ui() #TODO TODO TODO: activate after tests
         self.gui.radioButton_resgain.setChecked(False)
-        self.gui.label_8.setEnabled(False)  #TODO: maybe remove, Unidentified
+        #self.gui.label_8.setEnabled(False)  #TODO: maybe remove, Unidentified
         self.gui.pushButton_resample_cancel.clicked.connect(self.resample_c.cancel_resampling) #TODO: shift to a resample.view method
         self.resample_c.SigDisconnectExternalMethods.connect(self.ext_meth_disconnect)
         self.resample_c.SigConnectExternalMethods.connect(self.ext_meth_connect)

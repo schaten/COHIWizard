@@ -30,33 +30,36 @@ Created on Sa Dec 08 2023
 """
 import sys
 import os
-#import time
 import subprocess
 import datetime as ndatetime
 from datetime import datetime
 from pathlib import Path, PureWindowsPath
-#import numpy as np
-from PyQt5 import QtWidgets, QtCore#, QtGui
+from PyQt5 import QtWidgets, QtCore
+from PyQt5.QtWidgets import QMainWindow, QWidget, QApplication, QHBoxLayout, QLabel
+from PyQt5.QtCore import QTimer, QObject, QThread, pyqtSignal
+
+
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg,  NavigationToolbar2QT as NavigationToolbar
-from matplotlib.figure import Figure
-import yaml
+#from PyQt5.QtGui import *
+#from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg,  NavigationToolbar2QT as NavigationToolbar
+#from matplotlib.figure import Figure
+#from PyQt5.QtCore import QObject, QThread, pyqtSignal
+#import yaml
 import logging
+
 from COHIWizard_GUI_v10 import Ui_MainWindow as MyWizard
-from auxiliaries import WAVheader_tools
-from auxiliaries import auxiliaries as auxi
-from auxiliaries import timer_worker as tw
-from PyQt5.QtCore import QObject, QThread, pyqtSignal#, QMutex       #TODO: OBSOLETE
-import resampler_module_v5 as rsmp
-import view_spectra as vsp
-import annotate as ann
-import yaml_editor as yed
-import waveditor as waved
-from stemlab_control import StemlabControl
-import playrec
+# from auxiliaries import WAVheader_tools
+# from auxiliaries import auxiliaries as auxi
+# from auxiliaries import timer_worker as tw
+# import resampler_module_v5 as rsmp
+# #import view_spectra as vsp
+# import annotate as ann
+# import yaml_editor as yed
+# import waveditor as waved
+# from stemlab_control import StemlabControl
+# import playrec
 #from ISO_testgui import Ui_ISO_testgui
+
 from icons import Logos
 
 class starter(QMainWindow):
@@ -70,7 +73,17 @@ class starter(QMainWindow):
         self.gui.setupUi(self)
         self.gui.tableWidget_basisfields.verticalHeader().setVisible(True)
 
-# generate with QT Designer a QWidget and call it (objectName): "tab_ISO_testgui" and set windowTitle to ""
+# generate Player from individual widget
+# tab_player_widget = QtWidgets.QWidget()
+# tab_player_widget.setObjectName("tab_player_widget")
+# then call:
+# from player_widget import Ui_player_widget
+# tabUI_Player = Ui_player_widget() in __main__
+# tabUI_Player.setupUi(tab_player_widget)
+# gui.gui.tabWidget.addTab(tab_player_widget, "")
+#
+# then access all elements of Ui_ISO_testgui by tabUI_Player.elements
+
 # instantiate starter: 
 # gui = starter()
 # gui is then an object of type QMainWindow and has the GUI gui.gui = MyWizard = class UIMainWindow in COHIWitard_GUI_v10
@@ -83,11 +96,23 @@ class starter(QMainWindow):
 # then call:
 # from ISO_testgui import Ui_ISO_testgui
 
-# tabUI = Ui_ISO_testgui() in __main__
-# tabUI.setupUi(tab_ISO_testgui)
+# tabUI_Player = Ui_ISO_testgui() in __main__
+# tabUI_Player.setupUi(tab_ISO_testgui)
 # gui.gui.tabWidget.addTab(tab_ISO_testgui, "")
 #
-# then access all elements of Ui_ISO_testgui by tabUI.elements
+# then access all elements of Ui_ISO_testgui by tabUI_Player.elements
+
+# generate Player from individual widget
+# tab_player_widget = QtWidgets.QWidget()
+# tab_player_widget.setObjectName("tab_player_widget")
+# then call:
+# from player_widget import Ui_player_widget
+# tabUI_Player = Ui_player_widget() in __main__
+# tabUI_Player.setupUi(tab_player_widget)
+# gui.gui.tabWidget.addTab(tab_player_widget, "")
+#
+# then access all elements of Ui_ISO_testgui by tabUI_Player.elements
+
 
 class core_m(QObject):
     def __init__(self):
@@ -161,12 +186,12 @@ class core_c(QObject):
         elif not os.path.isdir(self.m["metadata"]["recording_path"]):
             recfail = True
         if recfail:
-            options = QFileDialog.Options()
-            options |= QFileDialog.ShowDirsOnly
+            options = QtWidgets.QFileDialog.Options()
+            options |= QtWidgets.QFileDialog.ShowDirsOnly
             self.m["recording_path"] = ""
             while len(self.m["recording_path"]) < 1:
                 try:
-                    self.m["recording_path"] = QFileDialog.getExistingDirectory(self.m["QTMAINWINDOWparent"], "Select Recording Directory", options=options)
+                    self.m["recording_path"] = QtWidgets.QFileDialog.getExistingDirectory(self.m["QTMAINWINDOWparent"], "Select Recording Directory", options=options)
                 except:
                     return
                 if len(self.m["recording_path"]) < 1:
@@ -192,9 +217,9 @@ class core_c(QObject):
         :return: none
         :rtype: none
         """         
-        options = QFileDialog.Options()
-        options |= QFileDialog.ShowDirsOnly
-        self.m["recording_path"] = QFileDialog.getExistingDirectory(self.m["QTMAINWINDOWparent"], "Select Recording Directory", options=options)
+        options = QtWidgets.QFileDialog.Options()
+        options |= QtWidgets.QFileDialog.ShowDirsOnly
+        self.m["recording_path"] = QtWidgets.QFileDialog.getExistingDirectory(self.m["QTMAINWINDOWparent"], "Select Recording Directory", options=options)
         self.logger.debug("playrec recording path: %s", self.m["recording_path"])
         self.m["metadata"]["recording_path"] = self.m["recording_path"]
         stream = open("config_wizard.yaml", "w")
@@ -224,14 +249,9 @@ class core_v(QObject):
 
     def __init__(self, gui, core_c, core_m):
         super().__init__()
-        # self.splash = SplashScreen()
-        # self.splash.setFocus()
-        # self.splash.show()
         print("Initializing GUI, please wait....")
         self.m = core_m.mdl
         self.core_c = core_c
-        #self.OLD = True #TODO KIPP: remove
-        #self.TEST = True    # Test Mode Flag for testing the App, --> playloop  ##NOT USED #TODO:future system status
         self.bps = ['16', '24', '32'] #TODO:future system state
         self.standardLO = 1100 #TODO:future system state
         self.annotationdir_prefix = 'ANN_' ##################TODO:future system state
@@ -248,19 +268,9 @@ class core_v(QObject):
         for index in range(self.gui.tabWidget.count()):
             self.tab_names[index] = self.gui.tabWidget.tabText(index)
 
-        # self.gui = MyWizard()
-        # self.gui.setupUi(self)
-        # self.gui.tableWidget_basisfields.verticalHeader().setVisible(True)   
         self.gui.actionFile_open.triggered.connect(self.cb_open_file)
-        #self.gui.actionfileopen_ref.triggered.connect(self.cb_open_file)
         self.SigGUIReset.connect(self.reset_GUI)
 
-
-        #self.gui.pushButton_resample_GainOnly.setEnabled(False)
-        #self.gui.tabwidget_ref.setCurrentIndex(1) #TODO: avoid magic number, make config issue
-        #self.gui.lineEdit_IPAddress.setInputMask('000.000.000.000')
-        #self.gui.lineEdit_IPAddress.setTabChangesFocus(True)  # Allow Tab key to change focus
-        #self.gui.lineEdit_IPAddress.installEventFilter(self)  # Install event filter
         ###TODO: re-organize, there should be no access to gui elements of other modules
         self.gui.tabWidget.setCurrentIndex(0) #TODO: avoid magic number, make config issue
         self.gui.playrec_comboBox_startuptab.setCurrentIndex(0)
@@ -272,9 +282,6 @@ class core_v(QObject):
         self.gui.lineEdit_IPAddress.setEnabled(False)
         self.gui.lineEdit_IPAddress.setReadOnly(True)
         self.gui.pushButton_IP.clicked.connect(self.editHostAddress)
-        #self.gui.Conf_lineEdit_IPAddress.setEnabled(True)
-        #self.gui.Conf_lineEdit_IPAddress.setReadOnly(False)
-        #self.gui.pushButton_IP.clicked.connect(self.set_IP)
         self.gui.lineEdit_IPAddress.returnPressed.connect(self.set_IP)
         self.gui.pushButton_IP.setText("set IP Address")
         self.gui.pushButton_IP.adjustSize()
@@ -438,7 +445,7 @@ class core_v(QObject):
         self.SigRelay.emit("cm_playrec",["rates",self.m["rates"]])
         self.SigRelay.emit("cm_playrec",["irate",self.m["irate"]])
         self.SigRelay.emit("cm_resample",["reslist_ix",self.m["reslist_ix"]]) #TODO check: maybe local in future !
-        self.SigRelay.emit("cm_playrec",["Obj_stemlabcontrol",stemlabcontrol])
+        #self.SigRelay.emit("cm_playrec",["Obj_stemlabcontrol",stemlabcontrol]) #TODO: check testing REMOVED 06-05-2024
         self.SigRelay.emit("cm_configuration",["tablist",tab_dict["list"]])
         #self.SigRelay.emit("cexex_core",["updateGUIelements",0])
         self.SigRelay.emit("cm_playrec",["sdr_configparams",self.m["sdr_configparams"]])
@@ -556,75 +563,35 @@ class core_v(QObject):
         self.m["list_out_files_resampled"] = []
         self.m["playthreadActive"] = False
 
-    # def generate_canvas(self,dummy,gridref,gridc,gridt,Tabref): #TODO: remove unelegant dummy issue
+
+    # def init_Tabref(self): #TODO TODO TODO:remove after all tests
     #     """
-    #     --> VIEW or auxiliary
-    #     eher AUXILIARY !
+    #     UNKLAR: Definition einer Referenztabelle für das Ansprechen verschiedener TABs und insb CANVAS-Zuweisung
+    #     könnte auch im Datenmodul residieren
     #     initialize central Tab management dictionary Tabref
-    #     :param: gridref
-    #     :type: ui.gridLayout_# object from GUI, e.g. self.gui.gridLayout_4 given by QT-designer
-    #     :param: gridc, position of canvas, list with 4 entries: row_index, col_index, line_span, col_span
-    #     :type: list 
-    #     :param: gridt, position and span of toolbar with 4 entries: row_index, col_index, line_span, col_span
-    #             if gridt[0] < 0 --> no toolbar is being assigned
-    #     :type: list
-    #     :param: Tabref["name"], name = name of tab
-    #     :type: dict["name"]
+    #     :param: none
+    #     :type: none
     #     ...
     #     :raises: none
     #     ...
     #     :return: none
     #     :rtype: none
     #     """
-    #     figure = Figure()
-    #     canvas = FigureCanvasQTAgg(figure)
-    #     gridref.addWidget(canvas,gridc[0],gridc[1],gridc[2],gridc[3])
-    #     ax = figure.add_subplot(111)
-    #     if gridt[0] >= 0:
-    #         toolbar = NavigationToolbar(canvas, gui)  
-    #         print(f"generate_canvas: gui = {gui}, self.gui = {self.gui}, gui.gui = {gui.gui}")
-    #         ##TODO TODO TODO: in case of transfer to auxi: gui must be reference to the instance of the gui in the class starter
-    #         #probably it must be passed to the parameter list  to be callable from anywhere
-    #         # gui is of the type Qmainwindow (starter instance) and has the method gui.gui which is the MyWizard instance
-    #         # Reference to gui must be passed to all tab_modules as m["QMainWindow_reference"]
-    #         gridref.addWidget(toolbar,gridt[0],gridt[1],gridt[2],gridt[3])
-    #     Tabref["ax"] = ax
-    #     Tabref["canvas"] = canvas
-    #     Tabref["ax"].plot([], [])
-    #     Tabref["canvas"].draw()  ##TODO TODO TODO: in case of transfer to auxi: Tabref should be returned as return variable
-        
-    # #TODO TODO TODO Idee: generate_vanvas wird eine auxi-Methode
-    # #               im jeweiligen Modul wird creference = generate_canvas_new (self, gridlayout, [],[], gui) aufgerufen
-    # #               alle plot-Operationen werden dann auf dieses creference ausgeführt
-
-    def init_Tabref(self): #TODO TODO TODO:remove after all tests
-        """
-        UNKLAR: Definition einer Referenztabelle für das Ansprechen verschiedener TABs und insb CANVAS-Zuweisung
-        könnte auch im Datenmodul residieren
-        initialize central Tab management dictionary Tabref
-        :param: none
-        :type: none
-        ...
-        :raises: none
-        ...
-        :return: none
-        :rtype: none
-        """
-        # Bei Erweiterungen: für jeden neuen Tab einen neuen Tabref Eintrag generieren, generate_canvas nur wenn man dort einen Canvas will
-        #TODO:future system state
-        # self.Tabref["Player"] = {}
-        # self.Tabref["Player"]["tab_reference"] = self.gui.tab_playrec   ## TODO TODO TODO: never used ! required ?
-        #Tab View spectra TODO TODO TODO: remove after all tests 26-04-2024
-        # self.Tabref["View_Spectra"] = {}
-        # self.Tabref["View_Spectra"]["tab_reference"] = self.gui.tab_view_spectra ## TODO TODO TODO: never used ! required ?
-        # self.generate_canvas(self,self.gui.gridLayout_4,[4,0,1,5],[2,2,2,1],self.Tabref["View_Spectra"])
-        #generiert einen Canvas auf den man mit self.Tabref["View_Spectra"]["canvas"] und
-        #self.Tabref["View_Spectra"]["ax"] als normale ax und canvas Objekte zugreifen kann
-        #wie plot(...), show(), close()
-        # Tab Resampler
-        # self.Tabref["Resample"] = {}
-        # self.Tabref["Resample"]["tab_reference"] = self.gui.tab_resample ## TODO TODO TODO: never used ! required ?
-        # self.generate_canvas(self,self.gui.gridLayout_5,[6,0,6,4],[-1,-1,-1,-1],self.Tabref["Resample"])
+    #     # Bei Erweiterungen: für jeden neuen Tab einen neuen Tabref Eintrag generieren, generate_canvas nur wenn man dort einen Canvas will
+    #     #TODO:future system state
+    #     # self.Tabref["Player"] = {}
+    #     # self.Tabref["Player"]["tab_reference"] = self.gui.tab_playrec   ## TODO TODO TODO: never used ! required ?
+    #     #Tab View spectra TODO TODO TODO: remove after all tests 26-04-2024
+    #     # self.Tabref["View_Spectra"] = {}
+    #     # self.Tabref["View_Spectra"]["tab_reference"] = self.gui.tab_view_spectra ## TODO TODO TODO: never used ! required ?
+    #     # self.generate_canvas(self,self.gui.gridLayout_4,[4,0,1,5],[2,2,2,1],self.Tabref["View_Spectra"])
+    #     #generiert einen Canvas auf den man mit self.Tabref["View_Spectra"]["canvas"] und
+    #     #self.Tabref["View_Spectra"]["ax"] als normale ax und canvas Objekte zugreifen kann
+    #     #wie plot(...), show(), close()
+    #     # Tab Resampler
+    #     # self.Tabref["Resample"] = {}
+    #     # self.Tabref["Resample"]["tab_reference"] = self.gui.tab_resample ## TODO TODO TODO: never used ! required ?
+    #     # self.generate_canvas(self,self.gui.gridLayout_5,[6,0,6,4],[-1,-1,-1,-1],self.Tabref["Resample"])
 
     def setactivity_tabs(self,caller,statuschange,exceptionlist):
         """
@@ -1031,11 +998,14 @@ class SplashScreen(QWidget):
         #logger.debug("Showing Splash Screen")
 
         self.main_layout = QHBoxLayout()
-        self.main_layout.setContentsMargins(0, 0, 0, 0)
-
-        self.logo = Logos.Logo_full()
+        self.main_layout.setContentsMargins(0, 0, 0, 0) 
+        logopath = Path(os.getcwd()) / "logos"
+        self.logo = Logos.Logo_full(logopath)
         self.logo_label = QLabel()
-        self.logo_label.setPixmap(self.logo.pixmap(self.logo.availableSizes()[0]))
+        if self.logo.availableSizes() == []:
+            print(f"Could not load splashscreen icon")
+        else:
+            self.logo_label.setPixmap(self.logo.pixmap(self.logo.availableSizes()[0]))
         self.logo_label.setStyleSheet("border: 0px solid green")
 
         self.main_layout.addWidget(self.logo_label)
@@ -1048,7 +1018,7 @@ class SplashScreen(QWidget):
 
 if __name__ == '__main__':
     print("starting main, initializing GUI, please wait ... ")
-    
+
     if hasattr(QtCore.Qt, 'AA_EnableHighDpiScaling'):
         QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
     if hasattr(QtCore.Qt, 'AA_UseHighDpiPixmaps'):
@@ -1057,9 +1027,26 @@ if __name__ == '__main__':
     app = QApplication([])
     gui = starter()
     print(f"__main__: gui = {gui} gui.gui = {gui.gui}")
+    import yaml
+    from auxiliaries import WAVheader_tools
+    from auxiliaries import auxiliaries as auxi
+    from auxiliaries import timer_worker as tw
+    #import view_spectra as vsp   #### b) new import from filestructure  #TODO: check testing REMOVED 06-05-2024
+    #import resampler_module_v5 as rsmp #inactivate  #TODO: check testing REMOVED 06-05-2024
+    #import view_spectra as vsp  #TODO: check testing REMOVED 06-05-2024
+    #import annotate as ann  #### b) new import from filestructure  #TODO: check testing REMOVED 06-05-2024
+    #import yaml_editor as yed  #### b) new import from filestructure  #TODO: check testing REMOVED 06-05-2024
+    #import waveditor as waved  #### b) new import from filestructure  #TODO: check testing REMOVED 06-05-2024
+    #from stemlab_control import StemlabControl  #TODO: check testing REMOVED 06-05-2024
+    from player import playrec  ######TODO TODO TODO: import only on demand
+    from resampler import resample  ######TODO TODO TODO: import only on demand
+    from spectralviewer import view_spectra
+    from wavheader_editor import wavheader_editor #### b) new import from filestructure
+    from yaml_editor import yaml_editor
+    from annotator import annotate  #### b) new import from filestructure
     gui.show()
 
-    #TODOTODO TODO: this is an individual entry in __main__ for including anew Tab with an individual GUI ISO_testgui.py/ui
+    #TODOTODO TODO: this is an individual entry in __main__ for including the plaer Tab with an individual GUI ISO_testgui.py/ui
     # tabUI = Ui_ISO_testgui()
     # tab_ISO_testgui = QtWidgets.QWidget()
     # tab_ISO_testgui.setObjectName("tab_ISO_testgui")
@@ -1072,51 +1059,79 @@ if __name__ == '__main__':
     # gui.gui.tabWidget.setTabText(a,"ISO")
     #########################################################################################################################
     #ZUgriff auf elements of tabUI via tabUI instance ! not gui.gui.
+    
+    # if 'player' in sys.modules:
+    #     from player import player_widget
+    #     tabUI_Player = player_widget.Ui_player_widget()######TODO TODO TODO: change acc to indivitial widgets rather than one big GUI
+    #     tab_player_widget = QtWidgets.QWidget()
+    #     tab_player_widget.setObjectName("tab_player_widget")
+    #     tab_player_widget.setWindowTitle("Player")
+    #     tab_player_widget.setWindowIconText("Player")
+    #     # tabUI_Player = Ui_player_widget() in __main__
+    #     tabUI_Player.setupUi(tab_player_widget)
+    #     a = gui.gui.tabWidget.addTab(tab_player_widget, "")
+    #     gui.gui.tabWidget.setTabText(a,"Player")
+
+    if 'resampler' in sys.modules: #(c) aktiviere neuen Tab; 
+        from resampler import resampler_widget
+        tabUI_Resampler = resampler_widget.Ui_resampler_widget()######TODO TODO TODO: change acc to indivitial widgets rather than one big GUI
+        tab_resampler_widget = QtWidgets.QWidget()
+        tab_resampler_widget.setObjectName("tab_resampler_widget")
+        tab_resampler_widget.setWindowTitle("Resampler")
+        tab_resampler_widget.setWindowIconText("Resampler")
+        tabUI_Resampler.setupUi(tab_resampler_widget)
+        a = gui.gui.tabWidget.addTab(tab_resampler_widget, "")
+        gui.gui.tabWidget.setTabText(a,"Resampler")
+    #########################################################################################################################
+    #ZUgriff auf elements of tabUI_Player via tabUI_Player instance ! not gui.gui.
 
     xcore_m = core_m()
     xcore_c = core_c(xcore_m)
     xcore_v = core_v(gui,xcore_c,xcore_m) # self.gui wird in xcore_v gestartet 
 
 #    app.aboutToQuit.connect(win.stop_worker)    #graceful thread termination on app exit
-    stemlabcontrol = StemlabControl()#TODO TODO TODO remove after transfer to playrec ??????????????????????
+    #stemlabcontrol = StemlabControl()  #TODO: check testing REMOVED 06-05-2024
     tab_dict = {}
     tab_dict["list"] = ["xcore"]
     tab_dict["tabname"] = ["xcore"]
 
     #TODO TODO TODO: clarify that xcore_v.gui is the same as gui.gui !
-    if 'resampler_module_v5' in sys.modules:
-        resample_m = rsmp.resample_m() #TODO: wird gui in _m jemals gebraucht ? ich denke nein !
-        resample_c = rsmp.resample_c(resample_m) #TODO: replace sys_state
-        resample_v = rsmp.resample_v(xcore_v.gui,resample_c, resample_m) #TODO: replace sys_state
+    #if 'resampler_module_v5' in sys.modules:
+    if 'resampler' in sys.modules: #(d) Instanzierung, referenzierung und connecting für neuen Tab; 
+        resample_m = resample.resample_m() #TODO: wird gui in _m jemals gebraucht ? ich denke nein !
+        resample_c = resample.resample_c(resample_m) #TODO: replace sys_state
+        #resample_v = rsmp.resample_v(xcore_v.gui,resample_c, resample_m) #TODO: replace sys_state
+        resample_v = resample.resample_v(tabUI_Resampler,resample_c,resample_m) #ZUM TESTEN FREISCHALTEN
         tab_dict["list"].append("resample")
         tab_dict["tabname"].append("Resample")
         resample_v.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
         resample_c.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
+        gui.gui.tabWidget.removeTab(5) ##TODO TODO TODO: remove after cleanup
 
-    else:
-        xcore_v.gui.tabWidget.setTabVisible('tab_resample',False)
-
-    if 'view_spectra' in sys.modules:
-        view_spectra_m = vsp.view_spectra_m()
-        view_spectra_c = vsp.view_spectra_c(view_spectra_m)
-        view_spectra_v = vsp.view_spectra_v(xcore_v.gui,view_spectra_c,view_spectra_m)
+    #TODO TODO TODO: (d) Instanzierung, referenzierung und connecting für neuen Tab; 
+    #if 'view_spectra' in sys.modules:
+    if 'spectralviewer' in sys.modules:
+        
+        view_spectra_m = view_spectra.view_spectra_m()
+        view_spectra_c = view_spectra.view_spectra_c(view_spectra_m)
+        view_spectra_v = view_spectra.view_spectra_v(xcore_v.gui,view_spectra_c,view_spectra_m)
         tab_dict["list"].append("view_spectra")
         tab_dict["tabname"].append("View spectra")
 
-    if 'annotate' in sys.modules:
+    #TODO TODO TODO: (d) ?? connecting für neuen Tab; 
+    if 'annotator' in sys.modules:
         win_annOLD = False  #TODO KIPP: remove
-        annotate_m = ann.annotate_m()
-        annotate_c = ann.annotate_c(annotate_m)
-        annotate_v = ann.annotate_v(xcore_v.gui,annotate_c,annotate_m)
+        annotate_m = annotate.annotate_m()
+        annotate_c = annotate.annotate_c(annotate_m)
+        annotate_v = annotate.annotate_v(xcore_v.gui,annotate_c,annotate_m)
         tab_dict["list"].append("annotate")
         tab_dict["tabname"].append("Annotate")
-    else:  #TODO KIPP: remove
-        win_annOLD = True  #TODO KIPP: remove
 
+    #TODO TODO TODO: (d) ?? connecting für neuen Tab; 
     if 'yaml_editor' in sys.modules:
-        yamleditor_m = yed.yamleditor_m()
-        yamleditor_c = yed.yamleditor_c(yamleditor_m)
-        yamleditor_v = yed.yamleditor_v(xcore_v.gui,yamleditor_c,yamleditor_m)
+        yamleditor_m = yaml_editor.yamleditor_m()
+        yamleditor_c = yaml_editor.yamleditor_c(yamleditor_m)
+        yamleditor_v = yaml_editor.yamleditor_v(xcore_v.gui,yamleditor_c,yamleditor_m)
         tab_dict["list"].append("yamleditor")
         tab_dict["tabname"].append("YAML editor")
     else:
@@ -1124,10 +1139,12 @@ if __name__ == '__main__':
         c_index = xcore_v.gui.tabWidget.indexOf(page)
         xcore_v.gui.tabWidget.setTabVisible(c_index,False)
 
-    if 'waveditor' in sys.modules:
-        waveditor_m = waved.waveditor_m()
-        waveditor_c = waved.waveditor_c(waveditor_m)
-        waveditor_v = waved.waveditor_v(xcore_v.gui,waveditor_c,waveditor_m)
+    #TODO TODO TODO: (d) ?? connecting für neuen Tab; 
+    #if 'waveditor' in sys.modules:
+    if 'wavheader_editor' in sys.modules:
+        waveditor_m = wavheader_editor.waveditor_m()
+        waveditor_c = wavheader_editor.waveditor_c(waveditor_m)
+        waveditor_v = wavheader_editor.waveditor_v(xcore_v.gui,waveditor_c,waveditor_m)
         tab_dict["list"].append("waveditor")
         tab_dict["tabname"].append("WAV Header")
     else:
@@ -1135,22 +1152,17 @@ if __name__ == '__main__':
         c_index = xcore_v.gui.tabWidget.indexOf(page)
         xcore_v.gui.tabWidget.setTabVisible(c_index,False)
 
-    # if 'configuration' in sys.modules:
-    #     configuration_m = conf.configuration_m()
-    #     configuration_c = conf.configuration_c(configuration_m)
-    #     configuration_v = conf.configuration_v(xcore_v.gui,configuration_c,configuration_m)
-    #     tab_dict["list"].append("configuration")
-    #     tab_dict["tabname"].append("Configuration")
-    # else:
-    #     page = xcore_v.gui.tabWidget.findChild(QWidget, "tab_configuration")
-    #     c_index = xcore_v.gui.tabWidget.indexOf(page)
-    #     xcore_v.gui.tabWidget.setTabVisible(c_index,False)
-    #     pass
+    page = xcore_v.gui.tabWidget.findChild(QWidget, "tab_configuration")  ###TODO TODO TODO: remove after complete reconfiguration
+    c_index = xcore_v.gui.tabWidget.indexOf(page)
+    xcore_v.gui.tabWidget.setTabVisible(c_index,False)
+    pass
 
-    if 'playrec' in sys.modules: #and win.OLD is False:
+    #if 'playrec' in sys.modules: #and win.OLD is False:
+    if 'player' in sys.modules: #(d) Instanzierung, referenzierung und connecting für neuen Tab;  
         playrec_m = playrec.playrec_m()
         playrec_c = playrec.playrec_c(playrec_m)
         playrec_v = playrec.playrec_v(xcore_v.gui,playrec_c,playrec_m)
+        #playrec_v = playrec.playrec_v(tabUI_Player,playrec_c,playrec_m) #ZUM TESTEN FREISCHALTEN
         tab_dict["list"].append("playrec")
         playrec_v.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
         playrec_c.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
@@ -1160,7 +1172,6 @@ if __name__ == '__main__':
     #     c_index = win.gui.tabWidget.indexOf(page)
     #     win.gui.tabWidget.setTabVisible(c_index,False)
 
-    #TODO TODO TODO: das muss für alle Tabs gemacht werden
     #view_spectra_v.SigSyncGUIUpdatelist.connect(win.generate_GUIupdaterlist)
     resample_v.SigUpdateOtherGUIs.connect(xcore_v.sendupdateGUIs)    #TODO TODO TODO schwer zu finden, sollte so nicht connected werden
     resample_c.SigUpdateGUIelements.connect(resample_v.updateGUIelements)
@@ -1175,6 +1186,7 @@ if __name__ == '__main__':
             pass
     tabselector = list(filter(None, tabselector))
 
+    # set startup Tab
     xcore_v.gui.playrec_comboBox_startuptab.addItems(tabselector)
     xcore_v.gui.playrec_comboBox_startuptab.setEnabled(True)
     try:
@@ -1183,42 +1195,48 @@ if __name__ == '__main__':
         xcore_v.logger.error("startup Tab not defined in configuration file config_wizard.yaml")
     xcore_v.gui.playrec_comboBox_startuptab.currentIndexChanged.connect(xcore_v.set_startuptab)
 
-
+    # build connections for interpackage-Relaying system
     for tabitem1 in tab_dict["list"]:
         for tabitem2 in tab_dict["list"]:
             eval(tabitem1 + "_v.SigRelay.connect(" + tabitem2 + "_v.rxhandler)")
-            #eval(tabitem1 + "_c.SigRelay.connect(" + tabitem2 + "_v.rxhandler)")
             xcore_v.logger.debug(f' {tabitem1 + "_v.SigRelay.connect(" + tabitem2 + "_v.rxhandler)"}')
     
-    #######################TODO: CHECK IF STILL NECESSARY #######################
-    for tabitem in tab_dict["list"]:     
-        tab_dict[tabitem + "_m"] = eval(tabitem + "_m") #resample_m     
-        tab_dict[tabitem + "_c"] = eval(tabitem + "_c") #resample_c     
-        tab_dict[tabitem + "_v"] = eval(tabitem + "_v") #resample_v  
+    #######################TODO: Remove after testing 06-05-2024
+    # for tabitem in tab_dict["list"]:     #contains all references to the instantiated module objects
+    #     tab_dict[tabitem + "_m"] = eval(tabitem + "_m") #resample_m     
+    #     tab_dict[tabitem + "_c"] = eval(tabitem + "_c") #resample_c     
+    #     tab_dict[tabitem + "_v"] = eval(tabitem + "_v") #resample_v  
         #xcore_v.generate_GUIupdaterlist(eval(tabitem + "_v.updateGUIelements")) #necessary ????????????
     #make tab dict visible to core module
     xcore_v.tab_dict = tab_dict 
     xcore_v.m["tab_dict"] = tab_dict  ###TODO: check if double tabdict in xcore_v is necessary
-
-    ###################CHECK IF STILL NECESSARY END ###########################
+    ################### end remove ###########################
 
     #all tab initializations occur in connect_init() in core module
     xcore_v.connect_init() 
-    #xcore_v.setstandardpaths()
-    #xcore_v.SigRelay.emit("cexex_all_",["updateGUIelements",0])
-    #xcore_v.SigRelay.emit("cm_all_",["QMainWindow"],gui)
     xcore_v.SigRelay.emit("cexex_all_",["canvasbuild",gui])   # communicate reference to gui instance to all modules which instanciate a canvas with auxi.generate_canvas(self,gridref,gridc,gridt,gui)
     sys.exit(app.exec_())
 
 #TODOs:
     # file open muss in den Controller
     #
-    # replace Tabref and all its references by new canvasbuilder generate_canvas(self,gridref,gridc,gridt,gui)
-    # last affected module: resampler
+    # deaktiviere Tab alten Resample
     #
-    # shift access to xcore_v in __main__ ti special initializer method in xcore_v, which is started by a single call in __main__
+    # baue GUI-widgets für wav header; (b) new import from filestructure); (c) aktiviere neuen Tab; #(d) Instanzierung, referenzierung und connecting für neuen Tab;  
     #
-    # Access of GUI elements should be transferred to the respective modules
+    # baue GUI-widgets für yaml editor; (b) new import from filestructure); (c) aktiviere neuen Tab; #(d) Instanzierung, referenzierung und connecting für neuen Tab;  
+    #
+    # baue GUI-widgets für annotate;  (b) new import from filestructure); (c) aktiviere neuen Tab; #(d) Instanzierung, referenzierung und connecting für neuen Tab;  
+    #
+    # baue GUI-widgets für view spectra;  (b) new import from filestructure); (c) aktiviere neuen Tab; #(d) Instanzierung, referenzierung und connecting für neuen Tab;  
+    #
+    # Anpassen Pfad für XLS-Datenbanken im Annotator: Pfad auf annotator/ressources setzen, Standardpath os-Konform setzen
+    #                filename =  QtWidgets.QFileDialog.getOpenFileName(self.m["QTMAINWINDOWparent"],
+    #                                                                "Open new stations list (e.g. MWList) file"
+    #                                                                , self.m["standardpath"], filters, selected_filter)
+    #
+    #
+    # shift access to xcore_v in __main__ to special initializer method in xcore_v, which is started by a single call in __main__
     #
     # fix error with SNR calculation: there seems to be no reaction to baselineshifts when calculating the SNR for praks and identifying those above threshold
     #

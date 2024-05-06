@@ -17,7 +17,9 @@ class Icons:
         Returns:
             QIcon: The loaded image.
         """
-        path = Path(__file__).parent / folder / name
+        #path = Path(__file__).parent / folder / name
+        path = Path(folder) / name
+        print(f"path for splashscreen: {path}")
         icon = QIcon(str(path))
 
         # Print warning if the icon could not be loaded
@@ -31,7 +33,7 @@ class Logos(Icons):
     """This class provides the logos for the different modules."""
 
     @staticmethod
-    def get_logo(name):
+    def get_logo(logopath, name):
         """Returns a logo as a QIcon.
 
         Args:
@@ -40,12 +42,12 @@ class Logos(Icons):
         Returns:
             QIcon: The loaded logo.
         """
-        return Icons.load_icon("logos", name)
+        return Icons.load_icon(logopath, name)
     
     @staticmethod
-    def Logo_full():
+    def Logo_full(logopath):
         """ Returns the Logo_fulllogo as QIcon.
         This is also exported in 400%. Only use this for the splash screen and maybe about page. It has a weird size.
         Returns:
             QIcon: The Logo_full"""
-        return Logos.get_logo("COHIRADIA_Logo_Snap.PNG")
+        return Logos.get_logo(logopath,"SplasScreen_s.png")
