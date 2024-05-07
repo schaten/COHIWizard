@@ -298,8 +298,9 @@ class core_v(QObject):
             if "startup_tab" in self.m["metadata"]:
                 ###TODO: re-organize, there should be no access to gui elements of other modules
                 #self.gui.playrec_comboBox_startuptab.setCurrentIndex(int(self.m["metadata"]["startup_tab"]))
-                self.gui.tabWidget.setCurrentIndex(int(self.m["metadata"]["startup_tab"]))
-                self.gui.playrec_comboBox_startuptab.setCurrentIndex(int(self.m["metadata"]["startup_tab"]))
+                self.m["startup_tab"] = int(self.m["metadata"]["startup_tab"])
+                #self.gui.tabWidget.setCurrentIndex(int(self.m["metadata"]["startup_tab"]))
+                #self.gui.playrec_comboBox_startuptab.setCurrentIndex(int(self.m["metadata"]["startup_tab"]))
         except:
             print("cannot get config_wizard.yaml metadata, write a new initial config file")
             self.m["metadata"]["last_path"] = os.getcwd()
@@ -1043,7 +1044,7 @@ if __name__ == '__main__':
     from spectralviewer import view_spectra
     from wavheader_editor import wavheader_editor #### b) new import from filestructure
     from yaml_editor import yaml_editor
-    from annotator import annotate  #### b) new import from filestructure
+    from annotator import annotate
     gui.show()
 
     #TODOTODO TODO: this is an individual entry in __main__ for including the plaer Tab with an individual GUI ISO_testgui.py/ui
@@ -1082,6 +1083,18 @@ if __name__ == '__main__':
         tabUI_Resampler.setupUi(tab_resampler_widget)
         a = gui.gui.tabWidget.addTab(tab_resampler_widget, "")
         gui.gui.tabWidget.setTabText(a,"Resampler")
+
+    if 'annotator' in sys.modules: #(c) aktiviere neuen Tab; 
+        from annotator import annotator_widget
+        tabUI_annotator = annotator_widget.Ui_annotator_widget()######TODO TODO TODO: change acc to indivitial widgets rather than one big GUI
+        tab_annotator_widget = QtWidgets.QWidget()
+        tab_annotator_widget.setObjectName("tab_annotator_widget")
+        tab_annotator_widget.setWindowTitle("Annotator")
+        tab_annotator_widget.setWindowIconText("Annotator")
+        tabUI_annotator.setupUi(tab_annotator_widget)
+        a = gui.gui.tabWidget.addTab(tab_annotator_widget, "")
+        gui.gui.tabWidget.setTabText(a,"Annotate")
+
     #########################################################################################################################
     #ZUgriff auf elements of tabUI_Player via tabUI_Player instance ! not gui.gui.
 
@@ -1095,23 +1108,10 @@ if __name__ == '__main__':
     tab_dict["list"] = ["xcore"]
     tab_dict["tabname"] = ["xcore"]
 
-    #TODO TODO TODO: clarify that xcore_v.gui is the same as gui.gui !
-    #if 'resampler_module_v5' in sys.modules:
-    if 'resampler' in sys.modules: #(d) Instanzierung, referenzierung und connecting für neuen Tab; 
-        resample_m = resample.resample_m() #TODO: wird gui in _m jemals gebraucht ? ich denke nein !
-        resample_c = resample.resample_c(resample_m) #TODO: replace sys_state
-        #resample_v = rsmp.resample_v(xcore_v.gui,resample_c, resample_m) #TODO: replace sys_state
-        resample_v = resample.resample_v(tabUI_Resampler,resample_c,resample_m) #ZUM TESTEN FREISCHALTEN
-        tab_dict["list"].append("resample")
-        tab_dict["tabname"].append("Resample")
-        resample_v.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
-        resample_c.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
-        gui.gui.tabWidget.removeTab(5) ##TODO TODO TODO: remove after cleanup
 
     #TODO TODO TODO: (d) Instanzierung, referenzierung und connecting für neuen Tab; 
     #if 'view_spectra' in sys.modules:
     if 'spectralviewer' in sys.modules:
-        
         view_spectra_m = view_spectra.view_spectra_m()
         view_spectra_c = view_spectra.view_spectra_c(view_spectra_m)
         view_spectra_v = view_spectra.view_spectra_v(xcore_v.gui,view_spectra_c,view_spectra_m)
@@ -1120,12 +1120,26 @@ if __name__ == '__main__':
 
     #TODO TODO TODO: (d) ?? connecting für neuen Tab; 
     if 'annotator' in sys.modules:
-        win_annOLD = False  #TODO KIPP: remove
         annotate_m = annotate.annotate_m()
         annotate_c = annotate.annotate_c(annotate_m)
-        annotate_v = annotate.annotate_v(xcore_v.gui,annotate_c,annotate_m)
+        #annotate_v = annotate.annotate_v(xcore_v.gui,annotate_c,annotate_m) TODO: replace old giu referece
+        annotate_v = annotate.annotate_v(tabUI_annotator,annotate_c,annotate_m)
         tab_dict["list"].append("annotate")
         tab_dict["tabname"].append("Annotate")
+        gui.gui.tabWidget.removeTab(2) ##TODO TODO TODO: remove after cleanup
+
+    #TODO TODO TODO: clarify that xcore_v.gui is the same as gui.gui !
+    #if 'resampler_module_v5' in sys.modules:
+    if 'resampler' in sys.modules: #(d) Instanzierung, referenzierung und connecting für neuen Tab; 
+        resample_m = resample.resample_m() #TODO: wird gui in _m jemals gebraucht ? ich denke nein !
+        resample_c = resample.resample_c(resample_m) #TODO: replace sys_state
+        #resample_v = rsmp.resample_v(xcore_v.gui,resample_c, resample_m) #TODO: replace sys_state
+        resample_v = resample.resample_v(tabUI_Resampler,resample_c,resample_m) #ZUM TESTEN FREISCHALTEN
+        tab_dict["list"].append("resample")
+        tab_dict["tabname"].append("Resampler")
+        resample_v.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
+        resample_c.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
+        gui.gui.tabWidget.removeTab(4) ##TODO TODO TODO: remove after cleanup
 
     #TODO TODO TODO: (d) ?? connecting für neuen Tab; 
     if 'yaml_editor' in sys.modules:
@@ -1177,10 +1191,15 @@ if __name__ == '__main__':
     resample_c.SigUpdateGUIelements.connect(resample_v.updateGUIelements)
     xcore_v.SigUpdateOtherGUIs.connect(view_spectra_v.updateGUIelements)
 
+    #TODO: check what to do if tab_names do not exist any more because tabWidget is empty or rudimentary ?
+    tab_names = {}
+    for index in range(gui.gui.tabWidget.count()):
+        tab_names[index] = gui.gui.tabWidget.tabText(index)
+
     tabselector = [""] * len(tab_dict["tabname"])
     for _ct,_name in enumerate(tab_dict["tabname"]):
         try:
-            _key = [k for k,v in xcore_v.tab_names.items() if v == _name][0]
+            _key = [k for k,v in tab_names.items() if v == _name][0] #xcore_v.
             tabselector[_key] = _name 
         except:
             pass
@@ -1191,6 +1210,7 @@ if __name__ == '__main__':
     xcore_v.gui.playrec_comboBox_startuptab.setEnabled(True)
     try:
         xcore_v.gui.playrec_comboBox_startuptab.setCurrentIndex(int(xcore_v.m["metadata"]["startup_tab"]))
+        xcore_v.gui.tabWidget.setCurrentIndex(int(xcore_v.m["metadata"]["startup_tab"]))
     except:
         xcore_v.logger.error("startup Tab not defined in configuration file config_wizard.yaml")
     xcore_v.gui.playrec_comboBox_startuptab.currentIndexChanged.connect(xcore_v.set_startuptab)
@@ -1220,21 +1240,13 @@ if __name__ == '__main__':
 #TODOs:
     # file open muss in den Controller
     #
-    # deaktiviere Tab alten Resample
+    # deaktiviere Tab alten Resample, alten Annotator
     #
     # baue GUI-widgets für wav header; (b) new import from filestructure); (c) aktiviere neuen Tab; #(d) Instanzierung, referenzierung und connecting für neuen Tab;  
     #
     # baue GUI-widgets für yaml editor; (b) new import from filestructure); (c) aktiviere neuen Tab; #(d) Instanzierung, referenzierung und connecting für neuen Tab;  
     #
-    # baue GUI-widgets für annotate;  (b) new import from filestructure); (c) aktiviere neuen Tab; #(d) Instanzierung, referenzierung und connecting für neuen Tab;  
-    #
     # baue GUI-widgets für view spectra;  (b) new import from filestructure); (c) aktiviere neuen Tab; #(d) Instanzierung, referenzierung und connecting für neuen Tab;  
-    #
-    # Anpassen Pfad für XLS-Datenbanken im Annotator: Pfad auf annotator/ressources setzen, Standardpath os-Konform setzen
-    #                filename =  QtWidgets.QFileDialog.getOpenFileName(self.m["QTMAINWINDOWparent"],
-    #                                                                "Open new stations list (e.g. MWList) file"
-    #                                                                , self.m["standardpath"], filters, selected_filter)
-    #
     #
     # shift access to xcore_v in __main__ to special initializer method in xcore_v, which is started by a single call in __main__
     #

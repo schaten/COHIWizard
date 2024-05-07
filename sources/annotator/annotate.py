@@ -31,7 +31,7 @@ import logging
 #from COHIWizard_GUI_v10 import Ui_MainWindow as MyWizard
 #from auxiliaries import WAVheader_tools
 from auxiliaries import auxiliaries as auxi
-from auxiliaries import timer_worker as tw
+#from auxiliaries import timer_worker as tw
 from PyQt5.QtCore import QObject, QThread, pyqtSignal, QMutex       #TODO: OBSOLETE
 #import system_module as wsys
 
@@ -515,7 +515,7 @@ class annotate_c(QObject):
         self.m["deltaf"] = 5000 #minimum peak distance in Hz for peak detector #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
         self.m["peakwidth"] = 10 # minimum peak width in Hz for peak detector #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
         self.m["prominence"] = 15 # minimum peak prominence in dB above baseline for peak detector #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
-        self.m["FILTERKERNEL"] = 2 # length of the moving median filter kernel in % of the spectral span #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
+        self.m["filterkernel"] = 2 # length of the moving median filter kernel in % of the spectral span #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
         self.STICHTAG = datetime(2023,2,25,0,0,0)
         self.m["scanerror"] = False
 
@@ -617,9 +617,9 @@ class annotate_c(QObject):
         datax = freq
         datay = 20*np.log10(spr)
         # filter out all data below the baseline; baseline = moving median
-        # filter kernel is self.m["FILTERKERNEL"] % of the spectral span
+        # filter kernel is self.m["filterkernel"] % of the spectral span
         datay_filt = datay
-        kernel_length = int(N*self.m["FILTERKERNEL"]/100)
+        kernel_length = int(N*self.m["filterkernel"]/100)
         # kernel length must be odd integer
         if (kernel_length % 2) == 0:
             kernel_length += 1
@@ -898,6 +898,7 @@ class annotate_v(QObject):
         self.m["Progressbarupdate_ref"] = self.Progressbarupdate
         self.m["Progressbarupdate2_ref"] = self.Progressbarupdate2
 
+
     def init_annotate_ui(self):
         #preset ui elements of annotator
         self.gui.pushButtonAnnotate.setFont(QFont('MS Shell Dlg 2', 12))
@@ -914,12 +915,9 @@ class annotate_v(QObject):
         self.gui.pushButtonDiscard.setEnabled(False)
         self.gui.lineEdit.setStyleSheet("background-color : white")
         self.gui.lineEdit.setFont(QFont('MS Shell Dlg 2', 12))
-        self.gui.tab_annotate.setEnabled(True) 
         self.gui.pushButtonENTER.setEnabled(False)
         self.gui.progressBar_2.setProperty("value", 0)
         self.gui.Annotate_listWidget.clear()
-        self.gui.spinBoxminSNR_ScannerTab.setProperty("value", self.m["prominence"])
-        self.m["baselineoffset"] = self.gui.spinBoxminBaselineoffset.value()  #TODO TODO TODO: introduce separate GUI element because this one belongs to view_spectra
         self.m["NumScan"] = self.gui.spinBoxNumScan.value()
         self.m["minSNR"] = self.gui.spinBoxminSNR.value()
 
@@ -931,7 +929,7 @@ class annotate_v(QObject):
         self.gui.pushButtonENTER.clicked.connect(self.enterlinetoannotation) ####TODO TODO TODO in future must be the controller method
         self.gui.Annotate_listWidget.itemClicked.connect(self.cb_ListClicked)
         self.gui.spinBoxNumScan.valueChanged.connect(self.cb_numscanchange) 
-        self.gui.spinBoxminSNR.valueChanged.connect(self.cb_minSNRchange)
+        #self.gui.spinBoxminSNR.valueChanged.connect(self.cb_minSNRchange) #TODO: wozu ?
         self.gui.annotate_pushButtonBack.setEnabled(False)
         self.gui.annotate_pushButtonBack.clicked.connect(self.cb_backinfrequency)  ####TODO TODO TODO in future must be the controller method
         #self.gui.lineEdit.returnPressed.connect(self.enterlinetoannotation)
@@ -1027,27 +1025,34 @@ class annotate_v(QObject):
         :rtype: Boolean
         """
         #print("annotate: updateGUIelements")
-        self.gui.label_Filename_Annotate.setText(self.m["my_filename"] + self.m["ext"])
-        self.gui.label_6.setText("Baseline Offset:" + str(self.gui.spinBoxminBaselineoffset.value())) #TODO: not ent. clean, access of gui element of another tab
-        if (os.path.exists(self.stations_filename) == True):
-            self.scan_completed()
-            try:
-                stream = open(self.status_filename, "r")
-                status = yaml.safe_load(stream)
-                stream.close()
-            except:
-                #print("update GUI elements: cannot get status")
-                return False 
-            if status["annotated"] == True:
-                self.annotation_completed()
-                self.ui.pushButton_Writeyamlheader.setEnabled(True)
+        if self.m["fileopened"]:
+            self.gui.label_Filename_Annotate.setText(self.m["my_filename"] + self.m["ext"])
+        ####################TODO TODO TODO: CHECK DONE urgent no direct access of GUI replace by signalling
+        #self.gui.label_6.setText("Baseline Offset:" + str(self.gui.spinBoxminBaselineoffset.value())) #TODO: not ent. clean, access of gui element of another tab
+        self.gui.label_6.setText("Baseline Offset:" + str(self.m["baselineoffset"]))
+        ######################################
+        try:
+            if (os.path.exists(self.stations_filename) == True):
+                self.scan_completed()
+                try:
+                    stream = open(self.status_filename, "r")
+                    status = yaml.safe_load(stream)
+                    stream.close()
+                except:
+                    #print("update GUI elements: cannot get status")
+                    return False 
+                if status["annotated"] == True:
+                    self.annotation_completed()
+                    self.ui.pushButton_Writeyamlheader.setEnabled(True)
+                else:
+                    self.annotation_activate()
+            elif self.m["fileopened"]:
+                self.scan_activate()
             else:
-                self.annotation_activate()
-        elif self.m["fileopened"]:
-            self.scan_activate()
-        else:
+                pass
+        except:
             pass
-
+        self.gui.spinBoxminSNR.setProperty("value",self.m["prominence"])
 
         #self.gui.DOSOMETHING
 
@@ -1058,17 +1063,10 @@ class annotate_v(QObject):
         self.gui.lineEdit_TX_Site.setText('')
         self.gui.lineEdit_Country.setText('')
         self.gui.lineEdit.setStyleSheet("background-color : white")
-        #self.gui.lineEdit.setFont(QFont('MS Shell Dlg 2', 12))
         self.gui.Annotate_listWidget.clear()
         self.gui.pushButtonDiscard.setEnabled(False)
         self.gui.labelFrequency.setText("Freq:")
         self.gui.label_Filename_Annotate.setText('')
-                # self.gui.lineEdit.setFont(QFont('MS Shell Dlg 2', 12))
-                # self.gui.lineEdit.setText('')
-                # self.gui.lineEdit_TX_Site.setText('')
-                # self.gui.lineEdit_Country.setText('')
-                # self.gui.lineEdit.setStyleSheet("background-color : white")
-                # self.gui.lineEdit.setFont(QFont('MS Shell Dlg 2', 12))
 
         self.annotation_deactivate()
         self.scan_deactivate()
@@ -1100,7 +1098,7 @@ class annotate_v(QObject):
     def cb_numscanchange(self):
         self.m["NumScan"] = self.gui.spinBoxNumScan.value()
 
-    def cb_minSNRchange(self):
+    def cb_minSNRchange(self):  #TODO: obsolete ?
         self.m["minSNR"] = self.gui.spinBoxminSNR.value()
 
     def annotation_completed(self):
@@ -1152,11 +1150,18 @@ class annotate_v(QObject):
         self.gui.lineEdit.setFont(QFont('MS Shell Dlg 2', 12))
         #TODO: save settings for MF Kernel, SNR baselineoffset min peak width min peak distance to status file
         #TODO: write spinbox values to status file
-        peakwidth = self.gui.spinBoxminPeakwidth.value()
-        filterkernel = self.gui.spinBoxKernelwidth.value()
-        self.m["baselineoffset"] = self.gui.spinBoxminBaselineoffset.value()  ##########TODO: introduce separate GUI element because this one belongs to view_spectra
-        minSNR = self.gui.spinBoxminSNR_ScannerTab.value()
-        minPeakDist = self.gui.spinBoxminPeakDistance.value()
+        ####################TODO TODO TODO:CHECK:DONE urgent no direct access of GUI replace by signalling 
+        #peakwidth = self.gui.spinBoxminPeakwidth.value()
+        peakwidth = self.m["peakwidth"] #TODO: necessary or could be used directly ?
+        #filterkernel = self.gui.spinBoxKernelwidth.value()
+        filterkernel = self.m["filterkernel"] #TODO: necessary or could be used directly ?
+        ##############TODO urgent 
+        #self.m["baselineoffset"] = self.gui.spinBoxminBaselineoffset.value()  ##########TODO: introduce separate GUI element because this one belongs to view_spectra
+        #minSNR = self.gui.spinBoxminSNR_ScannerTab.value()
+        minSNR = self.m["prominence"] #TODO: necessary or could be used directly ?
+        #minPeakDist = self.gui.spinBoxminPeakDistance.value()
+        minPeakDist = self.m["deltaf"] #TODO: necessary or could be used directly ?
+        ###################################################################################
         self.m["NumScan"] = self.gui.spinBoxNumScan.value()
         try:
             stream = open(self.m["status_filename"], "r")
@@ -1203,9 +1208,12 @@ class annotate_v(QObject):
         """_summary_
         """
         self.m["prominence"] = self.gui.spinBoxminSNR.value()
-        self.gui.spinBoxminSNR_ScannerTab.setProperty("value", self.m["prominence"])
+        self.m["minSNR"] = self.gui.spinBoxminSNR.value()
+        ####################TODO TODO TODO: urgent no direct access of GUI replace by signalling
+        #self.gui.spinBoxminSNR_ScannerTab.setProperty("value", self.m["prominence"])
+        ####################################################################
         self.SigRelay.emit("cm_all_",["prominence",self.m["prominence"]])
-        self.SigRelay.emit("cexex_view-spectrum",["updateGUIelements",0])
+        self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
 
     def activate_WAVEDIT(self):
         self.show()
@@ -1223,7 +1231,9 @@ class annotate_v(QObject):
         """
         self.gui.label.setText("Status: Scan spectra for prominent TX peaks")
         self.gui.pushButton_Scan.setEnabled(False)
+        ### TODO: urgent access of foreign GUI element
         self.gui.horizontalScrollBar_view_spectra.setEnabled(False)
+        ###########################
         self.gui.lineEdit.setText('Please wait while spectra are analyzed for peaks')
         self.gui.lineEdit.setStyleSheet("background-color : yellow")
         self.gui.lineEdit.setFont(QFont('MS Shell Dlg 2', 12))
@@ -1266,7 +1276,10 @@ class annotate_v(QObject):
         """
         _summary_
         """
-        self.gui.horizontalScrollBar_view_spectra.setEnabled(True)
+        ### TODO: urgent access of foreign GUI element
+        #self.gui.horizontalScrollBar_view_spectra.setEnabled(True)
+        self.SigRelay.emit("cexex_view_spectra",["enablescrollbar",True])
+        ##############################################
         self.gui.lineEdit.setText('')
         self.gui.lineEdit_TX_Site.setText('')
         self.gui.lineEdit_Country.setText('')
@@ -1306,12 +1319,13 @@ class annotate_v(QObject):
         # #TODO: Implement further slot communicationa shown here
         # self.autoscaninst.set_0([self.m["Numscan"],self.gui.spinBoxminSNR.value(),[]])
 
+        # TODO: urgent: no access of foreign GUI
+        #self.gui.tab_view_spectra.setEnabled(True)
 
-        self.gui.tab_view_spectra.setEnabled(True)
-        self.gui.label_8.setEnabled(False)
-        self.gui.label_36.setText('READY')
-        self.gui.label_36.setFont(QFont('arial',12))
-        self.gui.label_36.setStyleSheet("background-color: lightgray")
+        #self.gui.label_8.setEnabled(False)
+        #self.gui.label_36.setText('READY')
+        #self.gui.label_36.setFont(QFont('arial',12))
+        #self.gui.label_36.setStyleSheet("background-color: lightgray")
 
 
     def scanupdateGUI(self):
@@ -1320,7 +1334,9 @@ class annotate_v(QObject):
         """
         self.gui.label.setText("Status: Scan spectra for prominent TX peaks")
         self.gui.pushButton_Scan.setEnabled(False)
-        self.gui.horizontalScrollBar_view_spectra.setEnabled(False)
+        #TODO urgent access of foreign GUI element
+        #self.gui.horizontalScrollBar_view_spectra.setEnabled(False)
+        self.SigRelay.emit("cexex_view_spectra",["enablescrollbar",False])
         self.gui.lineEdit.setText('Please wait while spectra are analyzed for peaks')
         self.gui.lineEdit.setStyleSheet("background-color : yellow")
         self.gui.lineEdit.setFont(QFont('MS Shell Dlg 2', 12))

@@ -30,6 +30,7 @@ class view_spectra_m(QObject):
         self.mdl["peakwidth"] = 10 # minimum peak width in Hz for peak detector #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
         self.mdl["prominence"] = 15 # minimum peak prominence in dB above baseline for peak detector #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
         #self.mdl["FILTERKERNEL"] =15 # length of the moving median filter kernel in % of the spectral span #TODO:occurs in ann-module; values also used in spectrum view; ; must be shifted to the respective modules in future
+        #TODO: make this a config item, also initialized in annotator !
         self.mdl["filterkernel"] = 15
         self.mdl["baselineoffset"] = 0
         self.mdl["position"] = 0
@@ -130,6 +131,11 @@ class view_spectra_v(QObject):
     #     #self.SigToolbar.connect(lambda: self.plot_spectrum(self,self.position)) #TODO Remove ???
         self.gui.spinBoxNumScan.setProperty("value", 10) #TODO: avoid magic number
         self.gui.label_Filename_ViewSpectra.setText('')
+        self.setkernelwidth()
+        self.minPeakwidthupdate()
+        self.minPeakDistanceupdate()
+        self.minSNRupdate_ScannerTab()
+
         
     # def connector(self):
     #     self.SigSyncGUIUpdatelist.emit(self.updateGUIelements)
@@ -168,6 +174,8 @@ class view_spectra_v(QObject):
                 self.logfilehandler(_value[1])
             if  _value[0].find("canvasbuild") == 0:
                 self.canvasbuild(_value[1])
+            if  _value[0].find("enablescrollbar") == 0:
+                self.gui.horizontalScrollBar_view_spectra.setEnabled(_value[1])
 
     def canvasbuild(self,gui):
         """
@@ -207,7 +215,7 @@ class view_spectra_v(QObject):
         :rtype: Boolean
         """
         #print("view spectra: updateGUIelements")
-
+        self.gui.spinBoxminSNR_ScannerTab.setProperty("value",self.m["prominence"])
         self.logger.debug("view spectra: updateGUIelements")
         self.gui.label_Filename_ViewSpectra.setText(self.m["my_filename"] + self.m["ext"])
         dummy = 0
@@ -417,13 +425,15 @@ class view_spectra_v(QObject):
         self.m["prominence"] = self.gui.spinBoxminSNR_ScannerTab.value()
         #TODO: this is an access to a function of another module; very dangerous, because it must be exactly known how to call that function
         #should this option be offered by the rxhandlers anyway ?
-        self.SigRelay.emit("cui_annotate",[self.gui.spinBoxminSNR.setProperty,["value",self.m["prominence"]]]) 
+        ########TODO TODO TODO: urgent, close this access as soon as possible
+        self.SigRelay.emit("cui_annotate",[self.gui.spinBoxminSNR.setProperty,["value",self.m["prominence"]]])
+        #####################
         self.gui.spinBoxminSNR.setProperty("value", self.m["prominence"]) #TODO TODO TODO: remove after relocation of annotator and activate line above
         #self.m["position"] = self.gui.horizontalScrollBar_view_spectra.value()
         #self.SigRelay.emit("cm_all_",["horzscal", self.m["position"]])
         self.SigRelay.emit("cm_all_",["prominence", self.m["prominence"]])
         self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
-
+        self.SigRelay.emit("cexex_annotate",["updateGUIelements",0])
 
     def set_baselineoffset(self):        
         baselineoffset = self.gui.spinBoxminBaselineoffset.value()
@@ -433,6 +443,7 @@ class view_spectra_v(QObject):
         self.SigRelay.emit("cm_all_",["baselineoffset",baselineoffset])
         #self.SigRelay.emit("cm_view_spectra",["position",position]) # TODO: CHECK THIS IS STRANGE !
         self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
+        self.SigRelay.emit("cexex_annotate",["updateGUIelements",0])
 
     def setkernelwidth(self):               
         filterkernel = self.gui.spinBoxKernelwidth.value()
@@ -448,6 +459,7 @@ class view_spectra_v(QObject):
         #self.SigRelay.emit("cm_all_",["deltaf",self.DELTAF])# TODO: CHECK THIS IS STRANGE !
         #self.SigRelay.emit("cm_view_spectra",["position",position])# TODO: CHECK THIS IS STRANGE !
         self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
+        self.SigRelay.emit("cexex_annotate",["updateGUIelements",0]) #TODO: not necessary ?
 
     def minPeakDistanceupdate(self):
         deltaf = self.gui.spinBoxminPeakDistance.value()
@@ -456,3 +468,4 @@ class view_spectra_v(QObject):
         self.SigRelay.emit("cm_all_",["deltaf",deltaf])
         # self.SigRelay.emit("cm_view_spectra",["position",self.position])# TODO: CHECK THIS IS STRANGE !
         self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
+        self.SigRelay.emit("cexex_annotate",["updateGUIelements",0]) #TODO: not necessary ?
