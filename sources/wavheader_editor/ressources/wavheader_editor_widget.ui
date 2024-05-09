@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>wavheader_editor</class>
- <widget class="QWidget" name="wavheader_editor">
+ <class>wavheader_editor_widget</class>
+ <widget class="QWidget" name="wavheader_editor_widget">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1131</width>
-    <height>854</height>
+    <width>1023</width>
+    <height>689</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,88 +16,7 @@
   <layout class="QGridLayout" name="gridLayout_2">
    <item row="0" column="0">
     <layout class="QGridLayout" name="gridLayout">
-     <item row="15" column="3" colspan="10">
-      <widget class="QLabel" name="label_Filename_WAVHeader">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-      </widget>
-     </item>
-     <item row="15" column="0">
-      <widget class="QLabel" name="label_5">
-       <property name="text">
-        <string/>
-       </property>
-      </widget>
-     </item>
-     <item row="13" column="11">
-      <widget class="QLabel" name="label_24">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>10</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string>TextLabel</string>
-       </property>
-      </widget>
-     </item>
-     <item row="14" column="10">
-      <widget class="QLabel" name="label_23">
-       <property name="text">
-        <string/>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="12">
-      <widget class="QRadioButton" name="radioButton_WAVEDIT">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>12</pointsize>
-        </font>
-       </property>
-       <property name="toolTip">
-        <string>make this table editable by clicking 'edit'</string>
-       </property>
-       <property name="autoFillBackground">
-        <bool>true</bool>
-       </property>
-       <property name="text">
-        <string>EDIT</string>
-       </property>
-      </widget>
-     </item>
-     <item row="15" column="2">
-      <widget class="QLabel" name="label_13">
-       <property name="font">
-        <font>
-         <pointsize>12</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string>Filename:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="14" column="11">
+     <item row="9" column="1">
       <widget class="QLabel" name="label_8">
        <property name="enabled">
         <bool>true</bool>
@@ -356,10 +275,10 @@ by inserting current wav header</string>
        </property>
       </widget>
      </item>
-     <item row="14" column="12">
-      <widget class="QPushButton" name="pushButton_InsertHeader">
+     <item row="4" column="3">
+      <widget class="QPushButton" name="pushButton_subtract">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Maximum" vsizetype="Minimum">
+        <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
@@ -369,58 +288,13 @@ by inserting current wav header</string>
          <pointsize>10</pointsize>
         </font>
        </property>
-       <property name="toolTip">
-        <string>insert header into dat file</string>
-       </property>
-       <property name="text">
-        <string>Insert 
-Header</string>
-       </property>
-      </widget>
-     </item>
-     <item row="14" column="9">
-      <widget class="QLabel" name="label_22">
-       <property name="text">
-        <string/>
-       </property>
-      </widget>
-     </item>
-     <item row="15" column="1">
-      <widget class="QLabel" name="label_15">
-       <property name="text">
-        <string/>
-       </property>
-      </widget>
-     </item>
-     <item row="14" column="0" colspan="8">
-      <widget class="QLabel" name="label_40">
-       <property name="text">
-        <string/>
-       </property>
-      </widget>
-     </item>
-     <item row="14" column="8">
-      <widget class="QLabel" name="label_21">
-       <property name="text">
-        <string/>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="13">
-      <widget class="QPushButton" name="pushButton_subtract">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
        <property name="text">
         <string>-</string>
        </property>
       </widget>
      </item>
-     <item row="2" column="12" colspan="2">
-      <widget class="QLabel" name="label_39">
+     <item row="3" column="2" colspan="2">
+      <widget class="QDateTimeEdit" name="wavheader_dateTimeEdit_starttime">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
          <horstretch>0</horstretch>
@@ -430,187 +304,50 @@ Header</string>
        <property name="font">
         <font>
          <pointsize>10</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
         </font>
        </property>
-       <property name="text">
-        <string>Aux time calculator</string>
+       <property name="displayFormat">
+        <string>dd.MM.yyyy HH:mm:ss</string>
        </property>
       </widget>
      </item>
-     <item row="4" column="12">
-      <widget class="QPushButton" name="pushButton_add">
+     <item row="5" column="2" colspan="2">
+      <widget class="QTimeEdit" name="wavheader_timeEdit_subtr">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+        <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
-       <property name="text">
-        <string>+</string>
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
+       <property name="displayFormat">
+        <string>HH:mm:ss</string>
        </property>
       </widget>
      </item>
-     <item row="0" column="11" rowspan="7">
-      <widget class="QTableWidget" name="tableWidget_starttime">
+     <item row="6" column="2" colspan="2">
+      <widget class="QDateTimeEdit" name="wavheader_dateTimeEdit_result">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Maximum" vsizetype="Minimum">
+        <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
-       <property name="minimumSize">
-        <size>
-         <width>400</width>
-         <height>380</height>
-        </size>
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
        </property>
-       <property name="maximumSize">
-        <size>
-         <width>530</width>
-         <height>16777215</height>
-        </size>
+       <property name="displayFormat">
+        <string>dd.MM.yyyy HH:mm:ss</string>
        </property>
-       <property name="toolTip">
-        <string>make this table editable by clicking 'edit'</string>
-       </property>
-       <attribute name="horizontalHeaderDefaultSectionSize">
-        <number>100</number>
-       </attribute>
-       <row>
-        <property name="text">
-         <string>YYYY</string>
-        </property>
-       </row>
-       <row>
-        <property name="text">
-         <string>MM</string>
-        </property>
-       </row>
-       <row>
-        <property name="text">
-         <string>---</string>
-        </property>
-       </row>
-       <row>
-        <property name="text">
-         <string>DD</string>
-        </property>
-       </row>
-       <row>
-        <property name="text">
-         <string>HH</string>
-        </property>
-       </row>
-       <row>
-        <property name="text">
-         <string>mm</string>
-        </property>
-       </row>
-       <row>
-        <property name="text">
-         <string>ss</string>
-        </property>
-       </row>
-       <row>
-        <property name="text">
-         <string>ms</string>
-        </property>
-       </row>
-       <column>
-        <property name="text">
-         <string>Start</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>Stop</string>
-        </property>
-       </column>
-       <item row="0" column="0">
-        <property name="text">
-         <string>0</string>
-        </property>
-       </item>
-       <item row="0" column="1">
-        <property name="text">
-         <string>0</string>
-        </property>
-       </item>
-       <item row="1" column="0">
-        <property name="text">
-         <string>0</string>
-        </property>
-       </item>
-       <item row="1" column="1">
-        <property name="text">
-         <string>0</string>
-        </property>
-       </item>
-       <item row="2" column="0">
-        <property name="text">
-         <string>0</string>
-        </property>
-       </item>
-       <item row="2" column="1">
-        <property name="text">
-         <string>0</string>
-        </property>
-       </item>
-       <item row="3" column="0">
-        <property name="text">
-         <string>0</string>
-        </property>
-       </item>
-       <item row="3" column="1">
-        <property name="text">
-         <string>0</string>
-        </property>
-       </item>
-       <item row="4" column="0">
-        <property name="text">
-         <string>0</string>
-        </property>
-       </item>
-       <item row="4" column="1">
-        <property name="text">
-         <string>0</string>
-        </property>
-       </item>
-       <item row="5" column="0">
-        <property name="text">
-         <string>0</string>
-        </property>
-       </item>
-       <item row="5" column="1">
-        <property name="text">
-         <string>0</string>
-        </property>
-       </item>
-       <item row="6" column="0">
-        <property name="text">
-         <string>0</string>
-        </property>
-       </item>
-       <item row="6" column="1">
-        <property name="text">
-         <string>0</string>
-        </property>
-       </item>
-       <item row="7" column="0">
-        <property name="text">
-         <string>0</string>
-        </property>
-       </item>
-       <item row="7" column="1">
-        <property name="text">
-         <string>0</string>
-        </property>
-       </item>
       </widget>
      </item>
-     <item row="9" column="11" rowspan="4">
+     <item row="8" column="1">
       <widget class="QTableWidget" name="tableWidget_3">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Maximum" vsizetype="Minimum">
@@ -620,9 +357,20 @@ Header</string>
        </property>
        <property name="minimumSize">
         <size>
-         <width>500</width>
+         <width>400</width>
          <height>192</height>
         </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>700</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
        </property>
        <property name="toolTip">
         <string>make this table editable by clicking 'edit'</string>
@@ -788,43 +536,7 @@ Header</string>
        </item>
       </widget>
      </item>
-     <item row="5" column="12" colspan="2">
-      <widget class="QTimeEdit" name="wavheader_timeEdit_subtr">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>10</pointsize>
-        </font>
-       </property>
-       <property name="displayFormat">
-        <string>HH:mm:ss</string>
-       </property>
-      </widget>
-     </item>
-     <item row="6" column="12" colspan="2">
-      <widget class="QDateTimeEdit" name="wavheader_dateTimeEdit_result">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>10</pointsize>
-        </font>
-       </property>
-       <property name="displayFormat">
-        <string>dd.MM.yyyy HH:mm:ss</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0" rowspan="13" colspan="11">
+     <item row="0" column="0" rowspan="9">
       <widget class="QTableWidget" name="tableWidget_basisfields">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Maximum" vsizetype="Minimum">
@@ -834,15 +546,20 @@ Header</string>
        </property>
        <property name="minimumSize">
         <size>
-         <width>400</width>
+         <width>200</width>
          <height>0</height>
         </size>
        </property>
        <property name="maximumSize">
         <size>
-         <width>500</width>
+         <width>400</width>
          <height>16777215</height>
         </size>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
        </property>
        <property name="toolTip">
         <string>make this table editable by clicking 'edit'</string>
@@ -1003,15 +720,218 @@ Header</string>
        </item>
       </widget>
      </item>
-     <item row="1" column="13">
-      <widget class="QLabel" name="label">
+     <item row="9" column="2">
+      <widget class="QPushButton" name="pushButton_InsertHeader">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Maximum" vsizetype="Minimum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
+       <property name="toolTip">
+        <string>insert header into dat file</string>
+       </property>
        <property name="text">
-        <string/>
+        <string>Insert 
+Header</string>
        </property>
       </widget>
      </item>
-     <item row="3" column="12" colspan="2">
-      <widget class="QDateTimeEdit" name="wavheader_dateTimeEdit_starttime">
+     <item row="10" column="2">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="2">
+      <widget class="QPushButton" name="pushButton_add">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>+</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1" rowspan="8">
+      <widget class="QTableWidget" name="tableWidget_starttime">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Maximum" vsizetype="Minimum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>300</width>
+         <height>380</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>700</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
+       <property name="toolTip">
+        <string>make this table editable by clicking 'edit'</string>
+       </property>
+       <attribute name="horizontalHeaderDefaultSectionSize">
+        <number>100</number>
+       </attribute>
+       <row>
+        <property name="text">
+         <string>YYYY</string>
+        </property>
+       </row>
+       <row>
+        <property name="text">
+         <string>MM</string>
+        </property>
+       </row>
+       <row>
+        <property name="text">
+         <string>---</string>
+        </property>
+       </row>
+       <row>
+        <property name="text">
+         <string>DD</string>
+        </property>
+       </row>
+       <row>
+        <property name="text">
+         <string>HH</string>
+        </property>
+       </row>
+       <row>
+        <property name="text">
+         <string>mm</string>
+        </property>
+       </row>
+       <row>
+        <property name="text">
+         <string>ss</string>
+        </property>
+       </row>
+       <row>
+        <property name="text">
+         <string>ms</string>
+        </property>
+       </row>
+       <column>
+        <property name="text">
+         <string>Start</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Stop</string>
+        </property>
+       </column>
+       <item row="0" column="0">
+        <property name="text">
+         <string>0</string>
+        </property>
+       </item>
+       <item row="0" column="1">
+        <property name="text">
+         <string>0</string>
+        </property>
+       </item>
+       <item row="1" column="0">
+        <property name="text">
+         <string>0</string>
+        </property>
+       </item>
+       <item row="1" column="1">
+        <property name="text">
+         <string>0</string>
+        </property>
+       </item>
+       <item row="2" column="0">
+        <property name="text">
+         <string>0</string>
+        </property>
+       </item>
+       <item row="2" column="1">
+        <property name="text">
+         <string>0</string>
+        </property>
+       </item>
+       <item row="3" column="0">
+        <property name="text">
+         <string>0</string>
+        </property>
+       </item>
+       <item row="3" column="1">
+        <property name="text">
+         <string>0</string>
+        </property>
+       </item>
+       <item row="4" column="0">
+        <property name="text">
+         <string>0</string>
+        </property>
+       </item>
+       <item row="4" column="1">
+        <property name="text">
+         <string>0</string>
+        </property>
+       </item>
+       <item row="5" column="0">
+        <property name="text">
+         <string>0</string>
+        </property>
+       </item>
+       <item row="5" column="1">
+        <property name="text">
+         <string>0</string>
+        </property>
+       </item>
+       <item row="6" column="0">
+        <property name="text">
+         <string>0</string>
+        </property>
+       </item>
+       <item row="6" column="1">
+        <property name="text">
+         <string>0</string>
+        </property>
+       </item>
+       <item row="7" column="0">
+        <property name="text">
+         <string>0</string>
+        </property>
+       </item>
+       <item row="7" column="1">
+        <property name="text">
+         <string>0</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="10" column="0" colspan="2">
+      <widget class="QLabel" name="label_Filename_WAVHeader">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
          <horstretch>0</horstretch>
@@ -1023,8 +943,71 @@ Header</string>
          <pointsize>10</pointsize>
         </font>
        </property>
-       <property name="displayFormat">
-        <string>dd.MM.yyyy HH:mm:ss</string>
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="0">
+      <widget class="QLabel" name="label_13">
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Filename:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QRadioButton" name="radioButton_WAVEDIT">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
+       <property name="toolTip">
+        <string>make this table editable by clicking 'edit'</string>
+       </property>
+       <property name="autoFillBackground">
+        <bool>true</bool>
+       </property>
+       <property name="text">
+        <string>EDIT</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2" colspan="2">
+      <widget class="QLabel" name="label_9">
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="2" colspan="2">
+      <widget class="QLabel" name="label_39">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Aux time calculator</string>
        </property>
       </widget>
      </item>

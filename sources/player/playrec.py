@@ -493,6 +493,7 @@ class playrec_c(QObject):
         :rtype: none
         """     
         auxi.standard_errorbox(errorstring)
+        self.logger.error(errorstring)
 
     def display_status(self,messagestring): ##TODO TODO TODO: seems not to be used anywhere
         """handler for message signals from stemlabcontrol class

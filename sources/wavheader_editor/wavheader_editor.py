@@ -128,7 +128,7 @@ class waveditor_v(QObject):
 
 
     def init_waveditor_ui(self):
-        self.gui.actionOverwrite_header.triggered.connect(self.overwrite_header)
+        #self.gui.actionOverwrite_header.triggered.connect(self.overwrite_header)
         self.gui.pushButton_InsertHeader.setEnabled(False)
         self.gui.pushButton_InsertHeader.clicked.connect(self.overwrite_header)
         self.gui.radioButton_WAVEDIT.setEnabled(True)
@@ -201,6 +201,9 @@ class waveditor_v(QObject):
                 self.logfilehandler(_value[1])
             if  _value[0].find("reset_GUI") == 0:
                 self.reset_GUI()
+            if  _value[0].find("overwrite_header") == 0:
+                self.overwrite_header()
+                
             #handle method
             # if  _value[0].find("plot_spectrum") == 0: #EXAMPLE
             #     self.plot_spectrum(0,_value[1])   #EXAMPLE
@@ -463,7 +466,3 @@ class waveditor_v(QObject):
         else:
             self.logger.debug("waveditor: REACTIVATE LOGGING")
             self.logger.setLevel(logging.DEBUG)
-
-
-
-

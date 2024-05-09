@@ -23,6 +23,8 @@
         # self.gui.actionOverwrite_header.setVisible(False)
 # Start-Tab setzen:self.gui.tabWidget.setCurrentIndex(1) #TODO: avoid magic number, unidentified
 
+
+
 """
 Created on Sa Dec 08 2023
 
@@ -269,6 +271,7 @@ class core_v(QObject):
             self.tab_names[index] = self.gui.tabWidget.tabText(index)
 
         self.gui.actionFile_open.triggered.connect(self.cb_open_file)
+        self.gui.actionOverwrite_header.triggered.connect(self.send_overwrite_header)
         self.SigGUIReset.connect(self.reset_GUI)
 
         ###TODO: re-organize, there should be no access to gui elements of other modules
@@ -387,6 +390,12 @@ class core_v(QObject):
     #             self.gui.lineEdit_IPAddress.setCursorPosition(cursor + 1)  # Move cursor to the next field
     #             return True  # Ignore default Tab key behavior
     #     return super().eventFilter(source, event)
+
+    def send_overwrite_header(self):
+        self.SigRelay.emit("cexex_waveditor",["overwrite_header",0])
+        pass
+
+
 
     def editHostAddress(self):     #TODO Check if this is necessary, rename to cb_.... ! 
         ''' 
@@ -1039,10 +1048,10 @@ if __name__ == '__main__':
     #import yaml_editor as yed  #### b) new import from filestructure  #TODO: check testing REMOVED 06-05-2024
     #import waveditor as waved  #### b) new import from filestructure  #TODO: check testing REMOVED 06-05-2024
     #from stemlab_control import StemlabControl  #TODO: check testing REMOVED 06-05-2024
-    from player import playrec  ######TODO TODO TODO: import only on demand
-    from resampler import resample  ######TODO TODO TODO: import only on demand
+    from player import playrec  ######TODO TODO TODO: import only on demand via config file
+    from resampler import resample
     from spectralviewer import view_spectra
-    from wavheader_editor import wavheader_editor #### b) new import from filestructure
+    from wavheader_editor import wavheader_editor
     from yaml_editor import yaml_editor
     from annotator import annotate
     gui.show()
@@ -1094,6 +1103,17 @@ if __name__ == '__main__':
         tabUI_annotator.setupUi(tab_annotator_widget)
         a = gui.gui.tabWidget.addTab(tab_annotator_widget, "")
         gui.gui.tabWidget.setTabText(a,"Annotate")
+
+    if 'wavheader_editor' in sys.modules: #(c) aktiviere neuen Tab; 
+        from wavheader_editor import wavheader_editor_widget
+        tabUI_wavheader_editor = wavheader_editor_widget.Ui_wavheader_editor_widget()######TODO TODO TODO: change acc to indivitial widgets rather than one big GUI
+        tab_wavheader_editor_widget = QtWidgets.QWidget()
+        tab_wavheader_editor_widget.setObjectName("tab_wavheader_editor_widget")
+        tab_wavheader_editor_widget.setWindowTitle("wavheader_editor")
+        tab_wavheader_editor_widget.setWindowIconText("wavheader_editor")
+        tabUI_wavheader_editor.setupUi(tab_wavheader_editor_widget)
+        a = gui.gui.tabWidget.addTab(tab_wavheader_editor_widget, "")
+        gui.gui.tabWidget.setTabText(a,"WAV Header")
 
     #########################################################################################################################
     #ZUgriff auf elements of tabUI_Player via tabUI_Player instance ! not gui.gui.
@@ -1158,13 +1178,15 @@ if __name__ == '__main__':
     if 'wavheader_editor' in sys.modules:
         waveditor_m = wavheader_editor.waveditor_m()
         waveditor_c = wavheader_editor.waveditor_c(waveditor_m)
-        waveditor_v = wavheader_editor.waveditor_v(xcore_v.gui,waveditor_c,waveditor_m)
+        #waveditor_v = wavheader_editor.waveditor_v(xcore_v.gui,waveditor_c,waveditor_m)
+        waveditor_v = wavheader_editor.waveditor_v(tabUI_wavheader_editor,resample_c,resample_m) #ZUM TESTEN FREISCHALTEN
         tab_dict["list"].append("waveditor")
         tab_dict["tabname"].append("WAV Header")
-    else:
-        page = xcore_v.gui.tabWidget.findChild(QWidget, "tab_waveditor")
-        c_index = xcore_v.gui.tabWidget.indexOf(page)
-        xcore_v.gui.tabWidget.setTabVisible(c_index,False)
+        gui.gui.tabWidget.removeTab(3) 
+    # else:
+    #     page = xcore_v.gui.tabWidget.findChild(QWidget, "tab_waveditor")
+    #     c_index = xcore_v.gui.tabWidget.indexOf(page)
+    #     xcore_v.gui.tabWidget.setTabVisible(c_index,False)
 
     page = xcore_v.gui.tabWidget.findChild(QWidget, "tab_configuration")  ###TODO TODO TODO: remove after complete reconfiguration
     c_index = xcore_v.gui.tabWidget.indexOf(page)
@@ -1240,9 +1262,7 @@ if __name__ == '__main__':
 #TODOs:
     # file open muss in den Controller
     #
-    # deaktiviere Tab alten Resample, alten Annotator
-    #
-    # baue GUI-widgets für wav header; (b) new import from filestructure); (c) aktiviere neuen Tab; #(d) Instanzierung, referenzierung und connecting für neuen Tab;  
+    # deaktiviere Tab alten Resample, alten Annotator, alten WAV editor
     #
     # baue GUI-widgets für yaml editor; (b) new import from filestructure); (c) aktiviere neuen Tab; #(d) Instanzierung, referenzierung und connecting für neuen Tab;  
     #
