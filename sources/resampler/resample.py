@@ -2657,9 +2657,10 @@ class resample_v(QObject):
         #check for sox as a prerequisite
         if self.soxnotexist:
             infotext = "<font size = 12> You must install sox before being able to resample; <br> Download from: <br><a href='%s'>sox version 14.2.2 </a> <br><br>Either install sox to RFCorder directory or set the system path to the sox installation directory. <br> See also RFCorder user manual; </font>" % self.soxlink
-            msg = QMessageBox()
-            msg.information(self, 'Message', infotext, QMessageBox.Ok, QMessageBox.Ok)
-            self.gui.listWidget_playlist_2.itemChanged.connect(self.reslist_update)
+            auxi.standard_errorbox(infotext)
+            # msg = QMessageBox()
+            # msg.information(self, 'Message', infotext, QMessageBox.Ok, QMessageBox.Ok)
+            # self.gui.listWidget_playlist_2.itemChanged.connect(self.reslist_update)
             return False
         #check if filepath has been defined
         if not self.m["fileopened"]:
