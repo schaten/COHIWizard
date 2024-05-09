@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_wavheader_editor_widget(object):
     def setupUi(self, wavheader_editor_widget):
         wavheader_editor_widget.setObjectName("wavheader_editor_widget")
-        wavheader_editor_widget.resize(1023, 689)
+        wavheader_editor_widget.resize(993, 689)
         self.gridLayout_2 = QtWidgets.QGridLayout(wavheader_editor_widget)
         self.gridLayout_2.setObjectName("gridLayout_2")
         self.gridLayout = QtWidgets.QGridLayout()
@@ -320,9 +320,6 @@ class Ui_wavheader_editor_widget(object):
         self.pushButton_InsertHeader.setFont(font)
         self.pushButton_InsertHeader.setObjectName("pushButton_InsertHeader")
         self.gridLayout.addWidget(self.pushButton_InsertHeader, 9, 2, 1, 1)
-        self.label = QtWidgets.QLabel(wavheader_editor_widget)
-        self.label.setObjectName("label")
-        self.gridLayout.addWidget(self.label, 10, 2, 1, 1)
         self.pushButton_add = QtWidgets.QPushButton(wavheader_editor_widget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
         sizePolicy.setHorizontalStretch(0)
@@ -558,7 +555,6 @@ class Ui_wavheader_editor_widget(object):
         self.pushButton_InsertHeader.setToolTip(_translate("wavheader_editor_widget", "insert header into dat file"))
         self.pushButton_InsertHeader.setText(_translate("wavheader_editor_widget", "Insert \n"
 "Header"))
-        self.label.setText(_translate("wavheader_editor_widget", "TextLabel"))
         self.pushButton_add.setText(_translate("wavheader_editor_widget", "+"))
         self.tableWidget_starttime.setToolTip(_translate("wavheader_editor_widget", "make this table editable by clicking \'edit\'"))
         item = self.tableWidget_starttime.verticalHeaderItem(0)

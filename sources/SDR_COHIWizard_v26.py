@@ -42,27 +42,12 @@ from PyQt5.QtCore import QTimer, QObject, QThread, pyqtSignal
 
 
 from PyQt5.QtWidgets import *
-#from PyQt5.QtGui import *
-#from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg,  NavigationToolbar2QT as NavigationToolbar
-#from matplotlib.figure import Figure
-#from PyQt5.QtCore import QObject, QThread, pyqtSignal
-#import yaml
 import logging
 
-from COHIWizard_GUI_v10 import Ui_MainWindow as MyWizard
-# from auxiliaries import WAVheader_tools
-# from auxiliaries import auxiliaries as auxi
-# from auxiliaries import timer_worker as tw
-# import resampler_module_v5 as rsmp
-# #import view_spectra as vsp
-# import annotate as ann
-# import yaml_editor as yed
-# import waveditor as waved
-# from stemlab_control import StemlabControl
-# import playrec
-#from ISO_testgui import Ui_ISO_testgui
-
+#from .COHIWizard_GUI_v10 import Ui_MainWindow as MyWizard  ##TODO: after transfer to core folder set other path
 from icons import Logos
+from core import COHIWizard_GUI_v10
+
 
 class starter(QMainWindow):
     def __init__(self):
@@ -71,7 +56,8 @@ class starter(QMainWindow):
         self.splash.setFocus()
         self.splash.show()
 
-        self.gui= MyWizard()
+        #self.gui= MyWizard()
+        self.gui = COHIWizard_GUI_v10.Ui_MainWindow()
         self.gui.setupUi(self)
         self.gui.tableWidget_basisfields.verticalHeader().setVisible(True)
 
@@ -1041,13 +1027,6 @@ if __name__ == '__main__':
     from auxiliaries import WAVheader_tools
     from auxiliaries import auxiliaries as auxi
     from auxiliaries import timer_worker as tw
-    #import view_spectra as vsp   #### b) new import from filestructure  #TODO: check testing REMOVED 06-05-2024
-    #import resampler_module_v5 as rsmp #inactivate  #TODO: check testing REMOVED 06-05-2024
-    #import view_spectra as vsp  #TODO: check testing REMOVED 06-05-2024
-    #import annotate as ann  #### b) new import from filestructure  #TODO: check testing REMOVED 06-05-2024
-    #import yaml_editor as yed  #### b) new import from filestructure  #TODO: check testing REMOVED 06-05-2024
-    #import waveditor as waved  #### b) new import from filestructure  #TODO: check testing REMOVED 06-05-2024
-    #from stemlab_control import StemlabControl  #TODO: check testing REMOVED 06-05-2024
     from player import playrec  ######TODO TODO TODO: import only on demand via config file
     from resampler import resample
     from spectralviewer import view_spectra
@@ -1115,6 +1094,17 @@ if __name__ == '__main__':
         a = gui.gui.tabWidget.addTab(tab_wavheader_editor_widget, "")
         gui.gui.tabWidget.setTabText(a,"WAV Header")
 
+    if 'yaml_editor' in sys.modules: 
+        from yaml_editor import yaml_editor_widget
+        tabUI_yaml_editor = yaml_editor_widget.Ui_yaml_editor_widget()
+        tab_yaml_editor_widget = QtWidgets.QWidget()
+        tab_yaml_editor_widget.setObjectName("tab_yaml_editor_widget")
+        tab_yaml_editor_widget.setWindowTitle("yaml_editor")
+        tab_yaml_editor_widget.setWindowIconText("yaml_editor")
+        tabUI_yaml_editor.setupUi(tab_yaml_editor_widget)
+        a = gui.gui.tabWidget.addTab(tab_yaml_editor_widget, "")
+        gui.gui.tabWidget.setTabText(a,"YAML editor")
+
     #########################################################################################################################
     #ZUgriff auf elements of tabUI_Player via tabUI_Player instance ! not gui.gui.
 
@@ -1162,18 +1152,6 @@ if __name__ == '__main__':
         gui.gui.tabWidget.removeTab(4) ##TODO TODO TODO: remove after cleanup
 
     #TODO TODO TODO: (d) ?? connecting für neuen Tab; 
-    if 'yaml_editor' in sys.modules:
-        yamleditor_m = yaml_editor.yamleditor_m()
-        yamleditor_c = yaml_editor.yamleditor_c(yamleditor_m)
-        yamleditor_v = yaml_editor.yamleditor_v(xcore_v.gui,yamleditor_c,yamleditor_m)
-        tab_dict["list"].append("yamleditor")
-        tab_dict["tabname"].append("YAML editor")
-    else:
-        page = xcore_v.gui.tabWidget.findChild(QWidget, "tab_yamleditor")
-        c_index = xcore_v.gui.tabWidget.indexOf(page)
-        xcore_v.gui.tabWidget.setTabVisible(c_index,False)
-
-    #TODO TODO TODO: (d) ?? connecting für neuen Tab; 
     #if 'waveditor' in sys.modules:
     if 'wavheader_editor' in sys.modules:
         waveditor_m = wavheader_editor.waveditor_m()
@@ -1183,8 +1161,24 @@ if __name__ == '__main__':
         tab_dict["list"].append("waveditor")
         tab_dict["tabname"].append("WAV Header")
         gui.gui.tabWidget.removeTab(3) 
+    #TODO TODO TODO: (d) ?? connecting für neuen Tab; 
+
     # else:
     #     page = xcore_v.gui.tabWidget.findChild(QWidget, "tab_waveditor")
+    #     c_index = xcore_v.gui.tabWidget.indexOf(page)
+    #     xcore_v.gui.tabWidget.setTabVisible(c_index,False)
+    #TODO TODO TODO: (d) ?? connecting für neuen Tab; 
+    if 'yaml_editor' in sys.modules:
+        yamleditor_m = yaml_editor.yamleditor_m()
+        yamleditor_c = yaml_editor.yamleditor_c(yamleditor_m)
+        yamleditor_v = yaml_editor.yamleditor_v(tabUI_yaml_editor,yamleditor_c,yamleditor_m)
+        tab_dict["list"].append("yamleditor")
+        tab_dict["tabname"].append("YAML editor")
+        gui.gui.tabWidget.removeTab(2) ##TODO TODO TODO: remove after cleanup
+        #TODO TODO TODO: (d) ?? connecting für neuen Tab; 
+
+    # else:
+    #     page = xcore_v.gui.tabWidget.findChild(QWidget, "tab_yamleditor")
     #     c_index = xcore_v.gui.tabWidget.indexOf(page)
     #     xcore_v.gui.tabWidget.setTabVisible(c_index,False)
 
@@ -1262,12 +1256,16 @@ if __name__ == '__main__':
 #TODOs:
     # file open muss in den Controller
     #
-    # deaktiviere Tab alten Resample, alten Annotator, alten WAV editor
+    # check why loading of file takes so long
     #
-    # baue GUI-widgets für yaml editor; (b) new import from filestructure); (c) aktiviere neuen Tab; #(d) Instanzierung, referenzierung und connecting für neuen Tab;  
+    # check after file load if annotaton file is complete; if yes release yml editor pushbutton self.SigRelay.emit("cexex_yamleditor",["setWriteyamlButton",True])
+    #
+    # inactivate Add station to last F button after end of annotation (annotation_completed method)
     #
     # baue GUI-widgets für view spectra;  (b) new import from filestructure); (c) aktiviere neuen Tab; #(d) Instanzierung, referenzierung und connecting für neuen Tab;  
     #
+    # deaktiviere Tab alten view spectra
+    # 
     # shift access to xcore_v in __main__ to special initializer method in xcore_v, which is started by a single call in __main__
     #
     # fix error with SNR calculation: there seems to be no reaction to baselineshifts when calculating the SNR for praks and identifying those above threshold

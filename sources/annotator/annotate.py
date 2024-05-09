@@ -1043,7 +1043,8 @@ class annotate_v(QObject):
                     return False 
                 if status["annotated"] == True:
                     self.annotation_completed()
-                    self.ui.pushButton_Writeyamlheader.setEnabled(True)
+                    #self.ui.pushButton_Writeyamlheader.setEnabled(True)  ####TODO TODO TODO send by relaying yaml
+                    self.SigRelay.emit("cexex_yamleditor",["setWriteyamlButton",True])
                 else:
                     self.annotation_activate()
             elif self.m["fileopened"]:
@@ -1086,7 +1087,8 @@ class annotate_v(QObject):
                 return False 
             if status["annotated"] == True:
                 self.annotation_completed()
-                self.ui.pushButton_Writeyamlheader.setEnabled(True)
+                #self.ui.pushButton_Writeyamlheader.setEnabled(True) ####TODO TODO TODO send by relaying yaml
+                self.SigRelay.emit("cexex_yamleditor",["setWriteyamlButton",True])
             else:
                 self.annotation_activate()
         elif self.m["fileopened"]:
@@ -1113,7 +1115,8 @@ class annotate_v(QObject):
         self.gui.lineEdit.setText('Record has already been annotated. For re-annotation delete annotation folder')
         self.gui.lineEdit.setStyleSheet("background-color : yellow")
         self.gui.lineEdit.setFont(QFont('MS Shell Dlg 2', 12))
-        self.gui.pushButton_Writeyamlheader.setEnabled(True)
+        self.SigRelay.emit("cexex_yamleditor",["setWriteyamlButton",True])
+        #self.gui.pushButton_Writeyamlheader.setEnabled(True) ##### replace by relaying !
         self.flag_ann_completed = True
 
     def annotation_activate(self):

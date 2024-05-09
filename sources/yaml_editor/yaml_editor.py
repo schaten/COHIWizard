@@ -109,6 +109,8 @@ class  yamleditor_v(QObject):
             if  _value[0].find("updateGUIelements") == 0:
                 self.updateGUIelements()
                 self.logger.debug("call updateGUIelements")
+            if  _value[0].find("setWriteyamlButton") == 0:
+                self.gui.pushButton_Writeyamlheader.setEnabled(_value[1])
 
     def updateGUIelements(self):
         """

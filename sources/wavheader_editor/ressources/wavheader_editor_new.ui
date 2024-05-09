@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>993</width>
-    <height>689</height>
+    <width>831</width>
+    <height>660</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -536,7 +536,7 @@ by inserting current wav header</string>
        </item>
       </widget>
      </item>
-     <item row="0" column="0" rowspan="9">
+     <item row="0" column="0" rowspan="9" alignment="Qt::AlignTop">
       <widget class="QTableWidget" name="tableWidget_basisfields">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Maximum" vsizetype="Minimum">
@@ -547,13 +547,13 @@ by inserting current wav header</string>
        <property name="minimumSize">
         <size>
          <width>200</width>
-         <height>0</height>
+         <height>550</height>
         </size>
        </property>
        <property name="maximumSize">
         <size>
          <width>400</width>
-         <height>16777215</height>
+         <height>600</height>
         </size>
        </property>
        <property name="font">
@@ -771,7 +771,7 @@ Header</string>
        <property name="minimumSize">
         <size>
          <width>300</width>
-         <height>380</height>
+         <height>320</height>
         </size>
        </property>
        <property name="maximumSize">
