@@ -1871,6 +1871,8 @@ class playrec_v(QObject):
         :return: True/False on successful/unsuccesful operation
         :rtype: bool
         """ 
+        if not self.m["fileopened"]:
+            return
         delta =  datetime.now() - self.lastupdatecurtime
         #print(f"updateurtime microsec: {delta}")
         if delta.microseconds < 10000:

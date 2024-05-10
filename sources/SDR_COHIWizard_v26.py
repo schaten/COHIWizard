@@ -46,7 +46,7 @@ import logging
 
 #from .COHIWizard_GUI_v10 import Ui_MainWindow as MyWizard  ##TODO: after transfer to core folder set other path
 from icons import Logos
-from core import COHIWizard_GUI_v10
+from core import COHIWizard_GUI_v10_reduced
 
 
 class starter(QMainWindow):
@@ -57,9 +57,9 @@ class starter(QMainWindow):
         self.splash.show()
 
         #self.gui= MyWizard()
-        self.gui = COHIWizard_GUI_v10.Ui_MainWindow()
+        self.gui = COHIWizard_GUI_v10_reduced.Ui_MainWindow()
         self.gui.setupUi(self)
-        self.gui.tableWidget_basisfields.verticalHeader().setVisible(True)
+        #self.gui.tableWidget_basisfields.verticalHeader().setVisible(True)
 
 # generate Player from individual widget
 # tab_player_widget = QtWidgets.QWidget()
@@ -1061,16 +1061,16 @@ if __name__ == '__main__':
     #     a = gui.gui.tabWidget.addTab(tab_player_widget, "")
     #     gui.gui.tabWidget.setTabText(a,"Player")
 
-    if 'resampler' in sys.modules: #(c) aktiviere neuen Tab; 
-        from resampler import resampler_widget
-        tabUI_Resampler = resampler_widget.Ui_resampler_widget()######TODO TODO TODO: change acc to indivitial widgets rather than one big GUI
-        tab_resampler_widget = QtWidgets.QWidget()
-        tab_resampler_widget.setObjectName("tab_resampler_widget")
-        tab_resampler_widget.setWindowTitle("Resampler")
-        tab_resampler_widget.setWindowIconText("Resampler")
-        tabUI_Resampler.setupUi(tab_resampler_widget)
-        a = gui.gui.tabWidget.addTab(tab_resampler_widget, "")
-        gui.gui.tabWidget.setTabText(a,"Resampler")
+    if 'spectralviewer' in sys.modules: 
+        from spectralviewer import spectralviewer_widget
+        tabUI_spectralviewer = spectralviewer_widget.Ui_spectralviewer_widget()
+        tab_spectralviewer_widget = QtWidgets.QWidget()
+        tab_spectralviewer_widget.setObjectName("tab_spectralviewer_widget")
+        tab_spectralviewer_widget.setWindowTitle("spectralviewer")
+        tab_spectralviewer_widget.setWindowIconText("spectralviewer")
+        tabUI_spectralviewer.setupUi(tab_spectralviewer_widget)
+        a = gui.gui.tabWidget.addTab(tab_spectralviewer_widget, "")
+        gui.gui.tabWidget.setTabText(a,"View spectra")
 
     if 'annotator' in sys.modules: #(c) aktiviere neuen Tab; 
         from annotator import annotator_widget
@@ -1105,6 +1105,17 @@ if __name__ == '__main__':
         a = gui.gui.tabWidget.addTab(tab_yaml_editor_widget, "")
         gui.gui.tabWidget.setTabText(a,"YAML editor")
 
+    if 'resampler' in sys.modules: #(c) aktiviere neuen Tab; 
+        from resampler import resampler_widget
+        tabUI_Resampler = resampler_widget.Ui_resampler_widget()######TODO TODO TODO: change acc to indivitial widgets rather than one big GUI
+        tab_resampler_widget = QtWidgets.QWidget()
+        tab_resampler_widget.setObjectName("tab_resampler_widget")
+        tab_resampler_widget.setWindowTitle("Resampler")
+        tab_resampler_widget.setWindowIconText("Resampler")
+        tabUI_Resampler.setupUi(tab_resampler_widget)
+        a = gui.gui.tabWidget.addTab(tab_resampler_widget, "")
+        gui.gui.tabWidget.setTabText(a,"Resampler")
+
     #########################################################################################################################
     #ZUgriff auf elements of tabUI_Player via tabUI_Player instance ! not gui.gui.
 
@@ -1118,15 +1129,20 @@ if __name__ == '__main__':
     tab_dict["list"] = ["xcore"]
     tab_dict["tabname"] = ["xcore"]
 
-
     #TODO TODO TODO: (d) Instanzierung, referenzierung und connecting für neuen Tab; 
     #if 'view_spectra' in sys.modules:
     if 'spectralviewer' in sys.modules:
         view_spectra_m = view_spectra.view_spectra_m()
         view_spectra_c = view_spectra.view_spectra_c(view_spectra_m)
-        view_spectra_v = view_spectra.view_spectra_v(xcore_v.gui,view_spectra_c,view_spectra_m)
+        #view_spectra_v = view_spectra.view_spectra_v(xcore_v.gui,view_spectra_c,view_spectra_m)
+        view_spectra_v = view_spectra.view_spectra_v(tabUI_spectralviewer,view_spectra_c,view_spectra_m)
         tab_dict["list"].append("view_spectra")
         tab_dict["tabname"].append("View spectra")
+        #gui.gui.tabWidget.removeTab(1) ##TODO TODO TODO: remove after cleanup
+    # else:
+    #     page = xcore_v.gui.tabWidget.findChild(QWidget, "tab_yamleditor")
+    #     c_index = xcore_v.gui.tabWidget.indexOf(page)
+    #     xcore_v.gui.tabWidget.setTabVisible(c_index,False)
 
     #TODO TODO TODO: (d) ?? connecting für neuen Tab; 
     if 'annotator' in sys.modules:
@@ -1136,20 +1152,7 @@ if __name__ == '__main__':
         annotate_v = annotate.annotate_v(tabUI_annotator,annotate_c,annotate_m)
         tab_dict["list"].append("annotate")
         tab_dict["tabname"].append("Annotate")
-        gui.gui.tabWidget.removeTab(2) ##TODO TODO TODO: remove after cleanup
-
-    #TODO TODO TODO: clarify that xcore_v.gui is the same as gui.gui !
-    #if 'resampler_module_v5' in sys.modules:
-    if 'resampler' in sys.modules: #(d) Instanzierung, referenzierung und connecting für neuen Tab; 
-        resample_m = resample.resample_m() #TODO: wird gui in _m jemals gebraucht ? ich denke nein !
-        resample_c = resample.resample_c(resample_m) #TODO: replace sys_state
-        #resample_v = rsmp.resample_v(xcore_v.gui,resample_c, resample_m) #TODO: replace sys_state
-        resample_v = resample.resample_v(tabUI_Resampler,resample_c,resample_m) #ZUM TESTEN FREISCHALTEN
-        tab_dict["list"].append("resample")
-        tab_dict["tabname"].append("Resampler")
-        resample_v.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
-        resample_c.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
-        gui.gui.tabWidget.removeTab(4) ##TODO TODO TODO: remove after cleanup
+        #gui.gui.tabWidget.removeTab(1) ##TODO TODO TODO: remove after cleanup
 
     #TODO TODO TODO: (d) ?? connecting für neuen Tab; 
     #if 'waveditor' in sys.modules:
@@ -1157,10 +1160,10 @@ if __name__ == '__main__':
         waveditor_m = wavheader_editor.waveditor_m()
         waveditor_c = wavheader_editor.waveditor_c(waveditor_m)
         #waveditor_v = wavheader_editor.waveditor_v(xcore_v.gui,waveditor_c,waveditor_m)
-        waveditor_v = wavheader_editor.waveditor_v(tabUI_wavheader_editor,resample_c,resample_m) #ZUM TESTEN FREISCHALTEN
+        waveditor_v = wavheader_editor.waveditor_v(tabUI_wavheader_editor,waveditor_c,waveditor_m) #ZUM TESTEN FREISCHALTEN
         tab_dict["list"].append("waveditor")
         tab_dict["tabname"].append("WAV Header")
-        gui.gui.tabWidget.removeTab(3) 
+        #gui.gui.tabWidget.removeTab(1) 
     #TODO TODO TODO: (d) ?? connecting für neuen Tab; 
 
     # else:
@@ -1174,13 +1177,21 @@ if __name__ == '__main__':
         yamleditor_v = yaml_editor.yamleditor_v(tabUI_yaml_editor,yamleditor_c,yamleditor_m)
         tab_dict["list"].append("yamleditor")
         tab_dict["tabname"].append("YAML editor")
-        gui.gui.tabWidget.removeTab(2) ##TODO TODO TODO: remove after cleanup
+        #gui.gui.tabWidget.removeTab(1) ##TODO TODO TODO: remove after cleanup
         #TODO TODO TODO: (d) ?? connecting für neuen Tab; 
 
-    # else:
-    #     page = xcore_v.gui.tabWidget.findChild(QWidget, "tab_yamleditor")
-    #     c_index = xcore_v.gui.tabWidget.indexOf(page)
-    #     xcore_v.gui.tabWidget.setTabVisible(c_index,False)
+    #TODO TODO TODO: clarify that xcore_v.gui is the same as gui.gui !
+    #if 'resampler_module_v5' in sys.modules:
+    if 'resampler' in sys.modules: #(d) Instanzierung, referenzierung und connecting für neuen Tab; 
+        resample_m = resample.resample_m() #TODO: wird gui in _m jemals gebraucht ? ich denke nein !
+        resample_c = resample.resample_c(resample_m) #TODO: replace sys_state
+        #resample_v = rsmp.resample_v(xcore_v.gui,resample_c, resample_m) #TODO: replace sys_state
+        resample_v = resample.resample_v(tabUI_Resampler,resample_c,resample_m) #ZUM TESTEN FREISCHALTEN
+        tab_dict["list"].append("resample")
+        tab_dict["tabname"].append("Resampler")
+        resample_v.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
+        resample_c.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
+        #gui.gui.tabWidget.removeTab(1) ##TODO TODO TODO: remove after cleanup
 
     page = xcore_v.gui.tabWidget.findChild(QWidget, "tab_configuration")  ###TODO TODO TODO: remove after complete reconfiguration
     c_index = xcore_v.gui.tabWidget.indexOf(page)
@@ -1256,15 +1267,15 @@ if __name__ == '__main__':
 #TODOs:
     # file open muss in den Controller
     #
+    # Player UI: Rec Bandwidth left allign; LO Offset edit Fenster pointsize 10; Activate playlist logo etwas groß;
+    # Annotate UI: Scan und Annotate Button Fontsize 10
+    # Player: Inactivate ÜPlaylist Button, when no file loaded, reset to base state when file closed
+    #
     # check why loading of file takes so long
     #
     # check after file load if annotaton file is complete; if yes release yml editor pushbutton self.SigRelay.emit("cexex_yamleditor",["setWriteyamlButton",True])
     #
     # inactivate Add station to last F button after end of annotation (annotation_completed method)
-    #
-    # baue GUI-widgets für view spectra;  (b) new import from filestructure); (c) aktiviere neuen Tab; #(d) Instanzierung, referenzierung und connecting für neuen Tab;  
-    #
-    # deaktiviere Tab alten view spectra
     # 
     # shift access to xcore_v in __main__ to special initializer method in xcore_v, which is started by a single call in __main__
     #

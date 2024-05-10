@@ -6,9 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1391</width>
-    <height>805</height>
+    <width>1104</width>
+    <height>690</height>
    </rect>
+  </property>
+  <property name="font">
+   <font>
+    <pointsize>10</pointsize>
+   </font>
   </property>
   <property name="windowTitle">
    <string>Form</string>
@@ -26,7 +31,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="text">
@@ -38,7 +43,7 @@
       <widget class="QLabel" name="label_Filename_resample">
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="text">
@@ -56,7 +61,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="text">
@@ -74,7 +79,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="value">
@@ -92,7 +97,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>7</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="toolTip">
@@ -125,7 +130,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="text">
@@ -143,7 +148,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="text">
@@ -153,6 +158,11 @@
      </item>
      <item row="2" column="2">
       <widget class="QLabel" name="label_34">
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string/>
        </property>
@@ -168,7 +178,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="toolTip">
@@ -192,7 +202,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="editable">
@@ -250,7 +260,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="text">
@@ -268,7 +278,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="toolTip">
@@ -292,7 +302,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="text">
@@ -307,7 +317,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="displayFormat">
@@ -328,7 +338,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="toolTip">
@@ -352,7 +362,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="toolTip">
@@ -371,6 +381,11 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
        <property name="contextMenuPolicy">
         <enum>Qt::NoContextMenu</enum>
        </property>
@@ -386,7 +401,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="displayFormat">
@@ -401,7 +416,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="toolTip">
@@ -425,7 +440,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="text">
@@ -443,7 +458,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="toolTip">
@@ -470,7 +485,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="toolTip">
@@ -494,7 +509,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="text">
@@ -687,7 +702,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="toolTip">
@@ -961,7 +976,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
          <kerning>true</kerning>
         </font>
        </property>
@@ -980,7 +995,7 @@
       <widget class="QPushButton" name="pushButton_resample_resample">
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="toolTip">
@@ -995,7 +1010,7 @@
       <widget class="QPushButton" name="pushButton_resample_split2G">
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="toolTip">
@@ -1013,7 +1028,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="toolTip">
@@ -1028,7 +1043,7 @@
       <widget class="QCheckBox" name="checkBox_AutoMerge2G">
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="toolTip">
@@ -1043,7 +1058,7 @@
       <widget class="QCheckBox" name="checkBox_merge_selectall">
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="toolTip">
@@ -1064,7 +1079,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>7</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="dragEnabled">

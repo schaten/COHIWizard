@@ -128,8 +128,10 @@ class view_spectra_v(QObject):
         self.gui.spinBoxminBaselineoffset.valueChanged.connect(self.set_baselineoffset)
         self.gui.horizontalScrollBar_view_spectra.sliderReleased.connect(self.cb_plot_spectrum)
         self.gui.radioButton_plotraw.clicked.connect(self.cb_plot_spectrum)
-    #     #self.SigToolbar.connect(lambda: self.plot_spectrum(self,self.position)) #TODO Remove ???
-        self.gui.spinBoxNumScan.setProperty("value", 10) #TODO: avoid magic number
+        #self.SigToolbar.connect(lambda: self.plot_spectrum(self,self.position)) #TODO Remove ???
+        #TODO: replace by signalling 
+
+        #self.gui.spinBoxNumScan.setProperty("value", 10) #TODO: avoid magic number
         self.gui.label_Filename_ViewSpectra.setText('')
         self.setkernelwidth()
         self.minPeakwidthupdate()
@@ -426,9 +428,9 @@ class view_spectra_v(QObject):
         #TODO: this is an access to a function of another module; very dangerous, because it must be exactly known how to call that function
         #should this option be offered by the rxhandlers anyway ?
         ########TODO TODO TODO: urgent, close this access as soon as possible
-        self.SigRelay.emit("cui_annotate",[self.gui.spinBoxminSNR.setProperty,["value",self.m["prominence"]]])
+        #self.SigRelay.emit("cui_annotate",[self.gui.spinBoxminSNR.setProperty,["value",self.m["prominence"]]])
         #####################
-        self.gui.spinBoxminSNR.setProperty("value", self.m["prominence"]) #TODO TODO TODO: remove after relocation of annotator and activate line above
+        #self.gui.spinBoxminSNR.setProperty("value", self.m["prominence"]) #TODO TODO TODO: remove after relocation of annotator and activate line above
         #self.m["position"] = self.gui.horizontalScrollBar_view_spectra.value()
         #self.SigRelay.emit("cm_all_",["horzscal", self.m["position"]])
         self.SigRelay.emit("cm_all_",["prominence", self.m["prominence"]])
@@ -437,7 +439,7 @@ class view_spectra_v(QObject):
 
     def set_baselineoffset(self):        
         baselineoffset = self.gui.spinBoxminBaselineoffset.value()
-        self.gui.label_6.setText("Baseline Offset:" + str(baselineoffset))
+        #self.gui.label_6.setText("Baseline Offset:" + str(baselineoffset))
         #position = self.gui.horizontalScrollBar_view_spectra.value()
         #self.SigRelay.emit("cm_all_",["horzscal", position])
         self.SigRelay.emit("cm_all_",["baselineoffset",baselineoffset])

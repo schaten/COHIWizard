@@ -22,6 +22,11 @@
      <height>748</height>
     </rect>
    </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
    <layout class="QGridLayout" name="gridLayout_11">
     <item row="18" column="13">
      <widget class="QFrame" name="frame_17">
@@ -115,6 +120,11 @@
          </colorrole>
         </disabled>
        </palette>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
       </property>
       <property name="autoFillBackground">
        <bool>true</bool>
@@ -303,7 +313,7 @@
       </property>
       <property name="font">
        <font>
-        <pointsize>12</pointsize>
+        <pointsize>11</pointsize>
         <weight>75</weight>
         <bold>true</bold>
        </font>
@@ -399,7 +409,7 @@
       </property>
       <property name="font">
        <font>
-        <pointsize>12</pointsize>
+        <pointsize>10</pointsize>
        </font>
       </property>
       <property name="toolTip">
@@ -563,6 +573,11 @@
         </disabled>
        </palette>
       </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
       <property name="toolTip">
        <string>Duration of the planned recording</string>
       </property>
@@ -678,7 +693,7 @@
       </property>
       <property name="font">
        <font>
-        <pointsize>12</pointsize>
+        <pointsize>10</pointsize>
        </font>
       </property>
       <property name="toolTip">
@@ -764,6 +779,11 @@
         </disabled>
        </palette>
       </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
       <property name="toolTip">
        <string>Define starting time/date of autostarted recording</string>
       </property>
@@ -841,6 +861,11 @@
         </disabled>
        </palette>
       </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
       <property name="toolTip">
        <string>select bandwidth for a pre-set broadcasting band</string>
       </property>
@@ -856,7 +881,7 @@
      <widget class="QCheckBox" name="checkBox_TESTMODE">
       <property name="font">
        <font>
-        <pointsize>12</pointsize>
+        <pointsize>10</pointsize>
        </font>
       </property>
       <property name="toolTip">
@@ -871,6 +896,11 @@
      <widget class="QPushButton" name="pushButton_Play">
       <property name="enabled">
        <bool>true</bool>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
       </property>
       <property name="toolTip">
        <string>Play </string>
@@ -922,6 +952,11 @@ Tracking</string>
     </item>
     <item row="24" column="0" colspan="13">
      <widget class="QLabel" name="label_Filename_Player_2">
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
       <property name="text">
        <string/>
       </property>
@@ -1158,6 +1193,11 @@ Tracking</string>
         </disabled>
        </palette>
       </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
       <property name="toolTip">
        <string>move slider to browse through the record and plot spectra </string>
       </property>
@@ -1179,7 +1219,7 @@ Tracking</string>
      <widget class="QLabel" name="label_showtime">
       <property name="font">
        <font>
-        <pointsize>12</pointsize>
+        <pointsize>10</pointsize>
        </font>
       </property>
       <property name="autoFillBackground">
@@ -1209,6 +1249,11 @@ Tracking</string>
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
       </property>
       <property name="toolTip">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Manual tracking = advance 1 bit for correcting sudden jumps in the file read position,&lt;/p&gt;&lt;p&gt;i.e. when position deviates from integer multiple of 4 (8). It may be necessary to repeat a few times for finding the right tracking.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -1242,6 +1287,11 @@ Tracking</string>
     </item>
     <item row="21" column="11" colspan="3">
      <widget class="Line" name="line_4">
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
       <property name="lineWidth">
        <number>5</number>
       </property>
@@ -1257,6 +1307,11 @@ Tracking</string>
      <widget class="QPushButton" name="pushButton_Loop">
       <property name="enabled">
        <bool>true</bool>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
       </property>
       <property name="toolTip">
        <string>auto repeat</string>
@@ -1292,6 +1347,11 @@ Tracking</string>
     </item>
     <item row="7" column="6">
      <widget class="QLabel" name="label_32">
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
       <property name="text">
        <string>BUF
 UFL</string>
@@ -1308,7 +1368,7 @@ UFL</string>
       </property>
       <property name="font">
        <font>
-        <pointsize>16</pointsize>
+        <pointsize>10</pointsize>
        </font>
       </property>
       <property name="toolTip">
@@ -1498,6 +1558,11 @@ UFL</string>
       <property name="enabled">
        <bool>true</bool>
       </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
       <property name="toolTip">
        <string>Record (only v2.0 and higher)</string>
       </property>
@@ -1534,7 +1599,7 @@ UFL</string>
      <widget class="QLabel" name="label_showdate">
       <property name="font">
        <font>
-        <pointsize>12</pointsize>
+        <pointsize>10</pointsize>
        </font>
       </property>
       <property name="autoFillBackground">
@@ -1556,6 +1621,11 @@ UFL</string>
     </item>
     <item row="20" column="8">
      <widget class="QLabel" name="label_47">
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
       <property name="text">
        <string/>
       </property>
@@ -1565,6 +1635,11 @@ UFL</string>
      <widget class="QPushButton" name="pushButton_Stop">
       <property name="enabled">
        <bool>true</bool>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
       </property>
       <property name="toolTip">
        <string>Stop</string>
@@ -1599,6 +1674,11 @@ UFL</string>
      <widget class="QPushButton" name="pushButton_FF">
       <property name="enabled">
        <bool>true</bool>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
       </property>
       <property name="toolTip">
        <string>fast forward</string>
@@ -1639,7 +1719,7 @@ UFL</string>
      <widget class="QCheckBox" name="checkBox_UTC">
       <property name="font">
        <font>
-        <pointsize>12</pointsize>
+        <pointsize>10</pointsize>
        </font>
       </property>
       <property name="toolTip">
@@ -1652,6 +1732,11 @@ UFL</string>
     </item>
     <item row="10" column="0" colspan="4">
      <widget class="QPushButton" name="pushButton_act_playlist">
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
       <property name="toolTip">
        <string>toggles betweensingle file and playlist, activates playlist tool</string>
       </property>
@@ -1944,7 +2029,7 @@ UFL</string>
       </property>
       <property name="font">
        <font>
-        <pointsize>16</pointsize>
+        <pointsize>12</pointsize>
         <weight>75</weight>
         <bold>true</bold>
        </font>
@@ -1958,6 +2043,11 @@ UFL</string>
      <widget class="QPushButton" name="pushButton_REW">
       <property name="enabled">
        <bool>true</bool>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
       </property>
       <property name="toolTip">
        <string>rewind</string>
@@ -1994,6 +2084,7 @@ UFL</string>
      <widget class="QLabel" name="label_Playlist">
       <property name="font">
        <font>
+        <pointsize>10</pointsize>
         <weight>75</weight>
         <bold>true</bold>
        </font>
@@ -2401,7 +2492,7 @@ UFL</string>
       </property>
       <property name="font">
        <font>
-        <pointsize>9</pointsize>
+        <pointsize>10</pointsize>
         <weight>75</weight>
         <bold>true</bold>
         <kerning>true</kerning>
@@ -2522,6 +2613,11 @@ UFL</string>
          </colorrole>
         </disabled>
        </palette>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
       </property>
       <property name="toolTip">
        <string>Select Tab with which the COHIWizard should start up next time</string>
@@ -2903,6 +2999,11 @@ UFL</string>
         </disabled>
        </palette>
       </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
       <property name="toolTip">
        <string>chose preferred tab which should be shown on next startup</string>
       </property>
@@ -2924,6 +3025,11 @@ UFL</string>
      <widget class="QComboBox" name="comboBox_playrec_targetSR_2">
       <property name="enabled">
        <bool>true</bool>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
       </property>
       <property name="toolTip">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;pick AM broadcasting band&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -3075,7 +3181,7 @@ UFL</string>
       </property>
       <property name="font">
        <font>
-        <pointsize>12</pointsize>
+        <pointsize>11</pointsize>
         <weight>75</weight>
         <bold>true</bold>
        </font>
@@ -3228,7 +3334,7 @@ UFL</string>
       </property>
       <property name="font">
        <font>
-        <pointsize>11</pointsize>
+        <pointsize>10</pointsize>
         <weight>50</weight>
         <bold>false</bold>
        </font>
@@ -3243,6 +3349,11 @@ UFL</string>
     </item>
     <item row="9" column="13">
      <widget class="QLineEdit" name="lineEdit_playrec_LO_2">
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
       <property name="toolTip">
        <string>enter LO frequency here (kHz)</string>
       </property>
@@ -3373,6 +3484,11 @@ UFL</string>
      <widget class="QComboBox" name="comboBox_playrec_targetSR">
       <property name="enabled">
        <bool>true</bool>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
       </property>
       <property name="toolTip">
        <string>select bandwidth</string>
@@ -3768,6 +3884,11 @@ UFL</string>
         </disabled>
        </palette>
       </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
       <property name="autoFillBackground">
        <bool>true</bool>
       </property>
@@ -4075,6 +4196,7 @@ UFL</string>
       </property>
       <property name="font">
        <font>
+        <pointsize>10</pointsize>
         <weight>50</weight>
         <italic>false</italic>
         <bold>false</bold>
@@ -4178,6 +4300,11 @@ UFL</string>
          </colorrole>
         </disabled>
        </palette>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
       </property>
       <property name="autoFillBackground">
        <bool>true</bool>
@@ -4345,7 +4472,7 @@ UFL</string>
       </property>
       <property name="font">
        <font>
-        <pointsize>11</pointsize>
+        <pointsize>10</pointsize>
        </font>
       </property>
       <property name="toolTip">
@@ -4547,7 +4674,7 @@ UFL</string>
       </property>
       <property name="font">
        <font>
-        <pointsize>12</pointsize>
+        <pointsize>10</pointsize>
        </font>
       </property>
       <property name="autoFillBackground">
@@ -4687,6 +4814,11 @@ UFL</string>
     </item>
     <item row="17" column="13">
      <widget class="QTimeEdit" name="playrec_RECLENGTH_timeEdit">
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
       <property name="toolTip">
        <string>enter duration here in HH:MM:SS</string>
       </property>
@@ -4824,6 +4956,11 @@ UFL</string>
         </disabled>
        </palette>
       </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
       <property name="toolTip">
        <string>move slider for optimal signal level; volume indicator should be in the green area</string>
       </property>
@@ -4918,6 +5055,11 @@ UFL</string>
          </colorrole>
         </disabled>
        </palette>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
       </property>
       <property name="toolTip">
        <string>enter starting date/time</string>
@@ -5139,7 +5281,7 @@ UFL</string>
       </property>
       <property name="font">
        <font>
-        <pointsize>11</pointsize>
+        <pointsize>10</pointsize>
        </font>
       </property>
       <property name="toolTip">
@@ -5411,6 +5553,11 @@ UFL</string>
         </disabled>
        </palette>
       </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
       <property name="toolTip">
        <string>Set path for recorded files</string>
       </property>
@@ -5435,6 +5582,7 @@ UFL</string>
      <widget class="Line" name="line_2">
       <property name="font">
        <font>
+        <pointsize>10</pointsize>
         <weight>50</weight>
         <bold>false</bold>
        </font>
@@ -5597,6 +5745,11 @@ UFL</string>
         </disabled>
        </palette>
       </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
       <property name="toolTip">
        <string>Write debug and info messages during runtime to logfile (for advanced error analysis)</string>
       </property>
@@ -5615,6 +5768,11 @@ UFL</string>
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
       </property>
       <property name="toolTip">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;selection list window. drag items to playlist&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -5764,7 +5922,7 @@ UFL</string>
       </property>
       <property name="font">
        <font>
-        <pointsize>12</pointsize>
+        <pointsize>10</pointsize>
        </font>
       </property>
       <property name="toolTip">
@@ -5789,6 +5947,11 @@ UFL</string>
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
       <property name="toolTip">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;playlist window. drag items from selection list&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
@@ -5808,6 +5971,11 @@ UFL</string>
     </item>
     <item row="12" column="12" colspan="2">
      <widget class="Line" name="line_5">
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
       <property name="lineWidth">
        <number>5</number>
       </property>
@@ -5821,6 +5989,11 @@ UFL</string>
     </item>
     <item row="0" column="0" rowspan="4" colspan="6">
      <widget class="QPushButton" name="pushButton">
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
       <property name="text">
        <string/>
       </property>
@@ -5975,7 +6148,7 @@ UFL</string>
       </property>
       <property name="font">
        <font>
-        <pointsize>12</pointsize>
+        <pointsize>11</pointsize>
         <weight>75</weight>
         <bold>true</bold>
        </font>

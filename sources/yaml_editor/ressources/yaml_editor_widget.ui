@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>882</width>
+    <width>884</width>
     <height>655</height>
    </rect>
   </property>
@@ -29,7 +29,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="text">
@@ -54,7 +54,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>11</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="alternatingRowColors">
@@ -353,7 +353,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="autoFillBackground">

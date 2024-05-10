@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1257</width>
-    <height>831</height>
+    <width>1153</width>
+    <height>709</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -35,7 +35,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="text">
@@ -53,7 +53,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="text">
@@ -71,7 +71,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="toolTip">
@@ -132,7 +132,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="text">
@@ -150,7 +150,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="toolTip">
@@ -319,7 +319,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="toolTip">
@@ -340,7 +340,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="value">
@@ -358,7 +358,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="text">
@@ -376,7 +376,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="text">
@@ -394,7 +394,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="text">
@@ -412,7 +412,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="text">
@@ -430,7 +430,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="text">
@@ -448,7 +448,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="text">
@@ -466,7 +466,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="text">
@@ -484,7 +484,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="toolTip">
@@ -499,7 +499,7 @@
       <widget class="QPushButton" name="pushButton_Scan">
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="toolTip">
@@ -514,7 +514,7 @@
       <widget class="QSpinBox" name="spinBoxNumScan">
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="toolTip">
@@ -538,7 +538,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="toolTip">
@@ -553,7 +553,7 @@
       <widget class="QSpinBox" name="spinBoxminSNR">
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="toolTip">
@@ -586,7 +586,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="toolTip">
@@ -607,7 +607,7 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="toolTip">
@@ -625,7 +625,7 @@
       <widget class="QPushButton" name="pushButtonDiscard">
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="toolTip">
@@ -643,7 +643,7 @@
       <widget class="QPushButton" name="annotate_pushButtonBack">
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>10</pointsize>
         </font>
        </property>
        <property name="toolTip">
