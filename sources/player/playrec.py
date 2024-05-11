@@ -1083,7 +1083,7 @@ class playrec_v(QObject):
         self.gui.radioButton_LO_bias.setEnabled(True)
         self.gui.lineEdit_LO_bias.textChanged.connect(lambda: self.update_LO_bias("verbose","nochange"))
         self.gui.radioButton_LO_bias.clicked.connect(self.activate_LO_bias)
-        self.gui.pushButton_Play.setIcon(QIcon("play_v4.PNG"))
+        #self.gui.pushButton_Play.setIcon(QIcon("play_v4.PNG"))
         self.gui.pushButton_Play.clicked.connect(self.cb_Butt_toggleplay)
         self.gui.pushButton_Stop.clicked.connect(self.playrec_c.cb_Butt_STOP)
         self.gui.pushButton_REC.clicked.connect(self.cb_Butt_REC)        
@@ -1279,6 +1279,18 @@ class playrec_v(QObject):
         self.SigRelay.emit("cexex_view_spectra",["reset_GUI",0])
         self.SigRelay.emit("cexex_resample",["reset_GUI",0])
         self.gui.label_Filename_Player.setText('')
+
+        if self.m["playlist_active"] == True:
+        #     self.gui.pushButton_act_playlist.setChecked(True)
+        #     self.gui.listWidget_sourcelist.setEnabled(True)
+        #     self.gui.listWidget_playlist.setEnabled(True)
+        #     self.m["playlist_active"] = True
+        # else:
+            self.gui.pushButton_act_playlist.setChecked(False)
+            self.gui.listWidget_sourcelist.setEnabled(False)
+            self.gui.listWidget_playlist.setEnabled(False)
+            self.m["playlist_active"] = False
+
         #self.SigActivateOtherTabs.emit("Player","activate",[])
   
     def addplaylistitem(self):

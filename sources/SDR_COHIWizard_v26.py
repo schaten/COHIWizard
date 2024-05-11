@@ -39,7 +39,7 @@ from pathlib import Path, PureWindowsPath
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QMainWindow, QWidget, QApplication, QHBoxLayout, QLabel
 from PyQt5.QtCore import QTimer, QObject, QThread, pyqtSignal
-
+import time
 
 from PyQt5.QtWidgets import *
 import logging
@@ -660,13 +660,7 @@ class core_v(QObject):
             return False
 
         # TODO TODO TODO: Hostaddress is part of the config menu !
-        #self.m["HostAddress"] = self.gui.lineEdit_IPAddress.text()   ### TODO TODO TODO check if still necesary after transfer to modules playrec and config
         self.SigRelay.emit("cm_playrec",["HostAddress",self.m["HostAddress"]])
-        # configparams = {"ifreq":self.m["ifreq"], "irate":self.m["irate"],
-        #                     "rates": self.m["rates"], "icorr":self.m["icorr"],
-        #                     "HostAddress":self.m["HostAddress"], "LO_offset":self.m["LO_offset"]}
-        #self.m["sdr_configparams"] = configparams #TODO TODO TODO check after change 02-04-2024probably unused
-        #self.gui.spinBoxminSNR_ScannerTab.setProperty("value", self.PROMINENCE)    #######TODO: replace or remove
         
         if self.m["fileopened"] is True:
             msg = QMessageBox()
@@ -749,7 +743,6 @@ class core_v(QObject):
             (3) present recording parameters in info fields
         Returns: True, if successful, False otherwise
         '''
-    
         #TODO: could be an update action of the resampler ?
         self.SigRelay.emit("cexex_resample",["enable_resamp_GUI_elements",True])
         self.SigRelay.emit("cm_all_",["ismetadata",self.ismetadata])
@@ -766,6 +759,7 @@ class core_v(QObject):
                                                             "Open data file"
                                                             ,self.m["metadata"]["last_path"] , filters, selected_filter)
 
+        st = time.time()
         self.SigRelay.emit("cm_all_",["f1", filename[0]])
         if not self.m["f1"]:
             return False
@@ -794,7 +788,8 @@ class core_v(QObject):
         #resampling playlist (reslist). This requires a re-design of this method
         #Priority is currently low, so dat files cannot be resampled directly at the moment
         #then dat File must be entered into the resampling list !
-
+        et = time.time()
+        print(f"first segment etime: {et-st} s: process prompt and signalling to rest")
         if self.m["ext"] == ".dat" or self.m["ext"] == ".raw":
             filetype = "dat"
             self.SigRelay.emit("cexex_waveditor",["activate_insertheader",True])
@@ -809,6 +804,9 @@ class core_v(QObject):
             else:
                 auxi.standard_errorbox("no valid data forma, neiter wav, nor dat nor raw !")
                 return
+        st = et
+        et = time.time()
+        print(f"second segment etime: {et-st} s")
 
         #Generate wavheader and distribute to all modules
         if filetype == "dat": # namecheck only if dat --> makes void all wav-related operation sin filenameextract
@@ -832,6 +830,9 @@ class core_v(QObject):
             return False
         self.SigRelay.emit("cm_waveditor",["filetype",filetype])
         self.SigRelay.emit("cm_all_",["wavheader",self.wavheader])
+        st = et
+        et = time.time()
+        print(f"3rd segment etime: {et-st} s: wav header read")
 
         # build up playlist selectors
         self.SigRelay.emit("cexex_playrec",["addplaylistitem",0])
@@ -839,6 +840,10 @@ class core_v(QObject):
         self.SigRelay.emit("cexex_resample",["addplaylistitem",0])
         self.SigRelay.emit("cexex_resample",["fillplaylist",0])
         self.logger.debug("core_v: wavheader extracted and sent to all modules")
+
+        st = et
+        et = time.time()
+        print(f"4th segment etime: {et-st} s: signalling 2")
 
         ### set readoffset and relay to modules: TODO TODO TODO: check if should be translated to modules (dangerous, may affect many instances)
         if self.wavheader['sdrtype_chckID'].find('rcvr') > -1:
@@ -849,7 +854,7 @@ class core_v(QObject):
         self.SigRelay.emit("cm_all_",["readoffset",self.m["readoffset"]])
 
         #TODO TODO TODO check for transfer to modules
-        self.m["irate"] = self.wavheader['nSamplesPerSec'] #ONLY used in palyer, so shift
+        self.m["irate"] = self.wavheader['nSamplesPerSec'] #ONLY used in player, so shift
 
         # TODO FUTURE: check for append metadata instead of new write
 
@@ -859,18 +864,33 @@ class core_v(QObject):
         yaml.dump(self.m["metadata"], stream)
         stream.close()
 
+        st = et
+        et = time.time()
+        print(f"5th segment etime: {et-st} s: dump config yaml")
+
         self.m["timescaler"] = self.wavheader['nSamplesPerSec']*self.wavheader['nBlockAlign']
         self.m["fileopened"] = True #check if obsolete because f1 == "" would do the same
         self.SigRelay.emit("cm_all_",["fileopened",True])
 
+        st = et
+        et = time.time()
+        print(f"6A segment etime: {et-st} s: only relaying")
 
         out_dirname = self.my_dirname + '/out'  #TODO TODO TODO should only be created if really necessary for resampling !
         if os.path.exists(out_dirname) == False:         #exist yaml file: create from yaml-editor
             os.mkdir(out_dirname)
         self.SigRelay.emit("cm_all_",["out_dirname",out_dirname])
 
+        st = et
+        et = time.time()
+        print(f"6B segment etime: {et-st} s: make out directory")
+
+
         ##############TODO TODO TODO: intermediate hack for comm with scan worker
         self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
+        st = et
+        et = time.time()
+        print(f"6C segment etime: {et-st} s: relay and updateGUIs of all modules")
 
         #TODO TODO TODO: track multiple calls of plot_spectrum: is that really necessary on each fileopen ? 
         return True
@@ -1269,13 +1289,17 @@ if __name__ == '__main__':
     #
     # Player UI: Rec Bandwidth left allign; LO Offset edit Fenster pointsize 10; Activate playlist logo etwas groß;
     # Annotate UI: Scan und Annotate Button Fontsize 10
-    # Player: Inactivate ÜPlaylist Button, when no file loaded, reset to base state when file closed
+    # Player: Inactivate Playlist Button, when no file loaded, reset to base state when file closed
     #
     # check why loading of file takes so long
     #
     # check after file load if annotaton file is complete; if yes release yml editor pushbutton self.SigRelay.emit("cexex_yamleditor",["setWriteyamlButton",True])
     #
     # inactivate Add station to last F button after end of annotation (annotation_completed method)
+    #
+    # spectrogram:
+    # ay = plt.specgram(trace, NFFT=256, noverlap=100, Fs = 1250, mode='magnitude')
+    # plt.show
     # 
     # shift access to xcore_v in __main__ to special initializer method in xcore_v, which is started by a single call in __main__
     #

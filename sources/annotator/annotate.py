@@ -1025,12 +1025,10 @@ class annotate_v(QObject):
         :rtype: Boolean
         """
         #print("annotate: updateGUIelements")
+        self.gui.spinBoxminSNR.setProperty("value",self.m["prominence"])
         if self.m["fileopened"]:
             self.gui.label_Filename_Annotate.setText(self.m["my_filename"] + self.m["ext"])
-        ####################TODO TODO TODO: CHECK DONE urgent no direct access of GUI replace by signalling
-        #self.gui.label_6.setText("Baseline Offset:" + str(self.gui.spinBoxminBaselineoffset.value())) #TODO: not ent. clean, access of gui element of another tab
         self.gui.label_6.setText("Baseline Offset:" + str(self.m["baselineoffset"]))
-        ######################################
         try:
             if (os.path.exists(self.stations_filename) == True):
                 self.scan_completed()
@@ -1053,7 +1051,6 @@ class annotate_v(QObject):
                 pass
         except:
             pass
-        self.gui.spinBoxminSNR.setProperty("value",self.m["prominence"])
 
         #self.gui.DOSOMETHING
 
