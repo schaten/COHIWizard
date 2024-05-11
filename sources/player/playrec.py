@@ -1083,7 +1083,7 @@ class playrec_v(QObject):
         self.gui.radioButton_LO_bias.setEnabled(True)
         self.gui.lineEdit_LO_bias.textChanged.connect(lambda: self.update_LO_bias("verbose","nochange"))
         self.gui.radioButton_LO_bias.clicked.connect(self.activate_LO_bias)
-        #self.gui.pushButton_Play.setIcon(QIcon("play_v4.PNG"))
+        #self.gui.pushButton_Play.setIcon(QIcon("./core/ressources/icons/play_v4.PNG"))
         self.gui.pushButton_Play.clicked.connect(self.cb_Butt_toggleplay)
         self.gui.pushButton_Stop.clicked.connect(self.playrec_c.cb_Butt_STOP)
         self.gui.pushButton_REC.clicked.connect(self.cb_Butt_REC)        
@@ -1535,7 +1535,7 @@ class playrec_v(QObject):
                 self.reset_playerbuttongroup()
                 self.SigRelay.emit("cexex_all_",["reset_GUI",0])
                 return False
-            self.gui.pushButton_Play.setIcon(QIcon("pause_v4.PNG"))
+            self.gui.pushButton_Play.setIcon(QIcon("./core/ressources/icons/pause_v4.PNG"))
             self.gui.pushButton_REC.setEnabled(False)
             self.gui.lineEdit_LO_bias.setEnabled(False)
             if self.m["playthreadActive"] == True:
@@ -1547,7 +1547,7 @@ class playrec_v(QObject):
             self.gui.pushButton_adv1byte.setEnabled(True)
         else:
 
-            self.gui.pushButton_Play.setIcon(QIcon("play_v4.PNG"))
+            self.gui.pushButton_Play.setIcon(QIcon("./core/ressources/icons/play_v4.PNG"))
             self.m["pausestate"] = True ##TODO CHECK: necessary ? es gibt ja self.playrec_c.playrec_tworker.pausestate
             if self.m["playthreadActive"] == True:
                 self.playrec_c.playrec_tworker.pausestate = True
@@ -1716,10 +1716,10 @@ class playrec_v(QObject):
 
         """
         #system_state = sys_state.get_status()
-        self.gui.pushButton_Play.setIcon(QIcon("play_v4.PNG"))
+        self.gui.pushButton_Play.setIcon(QIcon("./core/ressources/icons/play_v4.PNG"))
         self.gui.pushButton_Play.setChecked(False)
         self.gui.pushButton_Loop.setChecked(False)
-        self.gui.pushButton_REC.setIcon(QIcon("rec_v4.PNG"))
+        self.gui.pushButton_REC.setIcon(QIcon("./core/ressources/icons/rec_v4.PNG"))
         self.gui.Label_Recindicator.setEnabled(False)
         self.gui.Label_Recindicator.setStyleSheet(('background-color: rgb(255,255,255)'))
         self.m["playthreadActive"] = False
