@@ -790,6 +790,9 @@ class core_v(QObject):
         #then dat File must be entered into the resampling list !
         et = time.time()
         print(f"first segment etime: {et-st} s: process prompt and signalling to rest")
+        self.logger.debug(f">>>>>> open file TIMING, first segment: {et-st} s: make out directory")
+
+
         if self.m["ext"] == ".dat" or self.m["ext"] == ".raw":
             filetype = "dat"
             self.SigRelay.emit("cexex_waveditor",["activate_insertheader",True])
@@ -884,6 +887,7 @@ class core_v(QObject):
         st = et
         et = time.time()
         print(f"6B segment etime: {et-st} s: make out directory")
+        self.logger.debug(f"6B segment etime: {et-st} s: make out directory")
 
 
         ##############TODO TODO TODO: intermediate hack for comm with scan worker
@@ -1291,7 +1295,8 @@ if __name__ == '__main__':
     # Annotate UI: Scan und Annotate Button Fontsize 10
     # Player: Inactivate Playlist Button, when no file loaded, reset to base state when file closed
     #
-    # check why loading of file takes so long
+    # check why loading of file takes so long:
+    # look at logfile: GUI update in view_spectra is called 4x !!!!!!!!!!!!!!!!!!!!!!!!!!
     #
     # check after file load if annotaton file is complete; if yes release yml editor pushbutton self.SigRelay.emit("cexex_yamleditor",["setWriteyamlButton",True])
     #
