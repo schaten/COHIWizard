@@ -8,7 +8,7 @@ Appropriate recordings can be played back on historic Radio receivers with exter
 
 ## Method A (Windows 10/11 only): 
 
-1) download the respective installation package from the COHIRADIA webpage (zop file)
+1) download the respective installation package from the [COHIRADIA webpage](https://www.radiomuseum.org/dsp_cohiradia.cfm) (zip file)
 2) unpack the zip file to a local directory of your PC, say `cohihome`
 3) start the exe File SDR_COHIWizard_v26.exe
 
