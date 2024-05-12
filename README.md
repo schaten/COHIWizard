@@ -19,7 +19,7 @@ Appropriate recordings can be played back on historic Radio receivers with exter
 3) change to this folder
 4) create a virtual environment with `python –m venv venv`
 5) activate the venv by `venv/Scripts/activate`
-6) install the required packages from the cohifolder\requirements.txt file by typing `pip install -r requirements.txt`
+6) install the required packages from the requirements.txt (in cohihome) file by typing `pip install -r requirements.txt`
 7) change dir to cohifolder/sources
 7) run the main script: `python SDR_COHIWizard_v26.py`
 
