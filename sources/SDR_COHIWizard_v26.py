@@ -48,7 +48,6 @@ import logging
 from icons import Logos
 from core import COHIWizard_GUI_v10_reduced
 
-
 class starter(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -1296,7 +1295,9 @@ if __name__ == '__main__':
     # Player: Inactivate Playlist Button, when no file loaded, reset to base state when file closed
     #
     # check why loading of file takes so long:
-    # look at logfile: GUI update in view_spectra is called 4x !!!!!!!!!!!!!!!!!!!!!!!!!!
+    # look at logfile: GUI update in view_spectra is called 3x !!!!!!!!!!!!!!!!!!!!!!!!!!
+    # reason unknown
+    # lon process = ann_spectrum: is that really necessary, unless annotation takes place ?
     #
     # check after file load if annotaton file is complete; if yes release yml editor pushbutton self.SigRelay.emit("cexex_yamleditor",["setWriteyamlButton",True])
     #

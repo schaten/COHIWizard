@@ -638,7 +638,7 @@ class annotate_c(QObject):
                "peaklocs": peaklocs, "peakprops": peakprops, "databasel": databasel}
         return ret
 
-    @auxi.waiting_effect
+    #@auxi.waiting_effect
     def mwlistread(self,MWlistname):
         T = pd.read_excel(MWlistname)
         return T
@@ -1037,11 +1037,9 @@ class annotate_v(QObject):
                     status = yaml.safe_load(stream)
                     stream.close()
                 except:
-                    #print("update GUI elements: cannot get status")
                     return False 
                 if status["annotated"] == True:
                     self.annotation_completed()
-                    #self.ui.pushButton_Writeyamlheader.setEnabled(True)  ####TODO TODO TODO send by relaying yaml
                     self.SigRelay.emit("cexex_yamleditor",["setWriteyamlButton",True])
                 else:
                     self.annotation_activate()

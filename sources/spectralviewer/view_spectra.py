@@ -10,6 +10,7 @@ from auxiliaries import WAVheader_tools
 import time
 from auxiliaries import auxiliaries as auxi
 import logging
+#from numba import njit
 
 class view_spectra_m(QObject):
     __slots__ = ["None"]
@@ -280,15 +281,11 @@ class view_spectra_v(QObject):
         if self.m["fileopened"] is False:
             return(False)
         else:
-            #print('plot spectrum')
             self.m["horzscal"] = position
-            
             # read datablock corresponding to current sliderposition
             #TODO TODO TODO: correct 32 bit case if wFormatTag != 3
             #print("plot spectrum reached, start readsegment")
-            #print("-------------> before pscale")
             pscale = self.m["wavheader"]['nBlockAlign']
-            #print(f"---> wavheader: {self.m['wavheader']} pscale: {pscale} horzscal: {self.m['horzscal']}")
             position = int(np.floor(pscale*np.round(self.m["wavheader"]['data_nChunkSize']*self.m["horzscal"]/pscale/1000)))
             if self.m["wavheader"]['sdrtype_chckID'].find('rcvr') > -1:
                 self.readoffset = 86
@@ -298,27 +295,18 @@ class view_spectra_v(QObject):
                                       32,self.m["wavheader"]["wFormatTag"])
             data = ret["data"]
             if 2*ret["size"]/self.m["wavheader"]["nBlockAlign"] < self.DATABLOCKSIZE:
-                #sys_state.set_status(system_state)
                 return False
 
-            #self.m["Tabref"]["View_Spectra"]["ax"].clear()
             self.cref["ax"].clear()
-            #print("datalen > 10")
-            #print(f"view_spectra plot_spectum, gain: {self.m['resampling_gain']}")
             if self.gui.radioButton_plotraw.isChecked() is True:
                 realindex = np.arange(0,self.DATABLOCKSIZE,2)
                 imagindex = np.arange(1,self.DATABLOCKSIZE,2)
                 #calculate spectrum and shift/rescale appropriately
                 trace = np.real(data[realindex]+1j*data[imagindex])
-
                 trace = trace * np.power(10,self.m["resampling_gain"]/20)
                 N = len(trace)
                 deltat = 1/self.m["wavheader"]['nSamplesPerSec']
                 time_ = np.linspace(0,N*deltat,N)
-
-                # self.m["Tabref"]["View_Spectra"]["ax"].plot(time_,trace, '-')
-                # self.m["Tabref"]["View_Spectra"]["ax"].set_xlabel('time (s)')
-                # self.m["Tabref"]["View_Spectra"]["ax"].set_ylabel('RFCorder amplitude (V)')
                 self.cref["ax"].plot(time_,trace, '-')
                 self.cref["ax"].set_xlabel('time (s)')
                 self.cref["ax"].set_ylabel('RFCorder amplitude (V)')
@@ -343,24 +331,13 @@ class view_spectra_v(QObject):
                     ymax = datay[peaklocs], color = "C1")
                 self.cref["ax"].hlines(y=peakprops["width_heights"], xmin=datax[peakprops["left_ips"].astype(int)],
                     xmax=datax[peakprops["right_ips"].astype(int)], color = "C1")
-
-                # self.m["Tabref"]["View_Spectra"]["ax"].plot(datax,datay, '-')
-                # self.m["Tabref"]["View_Spectra"]["ax"].plot(datax[peaklocs], datay[peaklocs], "x")
-                # self.m["Tabref"]["View_Spectra"]["ax"].plot(datax,basel, '-', color = "C2")
-                # self.m["Tabref"]["View_Spectra"]["ax"].set_xlabel('frequency (Hz)')
-                # self.m["Tabref"]["View_Spectra"]["ax"].set_ylabel('amplitude (dB)')
-                # #     ymax = datay[peaklocs], color = "C1")
-                # self.m["Tabref"]["View_Spectra"]["ax"].vlines(x=datax[peaklocs], ymin = basel[peaklocs],
-                #     ymax = datay[peaklocs], color = "C1")
-                # self.m["Tabref"]["View_Spectra"]["ax"].hlines(y=peakprops["width_heights"], xmin=datax[peakprops["left_ips"].astype(int)],
-                #     xmax=datax[peakprops["right_ips"].astype(int)], color = "C1")
             self.cref["canvas"].draw()
-            #self.m["Tabref"]["View_Spectra"]["canvas"].draw()
             #display ev<luation time
             displtime = str(self.m["wavheader"]['starttime_dt'] + (self.m["wavheader"]['stoptime_dt']-self.m["wavheader"]['starttime_dt'])*self.m["horzscal"]/1000)
             self.gui.lineEdit_evaltime.setText('Evaluation time: '+ displtime + ' UTC')
         return(True)
     
+    #@njit
     def ann_spectrum(self,dummy,data):      #TODO: This is a controller method, should be transferred to an annotation module
         """
         CONTROLLER

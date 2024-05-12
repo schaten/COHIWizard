@@ -1,3 +1,22 @@
 # COHIWizard
-Software for COHIRADIA. The main is SDR_COHIWizard_v26.py which starts up a GUI with a player and various utilities for e.g. visualization of the spectra, resampling, annotation (beta version) and editing of wav-headers. The player can play back IQ-files archived in COHIRADIA (details see https://www.radiomuseum.org/dsp_cohiradia.cfm).
-For details of use see the current documentations in /documentation 
+
+COHIWizard is an application which allows for playback, recording, analysis and processing of broadband RF signals when using a [STEMLAB125-14](https://redpitaya.com/de/stemlab-125-14/) by Red Pitaya . Main purpose is archiving AM radio bands like LW, MW, SW, VLF in the context of [COHIRADIA](https://www.radiomuseum.org/dsp_cohiradia.cfm) but other purposes can be thought of. While recording the data is stored in IQ data files with 32 bit per sample (2 x 16 bits complex) and carries an extended wav-header in the standard format used for most software defined radios (SDR). 
+
+Appropriate recordings can be played back on historic Radio receivers with external antenna jack and all transmitters active at the time of the recording can then be tuned through and listened to on the radio. Detailed information for installation, hardware setup and an archive with many recordings from 2006 on can be found on [COHIRADIA](https://www.radiomuseum.org/dsp_cohiradia.cfm).
+
+# Installation:
+
+## Method A (Windows 10/11 only): download the installation package from the COHIRADIA webpage
+
+## Method B: 
+
+1) install Python on your PC
+2) clone the repository from GITHUB to your PC to a folder say `cohihome`
+3) change to this folder
+4) create a virtual environment with `python –m venv venv`
+5) activate the venv by cohifolder/venv/Scripts/activate
+6) install the required packages from the cohifolder\requirements.txt file by typing `pip install -r requirements.txt`
+7) change dir to cohifolder/sources
+7) run the main script: python SDR_COHIWizard_v26.py
+
+SDR_COHIWizard_v26.py starts up a GUI with a recorder/player and various utilities for e.g. visualization of the spectra, resampling, annotation (beta version) and editing of wav-headers.
