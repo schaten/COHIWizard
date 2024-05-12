@@ -12,7 +12,7 @@ Appropriate recordings can be played back on historic Radio receivers with exter
 2) unpack the zip file to a local directory of your PC, say `cohihome`
 3) start the exe File SDR_COHIWizard_v26.exe
 
-## Method B: 
+## Method B for execution under Python (not yet tested in LUNIX environments !): 
 
 1) install Python on your PC
 2) clone the repository from GITHUB to your PC to a folder say cohihome
