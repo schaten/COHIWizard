@@ -29,3 +29,7 @@ file_path = "./player/player_widget.py"
 text = "font.setPointSize(10)"
 subs = "font.setPointSize(11)"
 replace(file_path, text, subs)
+replace(file_path, text, subs)
+text = 'QPixmap("'
+subs = 'QPixmap("./core/ressources/icons/'
+replace(file_path, text, subs)
