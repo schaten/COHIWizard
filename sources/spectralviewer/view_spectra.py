@@ -331,12 +331,26 @@ class view_spectra_v(QObject):
                     ymax = datay[peaklocs], color = "C1")
                 self.cref["ax"].hlines(y=peakprops["width_heights"], xmin=datax[peakprops["left_ips"].astype(int)],
                     xmax=datax[peakprops["right_ips"].astype(int)], color = "C1")
+            self.cref["canvas"].mpl_connect('button_press_event', self.on_click)
             self.cref["canvas"].draw()
             #display ev<luation time
             displtime = str(self.m["wavheader"]['starttime_dt'] + (self.m["wavheader"]['stoptime_dt']-self.m["wavheader"]['starttime_dt'])*self.m["horzscal"]/1000)
             self.gui.lineEdit_evaltime.setText('Evaluation time: '+ displtime + ' UTC')
         return(True)
     
+    def on_click(self, event):
+        """
+        TODO for Walter: new method for data readout by clicking on CANVAS
+        :param event
+        :type: ??
+        :raises [ErrorType]: [ErrorDescription]
+        :return:
+        :rtype:
+        """
+        if event.button == 1:  # Check if left mouse button is pressed
+            x, y = event.xdata, event.ydata
+            print(f'Clicked at x={x}, y={y}')
+
     #@njit
     def ann_spectrum(self,dummy,data):      #TODO: This is a controller method, should be transferred to an annotation module
         """

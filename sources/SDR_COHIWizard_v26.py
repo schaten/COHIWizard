@@ -1302,6 +1302,8 @@ if __name__ == '__main__':
     # check after file load if annotaton file is complete; if yes release yml editor pushbutton self.SigRelay.emit("cexex_yamleditor",["setWriteyamlButton",True])
     #
     # inactivate Add station to last F button after end of annotation (annotation_completed method)
+    ##
+    # AUf GITHUB: merge branch und etabliere verschiedene branches für die neueren Versionen
     #
     # spectrogram:
     # ay = plt.specgram(trace, NFFT=256, noverlap=100, Fs = 1250, mode='magnitude')

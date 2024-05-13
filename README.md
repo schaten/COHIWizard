@@ -6,13 +6,13 @@ Appropriate recordings can be played back on historic Radio receivers with exter
 
 # Installation:
 
-## Method A (Windows 10/11 only): 
+## Method A (different versions, Windows 10/11 only): 
 
 1) download the respective installation package from the [COHIRADIA webpage](https://www.radiomuseum.org/dsp_cohiradia.cfm) (zip file)
 2) unpack the zip file to a local directory of your PC, say `cohihome`
 3) start the exe File SDR_COHIWizard_v26.exe
 
-## Method B for execution under Python (not yet tested in LUNIX environments !): 
+## Method B (most recent version) for execution under Python (not yet tested in LUNIX environments !): 
 
 1) install Python on your PC
 2) clone the repository from GITHUB to your PC to a folder say cohihome
