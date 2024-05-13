@@ -40,7 +40,7 @@ subs = "self.menubar = QtWidgets.QMenuBar(MainWindow)"
 replace(file_path, text, subs)
 text = "from file import File"
 subs = "#from file import File"
-replace(file_path, text, subs)
-text = 'QPixmap("'
-subs = 'QPixmap("./core/ressources/icons/'
-replace(file_path, text, subs)
+# replace(file_path, text, subs)
+# text = 'QPixmap("'
+# subs = 'QPixmap("./core/ressources/icons/'
+# replace(file_path, text, subs)
