@@ -491,7 +491,7 @@ class Ui_player_widget(object):
         self.pushButton_Loop.setAutoFillBackground(False)
         self.pushButton_Loop.setText("")
         icon2 = QtGui.QIcon()
-        icon2.addPixmap(QtGui.QPixmap("./core/ressources/icons/../../../../../../SDR_Postprocessor/loop_v4.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon2.addPixmap(QtGui.QPixmap("./core/ressources/icons/loop_v4.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         icon2.addPixmap(QtGui.QPixmap("./core/ressources/icons/loopactive_v4.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
         icon2.addPixmap(QtGui.QPixmap("./core/ressources/icons/loop_v4.png"), QtGui.QIcon.Active, QtGui.QIcon.Off)
         icon2.addPixmap(QtGui.QPixmap("./core/ressources/icons/loopactive_v4.png"), QtGui.QIcon.Active, QtGui.QIcon.On)

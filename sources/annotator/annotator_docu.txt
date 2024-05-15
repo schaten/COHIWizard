@@ -1,0 +1,51 @@
+self.freq_union
+self.locs_union
+self.peakvals_union
+
+Beinhaltet alle Frequenzen und Peaks nach einer konkreten Iteration des scan-Workers
+
+Worker logistik:
+Setze einige Parameter
+Loop über Numsnaps:
+	advance Progressbar
+	lies neues Datensegment mit auxi.readsegment_new
+	rufe ann_spectrumhandler über SigAnnSpectrum(data)
+	wait for continue
+		generiere pdata aus gelesenen data über ann_spectrum
+			ann spectrum: 	calculate FFT, 
+					make log scaling, 
+					do median filtering, 
+					find peaks
+					return pdata as dict {"datax": datax, "datay": datay, "datay_filt": datay_filt,
+               				"peaklocs": peaklocs, "peakprops": peakprops, "databasel": databasel}
+		signalisiere continue
+	
+	rufe ann_spectrumhandler über SigAnnSpectrum(data) ??????? UNKLAR WIESO; wenn inactiv--> Programm bleibt stecken
+	get pdata
+	starte plotdata über Signal SigPlotdata (OPTIONAL)
+	Erzeuge 
+            self.peakvals_union = np.union1d(self.peakvals_union, self.annot[self.autoscan_ix]["PEAKVALS"])
+            self.locs_union = np.union1d(self.locs_union, self.annot[self.autoscan_ix]["PKS"])
+            self.freq_union = np.union1d(self.freq_union, self.annot[self.autoscan_ix]["FREQ"][self.annot[self.autoscan_ix]["PKS"]])
+
+Finde alle eindeutigen Frequenzen innerhalb 1 kHz Bandbreite und baue zusammengezogenen Datensatz:
+loope über ale Numsnaps
+	Update Mittelwerte und schreibe sie auf self.annotation
+	#########ENTRY POINT FÜR individuelle ausschreibungen: neues dict: datasnap[ix] = reannot["PEAKVALS"]
+
+
+Neu: datasnaps[ix] enthält nun das reannot["PEAKVALS"] zum Zeitpunkt ix. Liste aller Dictionaries mit den Peakvals.
+Die dazugehörigen Frequenzen sind in self.freq_union
+
+im System ist dann self.locs_union,self.freq_union
+es gibt nun eine Var self.annotation["PEAKVALS"] und datasnaps, kann mit datasnaps = self.autoscaninst.get_datasnaps() aus einer existierenden autoscan Instanz ausgelesen werden
+datasnaps ist eine Liste von Arrays, Umwandlung:
+A = np.array(datasnaps)
+xax = np.linspace(1,20,20): Hack für Zeitachse, muss noch skaliert werden
+plotten aller Peak-Traces: plt.plot(xax,A) 
+#Legende mit trunkierten Frequenzen
+plt.legend(self.annotation["FREQ"], loc="lower right")
+#Legende mit extern trunkierten Frequenzen auf kHz-Basis
+plt.legend(((np.round(self.freq_union/1000,0)).astype('int')).astype('str'), loc="lower right")
+# legend mit gerundeten Original-Frequenzdaten
+plt.legend((np.round(self.freq_union/1000,0)).astype('str'), loc="lower right")

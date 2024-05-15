@@ -256,7 +256,7 @@ class autoscan_worker(QtCore.QThread):
     """
     __slots__ = ["GUI_parameters", "continue","pdata","progressvalue","horzscal",
              "filepath","readoffset","wavheader","datablocksize","baselineoffset",
-             "unions","annotation_filename","annotation","errormsg"]
+             "unions","annotation_filename","annotation","errormsg", "datasnaps"]
 
     SigUpdateUnions = pyqtSignal()
     SigUpdateGUI = pyqtSignal()
@@ -275,6 +275,7 @@ class autoscan_worker(QtCore.QThread):
         self.host = host_window
         self.locs_union = []
         self.freq_union = []
+        self.peakvals_union = []
         self.slot_0 = []
         self.slot_1 = [False]
         self.slot_2 = {}
@@ -338,6 +339,10 @@ class autoscan_worker(QtCore.QThread):
         self.__slots__[13] = _value
     def get_errormsg(self):
         return(self.__slots__[13])
+    def set_datasnaps(self,_value):
+        self.__slots__[14] = _value
+    def get_datasnaps(self):
+        return(self.__slots__[14])
 
     #@njit
     def autoscan_fun(self):
@@ -372,8 +377,8 @@ class autoscan_worker(QtCore.QThread):
                 #print("waitloop")
                 time.sleep(0.01)
             #print("post waitloop")
-            file_stats = os.stat(self.get_filepath())
-            corrchunksize = min(wavheader['data_nChunkSize'],file_stats.st_size - self.get_readoffset())
+            file_stats = os.stat(self.get_filepath()) #TODO: move out of loop
+            corrchunksize = min(wavheader['data_nChunkSize'],file_stats.st_size - self.get_readoffset()) #TODO: drag out of the loop
             position = int(np.floor(pscale*np.round(corrchunksize*self.position/pscale/100)))
             #print(f'pre readsegment: fp: {self.get_filepath()},p: {position},ro: {self.get_readoffset()}, dbs: {self.get_datablocksize()},bps: {BPS},whfmttg: {wavheader["wFormatTag"]}')
             ret = auxi.readsegment_new(self,self.get_filepath(),position,self.get_readoffset(), self.get_datablocksize(),BPS,BPS,wavheader["wFormatTag"])#TODO: replace by slots communication
@@ -388,7 +393,7 @@ class autoscan_worker(QtCore.QThread):
             #print("sleep before continue 1")
             while self.get_continue() == False:
                 time.sleep(0.001)
-            self.SigAnnSpectrum.emit(data)
+            self.SigAnnSpectrum.emit(data)  #????????????????TODO check
             pdata = self.get_pdata()
             self.set_continue(False)
             self.SigPlotdata.emit()
@@ -402,10 +407,12 @@ class autoscan_worker(QtCore.QThread):
             datay = pdata["datay"]
             basel = pdata["databasel"] + self.get_baselineoffset()
             self.annot[self.autoscan_ix]["SNR"] = datay[peaklocs] - basel[peaklocs]
-            print(f'asf: peaklocs: {peaklocs}')
-            print(f'asf: basel   : {basel[peaklocs]}')
-            print(f'asf: SNR     : {datay[peaklocs] - basel[peaklocs]}')
+            self.annot[self.autoscan_ix]["PEAKVALS"] = datay[peaklocs]
+            #print(f'asf: peaklocs: {peaklocs}')
+            #print(f'asf: basel   : {basel[peaklocs]}')
+            #print(f'asf: SNR     : {datay[peaklocs] - basel[peaklocs]}')
             #collect all peaks which have occurred at least once in an array
+            self.peakvals_union = np.union1d(self.peakvals_union, self.annot[self.autoscan_ix]["PEAKVALS"])
             self.locs_union = np.union1d(self.locs_union, self.annot[self.autoscan_ix]["PKS"])
             self.freq_union = np.union1d(self.freq_union, self.annot[self.autoscan_ix]["FREQ"][self.annot[self.autoscan_ix]["PKS"]])
         # purge self.locs.union and remove elements the frequencies of which are
@@ -415,30 +422,40 @@ class autoscan_worker(QtCore.QThread):
 
         self.locs_union= self.locs_union[y_ix]
         self.freq_union = self.freq_union[y_ix]
-        self.set_unions([self.locs_union,self.freq_union])
+        self.peakvals_union = self.peakvals_union[y_ix]
+        self.set_unions([self.locs_union,self.freq_union, self.peakvals_union])
         self.SigUpdateUnions.emit()
 
         meansnr = np.zeros(len(self.locs_union))
+        meanpeakval = np.zeros(len(self.locs_union))
         minsnr = 1000*np.ones(len(self.locs_union))
         maxsnr = -1000*np.ones(len(self.locs_union))
         reannot = {}
-        for ix in range(self.NUMSNAPS): 
+        datasnaps = []
+        for ix in range(self.NUMSNAPS):
+            print(f"reannot ix {ix}")
             # find indices of current LOCS in the unified LOC vector self.locs_union
             sharedvals, ix_un, ix_ann = np.intersect1d(self.locs_union, self.annot[ix]["PKS"], return_indices=True)
             # write current SNR to the corresponding places of the self.reannotated matrix
             reannot["SNR"] = np.zeros(len(self.locs_union))
             reannot["SNR"][ix_un] = self.annot[ix]["SNR"][ix_ann]
+            reannot["PEAKVALS"] = np.zeros(len(self.locs_union))
+            reannot["PEAKVALS"][ix_un] = self.annot[ix]["PEAKVALS"][ix_ann]
+            datasnaps.append(reannot["PEAKVALS"])
             #Global Statistics, without consideration whether some peaks vanish or
             #appear when running through all values of ix
             meansnr = meansnr + reannot["SNR"]
+            meanpeakval = meanpeakval + reannot["PEAKVALS"]
             #min and max SNR data are currently not being used.
             minsnr = np.minimum(minsnr, reannot["SNR"])
             maxsnr = np.maximum(maxsnr, reannot["SNR"])
             #print("annotate worker findpeak")
-
+        print(f"<<<<<<< datasnaps: {np.size(datasnaps)}")
+        self.set_datasnaps(datasnaps)
         # collect cumulative info in a dictionary and write the info to the annotation yaml file 
         self.annotation = {}
         self.annotation["MSNR"] = meansnr/self.NUMSNAPS
+        self.annotation["PEAKVALS"] = meanpeakval/self.NUMSNAPS
         self.annotation["FREQ"] = np.round(self.freq_union/1000) # signifikante Stellen
         yamldata = [dict() for x in range(len(self.annotation["FREQ"]))]
 
@@ -568,7 +585,7 @@ class annotate_c(QObject):
 
     def annupdateunions(self):
         #print("annupdate unions")
-        [self.locs_union,self.freq_union] =self.autoscaninst.get_unions()
+        [self.locs_union,self.freq_union, self.peakvals_union] = self.autoscaninst.get_unions()
 
     def annspectrumhandler(self,data):
         print("annspectrumhandler reached")
@@ -610,9 +627,9 @@ class annotate_c(QObject):
         spr = np.abs(np.fft.fft((data[realindex]+1j*data[imagindex])))
         N = len(spr)
         spr = np.fft.fftshift(spr)
-        flo = self.m["wavheader"]['centerfreq'] - self.m["wavheader"]['nSamplesPerSec']/2
-        fup = self.m["wavheader"]['centerfreq'] + self.m["wavheader"]['nSamplesPerSec']/2
-        freq0 = np.linspace(0,self.m["wavheader"]['nSamplesPerSec'],N)
+        flo = self.m["wavheader"]['centerfreq'] - self.m["wavheader"]['nSamplesPerSec']/2#TODO: drag somehwere outside ?
+        fup = self.m["wavheader"]['centerfreq'] + self.m["wavheader"]['nSamplesPerSec']/2#TODO: drag somehwere outside ?
+        freq0 = np.linspace(0,self.m["wavheader"]['nSamplesPerSec'],N)#TODO: drag somehwere outside ?
         freq = freq0 + flo
         datax = freq
         datay = 20*np.log10(spr)
@@ -628,9 +645,9 @@ class annotate_c(QObject):
         datay_filt[datay_filt < databasel] = databasel[datay_filt < databasel]
         # find all peaks which are self.prominence dB above baseline and 
         # have a min distance of self.["DELTAF"] and a min width of self.["peakwidth"]
-        dist = np.floor(np.maximum(self.m["deltaf"]/self.m["wavheader"]['nSamplesPerSec']*N,100))
+        dist = np.floor(np.maximum(self.m["deltaf"]/self.m["wavheader"]['nSamplesPerSec']*N,100)) # drag somewhere outside ?
         
-        wd = np.floor(self.m["peakwidth"]/self.m["wavheader"]['nSamplesPerSec']*N)
+        wd = np.floor(self.m["peakwidth"]/self.m["wavheader"]['nSamplesPerSec']*N) # drag somewhere outside ?
 
         peaklocs, peakprops = sig.find_peaks(datay_filt,
                         prominence=(self.m["prominence"],None), distance=dist, width = wd)
