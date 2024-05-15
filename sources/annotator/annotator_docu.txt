@@ -38,7 +38,9 @@ Neu: datasnaps[ix] enthält nun das reannot["PEAKVALS"] zum Zeitpunkt ix. Liste 
 Die dazugehörigen Frequenzen sind in self.freq_union
 
 im System ist dann self.locs_union,self.freq_union
-es gibt nun eine Var self.annotation["PEAKVALS"] und datasnaps, kann mit datasnaps = self.autoscaninst.get_datasnaps() aus einer existierenden autoscan Instanz ausgelesen werden
+es gibt nun eine Var self.annotation["PEAKVALS"] und datasnaps, kann mit 
+	datasnaps = self.autoscaninst.get_datasnaps() 
+aus einer existierenden autoscan Instanz ausgelesen werden
 datasnaps ist eine Liste von Arrays, Umwandlung:
 A = np.array(datasnaps)
 xax = np.linspace(1,20,20): Hack für Zeitachse, muss noch skaliert werden

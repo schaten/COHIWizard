@@ -3,35 +3,25 @@
 Created on Mar 25 2023
 #@author: scharfetter_admin
 """
-#from pickle import FALSE, TRUE #intrinsic
 import sys
 import time
 import os
-#import subprocess
 import datetime as ndatetime
 from datetime import datetime
 from pathlib import Path, PureWindowsPath
-#from datetime import timedelta
-#from socket import socket, AF_INET, SOCK_STREAM
-#from struct import pack, unpack
 import numpy as np
 #from PyQt5.QtCore import QTimer
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
-#from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg,  NavigationToolbar2QT as NavigationToolbar
-#from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 from scipy import signal as sig
 from scipy.ndimage.filters import median_filter
 import pandas as pd  #TODO: check, not installed under this name
 import yaml
 import logging
-#from COHIWizard_GUI_v10 import Ui_MainWindow as MyWizard
-#from auxiliaries import WAVheader_tools
 from auxiliaries import auxiliaries as auxi
-#from auxiliaries import timer_worker as tw
 from PyQt5.QtCore import QObject, QThread, pyqtSignal, QMutex       #TODO: OBSOLETE
 #import system_module as wsys
 
@@ -433,7 +423,6 @@ class autoscan_worker(QtCore.QThread):
         reannot = {}
         datasnaps = []
         for ix in range(self.NUMSNAPS):
-            print(f"reannot ix {ix}")
             # find indices of current LOCS in the unified LOC vector self.locs_union
             sharedvals, ix_un, ix_ann = np.intersect1d(self.locs_union, self.annot[ix]["PKS"], return_indices=True)
             # write current SNR to the corresponding places of the self.reannotated matrix
@@ -450,7 +439,6 @@ class autoscan_worker(QtCore.QThread):
             minsnr = np.minimum(minsnr, reannot["SNR"])
             maxsnr = np.maximum(maxsnr, reannot["SNR"])
             #print("annotate worker findpeak")
-        print(f"<<<<<<< datasnaps: {np.size(datasnaps)}")
         self.set_datasnaps(datasnaps)
         # collect cumulative info in a dictionary and write the info to the annotation yaml file 
         self.annotation = {}
@@ -574,7 +562,7 @@ class annotate_c(QObject):
         self.autoscanthread.start()
         if self.autoscanthread.isRunning():
             self.autoscanthreadActive = True
-            print("scanthread started")
+            #print("scanthread started")
 
     def errorsigtoannstations(self):
         self.m["scanerror"] = True
@@ -588,7 +576,7 @@ class annotate_c(QObject):
         [self.locs_union,self.freq_union, self.peakvals_union] = self.autoscaninst.get_unions()
 
     def annspectrumhandler(self,data):
-        print("annspectrumhandler reached")
+        #print("annspectrumhandler reached")
         pdata = self.ann_spectrum(data)
         self.autoscaninst.set_pdata(pdata)
         self.autoscaninst.set_continue(True)
@@ -677,6 +665,32 @@ class annotate_c(QObject):
             auxi.standard_errorbox("Error during scan procedure, maybe wav header of file is corrupt or wrong entire (chunksize ?)")
             return False
         self.stations_filename = self.m["annotationpath"] + '/stations_list.yaml'
+
+        #write xls file with peak traces
+        datasnaps = self.autoscaninst.get_datasnaps()
+        A = np.array(datasnaps)
+
+        B = {}
+        for ix in range(len(self.freq_union)):
+            B[str(np.round(self.freq_union[ix],0))] = A[:,ix]
+        C = np.zeros((1,len(self.freq_union)))
+        C[0,:] = np.round(self.freq_union,0)
+        B = np.concatenate((C,A))
+        #TODO TODO TODO: place right time scaling here !
+        duration = (self.m["wavheader"]["starttime_dt"] - self.m["wavheader"]["stoptime_dt"]).seconds
+        deltat = duration/np.shape(B)[0]
+        xax = np.zeros((np.shape(B)[0],1))
+        xax[1:,0] = np.linspace(0,duration,num = np.shape(B)[0]-1)
+        ###############################################
+        D = np.concatenate((xax,B),1)
+
+        df = pd.DataFrame(D)
+        peaktracexls_filename = self.m["metadata"]["last_path"] + "/peaktrace_test.xlsx"
+        try:
+            df.to_excel(excel_writer = peaktracexls_filename)
+        except:
+            print("annotate: no access to test peakamplitude excel file")
+            pass
         if os.path.exists(self.stations_filename) == False:
             # read Annotation_basis table from mwlist.org   
             self.SigRelay.emit("cexex_annotate",["annotatestatusdisplay","Status: read MWList table for annotation"])

@@ -269,6 +269,7 @@ class Ui_annotator_widget(object):
         font.setPointSize(11)
         self.spinBoxNumScan.setFont(font)
         self.spinBoxNumScan.setKeyboardTracking(False)
+        self.spinBoxNumScan.setMaximum(99999)
         self.spinBoxNumScan.setProperty("value", 20)
         self.spinBoxNumScan.setObjectName("spinBoxNumScan")
         self.gridLayout_3.addWidget(self.spinBoxNumScan, 3, 5, 1, 1)
