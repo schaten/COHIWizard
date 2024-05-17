@@ -10,6 +10,7 @@ import datetime as ndatetime
 from datetime import datetime
 from pathlib import Path, PureWindowsPath
 import numpy as np
+import matplotlib.pyplot as plt
 #from PyQt5.QtCore import QTimer
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import *
@@ -246,7 +247,7 @@ class autoscan_worker(QtCore.QThread):
     """
     __slots__ = ["GUI_parameters", "continue","pdata","progressvalue","horzscal",
              "filepath","readoffset","wavheader","datablocksize","baselineoffset",
-             "unions","annotation_filename","annotation","errormsg", "datasnaps"]
+             "unions","annotation_filename","annotation","errormsg", "datasnaps", "round_digits"]
 
     SigUpdateUnions = pyqtSignal()
     SigUpdateGUI = pyqtSignal()
@@ -333,6 +334,10 @@ class autoscan_worker(QtCore.QThread):
         self.__slots__[14] = _value
     def get_datasnaps(self):
         return(self.__slots__[14])
+    def set_round_digits(self,_value):
+        self.__slots__[15] = _value
+    def get_round_digits(self):
+        return(self.__slots__[15])
 
     #@njit
     def autoscan_fun(self):
@@ -346,32 +351,35 @@ class autoscan_worker(QtCore.QThread):
         :return: none
         :rtype: none
         """
+        round_digits = self.get_round_digits()
+        locs_union = []
+        freq_union = []
         self.SigUpdateGUI.emit()
         self.SigScandeactivate.emit()
         # TODO: CHECK: connect self.scan_deactivate()
         self.NUMSNAPS = self.get_GUI_parameters()[0]
         self.prominence = self.get_GUI_parameters()[1]
-        self.annot = [dict() for x in range(self.NUMSNAPS)]
+        ann_master = [dict() for x in range(self.NUMSNAPS)]
         #print(f"annotate autoscan fu reached, GUI params: {self.get_GUI_parameters()}")
         wavheader = self.get_wavheader()
         pscale = wavheader['nBlockAlign']
         BPS = wavheader["nBitsPerSample"]
-        for self.autoscan_ix in range(self.NUMSNAPS):
-            self.position = int(np.floor(self.autoscan_ix/self.NUMSNAPS*100))
-            self.set_progressvalue(self.position)
+        for ix in range(self.NUMSNAPS):
+            position = int(np.floor(ix/self.NUMSNAPS*100))
+            self.set_progressvalue(position)
             self.set_continue(False)
             self.SigProgressBar.emit()
             # wait for confirmation from Progress bar updating
-            #print(f"annotate autoscan fu reached, position: {self.position}")
+            #print(f"annotate autoscan fu reached, position: {position}")
             while self.get_continue() == False:
                 #print("waitloop")
                 time.sleep(0.01)
             #print("post waitloop")
             file_stats = os.stat(self.get_filepath()) #TODO: move out of loop
             corrchunksize = min(wavheader['data_nChunkSize'],file_stats.st_size - self.get_readoffset()) #TODO: drag out of the loop
-            position = int(np.floor(pscale*np.round(corrchunksize*self.position/pscale/100)))
+            file_readix = int(np.floor(pscale*np.round(corrchunksize*position/pscale/100)))
             #print(f'pre readsegment: fp: {self.get_filepath()},p: {position},ro: {self.get_readoffset()}, dbs: {self.get_datablocksize()},bps: {BPS},whfmttg: {wavheader["wFormatTag"]}')
-            ret = auxi.readsegment_new(self,self.get_filepath(),position,self.get_readoffset(), self.get_datablocksize(),BPS,BPS,wavheader["wFormatTag"])#TODO: replace by slots communication
+            ret = auxi.readsegment_new(self,self.get_filepath(),file_readix,self.get_readoffset(), self.get_datablocksize(),BPS,BPS,wavheader["wFormatTag"])#TODO: replace by slots communication
             data = ret["data"]
             if 2*ret["size"]/wavheader["nBlockAlign"] < self.get_datablocksize():
                 print(f"size false condition: retsize: {ret['size']}, bBlockAlign: {wavheader['nBlockAlign']}, datablocksize: {self.get_datablocksize()}")
@@ -386,51 +394,49 @@ class autoscan_worker(QtCore.QThread):
             self.SigAnnSpectrum.emit(data)  #????????????????TODO check
             pdata = self.get_pdata()
             self.set_continue(False)
+            #optional plotting if activated
             self.SigPlotdata.emit()
             # wait until plot has been carried out
-            #print("sleep before continue 2")
             while self.get_continue() == False:
                 time.sleep(0.001)
-            self.annot[self.autoscan_ix]["FREQ"] = pdata["datax"] 
-            self.annot[self.autoscan_ix]["PKS"] = pdata["peaklocs"]
+            ann_master[ix]["FREQ"] = pdata["datax"] 
+            ann_master[ix]["PKS"] = pdata["peaklocs"]
             peaklocs = pdata["peaklocs"]
-            datay = pdata["datay"]
+            #datay = pdata["datay"]
             basel = pdata["databasel"] + self.get_baselineoffset()
-            self.annot[self.autoscan_ix]["SNR"] = datay[peaklocs] - basel[peaklocs]
-            self.annot[self.autoscan_ix]["PEAKVALS"] = datay[peaklocs]
+            ann_master[ix]["SNR"] = pdata["datay"][peaklocs] - basel[peaklocs]
+            ann_master[ix]["PEAKVALS"] = pdata["datay"][peaklocs]
             #print(f'asf: peaklocs: {peaklocs}')
             #print(f'asf: basel   : {basel[peaklocs]}')
-            #print(f'asf: SNR     : {datay[peaklocs] - basel[peaklocs]}')
+            #print(f'asf: SNR     : {pdata["datay"][peaklocs] - basel[peaklocs]}')
             #collect all peaks which have occurred at least once in an array
-            self.peakvals_union = np.union1d(self.peakvals_union, self.annot[self.autoscan_ix]["PEAKVALS"])
-            self.locs_union = np.union1d(self.locs_union, self.annot[self.autoscan_ix]["PKS"])
-            self.freq_union = np.union1d(self.freq_union, self.annot[self.autoscan_ix]["FREQ"][self.annot[self.autoscan_ix]["PKS"]])
+            #self.peakvals_union = np.union1d(self.peakvals_union, ann_master[ix]["PEAKVALS"])  #TODO: UNSINN
+            locs_union = np.union1d(locs_union, ann_master[ix]["PKS"])
+            #freq_union = np.union1d(freq_union, ann_master[ix]["FREQ"][ann_master[ix]["PKS"]])
+            freq_union = np.union1d(freq_union, np.round(ann_master[ix]["FREQ"][ann_master[ix]["PKS"]],round_digits))
         # purge self.locs.union and remove elements the frequencies of which are
         # within 1 kHz span 
-        uniquefreqs = pd.unique(np.round(self.freq_union/1000))
-        xyi, x_ix, y_ix = np.intersect1d(uniquefreqs, np.round(self.freq_union/1000), return_indices=True)
-
-        self.locs_union= self.locs_union[y_ix]
-        self.freq_union = self.freq_union[y_ix]
-        self.peakvals_union = self.peakvals_union[y_ix]
-        self.set_unions([self.locs_union,self.freq_union, self.peakvals_union])
-        self.SigUpdateUnions.emit()
-
-        meansnr = np.zeros(len(self.locs_union))
-        meanpeakval = np.zeros(len(self.locs_union))
-        minsnr = 1000*np.ones(len(self.locs_union))
-        maxsnr = -1000*np.ones(len(self.locs_union))
+        #print(f"length freq_union: {len(freq_union)}, length locs_union: {len(locs_union)}")
+        self.set_unions([locs_union,freq_union])
+        self.SigUpdateUnions.emit() #TODO: what is this for ?
+        meansnr = np.zeros(len(locs_union))
+        meanpeakval = np.zeros(len(locs_union))
+        minsnr = 1000*np.ones(len(locs_union))
+        maxsnr = -1000*np.ones(len(locs_union))
         reannot = {}
-        datasnaps = []
+        datasnaps = {}
+        datasnaps["PEAKVALS"] = []
+        datasnaps["SNR"] = []
         for ix in range(self.NUMSNAPS):
-            # find indices of current LOCS in the unified LOC vector self.locs_union
-            sharedvals, ix_un, ix_ann = np.intersect1d(self.locs_union, self.annot[ix]["PKS"], return_indices=True)
+            # find indices of current LOCS in the unified LOC vector locs_union
+            sharedvals, ix_un, ix_ann = np.intersect1d(locs_union, ann_master[ix]["PKS"], return_indices=True)
             # write current SNR to the corresponding places of the self.reannotated matrix
-            reannot["SNR"] = np.zeros(len(self.locs_union))
-            reannot["SNR"][ix_un] = self.annot[ix]["SNR"][ix_ann]
-            reannot["PEAKVALS"] = np.zeros(len(self.locs_union))
-            reannot["PEAKVALS"][ix_un] = self.annot[ix]["PEAKVALS"][ix_ann]
-            datasnaps.append(reannot["PEAKVALS"])
+            reannot["SNR"] = np.zeros(len(locs_union))
+            reannot["SNR"][ix_un] = ann_master[ix]["SNR"][ix_ann]
+            reannot["PEAKVALS"] = np.zeros(len(locs_union))
+            reannot["PEAKVALS"][ix_un] = ann_master[ix]["PEAKVALS"][ix_ann]
+            datasnaps["PEAKVALS"].append(reannot["PEAKVALS"])
+            datasnaps["SNR"].append(reannot["SNR"])
             #Global Statistics, without consideration whether some peaks vanish or
             #appear when running through all values of ix
             meansnr = meansnr + reannot["SNR"]
@@ -439,17 +445,41 @@ class autoscan_worker(QtCore.QThread):
             minsnr = np.minimum(minsnr, reannot["SNR"])
             maxsnr = np.maximum(maxsnr, reannot["SNR"])
             #print("annotate worker findpeak")
+        uniquefreqs = pd.unique(np.round(freq_union/1000,round_digits))
+        # ################# POSTHOC sorting
+        xyi, x_ix, y_ix = np.intersect1d(uniquefreqs, np.round(freq_union/1000,round_digits), return_indices=True)
+        #x_ix: kompakter Vektor [0 1 2 3 4]
+        #y_ix: disperser Vektor mit z.B. [0,2,4,5,6]
+        #contract all columns of the matrix between subsequent col indices in y_ix
+        #print(f"intersect products ix: {x_ix}, iy: {y_ix}")
+        _res1 = np.zeros((np.shape(datasnaps["PEAKVALS"])[0],len(x_ix)))
+        _res2 = _res1
+        A = np.array(datasnaps["SNR"])
+        B = np.array(datasnaps["PEAKVALS"])
+        #print(f"shape of _res: {np.shape(_res)}")
+        #print(f"A: {A}")
+        for ix in x_ix:
+            if ix < len(x_ix)-1:
+                #print("########################################")
+                #print(f"ix: {ix}, section: {A[:,y_ix[ix]:y_ix[ix+1]]}")
+                _res1[:,ix] = (A[:,y_ix[ix]:y_ix[ix+1]]).sum(axis=1)#/(y_ix[ix+1]-y_ix[ix])
+                _res2[:,ix] = (B[:,y_ix[ix]:y_ix[ix+1]]).sum(axis=1)#/(y_ix[ix+1]-y_ix[ix])
+                #print(f"_res[:,ix]: {_res[:,ix]}, _res: {_res}")
+        datasnaps["SNR_contracted"] = _res1
+        datasnaps["PEAKVALS_contracted"] = _res2
+        #print(f"length reannot[PEAKVALS]: {len(reannot['PEAKVALS'])}")
         self.set_datasnaps(datasnaps)
         # collect cumulative info in a dictionary and write the info to the annotation yaml file 
-        self.annotation = {}
-        self.annotation["MSNR"] = meansnr/self.NUMSNAPS
-        self.annotation["PEAKVALS"] = meanpeakval/self.NUMSNAPS
-        self.annotation["FREQ"] = np.round(self.freq_union/1000) # signifikante Stellen
-        yamldata = [dict() for x in range(len(self.annotation["FREQ"]))]
+        ann_dict = {}
+        ann_dict["MSNR"] = meansnr/self.NUMSNAPS
+        ann_dict["PEAKVALS"] = meanpeakval/self.NUMSNAPS
+        ann_dict["FREQ"] = np.round(freq_union/1000,round_digits) # signifikante Stellen
+        #print(f"length ann_dict[FREQ]: {len(ann_dict['FREQ'])}")
+        yamldata = [dict() for x in range(len(ann_dict["FREQ"]))]
 
-        for ix in range(len(self.annotation["FREQ"])):
-            yamldata[ix]["FREQ:"] = str(self.annotation["FREQ"][ix])
-            yamldata[ix]["SNR:"] = str(np.floor(self.annotation["MSNR"][ix]))
+        for ix in range(len(ann_dict["FREQ"])):
+            yamldata[ix]["FREQ:"] = str(ann_dict["FREQ"][ix])
+            yamldata[ix]["SNR:"] = str(np.floor(ann_dict["MSNR"][ix]))
         #TODO: check if file exists
         try:
             stream = open(self.get_annotation_filename(), "w")
@@ -458,7 +488,7 @@ class autoscan_worker(QtCore.QThread):
         except:
             print("cannot write annotation yaml")
             pass
-        self.set_annotation(self.annotation)
+        self.set_annotation(ann_dict)
         self.SigAnnotation.emit()
         self.SigStatustable.emit()
         self.set_continue(False)
@@ -480,6 +510,8 @@ class annotate_m(QObject):
         self.mdl["sample"] = 0
         self.mdl["_log"] = False
         self.mdl["baselineoffset"] = 0
+        self.mdl["round_digits"] = 0
+        self.mdl["export_xlsx"] = False
         # Create a custom logger
         logging.getLogger().setLevel(logging.DEBUG)
         # Erstelle einen Logger mit dem Modul- oder Skriptnamen
@@ -546,6 +578,7 @@ class annotate_c(QObject):
         self.autoscaninst.set_wavheader(self.m["wavheader"])
         self.autoscaninst.set_datablocksize(self.DATABLOCKSIZE)
         self.autoscaninst.set_baselineoffset(self.m["baselineoffset"])
+        self.autoscaninst.set_round_digits(self.m["round_digits"])
         self.autoscaninst.set_annotation_filename(self.m["annotation_filename"])
         self.autoscanthread.started.connect(self.autoscaninst.autoscan_fun)
         self.autoscaninst.SigError.connect(self.errorsigtoannstations)
@@ -573,7 +606,8 @@ class annotate_c(QObject):
 
     def annupdateunions(self):
         #print("annupdate unions")
-        [self.locs_union,self.freq_union, self.peakvals_union] = self.autoscaninst.get_unions()
+        #[self.locs_union,self.freq_union, self.peakvals_union] = self.autoscaninst.get_unions()
+        [self.locs_union,self.freq_union] = self.autoscaninst.get_unions()
 
     def annspectrumhandler(self,data):
         #print("annspectrumhandler reached")
@@ -659,38 +693,48 @@ class annotate_c(QObject):
         :return: flag False on unsuccessful execution if stations list or status file non-existent
         :rtype: Boolean
         """
-        #self.m = sys_state.get_status()
+
         time.sleep(0.1)
         if self.m["scanerror"]:
             auxi.standard_errorbox("Error during scan procedure, maybe wav header of file is corrupt or wrong entire (chunksize ?)")
             return False
         self.stations_filename = self.m["annotationpath"] + '/stations_list.yaml'
 
-        #write xls file with peak traces
-        datasnaps = self.autoscaninst.get_datasnaps()
-        A = np.array(datasnaps)
-
-        B = {}
-        for ix in range(len(self.freq_union)):
-            B[str(np.round(self.freq_union[ix],0))] = A[:,ix]
-        C = np.zeros((1,len(self.freq_union)))
-        C[0,:] = np.round(self.freq_union,0)
-        B = np.concatenate((C,A))
-        #TODO TODO TODO: place right time scaling here !
-        duration = (self.m["wavheader"]["starttime_dt"] - self.m["wavheader"]["stoptime_dt"]).seconds
-        deltat = duration/np.shape(B)[0]
-        xax = np.zeros((np.shape(B)[0],1))
-        xax[1:,0] = np.linspace(0,duration,num = np.shape(B)[0]-1)
-        ###############################################
-        D = np.concatenate((xax,B),1)
-
-        df = pd.DataFrame(D)
-        peaktracexls_filename = self.m["metadata"]["last_path"] + "/peaktrace_test.xlsx"
-        try:
-            df.to_excel(excel_writer = peaktracexls_filename)
-        except:
-            print("annotate: no access to test peakamplitude excel file")
-            pass
+        if self.m["export_xlsx"]:
+            #write xls file with peak traces
+            datasnaps = self.autoscaninst.get_datasnaps()
+            uniquefreqs = pd.unique(np.round(self.freq_union/1000,self.m["round_digits"]))
+            self.freq_union = uniquefreqs
+            #A = np.array(datasnaps["SNR_contracted"])
+            A = np.array(datasnaps["PEAKVALS_contracted"])
+            B = {}
+            for ix in range(len(self.freq_union)):
+                B[str(np.round(self.freq_union[ix],self.m["round_digits"]))] = A[:,ix]
+            C = np.zeros((1,len(self.freq_union)))
+            C[0,:] = np.round(self.freq_union,self.m["round_digits"])
+            B = np.concatenate((C,A))  #ERROR in exe occurs here in concatenatealong dimension 1 the array at index 0 has size 1 and the array at index 1 has size 8
+            duration = (self.m["wavheader"]["starttime_dt"] - self.m["wavheader"]["stoptime_dt"]).seconds
+            deltat = duration/np.shape(B)[0]
+            xax = np.zeros((np.shape(B)[0],1))
+            xax[1:,0] = np.linspace(0,duration,num = np.shape(B)[0]-1)
+            D = np.concatenate((xax,B),1)
+            try:
+                plt.clear()
+            except:
+                pass
+            plt.plot(xax[1:],B[1:,:])
+            plt.legend((np.round(self.freq_union,self.m["round_digits"])).astype('str'), loc="lower right")
+            plt.xlabel("time (s)")
+            plt.ylabel("peak value (dB)")
+            plt.title("time evolution of identified carriers, frequencies are in kHz")
+            plt.show()
+            df = pd.DataFrame(D)
+            peaktracexls_filename = self.m["annotationpath"] + "/peaktrace.xlsx"
+            try:
+                df.to_excel(excel_writer = peaktracexls_filename)
+            except:
+                print("annotate: no access to test peakamplitude excel file")
+                pass
         if os.path.exists(self.stations_filename) == False:
             # read Annotation_basis table from mwlist.org   
             self.SigRelay.emit("cexex_annotate",["annotatestatusdisplay","Status: read MWList table for annotation"])
@@ -954,15 +998,18 @@ class annotate_v(QObject):
 
         #connect ui element events with annotator methods
         self.gui.pushButton_Scan.clicked.connect(self.annotate_c.autoscan)
-        self.gui.pushButtonAnnotate.clicked.connect(self.annotate_c.ann_stations) 
+        self.gui.pushButtonAnnotate.clicked.connect(self.annotatehandler) 
         self.gui.pushButtonDiscard.clicked.connect(self.discard_annot_line) ####TODO TODO TODO in future must be the controller method
         self.gui.spinBoxminSNR.valueChanged.connect(self.minSNRupdate) 
         self.gui.pushButtonENTER.clicked.connect(self.enterlinetoannotation) ####TODO TODO TODO in future must be the controller method
         self.gui.Annotate_listWidget.itemClicked.connect(self.cb_ListClicked)
-        self.gui.spinBoxNumScan.valueChanged.connect(self.cb_numscanchange) 
+        self.gui.spinBoxNumScan.valueChanged.connect(self.cb_numscanchange)
+        self.gui.spinBox_res_digits.valueChanged.connect(self.cb_res_digits_change)
         #self.gui.spinBoxminSNR.valueChanged.connect(self.cb_minSNRchange) #TODO: wozu ?
         self.gui.annotate_pushButtonBack.setEnabled(False)
         self.gui.annotate_pushButtonBack.clicked.connect(self.cb_backinfrequency)  ####TODO TODO TODO in future must be the controller method
+        self.gui.radioButton_export_xlsx.setChecked(False)
+        self.gui.radioButton_export_xlsx.clicked.connect(self.cb_Butt_export)
         #self.gui.lineEdit.returnPressed.connect(self.enterlinetoannotation)
         #self.gui.pushButton_ScanAnn.clicked.connect(self.listclick_test)
 
@@ -971,6 +1018,27 @@ class annotate_v(QObject):
         #self.gui.spinBoxKernelwidth.setProperty("value", 15)
         #self.gui.spinBoxNumScan.setProperty("value", 10)
         #self.gui.spinBoxminBaselineoffset.setProperty("value", 5)
+
+    def annotatehandler(self):
+        self.m["export_xlsx"] = False
+        self.annotate_c.ann_stations()
+        self.m["export_xlsx"] = self.gui.radioButton_export_xlsx.isChecked()
+
+    def cb_Butt_export(self):
+        self.m["export_xlsx"] = self.gui.radioButton_export_xlsx.isChecked()
+
+    def cb_res_digits_change(self):
+        """
+        handles changes of the frequency resolution digits spinbox
+        :param : none
+        :type : none
+        :raises [ErrorType]: [ErrorDescription]
+        :return: none
+        :rtype: none
+        """
+        self.m["round_digits"] = self.gui.spinBox_res_digits.value()
+        self.SigRelay.emit("cm_annotate_",["round_digits",self.m["round_digits"]])
+
 
     def rxhandler(self,_key,_value):
         """
@@ -1043,6 +1111,7 @@ class annotate_v(QObject):
     def getGUIvalues(self):
                 self.m["NumScan"] = self.gui.spinBoxNumScan.value()
                 self.m["minSNR"] = self.gui.spinBoxminSNR.value()
+                self.m["round_digits"] = self.gui.spinBox_res_digits.value()
 
 
     def updateGUIelements(self):

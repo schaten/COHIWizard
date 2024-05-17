@@ -663,6 +663,53 @@
        </property>
       </widget>
      </item>
+     <item row="4" column="3">
+      <widget class="QSpinBox" name="spinBox_res_digits">
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
+       <property name="maximum">
+        <number>2</number>
+       </property>
+       <property name="displayIntegerBase">
+        <number>10</number>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="2">
+      <widget class="QLabel" name="label_4">
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Frequency resolution
+ digits after comma</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="6">
+      <widget class="QRadioButton" name="radioButton_export_xlsx">
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
+       <property name="layoutDirection">
+        <enum>Qt::RightToLeft</enum>
+       </property>
+       <property name="text">
+        <string>Export 
+ peaktraces</string>
+       </property>
+       <property name="autoExclusive">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
   </layout>

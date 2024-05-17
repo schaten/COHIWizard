@@ -14,8 +14,8 @@ Loop über Numsnaps:
 		generiere pdata aus gelesenen data über ann_spectrum
 			ann spectrum: 	calculate FFT, 
 					make log scaling, 
-					do median filtering, 
-					find peaks
+					do median filtering iside the spectrum (along f-axis), 
+					find peaks according to min distance, prominence, (SNR), min peakwidth
 					return pdata as dict {"datax": datax, "datay": datay, "datay_filt": datay_filt,
                				"peaklocs": peaklocs, "peakprops": peakprops, "databasel": databasel}
 		signalisiere continue
@@ -27,11 +27,14 @@ Loop über Numsnaps:
             self.peakvals_union = np.union1d(self.peakvals_union, self.annot[self.autoscan_ix]["PEAKVALS"])
             self.locs_union = np.union1d(self.locs_union, self.annot[self.autoscan_ix]["PKS"])
             self.freq_union = np.union1d(self.freq_union, self.annot[self.autoscan_ix]["FREQ"][self.annot[self.autoscan_ix]["PKS"]])
-
+		^^^^hier werden alle irgendwann auftretenden peaks zusammengesammelt
 Finde alle eindeutigen Frequenzen innerhalb 1 kHz Bandbreite und baue zusammengezogenen Datensatz:
 loope über ale Numsnaps
 	Update Mittelwerte und schreibe sie auf self.annotation
 	#########ENTRY POINT FÜR individuelle ausschreibungen: neues dict: datasnap[ix] = reannot["PEAKVALS"]
+
+
+
 
 
 Neu: datasnaps[ix] enthält nun das reannot["PEAKVALS"] zum Zeitpunkt ix. Liste aller Dictionaries mit den Peakvals.
