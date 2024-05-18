@@ -3579,12 +3579,8 @@ UFL</string>
             </property>
             <property name="icon">
              <iconset>
-              <normaloff>../../../../../../../../SDR_Postprocessor/loop_v4.png</normaloff>
-              <normalon>../../loopactive_v4.png</normalon>
-              <activeoff>../../loop_v4.png</activeoff>
-              <activeon>../../loopactive_v4.png</activeon>
-              <selectedoff>../../loop_v4.png</selectedoff>
-              <selectedon>../../loopactive_v4.png</selectedon>../../../../../../../../SDR_Postprocessor/loop_v4.png</iconset>
+              <normaloff>icons/loop_v4.png</normaloff>
+              <normalon>icons/loopactive_v4.png</normalon>icons/loop_v4.png</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -3596,6 +3592,9 @@ UFL</string>
              <bool>true</bool>
             </property>
             <property name="autoDefault">
+             <bool>false</bool>
+            </property>
+            <property name="flat">
              <bool>false</bool>
             </property>
            </widget>

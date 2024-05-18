@@ -741,10 +741,11 @@ class annotate_c(QObject):
             filters ="MWList files (*.xlsx)"
             selected_filter = "MWList files (*.xlsx)"
             filename=""
+            MWlistpath = Path(self.m["standardpath"] + "/annotator/ressources")
             if self.m["ismetadata"] == False:
                 filename =  QtWidgets.QFileDialog.getOpenFileName(self.m["QTMAINWINDOWparent"],
                                                                     "Open new stations list (e.g. MWList) file"
-                                                                    , self.m["standardpath"], filters, selected_filter)
+                                                                    , MWlistpath.__str__(), filters, selected_filter)
             else:
                 #print('open file with last path')
                 if "last_MWlist" in self.m["metadata"]:
@@ -756,7 +757,7 @@ class annotate_c(QObject):
                 else:
                     filename =  QtWidgets.QFileDialog.getOpenFileName(self.m["QTMAINWINDOWparent"],
                                                     "Open new stations list (e.g. MWList) file"
-                                                    , self.m["standardpath"], filters, selected_filter)
+                                                    , MWlistpath.__str__(), filters, selected_filter)
             if len(filename[0]) == 0:
                 return False
             list_selection = filename[0]   
