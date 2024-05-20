@@ -21,6 +21,6 @@ Appropriate recordings can be played back on historic Radio receivers with exter
 5) activate the venv by `venv/Scripts/activate`
 6) install the required packages from the requirements.txt (in cohihome) file by typing `pip install -r requirements.txt`
 7) change dir to cohifolder/sources
-7) run the main script: `python SDR_COHIWizard_v26.py`
+7) run the main script: `python SDR_COHIWizard.py`
 
-SDR_COHIWizard_v26.py starts up a GUI with a recorder/player and various utilities for e.g. visualization of the spectra, resampling, annotation (beta version) and editing of wav-headers.
+SDR_COHIWizard.py starts up a GUI with a recorder/player and various utilities for e.g. visualization of the spectra, resampling, annotation (beta version) and editing of wav-headers.
