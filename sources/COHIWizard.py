@@ -25,6 +25,7 @@
         # self.gui.lineEdit_resample_targetLO.setEnabled(False)
         # self.gui.actionOverwrite_header.setVisible(False)
 # Start-Tab setzen:self.gui.tabWidget.setCurrentIndex(1) #TODO: avoid magic number, unidentified
+# Documentation with Sphinx started in ../docs
 
 
 
