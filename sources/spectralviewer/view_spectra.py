@@ -90,7 +90,6 @@ class view_spectra_v(QObject):
 
     SigAny = pyqtSignal()
     SigCancel = pyqtSignal()
-    #SigUpdateGUI = pyqtSignal(object) #TODO: remove after tests
     SigSyncGUIUpdatelist = pyqtSignal(object)
     SigUpdateOtherGUIs = pyqtSignal()
     SigRX = pyqtSignal(str,object)
@@ -226,22 +225,6 @@ class view_spectra_v(QObject):
         self.logger.debug("view spectra: emit baselineoffset %i", self.m["baselineoffset"])
         self.SigRelay.emit("cm_xcore",["baselineoffset",self.m["baselineoffset"]])
 
-    # def update_GUI(self,_key): #TODO TODO: is this method still needed ? reorganize. gui-calls should be avoided, better only signalling and gui must call the routenes itself
-    #     #print(" view spectra updateGUI: new updateGUI in view spectra module reached")
-
-    #     self.logger.debug(" view spectra updateGUI: new updateGUI in view spectra module reached")
-    #     self.SigUpdateGUI.disconnect(self.update_GUI)
-    #     if _key.find("ext_update") == 0:
-    #         #update resampler gui with all elements
-    #         #TODO: fetch model values and re-fill all tab fields
-    #         print("view_spectra update_GUI reached")
-    #         pass
-    #     #other key possible: "none"
-    #     dummy = 0
-    #     self.plot_spectrum(dummy,self.m["position"])
-    #     time.sleep(0.1)
-    #     self.SigUpdateGUI.connect(self.update_GUI)
-    #     self.SigRelay.emit("cm_xcore",["baselineoffset",self.m["baselineoffset"]])
 
     def reset_GUI(self):
         #clear canvas
@@ -421,27 +404,19 @@ class view_spectra_v(QObject):
         ########TODO TODO TODO: urgent, close this access as soon as possible
         #self.SigRelay.emit("cui_annotate",[self.gui.spinBoxminSNR.setProperty,["value",self.m["prominence"]]])
         #####################
-        #self.gui.spinBoxminSNR.setProperty("value", self.m["prominence"]) #TODO TODO TODO: remove after relocation of annotator and activate line above
-        #self.m["position"] = self.gui.horizontalScrollBar_view_spectra.value()
-        #self.SigRelay.emit("cm_all_",["horzscal", self.m["position"]])
         self.SigRelay.emit("cm_all_",["prominence", self.m["prominence"]])
         self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
         self.SigRelay.emit("cexex_annotate",["updateGUIelements",0])
 
     def set_baselineoffset(self):        
         baselineoffset = self.gui.spinBoxminBaselineoffset.value()
-        #self.gui.label_6.setText("Baseline Offset:" + str(baselineoffset))
-        #position = self.gui.horizontalScrollBar_view_spectra.value()
-        #self.SigRelay.emit("cm_all_",["horzscal", position])
         self.SigRelay.emit("cm_all_",["baselineoffset",baselineoffset])
-        #self.SigRelay.emit("cm_view_spectra",["position",position]) # TODO: CHECK THIS IS STRANGE !
         self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
         self.SigRelay.emit("cexex_annotate",["updateGUIelements",0])
 
     def setkernelwidth(self):               
         filterkernel = self.gui.spinBoxKernelwidth.value()
         self.SigRelay.emit("cm_all_",["filterkernel",filterkernel])
-        #self.SigRelay.emit("cm_view_spectra",["fileopened",False])# TODO: CHECK THIS IS STRANGE !
         #self.SigRelay.emit("cm_view_spectra",["position",self.position])
         self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
 
@@ -449,16 +424,11 @@ class view_spectra_v(QObject):
         peakwidth = self.gui.spinBoxminPeakwidth.value()
         #position = self.gui.horizontalScrollBar_view_spectra.value()
         self.SigRelay.emit("cm_all_",["peakwidth",peakwidth])
-        #self.SigRelay.emit("cm_all_",["deltaf",self.DELTAF])# TODO: CHECK THIS IS STRANGE !
-        #self.SigRelay.emit("cm_view_spectra",["position",position])# TODO: CHECK THIS IS STRANGE !
         self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
         self.SigRelay.emit("cexex_annotate",["updateGUIelements",0]) #TODO: not necessary ?
 
     def minPeakDistanceupdate(self):
         deltaf = self.gui.spinBoxminPeakDistance.value()
-        #self.position = self.ui.horizontalScrollBar_view_spectra.value()# TODO: CHECK THIS IS STRANGE !
-        # self.SigRelay.emit("cm_all_",["horzscal", self.position])# TODO: CHECK THIS IS STRANGE !
         self.SigRelay.emit("cm_all_",["deltaf",deltaf])
-        # self.SigRelay.emit("cm_view_spectra",["position",self.position])# TODO: CHECK THIS IS STRANGE !
         self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
         self.SigRelay.emit("cexex_annotate",["updateGUIelements",0]) #TODO: not necessary ?

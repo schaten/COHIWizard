@@ -648,7 +648,7 @@ class annotate_c(QObject):
         #calculate spectrum and shift/rescale appropriately
         spr = np.abs(np.fft.fft((data[realindex]+1j*data[imagindex])))
         N = len(spr)
-        spr = np.fft.fftshift(spr)
+        spr = np.fft.fftshift(spr)/N
         flo = self.m["wavheader"]['centerfreq'] - self.m["wavheader"]['nSamplesPerSec']/2#TODO: drag somehwere outside ?
         fup = self.m["wavheader"]['centerfreq'] + self.m["wavheader"]['nSamplesPerSec']/2#TODO: drag somehwere outside ?
         freq0 = np.linspace(0,self.m["wavheader"]['nSamplesPerSec'],N)#TODO: drag somehwere outside ?
@@ -713,7 +713,7 @@ class annotate_c(QObject):
             C = np.zeros((1,len(self.freq_union)))
             C[0,:] = np.round(self.freq_union,self.m["round_digits"])
             B = np.concatenate((C,A))  #ERROR in exe occurs here in concatenatealong dimension 1 the array at index 0 has size 1 and the array at index 1 has size 8
-            duration = (self.m["wavheader"]["starttime_dt"] - self.m["wavheader"]["stoptime_dt"]).seconds
+            duration = (self.m["wavheader"]["stoptime_dt"] - self.m["wavheader"]["starttime_dt"]).seconds
             deltat = duration/np.shape(B)[0]
             xax = np.zeros((np.shape(B)[0],1))
             xax[1:,0] = np.linspace(0,duration,num = np.shape(B)[0]-1)
