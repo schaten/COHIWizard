@@ -1,0 +1,10 @@
+COHIWizard
+==========
+
+installation
+------------
+
+.. code-block:: console
+
+    pip install auxiliaries.py
+
