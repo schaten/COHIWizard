@@ -10,6 +10,8 @@ Welcome to COHIWizard_v1.2's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   modules
+   
 Contents
 --------
 .. toctree::
