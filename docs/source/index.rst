@@ -15,6 +15,8 @@ Contents
 .. toctree::
    intro
    installation
+   software_architecture
+   COHIWizard
 
 Indices and tables
 ==================

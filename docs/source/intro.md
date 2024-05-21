@@ -4,8 +4,13 @@ COHIWizard is an application which allows for playback, recording, analysis and 
 
 Appropriate recordings can be played back on historic Radio receivers with external antenna jack and all transmitters active at the time of the recording can then be tuned through and listened to on the radio. Detailed information for installation, hardware setup and an archive with many recordings from 2006 on can be found on [COHIRADIA](https://www.radiomuseum.org/dsp_cohiradia.cfm).
 
+See a video example of playing back an archived file on an old tube radio:
+
+   <iframe width="560" height="315" src="https://cohiradia.radiomuseum.org/download/docs/COHIRADIA_Demovideo_v1.mp4" frameborder="0" allowfullscreen></iframe>
+
 
 [comment]: <this is a comment>
 
 
-<img width="400" height="175" src="../../source/images/COHIRADIA_Logo_Snap.PNG" />
+
+<img width="300" height="120" src="../../source/images/COHIRADIA_Logo_Snap.PNG" />
