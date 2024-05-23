@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>player package &mdash; COHIWizard_v1.2 1.2.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=4d6f9085"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="resampler package" href="resampler.html" />
+    <link rel="prev" title="auxiliaries module" href="auxiliaries.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            COHIWizard_v1.2
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">What is COHIWizard ?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="software_architecture.html">Software architecture</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">sources</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="COHIWizard.html">COHIWizard</a></li>
+<li class="toctree-l2"><a class="reference internal" href="abstract_module.html">abstract_module module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="annotator.html">annotator package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auxiliaries.html">auxiliaries module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">player package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-player.player_widget">player.player_widget module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#player.player_widget.Ui_player_widget"><code class="docutils literal notranslate"><span class="pre">Ui_player_widget</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-player.playrec">player.playrec module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#player.playrec.playrec_c"><code class="docutils literal notranslate"><span class="pre">playrec_c</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#player.playrec.playrec_m"><code class="docutils literal notranslate"><span class="pre">playrec_m</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#player.playrec.playrec_v"><code class="docutils literal notranslate"><span class="pre">playrec_v</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#player.playrec.playrec_worker"><code class="docutils literal notranslate"><span class="pre">playrec_worker</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#player-set-fonts-module">player.set_fonts module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-player.stemlab_control">player.stemlab_control module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#player.stemlab_control.StemlabControl"><code class="docutils literal notranslate"><span class="pre">StemlabControl</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-player">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="resampler.html">resampler package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spectralviewer.html">spectralviewer package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wavheader_editor.html">wavheader_editor package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="yaml_editor.html">yaml_editor package</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">COHIWizard_v1.2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">sources</a></li>
+      <li class="breadcrumb-item active">player package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/player.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="player-package">
+<h1>player package<a class="headerlink" href="#player-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-player.player_widget">
+<span id="player-player-widget-module"></span><h2>player.player_widget module<a class="headerlink" href="#module-player.player_widget" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="player.player_widget.Ui_player_widget">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">player.player_widget.</span></span><span class="sig-name descname"><span class="pre">Ui_player_widget</span></span><a class="headerlink" href="#player.player_widget.Ui_player_widget" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="player.player_widget.Ui_player_widget.retranslateUi">
+<span class="sig-name descname"><span class="pre">retranslateUi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">player_widget</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.player_widget.Ui_player_widget.retranslateUi" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.player_widget.Ui_player_widget.setupUi">
+<span class="sig-name descname"><span class="pre">setupUi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">player_widget</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.player_widget.Ui_player_widget.setupUi" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-player.playrec">
+<span id="player-playrec-module"></span><h2>player.playrec module<a class="headerlink" href="#module-player.playrec" title="Link to this heading"></a></h2>
+<p>Created on Feb 24 2024</p>
+<p><a class="reference external" href="mailto:#&#37;&#52;&#48;author">#<span>&#64;</span>author</a>: scharfetter_admin</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="player.playrec.playrec_c">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">player.playrec.</span></span><span class="sig-name descname"><span class="pre">playrec_c</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">playrec_m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_c" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
+<p>_view method</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_c.EOF_manager">
+<span class="sig-name descname"><span class="pre">EOF_manager</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_c.EOF_manager" title="Link to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>_target of SigFinished from playloop. If signal is received, a decision is made whether </dt><dd><p>to stop the player completely, 
+continue with next file if ‘nextfile’ in wavheader exists
+continue restarting the same file as long as in endless <a href="#id7"><span class="problematic" id="id8">mode_</span></a></p>
+</dd>
+</dl>
+<p>:param : none
+:type : none
+‘’’
+:raises [ErrorType]: [ErrorDescription]
+‘’’
+:return:
+:rtype:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_c.LO_bias_checkbounds">
+<span class="sig-name descname"><span class="pre">LO_bias_checkbounds</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_c.LO_bias_checkbounds" title="Link to this definition"></a></dt>
+<dd><p>Purpose: checks if LO bias setting is within valid bounds; 
+:param [ParamName]: none
+:type [ParamName]: none
+:raises none
+:return: True if successful, otherwise False
+:rtype: Boolean</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_c.SigActivateOtherTabs">
+<span class="sig-name descname"><span class="pre">SigActivateOtherTabs</span></span><a class="headerlink" href="#player.playrec.playrec_c.SigActivateOtherTabs" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_c.SigAny">
+<span class="sig-name descname"><span class="pre">SigAny</span></span><a class="headerlink" href="#player.playrec.playrec_c.SigAny" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_c.SigEOFStart">
+<span class="sig-name descname"><span class="pre">SigEOFStart</span></span><a class="headerlink" href="#player.playrec.playrec_c.SigEOFStart" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_c.SigRelay">
+<span class="sig-name descname"><span class="pre">SigRelay</span></span><a class="headerlink" href="#player.playrec.playrec_c.SigRelay" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_c.cb_Butt_STOP">
+<span class="sig-name descname"><span class="pre">cb_Butt_STOP</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_c.cb_Butt_STOP" title="Link to this definition"></a></dt>
+<dd><p>Callback function for Stop Button; 
+sets stopstate flag True
+stops playrec_thread
+stops sdrserver if running –&gt; stops data streaming to STEMLAB sdr server
+resets all player buttons to initial state
+set all tabs which 
+:raises [none]: [none]
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_c.checkSTEMLABrates">
+<span class="sig-name descname"><span class="pre">checkSTEMLABrates</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_c.checkSTEMLABrates" title="Link to this definition"></a></dt>
+<dd><p>CONTROLLER
+_checks if the items ifreq, irate and icorr in system_state have the proper values acc. to RFCorder filename convention
+checks if system_state[“irate”] has a value out of the values defined for the STEMLAB in system_state[“rates”] 
+:param: none
+:type: none
+…
+:raises TODO [popup error message]: corresponding to different format errors
+…
+:return: True/False acc to success of the check
+:rtype: bool</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_c.checkdiskspace">
+<span class="sig-name descname"><span class="pre">checkdiskspace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">expected_filesize</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_dir</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_c.checkdiskspace" title="Link to this definition"></a></dt>
+<dd><p>check if free diskspace is sufficient for writing expeczed_filesize bytes on directory _dir
+:param: expected_filesize
+:type: int
+:param: _dir
+:type: str
+…
+:raises: none
+…
+:return: True if enough space, False else
+:rtype: Boolean</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_c.contvars">
+<span class="sig-name descname"><span class="pre">contvars</span></span><a class="headerlink" href="#player.playrec.playrec_c.contvars" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_c.display_status">
+<span class="sig-name descname"><span class="pre">display_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">messagestring</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_c.display_status" title="Link to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>handler for message signals from stemlabcontrol class</dt><dd><p>display message in GUI status field, if exists</p>
+</dd>
+</dl>
+<p>VIEW
+:param: messaagestring
+:type: str
+:raises [none]: [none]
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_c.generate_recfilename">
+<span class="sig-name descname"><span class="pre">generate_recfilename</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_c.generate_recfilename" title="Link to this definition"></a></dt>
+<dd><p>generate filenae for recording file from:
+recording_path/cohiwizard_datestring_Ttimestring_LOfrequency.dat
+:return: False if STEMLAB socket cannot be started</p>
+<blockquote>
+<div><p>False if playback thread cannot be started</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Boolean</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_c.jump_1_byte">
+<span class="sig-name descname"><span class="pre">jump_1_byte</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_c.jump_1_byte" title="Link to this definition"></a></dt>
+<dd><p>_increments file reading position by +1 byte for manually correcting for sample jumps 
+which deviate from integer multiples of sample size (4, 8); possible needs to be repeated several times
+this is an emergency method for exceptional usecases and not for regular operation
+if self.modality == “play”:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>update position slider</p></li>
+<li><p>set file read pointer to new position, <a href="#id3"><span class="problematic" id="id4">|if increment|</span></a> &gt; 1</p></li>
+</ul>
+</div></blockquote>
+<p>:param : none
+:type : int
+‘’’
+:raises [ErrorType]: [ErrorDescription]
+‘’’
+:return: True/False on successful/unsuccesful operation
+:rtype: bool</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_c.jump_to_position_c">
+<span class="sig-name descname"><span class="pre">jump_to_position_c</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_c.jump_to_position_c" title="Link to this definition"></a></dt>
+<dd><p>:param : none
+:type : none
+‘’’
+:raises [ErrorType]: [ErrorDescription]
+‘’’
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_c.play_manager">
+<span class="sig-name descname"><span class="pre">play_manager</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_c.play_manager" title="Link to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Callback function for Play Button; Calls file_open</dt><dd><p>starts data streaming to STEMLAB sdr server via method play_tstarter</p>
+</dd>
+</dl>
+<p>VIEW
+:raises [none]: [none]
+:return: False if IP address not set, File could not be opened</p>
+<blockquote>
+<div><p>False if STEMLAB socket cannot be started
+False if playback thread cannot be started
+True if player can be started successfully</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Boolean</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_c.play_tstarter">
+<span class="sig-name descname"><span class="pre">play_tstarter</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_c.play_tstarter" title="Link to this definition"></a></dt>
+<dd><p>_start playback via data stream to STEMLAB sdr server
+starts thread ‘playthread’ for data streaming to the STEMLAB
+instantiates thread worker method
+initializes <a href="#id9"><span class="problematic" id="id10">signalling_</span></a>
+CONTROLLER
+:return: _False if error, True on <a href="#id11"><span class="problematic" id="id12">succes_</span></a>
+:rtype: _Boolean_
+‘’’
+Purpose: 
+SigFinished:                 emitted by: thread worker on end of stream</p>
+<blockquote>
+<div><p>thread termination, activate callback for Stop button</p>
+</div></blockquote>
+<dl class="simple">
+<dt>thread.finished:</dt><dd><p>thread termination</p>
+</dd>
+<dt>thread.started:</dt><dd><p>start worker method streaming loop</p>
+</dd>
+<dt>SigIncrementCurTime:         emitted by: thread worker every second</dt><dd><p>increment playtime counter by 1 second</p>
+</dd>
+</dl>
+<p>Returns: False if error, True on success</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_c.recloopmanager">
+<span class="sig-name descname"><span class="pre">recloopmanager</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_c.recloopmanager" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_c.recordingsequence">
+<span class="sig-name descname"><span class="pre">recordingsequence</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_c.recordingsequence" title="Link to this definition"></a></dt>
+<dd><p>start SDR server unless already started. References to 
+:class: <cite>StemlabControl</cite>
+:return: False if STEMLAB socket cannot be started</p>
+<blockquote>
+<div><p>False if playback thread cannot be started</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Boolean</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_c.stemlabcontrol_errorhandler">
+<span class="sig-name descname"><span class="pre">stemlabcontrol_errorhandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">errorstring</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_c.stemlabcontrol_errorhandler" title="Link to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>handler for error signals from stemlabcontrol class</dt><dd><p>display error in standard errormessagebox
+NOT YET IMPLEMENTED: reset playerbuttongroup and GUI</p>
+</dd>
+</dl>
+<p>VIEW
+:param: errorstring
+:type: str
+:raises [none]: [none]
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="player.playrec.playrec_m">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">player.playrec.</span></span><span class="sig-name descname"><span class="pre">playrec_m</span></span><a class="headerlink" href="#player.playrec.playrec_m" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_m.None">
+<span class="sig-name descname"><span class="pre">None</span></span><a class="headerlink" href="#player.playrec.playrec_m.None" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_m.SigModelXXX">
+<span class="sig-name descname"><span class="pre">SigModelXXX</span></span><a class="headerlink" href="#player.playrec.playrec_m.SigModelXXX" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="player.playrec.playrec_v">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">player.playrec.</span></span><span class="sig-name descname"><span class="pre">playrec_v</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gui</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">playrec_c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">playrec_m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
+<p>_view methods for resampling module
+TODO: gui.wavheader –&gt; something less general ?</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.Buttloopmanager">
+<span class="sig-name descname"><span class="pre">Buttloopmanager</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.Buttloopmanager" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.SigActivateOtherTabs">
+<span class="sig-name descname"><span class="pre">SigActivateOtherTabs</span></span><a class="headerlink" href="#player.playrec.playrec_v.SigActivateOtherTabs" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.SigCancel">
+<span class="sig-name descname"><span class="pre">SigCancel</span></span><a class="headerlink" href="#player.playrec.playrec_v.SigCancel" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.SigGUIReset">
+<span class="sig-name descname"><span class="pre">SigGUIReset</span></span><a class="headerlink" href="#player.playrec.playrec_v.SigGUIReset" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.SigRelay">
+<span class="sig-name descname"><span class="pre">SigRelay</span></span><a class="headerlink" href="#player.playrec.playrec_v.SigRelay" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.SigSyncGUIUpdatelist">
+<span class="sig-name descname"><span class="pre">SigSyncGUIUpdatelist</span></span><a class="headerlink" href="#player.playrec.playrec_v.SigSyncGUIUpdatelist" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.activate_LO_bias">
+<span class="sig-name descname"><span class="pre">activate_LO_bias</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.activate_LO_bias" title="Link to this definition"></a></dt>
+<dd><p>Purpose: handle radiobutton for LO bias setting; 
+(1) highlight LO_lineEdit window
+(2) call update of offset value
+:param [ParamName]: none
+:type [ParamName]: none
+:raises none
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.addplaylistitem">
+<span class="sig-name descname"><span class="pre">addplaylistitem</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.addplaylistitem" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.blinkrec">
+<span class="sig-name descname"><span class="pre">blinkrec</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.blinkrec" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.cb_Butt_REC">
+<span class="sig-name descname"><span class="pre">cb_Butt_REC</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.cb_Butt_REC" title="Link to this definition"></a></dt>
+<dd><p>Callback function for REC Button; 
+#######################so far dummy, as not yet implemented
+:raises [none]: [none]
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.cb_Butt_toggle_playlist">
+<span class="sig-name descname"><span class="pre">cb_Butt_toggle_playlist</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.cb_Butt_toggle_playlist" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.cb_Butt_toggleplay">
+<span class="sig-name descname"><span class="pre">cb_Butt_toggleplay</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.cb_Butt_toggleplay" title="Link to this definition"></a></dt>
+<dd><p>toggles the play button between play and pause states
+TODO
+:param: none
+:type: none
+…
+:raises: none
+…
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.cb_setgain">
+<span class="sig-name descname"><span class="pre">cb_setgain</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.cb_setgain" title="Link to this definition"></a></dt>
+<dd><p>Descr
+#TODO</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.countdown">
+<span class="sig-name descname"><span class="pre">countdown</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.countdown" title="Link to this definition"></a></dt>
+<dd><p>updates countdown in play time indicator, if playrec_radioButton_RECAUTOSTART is enabled 
+starts recording if countdown drops &lt; 0
+:param: none
+:type: none
+…
+:raises: none
+…
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.editHostAddress">
+<span class="sig-name descname"><span class="pre">editHostAddress</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.editHostAddress" title="Link to this definition"></a></dt>
+<dd><p>Purpose: Callback for edidHostAddress Lineedit item
+activate Host IP address field and enable saving mode
+Returns: nothing</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.fillplaylist">
+<span class="sig-name descname"><span class="pre">fillplaylist</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.fillplaylist" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.indicate_bufoverflow">
+<span class="sig-name descname"><span class="pre">indicate_bufoverflow</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.indicate_bufoverflow" title="Link to this definition"></a></dt>
+<dd><p>_indicate if during recording a buffer underflow occurred
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.init_playrec_ui">
+<span class="sig-name descname"><span class="pre">init_playrec_ui</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.init_playrec_ui" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.jump_to_position">
+<span class="sig-name descname"><span class="pre">jump_to_position</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.jump_to_position" title="Link to this definition"></a></dt>
+<dd><p>jump to next player file position
+:param: none
+:type: none
+…
+:raises: none
+…
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.listhighlighter">
+<span class="sig-name descname"><span class="pre">listhighlighter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.listhighlighter" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.logfilehandler">
+<span class="sig-name descname"><span class="pre">logfilehandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.logfilehandler" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.numeraltest">
+<span class="sig-name descname"><span class="pre">numeraltest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_item</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lo_bound</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hi_bound</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errortextsource</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.numeraltest" title="Link to this definition"></a></dt>
+<dd><p>checks, if _item is a numeral and if it obeys certain criteria
+criteria:  &lt;lo_bound, &gt;hi bound, 
+param: _item: text to be checked
+type: str
+param: lo_bound: lowest valid value
+type: int
+param: hi_bound: highest valid value
+type: int
+param: errortextsource: text describing the source of the _item
+type: str
+:raises [none]: [none]
+:return: True if succesful, False else
+:rtype: Boolean</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.playlist_update">
+<span class="sig-name descname"><span class="pre">playlist_update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.playlist_update" title="Link to this definition"></a></dt>
+<dd><p>updates playlist whenever the playlist Widget is changed
+:param: none
+:type: none
+…
+:raises: none
+…
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.popup">
+<span class="sig-name descname"><span class="pre">popup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.popup" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.preset_SR_LO">
+<span class="sig-name descname"><span class="pre">preset_SR_LO</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.preset_SR_LO" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.recording_path_checker">
+<span class="sig-name descname"><span class="pre">recording_path_checker</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.recording_path_checker" title="Link to this definition"></a></dt>
+<dd><p>checks, if recording path exists in config_wizard.yaml and if the path exists
+if not: ask for target pathname and store in config.wizard.yaml
+param: none
+type: none
+:raises [none]: [none]
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.reset_GUI">
+<span class="sig-name descname"><span class="pre">reset_GUI</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.reset_GUI" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.reset_LO_bias">
+<span class="sig-name descname"><span class="pre">reset_LO_bias</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.reset_LO_bias" title="Link to this definition"></a></dt>
+<dd><p>Purpose: reset LO bias setting to 0; 
+:param [ParamName]: none
+:type [ParamName]: none
+:raises none
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.reset_playerbuttongroup">
+<span class="sig-name descname"><span class="pre">reset_playerbuttongroup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.reset_playerbuttongroup" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.rxhandler">
+<span class="sig-name descname"><span class="pre">rxhandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.rxhandler" title="Link to this definition"></a></dt>
+<dd><p>handles remote calls from other modules via Signal SigRX(_key,_value)
+:param : _key
+:type : str
+:param : _value
+:type : object
+:raises [ErrorType]: [ErrorDescription]
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.set_IP">
+<span class="sig-name descname"><span class="pre">set_IP</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.set_IP" title="Link to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>set IP Address and save to config yaml</dt><dd><p>disable IP address line
+enable Button for editing address</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Param<span class="colon">:</span></dt>
+<dd class="field-odd"><p>none</p>
+</dd>
+<dt class="field-even">Type<span class="colon">:</span></dt>
+<dd class="field-even"><p>none</p>
+</dd>
+</dl>
+<p>…
+:raises warning message: Read error if config_wizard.yaml does not exist
+…
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.showRFdata">
+<span class="sig-name descname"><span class="pre">showRFdata</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.showRFdata" title="Link to this definition"></a></dt>
+<dd><p>_take over datasegment from player loop worker and caluclate from there the signal volume and present it in the volume indicator
+read gain value and present it in the player Tab on the ‘progressbar’ Widget ‘progressBar_volume’
+Parameters: a = length form top to 0dB tick
+b = length between -80 and 0 dB ticks
+c = length between bottom and -80dB tick
+a+b+c = total length of the indicator and hence of the progress-bar volume 
+GUI Element
+:return: _False if error, True on <a href="#id13"><span class="problematic" id="id14">succes_</span></a>
+:rtype: _Boolean_</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.shutdown">
+<span class="sig-name descname"><span class="pre">shutdown</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.shutdown" title="Link to this definition"></a></dt>
+<dd><p>Returns: nothing</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.toggleRecAutostart">
+<span class="sig-name descname"><span class="pre">toggleRecAutostart</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.toggleRecAutostart" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.toggleTEST">
+<span class="sig-name descname"><span class="pre">toggleTEST</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.toggleTEST" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.toggleUTC">
+<span class="sig-name descname"><span class="pre">toggleUTC</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.toggleUTC" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.toggle_LO_bias">
+<span class="sig-name descname"><span class="pre">toggle_LO_bias</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.toggle_LO_bias" title="Link to this definition"></a></dt>
+<dd><p>Purpose: toggle status of the radiobuttongoup for LO bias setting; 
+(1) highlight/unhighligt LO_lineEdit
+(2) check/uncheck Radiobutton
+(3) enable/disable LO_lineEdit
+:param [ParamName]: none
+:type [ParamName]: none
+:raises none
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.updateGUIelements">
+<span class="sig-name descname"><span class="pre">updateGUIelements</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.updateGUIelements" title="Link to this definition"></a></dt>
+<dd><p>updates GUI elements , usually triggered by a Signal SigTabsUpdateGUIs to which 
+this method is connected in the __main__ of the core module
+:param : none
+:type : none
+:raises [ErrorType]: [ErrorDescription]
+:return: flag False or True, False on unsuccessful execution
+:rtype: Boolean</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.update_LO_bias">
+<span class="sig-name descname"><span class="pre">update_LO_bias</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.update_LO_bias" title="Link to this definition"></a></dt>
+<dd><p>Purpose: update LO bias setting; 
+check validity of offset value: isnumeric, integer
+<a href="#id1"><span class="problematic" id="id2">*</span></a>args: optional first argument “verbose”: then an errormessage is displayed if LO cannot be changed</p>
+<blockquote>
+<div><p>optional second argument “change” or “unchanged”: change means that the buttobgroup checkstatus is not changed in case of an error</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>[</strong><strong>ParamName</strong><strong>]</strong> (<em>str</em>) – args</p>
+</dd>
+</dl>
+<p>:raises none
+:return: True if successful, otherwise False
+:rtype: Boolean</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.updatecurtime">
+<span class="sig-name descname"><span class="pre">updatecurtime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">increment</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.updatecurtime" title="Link to this definition"></a></dt>
+<dd><p>_increments time indicator by value in increment, except for 0. 
+With increment == 0 the indicator is reset to 0
+if self.modality == “play”:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>update position slider</p></li>
+<li><p>set file read pointer to new position, <a href="#id5"><span class="problematic" id="id6">|if increment|</span></a> &gt; 1</p></li>
+</ul>
+</div></blockquote>
+<p>:param : increment
+:type : int
+‘’’
+:raises [ErrorType]: [ErrorDescription]
+‘’’
+:return: True/False on successful/unsuccesful operation
+:rtype: bool</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.viewvars">
+<span class="sig-name descname"><span class="pre">viewvars</span></span><a class="headerlink" href="#player.playrec.playrec_v.viewvars" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">player.playrec.</span></span><span class="sig-name descname"><span class="pre">playrec_worker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stemlabcontrolinst</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
+<p>worker class for data streaming thread from PC to STEMLAB
+object for playback and recording thread
+:param : no regular parameters; as this is a thread worker communication occurs via</p>
+<blockquote>
+<div><p>__slots__: Dictionary with entries:
+__slots__[0]: self.f1 = complete file path pathname/filename Type: str
+__slots__[1]: timescaler = bytes per second  TODO: rescaling to samples per second would probably be more logical, Type int
+__slots__[2]: TEST = flag for test mode Type: bool
+__slots__[3]: modality; currently not used TODO: remove ?
+__slots__[4]: filehandle
+__slots__[5]: data segment to be returned every second
+__slots__[6]: gain, scaling factor for playback
+__slots__[7]: formatlist: [formattag blockalign bitpsample]</p>
+</div></blockquote>
+<p>:type : dictionary
+‘’’
+:raises [ErrorType]: none
+‘’’</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">return<span class="colon">:</span></dt>
+<dd class="field-odd"><p>none</p>
+</dd>
+<dt class="field-even">rtype<span class="colon">:</span></dt>
+<dd class="field-even"><p>none</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.SigBufferOverflow">
+<span class="sig-name descname"><span class="pre">SigBufferOverflow</span></span><a class="headerlink" href="#player.playrec.playrec_worker.SigBufferOverflow" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.SigFinished">
+<span class="sig-name descname"><span class="pre">SigFinished</span></span><a class="headerlink" href="#player.playrec.playrec_worker.SigFinished" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.SigIncrementCurTime">
+<span class="sig-name descname"><span class="pre">SigIncrementCurTime</span></span><a class="headerlink" href="#player.playrec.playrec_worker.SigIncrementCurTime" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.TEST">
+<span class="sig-name descname"><span class="pre">TEST</span></span><a class="headerlink" href="#player.playrec.playrec_worker.TEST" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.data">
+<span class="sig-name descname"><span class="pre">data</span></span><a class="headerlink" href="#player.playrec.playrec_worker.data" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.datablocksize">
+<span class="sig-name descname"><span class="pre">datablocksize</span></span><a class="headerlink" href="#player.playrec.playrec_worker.datablocksize" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.fileHandle">
+<span class="sig-name descname"><span class="pre">fileHandle</span></span><a class="headerlink" href="#player.playrec.playrec_worker.fileHandle" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.filename">
+<span class="sig-name descname"><span class="pre">filename</span></span><a class="headerlink" href="#player.playrec.playrec_worker.filename" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.formattag">
+<span class="sig-name descname"><span class="pre">formattag</span></span><a class="headerlink" href="#player.playrec.playrec_worker.formattag" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.gain">
+<span class="sig-name descname"><span class="pre">gain</span></span><a class="headerlink" href="#player.playrec.playrec_worker.gain" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.get_0">
+<span class="sig-name descname"><span class="pre">get_0</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.get_0" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.get_1">
+<span class="sig-name descname"><span class="pre">get_1</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.get_1" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.get_2">
+<span class="sig-name descname"><span class="pre">get_2</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.get_2" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.get_3">
+<span class="sig-name descname"><span class="pre">get_3</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.get_3" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.get_4">
+<span class="sig-name descname"><span class="pre">get_4</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.get_4" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.get_5">
+<span class="sig-name descname"><span class="pre">get_5</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.get_5" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.get_6">
+<span class="sig-name descname"><span class="pre">get_6</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.get_6" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.get_7">
+<span class="sig-name descname"><span class="pre">get_7</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.get_7" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.get_8">
+<span class="sig-name descname"><span class="pre">get_8</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.get_8" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.modality">
+<span class="sig-name descname"><span class="pre">modality</span></span><a class="headerlink" href="#player.playrec.playrec_worker.modality" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.play_loop16">
+<span class="sig-name descname"><span class="pre">play_loop16</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.play_loop16" title="Link to this definition"></a></dt>
+<dd><p>worker loop for sending data to STEMLAB server
+data format i16; 2xi16 complex; FormatTag 1
+sends signals:</p>
+<blockquote>
+<div><p>SigFinished = pyqtSignal()
+SigIncrementCurTime = pyqtSignal()
+SigBufferOverflow = pyqtSignal()</p>
+</div></blockquote>
+<p>:param : no regular parameters; as this is a thread worker communication occurs via
+class slots __slots__[i], i = 0…3
+__slots__[0]: self.f1 = complete file path pathname/filename Type: str
+__slots__[1]: timescaler = bytes per second  TODO: rescaling to samples per second would probably be more logical, Type int
+__slots__[2]: TEST = flag for test mode Type: bool
+__slots__[3]: modality; currently not used TODO: remove ?
+__slots__[4]: filehandle
+__slots__[5]: data segment to be returned every second
+__slots__[6]: gain, scaling factor for playback
+__slots__[7]: formatlist: [formattag blockalign bitpsample]
+__slots__[8]: datablocksize
+:type : none
+‘’’
+:raises [ErrorType]: none
+‘’’
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.read24">
+<span class="sig-name descname"><span class="pre">read24</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">format</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.read24" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.rec_loop">
+<span class="sig-name descname"><span class="pre">rec_loop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.rec_loop" title="Link to this definition"></a></dt>
+<dd><p>worker loop for receiving data from STEMLAB server
+data is written to file
+loop runs until EOF or interruption by stopping
+loop can be paused ??????how????????
+data format i16; 2xi16 complex; FormatTag 1
+sends signals:</p>
+<blockquote>
+<div><p>SigFinished = pyqtSignal()
+SigIncrementCurTime = pyqtSignal()
+SigBufferOverflow = pyqtSignal()</p>
+</div></blockquote>
+<p>:param : no regular parameters; as this is a thread worker communication occurs via
+class slots __slots__[i], i = 0…3
+__slots__[0]: self.f1 = complete file path pathname/filename Type: str
+__slots__[1]: timescaler = bytes per second  TODO: rescaling to samples per second would probably be more logical, Type int
+__slots__[2]: TEST = flag for test mode Type: bool
+__slots__[3]: modality; currently not used TODO: remove ?
+__slots__[4]: filehandle
+__slots__[5]: data segment to be returned every second
+__slots__[6]: gain, scaling factor for playback
+__slots__[7]: formatlist: [formattag blockalign bitpsample]
+:type : none
+‘’’
+:raises [ErrorType]: none
+‘’’
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.resetCounter">
+<span class="sig-name descname"><span class="pre">resetCounter</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.resetCounter" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.set_0">
+<span class="sig-name descname"><span class="pre">set_0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.set_0" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.set_1">
+<span class="sig-name descname"><span class="pre">set_1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.set_1" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.set_2">
+<span class="sig-name descname"><span class="pre">set_2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.set_2" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.set_3">
+<span class="sig-name descname"><span class="pre">set_3</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.set_3" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.set_4">
+<span class="sig-name descname"><span class="pre">set_4</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.set_4" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.set_5">
+<span class="sig-name descname"><span class="pre">set_5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.set_5" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.set_6">
+<span class="sig-name descname"><span class="pre">set_6</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.set_6" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.set_7">
+<span class="sig-name descname"><span class="pre">set_7</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.set_7" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.set_8">
+<span class="sig-name descname"><span class="pre">set_8</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.set_8" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.stop_loop">
+<span class="sig-name descname"><span class="pre">stop_loop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.stop_loop" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.timescaler">
+<span class="sig-name descname"><span class="pre">timescaler</span></span><a class="headerlink" href="#player.playrec.playrec_worker.timescaler" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="player-set-fonts-module">
+<h2>player.set_fonts module<a class="headerlink" href="#player-set-fonts-module" title="Link to this heading"></a></h2>
+</section>
+<section id="module-player.stemlab_control">
+<span id="player-stemlab-control-module"></span><h2>player.stemlab_control module<a class="headerlink" href="#module-player.stemlab_control" title="Link to this heading"></a></h2>
+<p>Created on Feb 24 2024</p>
+<p><a class="reference external" href="mailto:#&#37;&#52;&#48;author">#<span>&#64;</span>author</a>: scharfetter_admin</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">player.stemlab_control.</span></span><span class="sig-name descname"><span class="pre">StemlabControl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.stemlab_control.StemlabControl" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
+<p>Class for STEMLAB ssh connection, server start and stop,
+data stream socket control and shutdown of the STEMLAB LINUX
+some methods emit a pyqtSignal(str) named SigMessage(messagestring) with argument messagestring 
+two settings are called via methods, i.e. set_play() and set_rec() for selecting play or rec
+:param : no regular parameters; communication occurs via</p>
+<blockquote>
+<div><p>__slots__: Dictionary with entries:
+__slots__[0]: irate, Type: int
+__slots__[1]: ifreq = LO, Type integer
+__slots__[2]: icorr Type: integer
+__slots__[3]: rates Type: list</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>[</strong><strong>ErrorType</strong><strong>]</strong> – none</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>none</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>none</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.HostAddress">
+<span class="sig-name descname"><span class="pre">HostAddress</span></span><a class="headerlink" href="#player.stemlab_control.StemlabControl.HostAddress" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.RPShutdown">
+<span class="sig-name descname"><span class="pre">RPShutdown</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configparams</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.stemlab_control.StemlabControl.RPShutdown" title="Link to this definition"></a></dt>
+<dd><p>Purpose: Shutdown the LINUX running on the STEMLAB
+Sequence:   (1) stop server sdr-transceiver-wide on the STEMLAB.</p>
+<blockquote>
+<div><ol class="arabic simple" start="2">
+<li><p>send ‘halt’ command via ssh, track result via stdout</p></li>
+<li><p>communicate steps and progress via popup messages</p></li>
+</ol>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.SigError">
+<span class="sig-name descname"><span class="pre">SigError</span></span><a class="headerlink" href="#player.stemlab_control.StemlabControl.SigError" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.SigMessage">
+<span class="sig-name descname"><span class="pre">SigMessage</span></span><a class="headerlink" href="#player.stemlab_control.StemlabControl.SigMessage" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.config_socket">
+<span class="sig-name descname"><span class="pre">config_socket</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configparams</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.stemlab_control.StemlabControl.config_socket" title="Link to this definition"></a></dt>
+<dd><p>initialize stream socket for communication to sdr_transceiver_wide on
+the STEMLAB
+returns as errorflag ‘False’ if an error occurs, else it returns ‘True’
+In case of unsuccessful socket setup popup error messages are sent
+param: configparams
+type: dict
+Returns:</p>
+<blockquote>
+<div><p>True if socket can be configures, False in case of error
+requires self.modality to have been set by set_play() or set_rec()</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.icorr">
+<span class="sig-name descname"><span class="pre">icorr</span></span><a class="headerlink" href="#player.stemlab_control.StemlabControl.icorr" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.ifreq">
+<span class="sig-name descname"><span class="pre">ifreq</span></span><a class="headerlink" href="#player.stemlab_control.StemlabControl.ifreq" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.irate">
+<span class="sig-name descname"><span class="pre">irate</span></span><a class="headerlink" href="#player.stemlab_control.StemlabControl.irate" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.monitor">
+<span class="sig-name descname"><span class="pre">monitor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.stemlab_control.StemlabControl.monitor" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.rates">
+<span class="sig-name descname"><span class="pre">rates</span></span><a class="headerlink" href="#player.stemlab_control.StemlabControl.rates" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.sdrserverstart">
+<span class="sig-name descname"><span class="pre">sdrserverstart</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configparams</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.stemlab_control.StemlabControl.sdrserverstart" title="Link to this definition"></a></dt>
+<dd><p>Purpose: start server sdr-transceiver-wide on the STEMLAB.
+Stop potentially running server instance before so as to prevent
+undefined communication</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.sdrserverstop">
+<span class="sig-name descname"><span class="pre">sdrserverstop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.stemlab_control.StemlabControl.sdrserverstop" title="Link to this definition"></a></dt>
+<dd><p>Purpose: stop server sdr-transceiver-wide on the STEMLAB.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.set_play">
+<span class="sig-name descname"><span class="pre">set_play</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.stemlab_control.StemlabControl.set_play" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.set_rec">
+<span class="sig-name descname"><span class="pre">set_rec</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.stemlab_control.StemlabControl.set_rec" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.sshsendcommandseq">
+<span class="sig-name descname"><span class="pre">sshsendcommandseq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shcomm</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.stemlab_control.StemlabControl.sshsendcommandseq" title="Link to this definition"></a></dt>
+<dd><p>send ssh command string sequence via command string list shcomm</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.startssh">
+<span class="sig-name descname"><span class="pre">startssh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configparams</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.stemlab_control.StemlabControl.startssh" title="Link to this definition"></a></dt>
+<dd><p>login to Host and start ssh session with STEMLAB
+Returns False if a connection error occurs, returns True if
+successful</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-player">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-player" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="auxiliaries.html" class="btn btn-neutral float-left" title="auxiliaries module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="resampler.html" class="btn btn-neutral float-right" title="resampler package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Hermann Scharfetter.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

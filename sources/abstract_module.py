@@ -8,7 +8,7 @@ from auxiliaries import auxiliaries as auxi
 import logging
 
 class abstract_module_m(QObject):
-    __slots__ = ["None"]
+    #__slots__ = ["None"]
     SigModelXXX = pyqtSignal()
 
     def __init__(self):
@@ -45,7 +45,7 @@ class abstract_module_m(QObject):
 class abstract_module_c(QObject):
     """_view method
     """
-    __slots__ = ["contvars"]
+    #__slots__ = ["contvars"]
 
     SigAny = pyqtSignal()
     SigRelay = pyqtSignal(str,object)
@@ -59,13 +59,16 @@ class abstract_module_c(QObject):
         #self.set_viewvars(viewvars)
         self.m = abstract_module_m.mdl
         self.logger = abstract_module_m.logger
+
+    def dummy(self):
+        print("hello from superclass")
         
 
 class abstract_module_v(QObject):
     """_view methods for resampling module
     TODO: gui.wavheader --> something less general ?
     """
-    __slots__ = ["viewvars"]
+    #__slots__ = ["viewvars"]
 
     SigAny = pyqtSignal()
     SigCancel = pyqtSignal()

@@ -617,29 +617,27 @@ class annotate_c(QObject):
         pass
 
     def ann_spectrum(self,data):
-        """
-        generate a single spectrum from complex data
+        """ generate a single spectrum from complex data
         scale x-axis as frequencies in the recorded AM band
         scale y-axis in dB
         calculate baseline basel from moving median filtering
         find spectral peaks (= transmitters) and calculate the corresponding properties
-        requires the following properties to exist:
-            self.DATABLOCKSIZE
+        requires the following properties to exist: self.DATABLOCKSIZE
+
         :param self: An instance of the class containing attributes such as header information and filtering parameters.
         :type self: object
         :param dummy: A dummy variable not used in the function.
         :type dummy: any
         :param data: A numpy array containing the complex data IQ data read from wav file
-        :type data: numpy.ndarray of float32, even entries = real odd entries = imaginary
-                part of the IQ signal
+        :type data: numpy.ndarray of float32, even entries = real odd entries = imaginary part of the IQ signal
         :raises [ErrorType]: [ErrorDescription]
-        :return: A dictionary containing various arrays related to the spectral analysis:
-                - datax: The frequency data.type: float32
-                - datay: The amplitude data.type: float32
-                - datay_filt: The filtered amplitude data.type: float32
-                - peaklocs: The indices of the identified peaks in the amplitude data.type: float32
-                - peakprops: Properties of the identified peaks, such as their height and width. type: dict
-                - databasel: The baseline data used in the filtering process.type: float32
+        :return: A dictionary containing various arrays related to the spectral analysis:   
+        - datax: The frequency data.type: float32
+        - datay: The amplitude data.type: float32
+        - datay_filt: The filtered amplitude data.type: float32
+        - peaklocs: The indices of the identified peaks in the amplitude data.type: float32
+        - peakprops: Properties of the identified peaks, such as their height and width. type: dict
+        - databasel: The baseline data used in the filtering process.type: float32
         :rtype: dict
         """
         # extract imaginary and real parts from complex data 
@@ -683,13 +681,13 @@ class annotate_c(QObject):
         return T
 
     def ann_stations(self):
-        """
-        read MWLIST and collect stations info in dictionary, initialize yamlheader, starts statlst_gen_worker for stationslist generation, 
-            finally calls interactive_station_select()
-            depends on: statlst_gen_worker, Progressbarupdate(), csan_completed(), write_yaml_header(), interactive_station_select(), annotation_completed()
-        :param : none
-        :type : none
-        :raises [ErrorType]: [ErrorDescription]
+        """read MWLIST and collect stations info in dictionary, initialize yamlheader, starts statlst_gen_worker for stationslist generation, 
+        finally calls interactive_station_select()
+        depends on: statlst_gen_worker, Progressbarupdate(), csan_completed(), write_yaml_header(), interactive_station_select(), annotation_completed()
+
+        :param: none
+        :type: none
+        :raises: [ErrorType]: [ErrorDescription]
         :return: flag False on unsuccessful execution if stations list or status file non-existent
         :rtype: Boolean
         """

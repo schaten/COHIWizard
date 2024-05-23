@@ -1,7 +1,7 @@
-COHIWizard
+abstract\_module module
 =======================
 
-.. automodule:: COHIWizard
+.. automodule:: abstract_module
    :members:
    :undoc-members:
    :show-inheritance:

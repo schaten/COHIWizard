@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wavheader_editor package &mdash; COHIWizard_v1.2 1.2.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=4d6f9085"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="yaml_editor package" href="yaml_editor.html" />
+    <link rel="prev" title="spectralviewer package" href="spectralviewer.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            COHIWizard_v1.2
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">What is COHIWizard ?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="software_architecture.html">Software architecture</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">sources</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="COHIWizard.html">COHIWizard</a></li>
+<li class="toctree-l2"><a class="reference internal" href="abstract_module.html">abstract_module module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="annotator.html">annotator package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auxiliaries.html">auxiliaries module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="player.html">player package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="resampler.html">resampler package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spectralviewer.html">spectralviewer package</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">wavheader_editor package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wavheader-editor-set-fonts-module">wavheader_editor.set_fonts module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-wavheader_editor.wavheader_editor">wavheader_editor.wavheader_editor module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#wavheader_editor.wavheader_editor.waveditor_c"><code class="docutils literal notranslate"><span class="pre">waveditor_c</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#wavheader_editor.wavheader_editor.waveditor_m"><code class="docutils literal notranslate"><span class="pre">waveditor_m</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#wavheader_editor.wavheader_editor.waveditor_v"><code class="docutils literal notranslate"><span class="pre">waveditor_v</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-wavheader_editor.wavheader_editor_widget">wavheader_editor.wavheader_editor_widget module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#wavheader_editor.wavheader_editor_widget.Ui_wavheader_editor_widget"><code class="docutils literal notranslate"><span class="pre">Ui_wavheader_editor_widget</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-wavheader_editor">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="yaml_editor.html">yaml_editor package</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">COHIWizard_v1.2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">sources</a></li>
+      <li class="breadcrumb-item active">wavheader_editor package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/wavheader_editor.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="wavheader-editor-package">
+<h1>wavheader_editor package<a class="headerlink" href="#wavheader-editor-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="wavheader-editor-set-fonts-module">
+<h2>wavheader_editor.set_fonts module<a class="headerlink" href="#wavheader-editor-set-fonts-module" title="Link to this heading"></a></h2>
+</section>
+<section id="module-wavheader_editor.wavheader_editor">
+<span id="wavheader-editor-wavheader-editor-module"></span><h2>wavheader_editor.wavheader_editor module<a class="headerlink" href="#module-wavheader_editor.wavheader_editor" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.waveditor_c">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">wavheader_editor.wavheader_editor.</span></span><span class="sig-name descname"><span class="pre">waveditor_c</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waveditor_m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#wavheader_editor.wavheader_editor.waveditor_c" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
+<p>_view method</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.waveditor_c.SigAny">
+<span class="sig-name descname"><span class="pre">SigAny</span></span><a class="headerlink" href="#wavheader_editor.wavheader_editor.waveditor_c.SigAny" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.waveditor_c.SigRelay">
+<span class="sig-name descname"><span class="pre">SigRelay</span></span><a class="headerlink" href="#wavheader_editor.wavheader_editor.waveditor_c.SigRelay" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.waveditor_c.contvars">
+<span class="sig-name descname"><span class="pre">contvars</span></span><a class="headerlink" href="#wavheader_editor.wavheader_editor.waveditor_c.contvars" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.waveditor_m">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">wavheader_editor.wavheader_editor.</span></span><span class="sig-name descname"><span class="pre">waveditor_m</span></span><a class="headerlink" href="#wavheader_editor.wavheader_editor.waveditor_m" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.waveditor_m.None">
+<span class="sig-name descname"><span class="pre">None</span></span><a class="headerlink" href="#wavheader_editor.wavheader_editor.waveditor_m.None" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.waveditor_m.SigModelXXX">
+<span class="sig-name descname"><span class="pre">SigModelXXX</span></span><a class="headerlink" href="#wavheader_editor.wavheader_editor.waveditor_m.SigModelXXX" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.waveditor_v">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">wavheader_editor.wavheader_editor.</span></span><span class="sig-name descname"><span class="pre">waveditor_v</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gui</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">waveditor_c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">waveditor_m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#wavheader_editor.wavheader_editor.waveditor_v" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
+<p>_view methods for resampling module
+TODO: gui.wavheader –&gt; something less general ?</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.waveditor_v.SigCancel">
+<span class="sig-name descname"><span class="pre">SigCancel</span></span><a class="headerlink" href="#wavheader_editor.wavheader_editor.waveditor_v.SigCancel" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.waveditor_v.SigRelay">
+<span class="sig-name descname"><span class="pre">SigRelay</span></span><a class="headerlink" href="#wavheader_editor.wavheader_editor.waveditor_v.SigRelay" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.waveditor_v.SigSyncGUIUpdatelist">
+<span class="sig-name descname"><span class="pre">SigSyncGUIUpdatelist</span></span><a class="headerlink" href="#wavheader_editor.wavheader_editor.waveditor_v.SigSyncGUIUpdatelist" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.waveditor_v.activate_WAVEDIT">
+<span class="sig-name descname"><span class="pre">activate_WAVEDIT</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#wavheader_editor.wavheader_editor.waveditor_v.activate_WAVEDIT" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.waveditor_v.activate_insertheader">
+<span class="sig-name descname"><span class="pre">activate_insertheader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#wavheader_editor.wavheader_editor.waveditor_v.activate_insertheader" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.waveditor_v.calculate_timediff">
+<span class="sig-name descname"><span class="pre">calculate_timediff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_operation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#wavheader_editor.wavheader_editor.waveditor_v.calculate_timediff" title="Link to this definition"></a></dt>
+<dd><p>calculated difference bertween ref and subtr datetimes and prints result in result datetime field
+:param : none
+:type : none
+:raises [ErrorType]: [ErrorDescription]
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.waveditor_v.check_consistency">
+<span class="sig-name descname"><span class="pre">check_consistency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#wavheader_editor.wavheader_editor.waveditor_v.check_consistency" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.waveditor_v.clear_WAVwidgets">
+<span class="sig-name descname"><span class="pre">clear_WAVwidgets</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#wavheader_editor.wavheader_editor.waveditor_v.clear_WAVwidgets" title="Link to this definition"></a></dt>
+<dd><p>clear the tabwidgets of the wav-editor tab
+:param : none
+:type : none
+:raises [ErrorType]: [ErrorDescription]
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.waveditor_v.fill_wavtable">
+<span class="sig-name descname"><span class="pre">fill_wavtable</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#wavheader_editor.wavheader_editor.waveditor_v.fill_wavtable" title="Link to this definition"></a></dt>
+<dd><p>VIEW
+fill tables on TAB wavedit with the respective values from the vaw header</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.waveditor_v.init_waveditor_ui">
+<span class="sig-name descname"><span class="pre">init_waveditor_ui</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#wavheader_editor.wavheader_editor.waveditor_v.init_waveditor_ui" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.waveditor_v.logfilehandler">
+<span class="sig-name descname"><span class="pre">logfilehandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#wavheader_editor.wavheader_editor.waveditor_v.logfilehandler" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.waveditor_v.overwrite_header">
+<span class="sig-name descname"><span class="pre">overwrite_header</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#wavheader_editor.wavheader_editor.waveditor_v.overwrite_header" title="Link to this definition"></a></dt>
+<dd><p>overwrite the tabwidget items of the wav-editor tab
+:param : none
+:type : none
+:raises [ErrorType]: [ErrorDescription]
+:return: False if some conditions are not met (fileopened False, no overwrite wanted,…)
+:rtype: Boolean</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.waveditor_v.popup">
+<span class="sig-name descname"><span class="pre">popup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#wavheader_editor.wavheader_editor.waveditor_v.popup" title="Link to this definition"></a></dt>
+<dd><p>VIEW or CONTROLLER ??</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.waveditor_v.reset_GUI">
+<span class="sig-name descname"><span class="pre">reset_GUI</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#wavheader_editor.wavheader_editor.waveditor_v.reset_GUI" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.waveditor_v.rxhandler">
+<span class="sig-name descname"><span class="pre">rxhandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#wavheader_editor.wavheader_editor.waveditor_v.rxhandler" title="Link to this definition"></a></dt>
+<dd><p>handles remote calls from other modules via Signal SigRX(_key,_value)
+:param : _key
+:type : str
+:param : _value
+:type : object
+:raises [ErrorType]: [ErrorDescription]
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.waveditor_v.updateGUIelements">
+<span class="sig-name descname"><span class="pre">updateGUIelements</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#wavheader_editor.wavheader_editor.waveditor_v.updateGUIelements" title="Link to this definition"></a></dt>
+<dd><p>updates GUI elements , usually triggered by a Signal SigTabsUpdateGUIs to which 
+this method is connected in the __main__ of the core module
+:param : none
+:type : none
+:raises [ErrorType]: [ErrorDescription]
+:return: flag False or True, False on unsuccessful execution
+:rtype: Boolean</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.waveditor_v.viewvars">
+<span class="sig-name descname"><span class="pre">viewvars</span></span><a class="headerlink" href="#wavheader_editor.wavheader_editor.waveditor_v.viewvars" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.waveditor_v.write_edited_wavheader">
+<span class="sig-name descname"><span class="pre">write_edited_wavheader</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#wavheader_editor.wavheader_editor.waveditor_v.write_edited_wavheader" title="Link to this definition"></a></dt>
+<dd><p>CONTROLLER</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-wavheader_editor.wavheader_editor_widget">
+<span id="wavheader-editor-wavheader-editor-widget-module"></span><h2>wavheader_editor.wavheader_editor_widget module<a class="headerlink" href="#module-wavheader_editor.wavheader_editor_widget" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor_widget.Ui_wavheader_editor_widget">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">wavheader_editor.wavheader_editor_widget.</span></span><span class="sig-name descname"><span class="pre">Ui_wavheader_editor_widget</span></span><a class="headerlink" href="#wavheader_editor.wavheader_editor_widget.Ui_wavheader_editor_widget" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor_widget.Ui_wavheader_editor_widget.retranslateUi">
+<span class="sig-name descname"><span class="pre">retranslateUi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wavheader_editor_widget</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#wavheader_editor.wavheader_editor_widget.Ui_wavheader_editor_widget.retranslateUi" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor_widget.Ui_wavheader_editor_widget.setupUi">
+<span class="sig-name descname"><span class="pre">setupUi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wavheader_editor_widget</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#wavheader_editor.wavheader_editor_widget.Ui_wavheader_editor_widget.setupUi" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-wavheader_editor">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-wavheader_editor" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="spectralviewer.html" class="btn btn-neutral float-left" title="spectralviewer package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="yaml_editor.html" class="btn btn-neutral float-right" title="yaml_editor package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Hermann Scharfetter.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,7 @@
+COHIWizard\_rescue module
+=========================
+
+.. automodule:: COHIWizard_rescue
+   :members:
+   :undoc-members:
+   :show-inheritance:

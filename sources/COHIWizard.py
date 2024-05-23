@@ -53,16 +53,26 @@ from icons import Logos
 from core import COHIWizard_GUI_v10_reduced
 
 class starter(QMainWindow):
+    """instantiates the central GUI object and calls its setupUI method; type QMainwindow
+
+    :param: none
+    """
     def __init__(self):
+        """instantiates SplashScreen object and then instantiates the central GUI as self.gui. 
+        Then setupUi of the central GUI is called which sets up the Mainwindow and the central 
+        widget of the player Tab.
+        :param: none
+        :type: none
+        :raises: none
+        :return: none
+        :type: none
+        """
         super().__init__()
         self.splash = SplashScreen()
         self.splash.setFocus()
         self.splash.show()
-
-        #self.gui= MyWizard()
         self.gui = COHIWizard_GUI_v10_reduced.Ui_MainWindow()
         self.gui.setupUi(self)
-        #self.gui.tableWidget_basisfields.verticalHeader().setVisible(True)
 
 # generate Player from individual widget
 # tab_player_widget = QtWidgets.QWidget()
@@ -104,13 +114,16 @@ class starter(QMainWindow):
 #
 # then access all elements of Ui_ISO_testgui by tabUI_Player.elements
 
-
 class core_m(QObject):
+    """core model class, holds all common module variables as a dictionary self.mdl
+    initializes a logger and a few variables
+    :param: none
+    :type: QObject
+    """
     def __init__(self):
         super().__init__()
         # Constants
         self.CONST_SAMPLE = 0 # sample constant
-        dummy = 0
         self.mdl = {}
         self.mdl["sample"] = 0
         self.mdl["_log"] = False
@@ -138,14 +151,23 @@ class core_m(QObject):
 
 
 class core_c(QObject):
-    """_view method
-    """
-    __slots__ = ["contvars"]
+    """core control class, implements controller methods for core module
 
-    SigAny = pyqtSignal()
+    :param: none
+    :type: QObject
+    """
+    #__slots__ = ["contvars"]
+
     SigRelay = pyqtSignal(str,object)
 
     def __init__(self, core_m): #TODO: remove gui
+        """establishes a reference to core_m.mdl as self.m and to core_m.logger as self.logger
+
+        :param core_m: reference to instance of model object core_m
+        :type core_m: QObject
+        :return: none
+        :type: none
+        """
         super().__init__()
 
         self.m = core_m.mdl
@@ -153,12 +175,12 @@ class core_c(QObject):
 
 
     def recording_path_checker(self):
-        """
-        checks, if recording path exists in config_wizard.yaml and if the path exists in the system
+        """_checks, if recording path exists in config_wizard.yaml and if the path exists in the system
         if not: ask for target pathname and store in config.wizard.yaml
-        param: none
-        type: none
-        :raises [none]: [none]
+
+        :param: none
+        :type: none
+        :raises: none
         :return: none
         :rtype: none
         """         
@@ -200,12 +222,12 @@ class core_c(QObject):
         self.SigRelay.emit("cexex_xcore",["updateConfigElements",0])
 
     def recording_path_setter(self):
-        """
-        checks, if recording path exists in config_wizard.yaml and if the path exists
+        """checks, if recording path exists in config_wizard.yaml and if the path exists 
         if not: ask for target pathname and store in config.wizard.yaml
-        param: none
-        type: none
-        :raises [none]: [none]
+
+        :param: none
+        :type: none
+        :raises: none
         :return: none
         :rtype: none
         """         
@@ -224,18 +246,15 @@ class core_c(QObject):
         self.SigRelay.emit("cexex_xcore",["updateConfigElements",0])
 
 class core_v(QObject):
+    """core view class, implements communication with the GUI elements and with controller module
+    holds all common module variables as a dictionary self.m
 
-    __slots__ = ["viewvars"]
+    :param: none
+    :type: QObject
+    """
 
-    #TODO KIPP: 
     SigUpdateGUI = pyqtSignal(object)
-    #SigUpdateGUI = pyqtSignal() #TODO KIPP: remove
-    SigToolbar = pyqtSignal()
-    SigGP = pyqtSignal()
-    SigProgress = pyqtSignal()
     SigGUIReset = pyqtSignal()
-    SigEOFStart = pyqtSignal()
-    SigSyncTabs = pyqtSignal(object)
     SigUpdateOtherGUIs = pyqtSignal()
     SigRelay = pyqtSignal(str,object)
 
@@ -385,11 +404,9 @@ class core_v(QObject):
         self.SigRelay.emit("cexex_waveditor",["overwrite_header",0])
         pass
 
-
-
     def editHostAddress(self):     #TODO Check if this is necessary, rename to cb_.... ! 
         ''' 
-        Purpose: Callback for edidHostAddress Lineedit item
+        Purpose: slot function for the edidHostAddress Lineedit item
         activate Host IP address field and enable saving mode
         Returns: nothing
         '''
@@ -456,7 +473,7 @@ class core_v(QObject):
 
 
     def togglelogfilehandler(self):
-        if self.gui.playrec_radioButtonpushButton_write_logfile.isChecked():
+        if self.gui.playrec_radioButtonpushButton_write_logfile.isChecked():  #TODO TODO: should be task of the playrec module
             self.logger.setLevel(logging.NOTSET)
             self.SigRelay.emit("cexex_all_",["logfilehandler",False])
         else:
@@ -486,7 +503,7 @@ class core_v(QObject):
         :rtype: Boolean
         """
         try:
-            self.gui.playrec_lineEdit_recordingpath.setText(self.m["recording_path"])
+            self.gui.playrec_lineEdit_recordingpath.setText(self.m["recording_path"])    #should be part of the playrec module ?
         except:
             self.core_c.recording_path_checker()
             #self.configuration_c.recording_path_setter()
@@ -541,6 +558,11 @@ class core_v(QObject):
         self.SigRelay.emit("cexex_all_",["timertick",0])
         
     def GUI_reset_status(self):
+        """reset status of all GUI elements to initial state
+
+        :param: none
+        :return: none
+        """
         #self.m = {}
         self.m["my_filename"] = ""
         self.m["ext"] = ""
@@ -563,35 +585,6 @@ class core_v(QObject):
         self.m["list_out_files_resampled"] = []
         self.m["playthreadActive"] = False
 
-
-    # def init_Tabref(self): #TODO TODO TODO:remove after all tests
-    #     """
-    #     UNKLAR: Definition einer Referenztabelle für das Ansprechen verschiedener TABs und insb CANVAS-Zuweisung
-    #     könnte auch im Datenmodul residieren
-    #     initialize central Tab management dictionary Tabref
-    #     :param: none
-    #     :type: none
-    #     ...
-    #     :raises: none
-    #     ...
-    #     :return: none
-    #     :rtype: none
-    #     """
-    #     # Bei Erweiterungen: für jeden neuen Tab einen neuen Tabref Eintrag generieren, generate_canvas nur wenn man dort einen Canvas will
-    #     #TODO:future system state
-    #     # self.Tabref["Player"] = {}
-    #     # self.Tabref["Player"]["tab_reference"] = self.gui.tab_playrec   ## TODO TODO TODO: never used ! required ?
-    #     #Tab View spectra TODO TODO TODO: remove after all tests 26-04-2024
-    #     # self.Tabref["View_Spectra"] = {}
-    #     # self.Tabref["View_Spectra"]["tab_reference"] = self.gui.tab_view_spectra ## TODO TODO TODO: never used ! required ?
-    #     # self.generate_canvas(self,self.gui.gridLayout_4,[4,0,1,5],[2,2,2,1],self.Tabref["View_Spectra"])
-    #     #generiert einen Canvas auf den man mit self.Tabref["View_Spectra"]["canvas"] und
-    #     #self.Tabref["View_Spectra"]["ax"] als normale ax und canvas Objekte zugreifen kann
-    #     #wie plot(...), show(), close()
-    #     # Tab Resampler
-    #     # self.Tabref["Resample"] = {}
-    #     # self.Tabref["Resample"]["tab_reference"] = self.gui.tab_resample ## TODO TODO TODO: never used ! required ?
-    #     # self.generate_canvas(self,self.gui.gridLayout_5,[6,0,6,4],[-1,-1,-1,-1],self.Tabref["Resample"])
 
     def setactivity_tabs(self,caller,statuschange,exceptionlist):
         """
@@ -624,24 +617,26 @@ class core_v(QObject):
 
     def reset_GUI(self):
         """
-        reset GUI elements to their defaults, re-initialize important variables
-        code is executed after new file open
-        :param none
-        :type: none
-        :raises [ErrorType]: [ErrorDescription]TODO
+        activates waveditor via Relay signalling ##TODO: unclear why this method is called reset_GUI; seems very strange
+
+        :param: none
         :return: True after completion, False if status-yaml not accessible
         :rtype: boolean
         """
         self.SigRelay.emit("cexex_waveditor",["activate_WAVEDIT",0])
 
     def cb_open_file(self):
-        """
-        VIEW
-        check conditions for proper opening of a new data file; if all conditions met:
-        call FileOpen() for getting the file handling parameters
-        conditions: playthread is not currently active
+        """ slot function for the File Open action in the Menubar of the Main GUI. It checks some conditions for proper opening of a new data file; 
+        if all conditions are met FileOpen() is called which does the detailed work
+        returns without action if a playthread is currently active; 
+        if a file is open, the method asks if a new file should be opened (yes/no); returns on 'No'
+        The method relays the variable m["fileopened"] via the SigRelay signal to all other modules
+        
+        .. image:: ../../source/images/cb_open_file.svg
 
-        returns: True if successful, False if condition not met.        
+        :param: none
+        :returns: True if successful, False if condition not met.
+        :type: Boolean
         """
         
         self.setactivity_tabs("all","activate",[])
@@ -670,7 +665,7 @@ class core_v(QObject):
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Question)
             msg.setText("open new file")
-            msg.setInformativeText("you are about o open another file. Current file will be closed; Do you want to proceed")
+            msg.setInformativeText("you are about to open another file. Current file will be closed; Do you want to proceed")
             msg.setWindowTitle("FILE OPEN")
             msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
             msg.buttonClicked.connect(self.popup)
@@ -693,34 +688,42 @@ class core_v(QObject):
         self.yesno = i.text()
 
     def setstandardpaths(self):  #TODO: shift to controller and general system module ? must be part of the system configuration procedure
-        """
-        CONTROLLER
+        """set standard paths for intermedite files and configuration files for the modules 
+        annotation and yaml_editor (for the auxiliary annotation files and the final annotation yaml) 
+        The pathnames are then relayed via SigRelay to the respective modules. This method is called by FileOpen() after a file has been opened
         
+        :TODO: check if some of the operations can be shifted to the respective modules
+        :TODO: should be shifted to the controller class
+        ------------------------------------------------------
+        
+        :parameters: none
+        :returns: none
         """
-        #TODO TODO TODO: check if the selfs must be selfs !
         self.m["annotationpath"] = self.my_dirname + '/' + self.annotationdir_prefix + self.m["my_filename"]
-        self.stations_filename = self.m["annotationpath"] + '/stations_list.yaml'
-        self.status_filename = self.m["annotationpath"] + '/status.yaml'
-        self.annotation_filename = self.m["annotationpath"] + '/snrannotation.yaml'
+        #suggestion: shift definition of annotationpathprefix to annotator and define all pathnames there
+
+        stations_filename = self.m["annotationpath"] + '/stations_list.yaml'
+        status_filename = self.m["annotationpath"] + '/status.yaml'
+        annotation_filename = self.m["annotationpath"] + '/snrannotation.yaml'
         self.SigRelay.emit("cm_annotate",["annotationpath",self.m["annotationpath"]])
-        self.SigRelay.emit("cm_annotate",["stations_filename",self.stations_filename])
-        self.SigRelay.emit("cm_annotate",["status_filename",self.status_filename])
-        self.SigRelay.emit("cm_annotate",["annotation_filename",self.annotation_filename])
+        self.SigRelay.emit("cm_annotate",["stations_filename",stations_filename])
+        self.SigRelay.emit("cm_annotate",["status_filename",status_filename])
+        self.SigRelay.emit("cm_annotate",["annotation_filename",annotation_filename])
         self.SigRelay.emit("cm_annotate",["annotationdir_prefix",self.annotationdir_prefix])
         self.SigRelay.emit("cm_all_",["standardpath",self.standardpath])
         
-        self.cohiradia_metadata_filename = self.m["annotationpath"] + '/cohiradia_metadata.yaml' #TODO: needs the variable be 'self' ?
-        self.cohiradia_yamlheader_filename = self.m["annotationpath"] + '/cohiradia_metadata_header.yaml' #TODO: needs the variable be 'self' ?
-        self.cohiradia_yamltailer_filename = self.m["annotationpath"] + '/cohiradia_metadata_tailer.yaml' #TODO: needs the variable be 'self' ?
-        self.cohiradia_yamlfinal_filename = self.m["annotationpath"] + '/COHI_YAML_FINAL.yaml' #TODO: needs the variable be 'self' ?
-        self.SigRelay.emit("cm_yamleditor",["cohiradia_yamlheader_filename",self.cohiradia_yamlheader_filename])
-        self.SigRelay.emit("cm_yamleditor",["cohiradia_yamltailer_filename",self.cohiradia_yamltailer_filename])
-        self.SigRelay.emit("cm_yamleditor",["cohiradia_yamlfinal_filename",self.cohiradia_yamlfinal_filename])
-        self.SigRelay.emit("cm_yamleditor",["cohiradia_metadata_filename",self.cohiradia_metadata_filename])
-        self.SigRelay.emit("cm_annotate",["cohiradia_yamlheader_filename",self.cohiradia_yamlheader_filename])
-        self.SigRelay.emit("cm_annotate",["cohiradia_yamltailer_filename",self.cohiradia_yamltailer_filename])
-        self.SigRelay.emit("cm_annotate",["cohiradia_yamlfinal_filename",self.cohiradia_yamlfinal_filename])
-        self.SigRelay.emit("cm_annotate",["cohiradia_metadata_filename",self.cohiradia_metadata_filename])
+        cohiradia_metadata_filename = self.m["annotationpath"] + '/cohiradia_metadata.yaml'
+        cohiradia_yamlheader_filename = self.m["annotationpath"] + '/cohiradia_metadata_header.yaml'
+        cohiradia_yamltailer_filename = self.m["annotationpath"] + '/cohiradia_metadata_tailer.yaml'
+        cohiradia_yamlfinal_filename = self.m["annotationpath"] + '/COHI_YAML_FINAL.yaml'
+        self.SigRelay.emit("cm_yamleditor",["cohiradia_yamlheader_filename",cohiradia_yamlheader_filename])
+        self.SigRelay.emit("cm_yamleditor",["cohiradia_yamltailer_filename",cohiradia_yamltailer_filename])
+        self.SigRelay.emit("cm_yamleditor",["cohiradia_yamlfinal_filename",cohiradia_yamlfinal_filename])
+        self.SigRelay.emit("cm_yamleditor",["cohiradia_metadata_filename",cohiradia_metadata_filename])
+        self.SigRelay.emit("cm_annotate",["cohiradia_yamlheader_filename",cohiradia_yamlheader_filename])
+        self.SigRelay.emit("cm_annotate",["cohiradia_yamltailer_filename",cohiradia_yamltailer_filename])
+        self.SigRelay.emit("cm_annotate",["cohiradia_yamlfinal_filename",cohiradia_yamlfinal_filename])
+        self.SigRelay.emit("cm_annotate",["cohiradia_metadata_filename",cohiradia_metadata_filename])
 
     def set_startuptab(self):
         #schreib den Index ins File, der als key in tab_dict["tabname"] zu dem value gehört, der in self.tab_names als value vorkommt
@@ -738,15 +741,31 @@ class core_v(QObject):
 
     #@njit
     def FileOpen(self):   #TODO: shift to controller, decompose in small submethods
+        '''acquires info about file to be opened and relays the following information to all other modules
+
+	    - ["ismetadata"]
+        - ["metadata"]
+        - ["f1"]
+        - ["my_dirname"]
+        - ["ext"]
+        - ["my_filename"]
+        - ["temp_directory"]
+        - ["wavheader"]
+       	- ["readoffset"]
+        - ["fileopened"]
+        - ["out_dirname"]
+
+        :TODO shift to controller module  !!!!!:
+
+        :params: none
+        :type: none
+        :returns: True, if successful, False otherwise
+        :type: Boolean
+
+        .. image:: ../../source/images/fileopen.svg
+
         '''
-        CONTROLLER ?
-        Purpose: 
-        If self.####### == True:
-            (1) Open data file for read
-            (2) call routine for extraction of recording parameters from filename
-            (3) present recording parameters in info fields
-        Returns: True, if successful, False otherwise
-        '''
+
         #TODO: could be an update action of the resampler ?
         self.SigRelay.emit("cexex_resample",["enable_resamp_GUI_elements",True])
         self.SigRelay.emit("cm_all_",["ismetadata",self.ismetadata])
@@ -966,31 +985,33 @@ class core_v(QObject):
         file_mod = datetime.fromtimestamp(ti_m)
         file_stats = os.stat(self.m["f1"])
         self.wavheader = WAVheader_tools.basic_wavheader(self,self.m["icorr"],int(self.m["irate"]),int(self.m["ifreq"]),int(bps),file_stats.st_size,file_mod)
-
         return True
 
-    def generate_GUIupdaterlist(self,item):
-        self.GUIupdaterlist.append(item)
+    # TODO TODO TODO: check if needed: has been removed 22-05-2024
+    # def generate_GUIupdaterlist(self,item): # is that needed ?????
+    #     self.GUIupdaterlist.append(item)
 
-    def sendupdateGUIs(self):
-        """  goes through the list of all registered Tabs and calls their GUI-Updatemethod
-        :param : none
-        :type : none
-        :raises [ErrorType]: none
-        :return: none
-        :rtype: none
-        """        
-        for item in self.GUIupdaterlist:
-            item()
+    # def sendupdateGUIs(self):
+    #     """goes through the list of all registered Tabs and calls their GUI-Updatemethod
+
+    #     :param: none
+    #     :type: none
+    #     :raises: none
+    #     :return: none
+    #     :rtype: none
+    #     """        
+    #     for item in self.GUIupdaterlist:
+    #         item()
 
     def rxhandler(self,_key,_value):
         """
         handles remote calls from other modules via Signal SigRX(_key,_value)
-        :param : _key
-        :type : str
-        :param : _value
-        :type : object
-        :raises [ErrorType]: [ErrorDescription]
+
+        :param: _key
+        :type: str
+        :param: _value
+        :type: object
+        :raises: [ErrorDescription]
         :return: flag False or True, False on unsuccessful execution
         :rtype: Boolean
         """
@@ -1242,9 +1263,10 @@ if __name__ == '__main__':
     #     win.gui.tabWidget.setTabVisible(c_index,False)
 
     #view_spectra_v.SigSyncGUIUpdatelist.connect(win.generate_GUIupdaterlist)
-    resample_v.SigUpdateOtherGUIs.connect(xcore_v.sendupdateGUIs)    #TODO TODO TODO schwer zu finden, sollte so nicht connected werden
+    #resample_v.SigUpdateOtherGUIs.connect(xcore_v.sendupdateGUIs)    #TODO TODO TODO schwer zu finden, sollte so nicht connected werden
     resample_c.SigUpdateGUIelements.connect(resample_v.updateGUIelements)
     xcore_v.SigUpdateOtherGUIs.connect(view_spectra_v.updateGUIelements)
+    resample_v.SigUpdateOtherGUIs.connect(xcore_v.updateGUIelements)
 
     #TODO: check what to do if tab_names do not exist any more because tabWidget is empty or rudimentary ?
     tab_names = {}
