@@ -761,7 +761,7 @@ class resample_c(QObject):
         if len(input_file_list) == 0: #TODO: check, if necessary, normally the cb_split buttonfcn catches this case
             auxi.standard_errorbox("No files to be resampled have been selected; please drag items to the 'selected file' area")
             #self.SigUpdateGUI.emit("terminate")
-            #gui.SigGUIReset.emit() #TODO solve with signalling to resample_c-view
+
             return False
         self.m["res_blinkstate"] = True
         output_file_prefix = self.m["out_dirname"] + self.m["mergeprefix"]
@@ -2595,7 +2595,7 @@ class resample_v(QObject):
             auxi.standard_errorbox("No files to be resampled have been selected; please drag items to the 'selected file' area")
             self.gui.pushButton_resample_split2G.clicked.connect(self.cb_split2G_Button)
             #self.resample_c.SigUpdateGUI.emit("reset")
-            #self.gui.SigGUIReset.emit() #TODO solve with signalling to resample_c-view
+
             return False
 
         self.m["t_wavheader"] = WAVheader_tools.get_sdruno_header(self,reslist[0])
@@ -2650,7 +2650,7 @@ class resample_v(QObject):
             time.sleep(0.1)
             self.m["fileopened"] = False
             self.gui.listWidget_playlist_2.itemChanged.connect(self.reslist_update)
-            #self.gui.SigGUIReset.emit()
+
             self.m["list_out_files_resampled"] = []
             self.GUI_reset_status()
             return False

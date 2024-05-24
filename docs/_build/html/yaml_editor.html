@@ -121,6 +121,11 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">yaml_editor.</span></span><span class="sig-name descname"><span class="pre">yamleditor_c</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">yamleditor_m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#yaml_editor.yamleditor_c" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
 <p>_view method</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="yaml_editor.yamleditor_c.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">yamleditor_m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#yaml_editor.yamleditor_c.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="yaml_editor.yamleditor_c.SigAny">
 <span class="sig-name descname"><span class="pre">SigAny</span></span><a class="headerlink" href="#yaml_editor.yamleditor_c.SigAny" title="Link to this definition"></a></dt>
@@ -142,6 +147,11 @@
 <dt class="sig sig-object py" id="yaml_editor.yamleditor_m">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">yaml_editor.</span></span><span class="sig-name descname"><span class="pre">yamleditor_m</span></span><a class="headerlink" href="#yaml_editor.yamleditor_m" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="yaml_editor.yamleditor_m.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#yaml_editor.yamleditor_m.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="yaml_editor.yamleditor_m.None">
 <span class="sig-name descname"><span class="pre">None</span></span><a class="headerlink" href="#yaml_editor.yamleditor_m.None" title="Link to this definition"></a></dt>
@@ -160,14 +170,9 @@
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
 <p>_view methods for resampling module
 TODO: gui.wavheader –&gt; something less general ?</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="yaml_editor.yamleditor_v.SigRelay">
-<span class="sig-name descname"><span class="pre">SigRelay</span></span><a class="headerlink" href="#yaml_editor.yamleditor_v.SigRelay" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="yaml_editor.yamleditor_v.SigSyncGUIUpdatelist">
-<span class="sig-name descname"><span class="pre">SigSyncGUIUpdatelist</span></span><a class="headerlink" href="#yaml_editor.yamleditor_v.SigSyncGUIUpdatelist" title="Link to this definition"></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="yaml_editor.yamleditor_v.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gui</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yamleditor_c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yamleditor_m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#yaml_editor.yamleditor_v.__init__" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -218,11 +223,6 @@ this method is connected in the __main__ of the core module
 :rtype: Boolean</p>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="yaml_editor.yamleditor_v.viewvars">
-<span class="sig-name descname"><span class="pre">viewvars</span></span><a class="headerlink" href="#yaml_editor.yamleditor_v.viewvars" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="yaml_editor.yamleditor_v.write_yaml_header">
 <span class="sig-name descname"><span class="pre">write_yaml_header</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#yaml_editor.yamleditor_v.write_yaml_header" title="Link to this definition"></a></dt>
@@ -239,6 +239,21 @@ this method is connected in the __main__ of the core module
 <span class="sig-name descname"><span class="pre">yaml_header_buttonfcn</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#yaml_editor.yamleditor_v.yaml_header_buttonfcn" title="Link to this definition"></a></dt>
 <dd><p>VIEW</p>
 </dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="yaml_editor.yamleditor_v.SigRelay">
+<span class="sig-name descname"><span class="pre">SigRelay</span></span><a class="headerlink" href="#yaml_editor.yamleditor_v.SigRelay" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="yaml_editor.yamleditor_v.SigSyncGUIUpdatelist">
+<span class="sig-name descname"><span class="pre">SigSyncGUIUpdatelist</span></span><a class="headerlink" href="#yaml_editor.yamleditor_v.SigSyncGUIUpdatelist" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="yaml_editor.yamleditor_v.viewvars">
+<span class="sig-name descname"><span class="pre">viewvars</span></span><a class="headerlink" href="#yaml_editor.yamleditor_v.viewvars" title="Link to this definition"></a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 

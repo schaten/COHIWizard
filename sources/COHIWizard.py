@@ -117,6 +117,7 @@ class starter(QMainWindow):
 class core_m(QObject):
     """core model class, holds all common module variables as a dictionary self.mdl
     initializes a logger and a few variables
+
     :param: none
     :type: QObject
     """
@@ -159,6 +160,13 @@ class core_c(QObject):
     #__slots__ = ["contvars"]
 
     SigRelay = pyqtSignal(str,object)
+    """signal for relaying data and messages to other module's rxhandler method; emitted as SigRelay(_key,_value)
+
+    :param: _key
+    :type: str
+    :param: _value
+    :type: object 
+    """
 
     def __init__(self, core_m): #TODO: remove gui
         """establishes a reference to core_m.mdl as self.m and to core_m.logger as self.logger
@@ -253,10 +261,20 @@ class core_v(QObject):
     :type: QObject
     """
 
-    SigUpdateGUI = pyqtSignal(object)
-    SigGUIReset = pyqtSignal()
+    #SigUpdateGUI = pyqtSignal(object) ''TODO: remove after tests; 24-05-2024
+    #SigGUIReset = pyqtSignal()
     SigUpdateOtherGUIs = pyqtSignal()
+    """
+    :TODO: check if this signal is ever used !
+    """
     SigRelay = pyqtSignal(str,object)
+    """signal for relaying data and messages to other module's rxhandler method; emitted as SigRelay(_key,_value)
+
+    :param: _key
+    :type: str
+    :param: _value
+    :type: object 
+    """
 
     def __init__(self, gui, core_c, core_m):
         super().__init__()
@@ -265,23 +283,22 @@ class core_v(QObject):
         self.core_c = core_c
         self.bps = ['16', '24', '32'] #TODO:future system state
         self.standardLO = 1100 #TODO:future system state
-        self.annotationdir_prefix = 'ANN_' ##################TODO:future system state
-        self.position = 0 #TODO:future system state URGENT !!!!!!!!!!!!!!
-        self.tab_dict = {}
+        self.annotationdir_prefix = 'ANN_' #TODO:future system state
+        #self.position = 0 #TODO:future system state URGENT !!!!!!!!!!!!!!   TODO: check removed 24-05-2024
+        #self.tab_dict = {}   TODO: check removed 24-05-2024
         self.m["recording_path"] = ""
 
-        self.GUIupdaterlist =[]
+        #self.GUIupdaterlist =[]   TODO: check removed 24-05-2024
         # create method which inactivates all tabs except the one which is passed as keyword
         self.GUI_reset_status()
         self.gui = gui.gui
 
-        self.tab_names = {}
-        for index in range(self.gui.tabWidget.count()):
-            self.tab_names[index] = self.gui.tabWidget.tabText(index)
+        # self.tab_names = {}  # TODO: check if this is ever used ! removed 24-05-2024
+        # for index in range(self.gui.tabWidget.count()):
+        #     self.tab_names[index] = self.gui.tabWidget.tabText(index)
 
         self.gui.actionFile_open.triggered.connect(self.cb_open_file)
         self.gui.actionOverwrite_header.triggered.connect(self.send_overwrite_header)
-        self.SigGUIReset.connect(self.reset_GUI)
 
         ###TODO: re-organize, there should be no access to gui elements of other modules
         self.gui.tabWidget.setCurrentIndex(0) #TODO: avoid magic number, make config issue
@@ -330,12 +347,9 @@ class core_v(QObject):
         self.m["sdr_configparams"] = {"ifreq":self.m["ifreq"], "irate":self.m["irate"],
                             "rates": self.m["rates"], "icorr":self.m["icorr"],
                             "HostAddress":self.m["HostAddress"], "LO_offset":self.m["LO_offset"]}
-        #self.m["sdr_configparams"] = configparams
         self.m["f1"] = ""
         self.m["_log"] = False
-        # self.Tabref={}
-        # self.init_Tabref()
-        self.timeref = datetime.now()    #TODO TODO TODO: remove, no 2 autoscaninstances !
+        #self.timeref = datetime.now()    #TODO TODO TODO: remove, no 2 autoscaninstances !
 
         # Create a custom logger
         # Setze den Level des Root-Loggers auf DEBUG
@@ -376,7 +390,6 @@ class core_v(QObject):
         self.gui.playrec_radioButtonpushButton_write_logfile.clicked.connect(self.togglelogfilehandler)
         self.gui.playrec_radioButtonpushButton_write_logfile.setChecked(True)
         self.gui.playrec_pushButton_recordingpath.clicked.connect(self.core_c.recording_path_setter)
-        #self.updateGUIelements()
         self.updateConfigElements()
         self.timethread = QThread()
         self.timertick = tw()
@@ -521,15 +534,10 @@ class core_v(QObject):
         
     def updatetimer(self):
         """
-        updates timer functions
-        shows date and time
-        changes between UTC and local time
-        manages recording timer
+        updates timer functions, shows date and time, changes between UTC and local time
+
         :param: none
         :type: none
-        ...
-        :raises: none
-        ...
         :return: none
         :rtype: none
         """
@@ -588,19 +596,23 @@ class core_v(QObject):
 
     def setactivity_tabs(self,caller,statuschange,exceptionlist):
         """
-        activates or inactivaes all tabs except the caller
-        caller can be any tab name
-        statuschange: 'activate': activate all tabs except the caller
-                        'inactivate' inactivate all tabs except the caller
-        :param caller
-        :type str
-        :param statuschange
-        :type str
-        :param exceptionlist
-        :type list        
-        ...
-        :raises [ErrorType]: none
-        ...
+        activates or inactivaes all tabs except the caller.\n
+        caller: calling Tab corresponding to TabName of the caller module as defined in gui.gui.tabWidget.TabText 
+        (currently set in  __main__ for each module by gui.gui.tabWidget.setTabText)
+        
+        statuschange: string indicating if other Tabs should be activated or inactivated:
+
+        - 'activate': activate all tabs except the caller
+        - 'inactivate' inactivate all tabs except the caller
+
+        exceptionlist: list of all Tab names the status of which should not be changed
+
+        :param: caller
+        :type: str
+        :param: statuschange
+        :type: str
+        :param: exceptionlist
+        :type: list        
         :return: success label: True, False
         :rtype: boolean
         """
@@ -672,11 +684,11 @@ class core_v(QObject):
             msg.exec_()
 
             if self.yesno == "&Yes":
-                if self.FileOpen() is False:
+                if self.fileOpen() is False:
                     self.SigRelay.emit("cm_all_",["fileopened", False])
                     return False
         else:
-            if self.FileOpen() is False:
+            if self.fileOpen() is False:
                 self.SigRelay.emit("cm_all_",["fileopened",False])
                 return False
             else:
@@ -690,7 +702,7 @@ class core_v(QObject):
     def setstandardpaths(self):  #TODO: shift to controller and general system module ? must be part of the system configuration procedure
         """set standard paths for intermedite files and configuration files for the modules 
         annotation and yaml_editor (for the auxiliary annotation files and the final annotation yaml) 
-        The pathnames are then relayed via SigRelay to the respective modules. This method is called by FileOpen() after a file has been opened
+        The pathnames are then relayed via SigRelay to the respective modules. This method is called by fileOpen() after a file has been opened
         
         :TODO: check if some of the operations can be shifted to the respective modules
         :TODO: should be shifted to the controller class
@@ -726,21 +738,22 @@ class core_v(QObject):
         self.SigRelay.emit("cm_annotate",["cohiradia_metadata_filename",cohiradia_metadata_filename])
 
     def set_startuptab(self):
-        #schreib den Index ins File, der als key in tab_dict["tabname"] zu dem value gehört, der in self.tab_names als value vorkommt
-        #besser: baue die combobox nach tab_dict auf !
-        
+        """writes intex of current Tab in Startuptab-combobox to configwizard.yaml
+
+        :param: none
+        :returns: none
+        """
         curix = self.gui.playrec_comboBox_startuptab.currentIndex()
         print(f"startuptab set: {curix}")
         #write to yaml
         self.m["metadata"]["startup_tab"] = str(curix)
-        # self.m["metadata"]["STM_IP_address"] = self.m["HostAddress"]
         stream = open("config_wizard.yaml", "w")
         yaml.dump(self.m["metadata"], stream)
         stream.close()
         pass
 
     #@njit
-    def FileOpen(self):   #TODO: shift to controller, decompose in small submethods
+    def fileOpen(self):   #TODO: shift to controller, decompose in small submethods
         '''acquires info about file to be opened and relays the following information to all other modules
 
 	    - ["ismetadata"]
@@ -786,7 +799,7 @@ class core_v(QObject):
         self.SigRelay.emit("cm_all_",["f1", filename[0]])
         if not self.m["f1"]:
             return False
-        self.logger.info(f'FileOpen: core_v File opened: {self.m["f1"]}')
+        self.logger.info(f'fileOpen: core_v File opened: {self.m["f1"]}')
 
         #get file info and distribute to all modules
         self.my_dirname = os.path.dirname(self.m["f1"])
@@ -1298,12 +1311,7 @@ if __name__ == '__main__':
             eval(tabitem1 + "_v.SigRelay.connect(" + tabitem2 + "_v.rxhandler)")
             xcore_v.logger.debug(f' {tabitem1 + "_v.SigRelay.connect(" + tabitem2 + "_v.rxhandler)"}')
     
-    #######################TODO: Remove after testing 06-05-2024
-    # for tabitem in tab_dict["list"]:     #contains all references to the instantiated module objects
-    #     tab_dict[tabitem + "_m"] = eval(tabitem + "_m") #resample_m     
-    #     tab_dict[tabitem + "_c"] = eval(tabitem + "_c") #resample_c     
-    #     tab_dict[tabitem + "_v"] = eval(tabitem + "_v") #resample_v  
-        #xcore_v.generate_GUIupdaterlist(eval(tabitem + "_v.updateGUIelements")) #necessary ????????????
+
     #make tab dict visible to core module
     xcore_v.tab_dict = tab_dict 
     xcore_v.m["tab_dict"] = tab_dict  ###TODO: check if double tabdict in xcore_v is necessary
@@ -1329,8 +1337,6 @@ if __name__ == '__main__':
     # check after file load if annotaton file is complete; if yes release yml editor pushbutton self.SigRelay.emit("cexex_yamleditor",["setWriteyamlButton",True])
     #
     # inactivate Add station to last F button after end of annotation (annotation_completed method)
-    ##
-    # AUf GITHUB: merge branch und etabliere verschiedene branches für die neueren Versionen
     #
     # spectrogram:
     # ay = plt.specgram(trace, NFFT=256, noverlap=100, Fs = 1250, mode='magnitude')

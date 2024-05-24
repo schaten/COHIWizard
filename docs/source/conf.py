@@ -24,6 +24,24 @@ extensions = [
     'sphinx.ext.autosummary',
 ]
 
+autodoc_default_options = {
+    'member-order': 'groupwise',
+    'special-members': '__init__',
+}
+
+# autodoc_default_options = {
+#     'members': 'var1, var2',
+#     'member-order': 'bysource',
+#     'special-members': '__init__',
+#     'undoc-members': True,
+#     'exclude-members': '__weakref__'
+# }
+# autodoc_member_order
+#     This value selects if automatically documented members are sorted alphabetical (value 'alphabetical'), by member type (value 'groupwise') or by source order (value 'bysource'). The default is alphabetical.
+#     Note that for source order, the module must be a Python module with the source code available.
+#     Added in version 0.6.
+#     Changed in version 1.0: Support for 'bysource'.
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 

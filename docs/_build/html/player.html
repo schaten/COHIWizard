@@ -169,24 +169,9 @@ continue restarting the same file as long as in endless <a href="#id7"><span cla
 :rtype: Boolean</p>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="player.playrec.playrec_c.SigActivateOtherTabs">
-<span class="sig-name descname"><span class="pre">SigActivateOtherTabs</span></span><a class="headerlink" href="#player.playrec.playrec_c.SigActivateOtherTabs" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="player.playrec.playrec_c.SigAny">
-<span class="sig-name descname"><span class="pre">SigAny</span></span><a class="headerlink" href="#player.playrec.playrec_c.SigAny" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="player.playrec.playrec_c.SigEOFStart">
-<span class="sig-name descname"><span class="pre">SigEOFStart</span></span><a class="headerlink" href="#player.playrec.playrec_c.SigEOFStart" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="player.playrec.playrec_c.SigRelay">
-<span class="sig-name descname"><span class="pre">SigRelay</span></span><a class="headerlink" href="#player.playrec.playrec_c.SigRelay" title="Link to this definition"></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_c.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">playrec_m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_c.__init__" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -232,11 +217,6 @@ checks if system_state[“irate”] has a value out of the values defined for th
 :return: True if enough space, False else
 :rtype: Boolean</p>
 </dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="player.playrec.playrec_c.contvars">
-<span class="sig-name descname"><span class="pre">contvars</span></span><a class="headerlink" href="#player.playrec.playrec_c.contvars" title="Link to this definition"></a></dt>
-<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="player.playrec.playrec_c.display_status">
@@ -389,12 +369,42 @@ NOT YET IMPLEMENTED: reset playerbuttongroup and GUI</p>
 :rtype: none</p>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_c.SigActivateOtherTabs">
+<span class="sig-name descname"><span class="pre">SigActivateOtherTabs</span></span><a class="headerlink" href="#player.playrec.playrec_c.SigActivateOtherTabs" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_c.SigAny">
+<span class="sig-name descname"><span class="pre">SigAny</span></span><a class="headerlink" href="#player.playrec.playrec_c.SigAny" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_c.SigEOFStart">
+<span class="sig-name descname"><span class="pre">SigEOFStart</span></span><a class="headerlink" href="#player.playrec.playrec_c.SigEOFStart" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_c.SigRelay">
+<span class="sig-name descname"><span class="pre">SigRelay</span></span><a class="headerlink" href="#player.playrec.playrec_c.SigRelay" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_c.contvars">
+<span class="sig-name descname"><span class="pre">contvars</span></span><a class="headerlink" href="#player.playrec.playrec_c.contvars" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="player.playrec.playrec_m">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">player.playrec.</span></span><span class="sig-name descname"><span class="pre">playrec_m</span></span><a class="headerlink" href="#player.playrec.playrec_m" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_m.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_m.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="player.playrec.playrec_m.None">
 <span class="sig-name descname"><span class="pre">None</span></span><a class="headerlink" href="#player.playrec.playrec_m.None" title="Link to this definition"></a></dt>
@@ -418,29 +428,9 @@ TODO: gui.wavheader –&gt; something less general ?</p>
 <span class="sig-name descname"><span class="pre">Buttloopmanager</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.Buttloopmanager" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="player.playrec.playrec_v.SigActivateOtherTabs">
-<span class="sig-name descname"><span class="pre">SigActivateOtherTabs</span></span><a class="headerlink" href="#player.playrec.playrec_v.SigActivateOtherTabs" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="player.playrec.playrec_v.SigCancel">
-<span class="sig-name descname"><span class="pre">SigCancel</span></span><a class="headerlink" href="#player.playrec.playrec_v.SigCancel" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="player.playrec.playrec_v.SigGUIReset">
-<span class="sig-name descname"><span class="pre">SigGUIReset</span></span><a class="headerlink" href="#player.playrec.playrec_v.SigGUIReset" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="player.playrec.playrec_v.SigRelay">
-<span class="sig-name descname"><span class="pre">SigRelay</span></span><a class="headerlink" href="#player.playrec.playrec_v.SigRelay" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="player.playrec.playrec_v.SigSyncGUIUpdatelist">
-<span class="sig-name descname"><span class="pre">SigSyncGUIUpdatelist</span></span><a class="headerlink" href="#player.playrec.playrec_v.SigSyncGUIUpdatelist" title="Link to this definition"></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gui</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">playrec_c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">playrec_m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.__init__" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -777,6 +767,31 @@ if self.modality == “play”:</p>
 </dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.SigActivateOtherTabs">
+<span class="sig-name descname"><span class="pre">SigActivateOtherTabs</span></span><a class="headerlink" href="#player.playrec.playrec_v.SigActivateOtherTabs" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.SigCancel">
+<span class="sig-name descname"><span class="pre">SigCancel</span></span><a class="headerlink" href="#player.playrec.playrec_v.SigCancel" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.SigGUIReset">
+<span class="sig-name descname"><span class="pre">SigGUIReset</span></span><a class="headerlink" href="#player.playrec.playrec_v.SigGUIReset" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.SigRelay">
+<span class="sig-name descname"><span class="pre">SigRelay</span></span><a class="headerlink" href="#player.playrec.playrec_v.SigRelay" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_v.SigSyncGUIUpdatelist">
+<span class="sig-name descname"><span class="pre">SigSyncGUIUpdatelist</span></span><a class="headerlink" href="#player.playrec.playrec_v.SigSyncGUIUpdatelist" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="player.playrec.playrec_v.viewvars">
 <span class="sig-name descname"><span class="pre">viewvars</span></span><a class="headerlink" href="#player.playrec.playrec_v.viewvars" title="Link to this definition"></a></dt>
 <dd></dd></dl>
@@ -815,54 +830,9 @@ __slots__[7]: formatlist: [formattag blockalign bitpsample]</p>
 </dd>
 </dl>
 </div></blockquote>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.SigBufferOverflow">
-<span class="sig-name descname"><span class="pre">SigBufferOverflow</span></span><a class="headerlink" href="#player.playrec.playrec_worker.SigBufferOverflow" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.SigFinished">
-<span class="sig-name descname"><span class="pre">SigFinished</span></span><a class="headerlink" href="#player.playrec.playrec_worker.SigFinished" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.SigIncrementCurTime">
-<span class="sig-name descname"><span class="pre">SigIncrementCurTime</span></span><a class="headerlink" href="#player.playrec.playrec_worker.SigIncrementCurTime" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.TEST">
-<span class="sig-name descname"><span class="pre">TEST</span></span><a class="headerlink" href="#player.playrec.playrec_worker.TEST" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.data">
-<span class="sig-name descname"><span class="pre">data</span></span><a class="headerlink" href="#player.playrec.playrec_worker.data" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.datablocksize">
-<span class="sig-name descname"><span class="pre">datablocksize</span></span><a class="headerlink" href="#player.playrec.playrec_worker.datablocksize" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.fileHandle">
-<span class="sig-name descname"><span class="pre">fileHandle</span></span><a class="headerlink" href="#player.playrec.playrec_worker.fileHandle" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.filename">
-<span class="sig-name descname"><span class="pre">filename</span></span><a class="headerlink" href="#player.playrec.playrec_worker.filename" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.formattag">
-<span class="sig-name descname"><span class="pre">formattag</span></span><a class="headerlink" href="#player.playrec.playrec_worker.formattag" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.gain">
-<span class="sig-name descname"><span class="pre">gain</span></span><a class="headerlink" href="#player.playrec.playrec_worker.gain" title="Link to this definition"></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stemlabcontrolinst</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.__init__" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -908,11 +878,6 @@ __slots__[7]: formatlist: [formattag blockalign bitpsample]</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="player.playrec.playrec_worker.get_8">
 <span class="sig-name descname"><span class="pre">get_8</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.get_8" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.modality">
-<span class="sig-name descname"><span class="pre">modality</span></span><a class="headerlink" href="#player.playrec.playrec_worker.modality" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -1038,6 +1003,61 @@ __slots__[7]: formatlist: [formattag blockalign bitpsample]
 <dd></dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.SigBufferOverflow">
+<span class="sig-name descname"><span class="pre">SigBufferOverflow</span></span><a class="headerlink" href="#player.playrec.playrec_worker.SigBufferOverflow" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.SigFinished">
+<span class="sig-name descname"><span class="pre">SigFinished</span></span><a class="headerlink" href="#player.playrec.playrec_worker.SigFinished" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.SigIncrementCurTime">
+<span class="sig-name descname"><span class="pre">SigIncrementCurTime</span></span><a class="headerlink" href="#player.playrec.playrec_worker.SigIncrementCurTime" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.TEST">
+<span class="sig-name descname"><span class="pre">TEST</span></span><a class="headerlink" href="#player.playrec.playrec_worker.TEST" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.data">
+<span class="sig-name descname"><span class="pre">data</span></span><a class="headerlink" href="#player.playrec.playrec_worker.data" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.datablocksize">
+<span class="sig-name descname"><span class="pre">datablocksize</span></span><a class="headerlink" href="#player.playrec.playrec_worker.datablocksize" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.fileHandle">
+<span class="sig-name descname"><span class="pre">fileHandle</span></span><a class="headerlink" href="#player.playrec.playrec_worker.fileHandle" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.filename">
+<span class="sig-name descname"><span class="pre">filename</span></span><a class="headerlink" href="#player.playrec.playrec_worker.filename" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.formattag">
+<span class="sig-name descname"><span class="pre">formattag</span></span><a class="headerlink" href="#player.playrec.playrec_worker.formattag" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.gain">
+<span class="sig-name descname"><span class="pre">gain</span></span><a class="headerlink" href="#player.playrec.playrec_worker.gain" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.modality">
+<span class="sig-name descname"><span class="pre">modality</span></span><a class="headerlink" href="#player.playrec.playrec_worker.modality" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="player.playrec.playrec_worker.timescaler">
 <span class="sig-name descname"><span class="pre">timescaler</span></span><a class="headerlink" href="#player.playrec.playrec_worker.timescaler" title="Link to this definition"></a></dt>
 <dd></dd></dl>
@@ -1079,11 +1099,6 @@ __slots__[3]: rates Type: list</p>
 <dd class="field-odd"><p>none</p>
 </dd>
 </dl>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.HostAddress">
-<span class="sig-name descname"><span class="pre">HostAddress</span></span><a class="headerlink" href="#player.stemlab_control.StemlabControl.HostAddress" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.RPShutdown">
 <span class="sig-name descname"><span class="pre">RPShutdown</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configparams</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.stemlab_control.StemlabControl.RPShutdown" title="Link to this definition"></a></dt>
@@ -1097,14 +1112,9 @@ Sequence:   (1) stop server sdr-transceiver-wide on the STEMLAB.</p>
 </div></blockquote>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.SigError">
-<span class="sig-name descname"><span class="pre">SigError</span></span><a class="headerlink" href="#player.stemlab_control.StemlabControl.SigError" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.SigMessage">
-<span class="sig-name descname"><span class="pre">SigMessage</span></span><a class="headerlink" href="#player.stemlab_control.StemlabControl.SigMessage" title="Link to this definition"></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.stemlab_control.StemlabControl.__init__" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -1123,29 +1133,9 @@ requires self.modality to have been set by set_play() or set_rec()</p>
 </div></blockquote>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.icorr">
-<span class="sig-name descname"><span class="pre">icorr</span></span><a class="headerlink" href="#player.stemlab_control.StemlabControl.icorr" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.ifreq">
-<span class="sig-name descname"><span class="pre">ifreq</span></span><a class="headerlink" href="#player.stemlab_control.StemlabControl.ifreq" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.irate">
-<span class="sig-name descname"><span class="pre">irate</span></span><a class="headerlink" href="#player.stemlab_control.StemlabControl.irate" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.monitor">
 <span class="sig-name descname"><span class="pre">monitor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.stemlab_control.StemlabControl.monitor" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.rates">
-<span class="sig-name descname"><span class="pre">rates</span></span><a class="headerlink" href="#player.stemlab_control.StemlabControl.rates" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -1185,6 +1175,41 @@ undefined communication</p>
 Returns False if a connection error occurs, returns True if
 successful</p>
 </dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.HostAddress">
+<span class="sig-name descname"><span class="pre">HostAddress</span></span><a class="headerlink" href="#player.stemlab_control.StemlabControl.HostAddress" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.SigError">
+<span class="sig-name descname"><span class="pre">SigError</span></span><a class="headerlink" href="#player.stemlab_control.StemlabControl.SigError" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.SigMessage">
+<span class="sig-name descname"><span class="pre">SigMessage</span></span><a class="headerlink" href="#player.stemlab_control.StemlabControl.SigMessage" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.icorr">
+<span class="sig-name descname"><span class="pre">icorr</span></span><a class="headerlink" href="#player.stemlab_control.StemlabControl.icorr" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.ifreq">
+<span class="sig-name descname"><span class="pre">ifreq</span></span><a class="headerlink" href="#player.stemlab_control.StemlabControl.ifreq" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.irate">
+<span class="sig-name descname"><span class="pre">irate</span></span><a class="headerlink" href="#player.stemlab_control.StemlabControl.irate" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.rates">
+<span class="sig-name descname"><span class="pre">rates</span></span><a class="headerlink" href="#player.stemlab_control.StemlabControl.rates" title="Link to this definition"></a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 

@@ -21,7 +21,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="icons module" href="icons.html" />
+    <link rel="next" title="player package" href="player.html" />
     <link rel="prev" title="annotator package" href="annotator.html" /> 
 </head>
 
@@ -44,27 +44,30 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul class="current">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">What is COHIWizard ?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="software_architecture.html">Software architecture</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">sources</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="COHIWizard.html">COHIWizard</a></li>
-<li class="toctree-l2"><a class="reference internal" href="COHIWizard_rescue.html">COHIWizard_rescue module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Trash.html">Trash package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="abstract_module.html">abstract_module module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="annotator.html">annotator package</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">auxiliaries module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#auxiliaries.WAVheader_tools"><code class="docutils literal notranslate"><span class="pre">WAVheader_tools</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#auxiliaries.WAVheader_tools.__init__"><code class="docutils literal notranslate"><span class="pre">WAVheader_tools.__init__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#auxiliaries.WAVheader_tools.basic_wavheader"><code class="docutils literal notranslate"><span class="pre">WAVheader_tools.basic_wavheader()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#auxiliaries.WAVheader_tools.get_sdruno_header"><code class="docutils literal notranslate"><span class="pre">WAVheader_tools.get_sdruno_header()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#auxiliaries.WAVheader_tools.write_sdruno_header"><code class="docutils literal notranslate"><span class="pre">WAVheader_tools.write_sdruno_header()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#auxiliaries.WIZ_auxiliaries"><code class="docutils literal notranslate"><span class="pre">WIZ_auxiliaries</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#auxiliaries.WIZ_auxiliaries.__init__"><code class="docutils literal notranslate"><span class="pre">WIZ_auxiliaries.__init__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#auxiliaries.WIZ_auxiliaries.standard_errorbox"><code class="docutils literal notranslate"><span class="pre">WIZ_auxiliaries.standard_errorbox()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#auxiliaries.WIZ_auxiliaries.standard_infobox"><code class="docutils literal notranslate"><span class="pre">WIZ_auxiliaries.standard_infobox()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#auxiliaries.auxiliaries"><code class="docutils literal notranslate"><span class="pre">auxiliaries</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#auxiliaries.auxiliaries.__init__"><code class="docutils literal notranslate"><span class="pre">auxiliaries.__init__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#auxiliaries.auxiliaries.generate_canvas"><code class="docutils literal notranslate"><span class="pre">auxiliaries.generate_canvas()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#auxiliaries.auxiliaries.readsegment_new"><code class="docutils literal notranslate"><span class="pre">auxiliaries.readsegment_new()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#auxiliaries.auxiliaries.standard_errorbox"><code class="docutils literal notranslate"><span class="pre">auxiliaries.standard_errorbox()</span></code></a></li>
@@ -73,15 +76,15 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#auxiliaries.timer_worker"><code class="docutils literal notranslate"><span class="pre">timer_worker</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#auxiliaries.timer_worker.SigFinished"><code class="docutils literal notranslate"><span class="pre">timer_worker.SigFinished</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#auxiliaries.timer_worker.SigTick"><code class="docutils literal notranslate"><span class="pre">timer_worker.SigTick</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#auxiliaries.timer_worker.__init__"><code class="docutils literal notranslate"><span class="pre">timer_worker.__init__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#auxiliaries.timer_worker.stoptick"><code class="docutils literal notranslate"><span class="pre">timer_worker.stoptick()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#auxiliaries.timer_worker.tick"><code class="docutils literal notranslate"><span class="pre">timer_worker.tick()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#auxiliaries.timer_worker.SigFinished"><code class="docutils literal notranslate"><span class="pre">timer_worker.SigFinished</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#auxiliaries.timer_worker.SigTick"><code class="docutils literal notranslate"><span class="pre">timer_worker.SigTick</span></code></a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="icons.html">icons module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="player.html">player package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="resampler.html">resampler package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="spectralviewer.html">spectralviewer package</a></li>
@@ -89,12 +92,6 @@
 <li class="toctree-l2"><a class="reference internal" href="yaml_editor.html">yaml_editor package</a></li>
 </ul>
 </li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="intro.html">What is COHIWizard ?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="software_architecture.html">Software architecture</a></li>
-<li class="toctree-l1"><a class="reference internal" href="COHIWizard.html">COHIWizard</a></li>
 </ul>
 
         </div>
@@ -128,6 +125,11 @@
 <dt class="sig sig-object py" id="auxiliaries.WAVheader_tools">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">auxiliaries.</span></span><span class="sig-name descname"><span class="pre">WAVheader_tools</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#auxiliaries.WAVheader_tools" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="auxiliaries.WAVheader_tools.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#auxiliaries.WAVheader_tools.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="auxiliaries.WAVheader_tools.basic_wavheader">
 <span class="sig-name descname"><span class="pre">basic_wavheader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">icorr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">irate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ifreq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fsize</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_mod</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#auxiliaries.WAVheader_tools.basic_wavheader" title="Link to this definition"></a></dt>
@@ -198,6 +200,11 @@ if ovwrt_flag == True:</p>
 :return: _description_
 :rtype: _type_</p>
 <dl class="py method">
+<dt class="sig sig-object py" id="auxiliaries.WIZ_auxiliaries.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#auxiliaries.WIZ_auxiliaries.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="auxiliaries.WIZ_auxiliaries.standard_errorbox">
 <span class="sig-name descname"><span class="pre">standard_errorbox</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#auxiliaries.WIZ_auxiliaries.standard_errorbox" title="Link to this definition"></a></dt>
 <dd></dd></dl>
@@ -213,6 +220,11 @@ if ovwrt_flag == True:</p>
 <dt class="sig sig-object py" id="auxiliaries.auxiliaries">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">auxiliaries.</span></span><span class="sig-name descname"><span class="pre">auxiliaries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#auxiliaries.auxiliaries" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="auxiliaries.auxiliaries.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#auxiliaries.auxiliaries.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="auxiliaries.auxiliaries.generate_canvas">
 <span class="sig-name descname"><span class="pre">generate_canvas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gridref</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gridc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gridt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gui</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#auxiliaries.auxiliaries.generate_canvas" title="Link to this definition"></a></dt>
@@ -233,7 +245,7 @@ if ovwrt_flag == True:</p>
 <dd class="field-even"><p>gui</p>
 </dd>
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="Trash.html#Trash.COHIWizard_GUI_v10.Ui_MainWindow" title="Trash.COHIWizard_GUI_v10.Ui_MainWindow">Ui_MainWindow</a> (MyWizard) object instantiated by starter method in core program</p>
+<dd class="field-odd"><p>Ui_MainWindow (MyWizard) object instantiated by starter method in core program</p>
 </dd>
 </dl>
 <p>…
@@ -307,14 +319,9 @@ output format is 16 or 32bit according to value specified in tBPS. No other BPS 
 …
 :return: [ReturnDescription]
 :rtype: [ReturnType]</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="auxiliaries.timer_worker.SigFinished">
-<span class="sig-name descname"><span class="pre">SigFinished</span></span><a class="headerlink" href="#auxiliaries.timer_worker.SigFinished" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="auxiliaries.timer_worker.SigTick">
-<span class="sig-name descname"><span class="pre">SigTick</span></span><a class="headerlink" href="#auxiliaries.timer_worker.SigTick" title="Link to this definition"></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="auxiliaries.timer_worker.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#auxiliaries.timer_worker.__init__" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -333,6 +340,16 @@ output format is 16 or 32bit according to value specified in tBPS. No other BPS 
 :rtype: none</p>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="auxiliaries.timer_worker.SigFinished">
+<span class="sig-name descname"><span class="pre">SigFinished</span></span><a class="headerlink" href="#auxiliaries.timer_worker.SigFinished" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="auxiliaries.timer_worker.SigTick">
+<span class="sig-name descname"><span class="pre">SigTick</span></span><a class="headerlink" href="#auxiliaries.timer_worker.SigTick" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 </section>
@@ -342,7 +359,7 @@ output format is 16 or 32bit according to value specified in tBPS. No other BPS 
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="annotator.html" class="btn btn-neutral float-left" title="annotator package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="icons.html" class="btn btn-neutral float-right" title="icons module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="player.html" class="btn btn-neutral float-right" title="player package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
