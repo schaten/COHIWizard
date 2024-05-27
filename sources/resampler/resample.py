@@ -270,6 +270,7 @@ class res_workers(QObject):
                                 return False
                         #return(False) ## TODO: stürzt ab, wenn return
                     gap_bytes = int(np.ceil(gap * wavheader["nAvgBytesPerSec"]/2)*2)
+                    #TODO: investigate if gap_bytes can become a non-integer multiple of 4 (or better nBlockAlign)
                     WRITEGAP = True
                 elif gap < 0:
                     self.logger.error(f"#################_______________merge2G, gap is negative, error !, gap = {gap}")
@@ -279,6 +280,8 @@ class res_workers(QObject):
                 with open(input_file, 'rb') as input_file:
                     self.logger.debug(f"next input file: {input_file} ")
                     fillchunk = bytes([0x00] * self.CHUNKSIZE)
+                    print(f"mergeworker file:{input_file}, fillchunksize: {self.CHUNKSIZE}")
+                    self.logger.debug(f"next input file: {input_file} , fillchunksize: {self.CHUNKSIZE}")
                     while True:
                         if self.stopix is True:
                             self.logger.debug("***merge2G worker cancel merging process")
@@ -298,7 +301,15 @@ class res_workers(QObject):
                                 WRITEGAP = False
                             else:
                                 WRITEGAP = False
+                                print(f"*********------------------>>>>>GAPFILLER>>>>>> len(data_chunk): {len(data_chunk)} CHECK IF MULTIPLE of 4 ")
+                                self.logger.debug(f"GAPFILLER in file {input_file} len(data_chunk): {len(data_chunk)} check if multiple of 4")
+                                if gap_bytes % 4> 0:                   #TODO: replace by nBlockAlign in further implementations for potential cases of higher resolution
+                                    #print(f"*********------------------>>>>>GAPFILLER ERRORS>>>>>> len(data_chunk): {len(data_chunk)} NOT of 4 ")
+                                    self.logger.error(f"GAPFILLER ERROR in file {input_file} len(data_chunk): {len(data_chunk)} NOT multiple of 4; 
+                                                      error is being corrected automatically by subtracting gap_bytes % 4 ")
+                                gap_bytes = gap_bytes - (gap_bytes % 4) #write less bytes so that mod 4 is 0
                                 data_chunk = bytes([0x00] * gap_bytes)
+
                         else:
                             # read CHUNKSIZE bytes from source file
                             data_chunk = input_file.read(self.CHUNKSIZE)  # 1 MB in Bytes
@@ -316,7 +327,7 @@ class res_workers(QObject):
                                 #TODO: this is wrong except for the last file! must be the stoptime of the last output file
                                 if firstpass:
                                     firstpass = False
-                                    stt = stt = self.get_sttime_atrim()
+                                    stt = self.get_sttime_atrim()
                                     self.logger.debug(f"merge2G: last == first write file reached, ix = 0")
                                     wavheader['starttime_dt'] = stt
                                     wavheader['starttime'] = [stt.year, stt.month, 0, stt.day, stt.hour, stt.minute, stt.second, int(stt.microsecond/1000)] 
@@ -2618,6 +2629,7 @@ class resample_v(QObject):
         self.gui.lineEdit_resample_targetnameprefix.setEnabled(False)
         self.m["basename"] = self.gui.lineEdit_resample_targetnameprefix.text()
         self.resample_c.merge2G_new(reslist)
+        self.gui.pushButton_resample_split2G.clicked.connect(self.cb_split2G_Button)
 
     def cb_resample(self):
         """_summary_

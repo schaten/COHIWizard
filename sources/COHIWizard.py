@@ -1214,7 +1214,6 @@ if __name__ == '__main__':
         annotate_v = annotate.annotate_v(tabUI_annotator,annotate_c,annotate_m)
         tab_dict["list"].append("annotate")
         tab_dict["tabname"].append("Annotate")
-        #gui.gui.tabWidget.removeTab(1) ##TODO TODO TODO: remove after cleanup
 
     #TODO TODO TODO: (d) ?? connecting für neuen Tab; 
     #if 'waveditor' in sys.modules:
@@ -1225,7 +1224,6 @@ if __name__ == '__main__':
         waveditor_v = wavheader_editor.waveditor_v(tabUI_wavheader_editor,waveditor_c,waveditor_m) #ZUM TESTEN FREISCHALTEN
         tab_dict["list"].append("waveditor")
         tab_dict["tabname"].append("WAV Header")
-        #gui.gui.tabWidget.removeTab(1) 
     #TODO TODO TODO: (d) ?? connecting für neuen Tab; 
 
     # else:
@@ -1239,7 +1237,6 @@ if __name__ == '__main__':
         yamleditor_v = yaml_editor.yamleditor_v(tabUI_yaml_editor,yamleditor_c,yamleditor_m)
         tab_dict["list"].append("yamleditor")
         tab_dict["tabname"].append("YAML editor")
-        #gui.gui.tabWidget.removeTab(1) ##TODO TODO TODO: remove after cleanup
         #TODO TODO TODO: (d) ?? connecting für neuen Tab; 
 
     #TODO TODO TODO: clarify that xcore_v.gui is the same as gui.gui !
@@ -1253,7 +1250,6 @@ if __name__ == '__main__':
         tab_dict["tabname"].append("Resampler")
         resample_v.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
         resample_c.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
-        #gui.gui.tabWidget.removeTab(1) ##TODO TODO TODO: remove after cleanup
 
     page = xcore_v.gui.tabWidget.findChild(QWidget, "tab_configuration")  ###TODO TODO TODO: remove after complete reconfiguration
     c_index = xcore_v.gui.tabWidget.indexOf(page)
