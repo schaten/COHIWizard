@@ -303,10 +303,10 @@ class res_workers(QObject):
                                 WRITEGAP = False
                                 print(f"*********------------------>>>>>GAPFILLER>>>>>> len(data_chunk): {len(data_chunk)} CHECK IF MULTIPLE of 4 ")
                                 self.logger.debug(f"GAPFILLER in file {input_file} len(data_chunk): {len(data_chunk)} check if multiple of 4")
-                                if gap_bytes % 4> 0:                   #TODO: replace by nBlockAlign in further implementations for potential cases of higher resolution
+                                if gap_bytes % 4> 0:                #TODO: replace by nBlockAlign in further implementations for potential cases of higher resolution
                                     #print(f"*********------------------>>>>>GAPFILLER ERRORS>>>>>> len(data_chunk): {len(data_chunk)} NOT of 4 ")
-                                    self.logger.error(f"GAPFILLER ERROR in file {input_file} len(data_chunk): {len(data_chunk)} NOT multiple of 4; 
-                                                      error is being corrected automatically by subtracting gap_bytes % 4 ")
+                                    self.logger.error(f"GAPFILLER ERROR in file {input_file} len(data_chunk): {len(data_chunk)} NOT multiple of 4; error is being corrected automatically by subtracting gap_bytes mod 4 ")
+                                    pass
                                 gap_bytes = gap_bytes - (gap_bytes % 4) #write less bytes so that mod 4 is 0
                                 data_chunk = bytes([0x00] * gap_bytes)
 
