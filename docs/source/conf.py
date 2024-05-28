@@ -27,6 +27,7 @@ extensions = [
 autodoc_default_options = {
     'member-order': 'groupwise',
     'special-members': '__init__',
+    'exclude-members': 'get_*, set_*',
 }
 
 # autodoc_default_options = {

@@ -190,13 +190,35 @@ class res_workers(QObject):
 
     def merge2G_worker(self):  # 2 GB in Bytes
         """worker for merging all files in system_state["list_out_files_resampled"]
-        :param: input_file_list
-        :type: none
-        ...
-        :raises none
-        ...
+
+        1. loops through resampling playlist
+
+        2. at each EOF of an input file it checks if there is a timegap between stop time of the current and start time of the next input file
+        if there is a gap < MAXGAP, then this gap is filled with null bytes (no signal), making sure that the lenght of the gapfiller is an integer multiple of 4 (Blockalign)
+        MAXGAP is set by set_maxgap()
+
+        3. After (optional) gap filling different parameters are read from the next wav header (e.g. start/stop times, sampling rates ...)
+
+        4. while not EOF: fetch datachunks and write them to current output file until max size of outputfile is reached (currently 2G)
+
+        5. on EOF (inputfile): close file and open next one, goto 2
+
+        6. if max length MAX_TARGETSIZE is reached:
+            - finalize wav-header of current outputfile, 
+            - close current outputfile
+            - rename current outputfile according to name convention and move to target folder
+            - open next outputfile
+            - write 216 null bytes (reserve for header)
+            - goto 2
+
+        stopix is set true from outside via the function soxworker_terminate()
+
+        .. image:: ../../source/images/merge2G_worker.svg
+        
+        :communication: with other threads via getters and setters
+
+        :param: none
         :return: none
-        :rtype: none
         """
         self.logger = self.get_logger()
         self.stopix = False
@@ -378,7 +400,6 @@ class res_workers(QObject):
                                 print(f"merge2G: first write file reached, ix = 0")
                                 #TODO: write first starttime from cut_times
                                 firstpass = False
-
                                 stt = self.get_sttime_atrim()
                                 wavheader['starttime_dt'] = stt
                                 wavheader['starttime'] = [stt.year, stt.month, 0, stt.day, stt.hour, stt.minute, stt.second, int(stt.microsecond/1000)] 
@@ -551,8 +572,6 @@ class res_workers(QObject):
         self.SigFinished.emit()
 
     def soxworker_terminate(self):
-        #self.stopix = False
-        #print("********************* ______________ terminate sox process now")
         self.stopix = True
 
 

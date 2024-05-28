@@ -248,14 +248,40 @@ __slots__[1]: return string from sox execution, type : str</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="resampler.resample.res_workers.merge2G_worker">
 <span class="sig-name descname"><span class="pre">merge2G_worker</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.res_workers.merge2G_worker" title="Link to this definition"></a></dt>
-<dd><p>worker for merging all files in system_state[“list_out_files_resampled”]
-:param: input_file_list
-:type: none
-…
-:raises none
-…
-:return: none
-:rtype: none</p>
+<dd><p>worker for merging all files in system_state[“list_out_files_resampled”]</p>
+<ol class="arabic simple">
+<li><p>loops through resampling playlist</p></li>
+</ol>
+<p>2. at each EOF of an input file it checks if there is a timegap between stop time of the current and start time of the next input file
+if there is a gap &lt; MAXGAP, then this gap is filled with null bytes (no signal), making sure that the lenght of the gapfiller is an integer multiple of 4 (Blockalign)
+MAXGAP is set by set_maxgap()</p>
+<ol class="arabic simple" start="3">
+<li><p>After (optional) gap filling different parameters are read from the next wav header (e.g. start/stop times, sampling rates …)</p></li>
+<li><p>while not EOF: fetch datachunks and write them to current output file until max size of outputfile is reached (currently 2G)</p></li>
+<li><p>on EOF (inputfile): close file and open next one, goto 2</p></li>
+<li><dl class="simple">
+<dt>if max length MAX_TARGETSIZE is reached:</dt><dd><ul class="simple">
+<li><p>finalize wav-header of current outputfile,</p></li>
+<li><p>close current outputfile</p></li>
+<li><p>rename current outputfile according to name convention and move to target folder</p></li>
+<li><p>open next outputfile</p></li>
+<li><p>write 216 null bytes (reserve for header)</p></li>
+<li><p>goto 2</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ol>
+<p>stopix is set true from outside via the function soxworker_terminate()</p>
+<img alt="../../source/images/merge2G_worker.svg" src="../../source/images/merge2G_worker.svg" /><p>:communication with other threads via getters and setters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Param<span class="colon">:</span></dt>
+<dd class="field-odd"><p>none</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>none</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
