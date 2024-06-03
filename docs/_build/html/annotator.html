@@ -120,11 +120,6 @@
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
 <p>_view method</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.annotate_c.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">annotate_m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.annotate_c.__init__" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="annotator.annotate.annotate_c.ann_spectrum">
 <span class="sig-name descname"><span class="pre">ann_spectrum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.annotate_c.ann_spectrum" title="Link to this definition"></a></dt>
 <dd><p>generate a single spectrum from complex data
@@ -259,11 +254,6 @@ read yaml stations_list.yaml</p>
 <dt class="sig sig-object py" id="annotator.annotate.annotate_m">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">annotator.annotate.</span></span><span class="sig-name descname"><span class="pre">annotate_m</span></span><a class="headerlink" href="#annotator.annotate.annotate_m" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.annotate_m.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.annotate_m.__init__" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
 <dl class="py attribute">
 <dt class="sig sig-object py" id="annotator.annotate.annotate_m.None">
 <span class="sig-name descname"><span class="pre">None</span></span><a class="headerlink" href="#annotator.annotate.annotate_m.None" title="Link to this definition"></a></dt>
@@ -293,11 +283,6 @@ TODO: gui.wavheader –&gt; something less general ?</p>
 <span class="sig-name descname"><span class="pre">Progressbarupdate2</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.annotate_v.Progressbarupdate2" title="Link to this definition"></a></dt>
 <dd><p>_summary_</p>
 </dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.annotate_v.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gui</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">annotate_c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">annotate_m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.annotate_v.__init__" title="Link to this definition"></a></dt>
-<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="annotator.annotate.annotate_v.activate_WAVEDIT">
@@ -375,14 +360,11 @@ read yaml stations_list.yaml</p>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.annotate_v.cb_res_digits_change">
-<span class="sig-name descname"><span class="pre">cb_res_digits_change</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.annotate_v.cb_res_digits_change" title="Link to this definition"></a></dt>
-<dd><p>handles changes of the frequency resolution digits spinbox
+<dt class="sig sig-object py" id="annotator.annotate.annotate_v.cb_peakBW_comboBox">
+<span class="sig-name descname"><span class="pre">cb_peakBW_comboBox</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.annotate_v.cb_peakBW_comboBox" title="Link to this definition"></a></dt>
+<dd><p>slot function for resolution digits spinbox
 :param : none
-:type : none
-:raises [ErrorType]: [ErrorDescription]
-:return: none
-:rtype: none</p>
+:return: none</p>
 </dd></dl>
 
 <dl class="py method">
@@ -548,11 +530,6 @@ this method is connected in the __main__ of the core module
 :return: [ReturnDescription]
 :rtype: [ReturnType]</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">host_window</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.__init__" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.autoscan_fun">
 <span class="sig-name descname"><span class="pre">autoscan_fun</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.autoscan_fun" title="Link to this definition"></a></dt>
 <dd><dl class="simple">
@@ -567,165 +544,9 @@ Signalling: TODO</p>
 :rtype: none</p>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.get_GUI_parameters">
-<span class="sig-name descname"><span class="pre">get_GUI_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.get_GUI_parameters" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.get_annotation">
-<span class="sig-name descname"><span class="pre">get_annotation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.get_annotation" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.get_annotation_filename">
-<span class="sig-name descname"><span class="pre">get_annotation_filename</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.get_annotation_filename" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.get_baselineoffset">
-<span class="sig-name descname"><span class="pre">get_baselineoffset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.get_baselineoffset" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.get_continue">
-<span class="sig-name descname"><span class="pre">get_continue</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.get_continue" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.get_datablocksize">
-<span class="sig-name descname"><span class="pre">get_datablocksize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.get_datablocksize" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.get_datasnaps">
-<span class="sig-name descname"><span class="pre">get_datasnaps</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.get_datasnaps" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.get_errormsg">
-<span class="sig-name descname"><span class="pre">get_errormsg</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.get_errormsg" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.get_filepath">
-<span class="sig-name descname"><span class="pre">get_filepath</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.get_filepath" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.get_horzscal">
-<span class="sig-name descname"><span class="pre">get_horzscal</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.get_horzscal" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.get_pdata">
-<span class="sig-name descname"><span class="pre">get_pdata</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.get_pdata" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.get_progressvalue">
-<span class="sig-name descname"><span class="pre">get_progressvalue</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.get_progressvalue" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.get_readoffset">
-<span class="sig-name descname"><span class="pre">get_readoffset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.get_readoffset" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.get_round_digits">
-<span class="sig-name descname"><span class="pre">get_round_digits</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.get_round_digits" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.get_unions">
-<span class="sig-name descname"><span class="pre">get_unions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.get_unions" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.get_wavheader">
-<span class="sig-name descname"><span class="pre">get_wavheader</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.get_wavheader" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.set_GUI_parameters">
-<span class="sig-name descname"><span class="pre">set_GUI_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.set_GUI_parameters" title="Link to this definition"></a></dt>
-<dd><p>__slots__[0] has entries: NUMSNAPS, prominence</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.set_annotation">
-<span class="sig-name descname"><span class="pre">set_annotation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.set_annotation" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.set_annotation_filename">
-<span class="sig-name descname"><span class="pre">set_annotation_filename</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.set_annotation_filename" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.set_baselineoffset">
-<span class="sig-name descname"><span class="pre">set_baselineoffset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.set_baselineoffset" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.set_continue">
-<span class="sig-name descname"><span class="pre">set_continue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.set_continue" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.set_datablocksize">
-<span class="sig-name descname"><span class="pre">set_datablocksize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.set_datablocksize" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.set_datasnaps">
-<span class="sig-name descname"><span class="pre">set_datasnaps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.set_datasnaps" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.set_errormsg">
-<span class="sig-name descname"><span class="pre">set_errormsg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.set_errormsg" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.set_filepath">
-<span class="sig-name descname"><span class="pre">set_filepath</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.set_filepath" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.set_horzscal">
-<span class="sig-name descname"><span class="pre">set_horzscal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.set_horzscal" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.set_pdata">
-<span class="sig-name descname"><span class="pre">set_pdata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.set_pdata" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.set_progressvalue">
-<span class="sig-name descname"><span class="pre">set_progressvalue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.set_progressvalue" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.set_readoffset">
-<span class="sig-name descname"><span class="pre">set_readoffset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.set_readoffset" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.set_round_digits">
-<span class="sig-name descname"><span class="pre">set_round_digits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.set_round_digits" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.set_unions">
-<span class="sig-name descname"><span class="pre">set_unions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.set_unions" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.set_wavheader">
-<span class="sig-name descname"><span class="pre">set_wavheader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.set_wavheader" title="Link to this definition"></a></dt>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.BW_peaklock">
+<span class="sig-name descname"><span class="pre">BW_peaklock</span></span><a class="headerlink" href="#annotator.annotate.autoscan_worker.BW_peaklock" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -864,131 +685,6 @@ Signalling: TODO</p>
 <dt class="sig sig-object py" id="annotator.annotate.statlst_gen_worker">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">annotator.annotate.</span></span><span class="sig-name descname"><span class="pre">statlst_gen_worker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">host_window</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.statlst_gen_worker" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QThread</span></code></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.statlst_gen_worker.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">host_window</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.statlst_gen_worker.__init__" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.statlst_gen_worker.get_T">
-<span class="sig-name descname"><span class="pre">get_T</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.statlst_gen_worker.get_T" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.statlst_gen_worker.get_annotation">
-<span class="sig-name descname"><span class="pre">get_annotation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.statlst_gen_worker.get_annotation" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.statlst_gen_worker.get_closed">
-<span class="sig-name descname"><span class="pre">get_closed</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.statlst_gen_worker.get_closed" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.statlst_gen_worker.get_continue">
-<span class="sig-name descname"><span class="pre">get_continue</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.statlst_gen_worker.get_continue" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.statlst_gen_worker.get_freq">
-<span class="sig-name descname"><span class="pre">get_freq</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.statlst_gen_worker.get_freq" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.statlst_gen_worker.get_locs_union">
-<span class="sig-name descname"><span class="pre">get_locs_union</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.statlst_gen_worker.get_locs_union" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.statlst_gen_worker.get_logger">
-<span class="sig-name descname"><span class="pre">get_logger</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.statlst_gen_worker.get_logger" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.statlst_gen_worker.get_progressvalue">
-<span class="sig-name descname"><span class="pre">get_progressvalue</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.statlst_gen_worker.get_progressvalue" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.statlst_gen_worker.get_rectime">
-<span class="sig-name descname"><span class="pre">get_rectime</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.statlst_gen_worker.get_rectime" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.statlst_gen_worker.get_stations_filename">
-<span class="sig-name descname"><span class="pre">get_stations_filename</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.statlst_gen_worker.get_stations_filename" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.statlst_gen_worker.get_status_filename">
-<span class="sig-name descname"><span class="pre">get_status_filename</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.statlst_gen_worker.get_status_filename" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.statlst_gen_worker.get_stichtag">
-<span class="sig-name descname"><span class="pre">get_stichtag</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.statlst_gen_worker.get_stichtag" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.statlst_gen_worker.set_T">
-<span class="sig-name descname"><span class="pre">set_T</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.statlst_gen_worker.set_T" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.statlst_gen_worker.set_annotation">
-<span class="sig-name descname"><span class="pre">set_annotation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.statlst_gen_worker.set_annotation" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.statlst_gen_worker.set_closed">
-<span class="sig-name descname"><span class="pre">set_closed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.statlst_gen_worker.set_closed" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.statlst_gen_worker.set_continue">
-<span class="sig-name descname"><span class="pre">set_continue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.statlst_gen_worker.set_continue" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.statlst_gen_worker.set_freq">
-<span class="sig-name descname"><span class="pre">set_freq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.statlst_gen_worker.set_freq" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.statlst_gen_worker.set_locs_union">
-<span class="sig-name descname"><span class="pre">set_locs_union</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.statlst_gen_worker.set_locs_union" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.statlst_gen_worker.set_logger">
-<span class="sig-name descname"><span class="pre">set_logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.statlst_gen_worker.set_logger" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.statlst_gen_worker.set_progressvalue">
-<span class="sig-name descname"><span class="pre">set_progressvalue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.statlst_gen_worker.set_progressvalue" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.statlst_gen_worker.set_rectime">
-<span class="sig-name descname"><span class="pre">set_rectime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.statlst_gen_worker.set_rectime" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.statlst_gen_worker.set_stations_filename">
-<span class="sig-name descname"><span class="pre">set_stations_filename</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.statlst_gen_worker.set_stations_filename" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.statlst_gen_worker.set_status_filename">
-<span class="sig-name descname"><span class="pre">set_status_filename</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.statlst_gen_worker.set_status_filename" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="annotator.annotate.statlst_gen_worker.set_stichtag">
-<span class="sig-name descname"><span class="pre">set_stichtag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.statlst_gen_worker.set_stichtag" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="annotator.annotate.statlst_gen_worker.stationsloop">
 <span class="sig-name descname"><span class="pre">stationsloop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.statlst_gen_worker.stationsloop" title="Link to this definition"></a></dt>

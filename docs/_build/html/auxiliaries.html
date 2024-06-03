@@ -54,20 +54,16 @@
 <li class="toctree-l2"><a class="reference internal" href="annotator.html">annotator package</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">auxiliaries module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#auxiliaries.WAVheader_tools"><code class="docutils literal notranslate"><span class="pre">WAVheader_tools</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#auxiliaries.WAVheader_tools.__init__"><code class="docutils literal notranslate"><span class="pre">WAVheader_tools.__init__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#auxiliaries.WAVheader_tools.basic_wavheader"><code class="docutils literal notranslate"><span class="pre">WAVheader_tools.basic_wavheader()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#auxiliaries.WAVheader_tools.get_sdruno_header"><code class="docutils literal notranslate"><span class="pre">WAVheader_tools.get_sdruno_header()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#auxiliaries.WAVheader_tools.write_sdruno_header"><code class="docutils literal notranslate"><span class="pre">WAVheader_tools.write_sdruno_header()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#auxiliaries.WIZ_auxiliaries"><code class="docutils literal notranslate"><span class="pre">WIZ_auxiliaries</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#auxiliaries.WIZ_auxiliaries.__init__"><code class="docutils literal notranslate"><span class="pre">WIZ_auxiliaries.__init__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#auxiliaries.WIZ_auxiliaries.standard_errorbox"><code class="docutils literal notranslate"><span class="pre">WIZ_auxiliaries.standard_errorbox()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#auxiliaries.WIZ_auxiliaries.standard_infobox"><code class="docutils literal notranslate"><span class="pre">WIZ_auxiliaries.standard_infobox()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#auxiliaries.auxiliaries"><code class="docutils literal notranslate"><span class="pre">auxiliaries</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#auxiliaries.auxiliaries.__init__"><code class="docutils literal notranslate"><span class="pre">auxiliaries.__init__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#auxiliaries.auxiliaries.generate_canvas"><code class="docutils literal notranslate"><span class="pre">auxiliaries.generate_canvas()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#auxiliaries.auxiliaries.readsegment_new"><code class="docutils literal notranslate"><span class="pre">auxiliaries.readsegment_new()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#auxiliaries.auxiliaries.standard_errorbox"><code class="docutils literal notranslate"><span class="pre">auxiliaries.standard_errorbox()</span></code></a></li>
@@ -76,7 +72,6 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#auxiliaries.timer_worker"><code class="docutils literal notranslate"><span class="pre">timer_worker</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#auxiliaries.timer_worker.__init__"><code class="docutils literal notranslate"><span class="pre">timer_worker.__init__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#auxiliaries.timer_worker.stoptick"><code class="docutils literal notranslate"><span class="pre">timer_worker.stoptick()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#auxiliaries.timer_worker.tick"><code class="docutils literal notranslate"><span class="pre">timer_worker.tick()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#auxiliaries.timer_worker.SigFinished"><code class="docutils literal notranslate"><span class="pre">timer_worker.SigFinished</span></code></a></li>
@@ -126,11 +121,6 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">auxiliaries.</span></span><span class="sig-name descname"><span class="pre">WAVheader_tools</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#auxiliaries.WAVheader_tools" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
-<dt class="sig sig-object py" id="auxiliaries.WAVheader_tools.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#auxiliaries.WAVheader_tools.__init__" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="auxiliaries.WAVheader_tools.basic_wavheader">
 <span class="sig-name descname"><span class="pre">basic_wavheader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">icorr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">irate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ifreq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fsize</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_mod</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#auxiliaries.WAVheader_tools.basic_wavheader" title="Link to this definition"></a></dt>
 <dd><p>generate standard wavheader 
@@ -150,20 +140,6 @@ Important: no check for the right datatypes in wavheader; if incorrect –&gt; p
 :raises : none
 :return: wavheader
 :rtype: dictionary</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="auxiliaries.WAVheader_tools.get_sdruno_header">
-<span class="sig-name descname"><span class="pre">get_sdruno_header</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#auxiliaries.WAVheader_tools.get_sdruno_header" title="Link to this definition"></a></dt>
-<dd><p>opens a file with name self.f1
-extracts meta information from <a href="#id1"><span class="problematic" id="id2">SDR-wav-header_</span></a>
-recognized formats: SDRUno, PERSEUS, SpectraVue
-closes file after headerreading</p>
-<p>:param : none
-:type : none
-:raises : none
-:return: dictionary wavheader containing the individual metadata items or False if unsuccessful
-:rtype: dictionary or Boolean</p>
 </dd></dl>
 
 <dl class="py method">
@@ -200,11 +176,6 @@ if ovwrt_flag == True:</p>
 :return: _description_
 :rtype: _type_</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="auxiliaries.WIZ_auxiliaries.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#auxiliaries.WIZ_auxiliaries.__init__" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="auxiliaries.WIZ_auxiliaries.standard_errorbox">
 <span class="sig-name descname"><span class="pre">standard_errorbox</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#auxiliaries.WIZ_auxiliaries.standard_errorbox" title="Link to this definition"></a></dt>
 <dd></dd></dl>
@@ -220,11 +191,6 @@ if ovwrt_flag == True:</p>
 <dt class="sig sig-object py" id="auxiliaries.auxiliaries">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">auxiliaries.</span></span><span class="sig-name descname"><span class="pre">auxiliaries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#auxiliaries.auxiliaries" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="auxiliaries.auxiliaries.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#auxiliaries.auxiliaries.__init__" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="auxiliaries.auxiliaries.generate_canvas">
 <span class="sig-name descname"><span class="pre">generate_canvas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gridref</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gridc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gridt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gui</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#auxiliaries.auxiliaries.generate_canvas" title="Link to this definition"></a></dt>
@@ -308,7 +274,7 @@ output format is 16 or 32bit according to value specified in tBPS. No other BPS 
 <dt class="sig sig-object py" id="auxiliaries.timer_worker">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">auxiliaries.</span></span><span class="sig-name descname"><span class="pre">timer_worker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#auxiliaries.timer_worker" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
-<p>_generates time signals for clock and recording <a href="#id3"><span class="problematic" id="id4">timer_</span></a></p>
+<p>_generates time signals for clock and recording <a href="#id1"><span class="problematic" id="id2">timer_</span></a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>[</strong><strong>ParamName</strong><strong>]</strong> (<em>[</em><em>ParamType</em><em>]</em><em>(</em><em>, </em><em>optional</em><em>)</em>) – [ParamDescription], defaults to [DefaultParamVal]</p>
@@ -319,11 +285,6 @@ output format is 16 or 32bit according to value specified in tBPS. No other BPS 
 …
 :return: [ReturnDescription]
 :rtype: [ReturnType]</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="auxiliaries.timer_worker.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#auxiliaries.timer_worker.__init__" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="auxiliaries.timer_worker.stoptick">
 <span class="sig-name descname"><span class="pre">stoptick</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#auxiliaries.timer_worker.stoptick" title="Link to this definition"></a></dt>

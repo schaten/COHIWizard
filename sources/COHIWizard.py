@@ -51,6 +51,7 @@ import logging
 #from .COHIWizard_GUI_v10 import Ui_MainWindow as MyWizard  ##TODO: after transfer to core folder set other path
 from icons import Logos
 from core import COHIWizard_GUI_v10_reduced
+#from core import COHIWizard_GUI_v10_scroll
 
 class starter(QMainWindow):
     """instantiates the central GUI object and calls its setupUI method; type QMainwindow
@@ -72,6 +73,7 @@ class starter(QMainWindow):
         self.splash.setFocus()
         self.splash.show()
         self.gui = COHIWizard_GUI_v10_reduced.Ui_MainWindow()
+        #self.gui = COHIWizard_GUI_v10_scroll.Ui_MainWindow()
         self.gui.setupUi(self)
 
 # generate Player from individual widget
@@ -753,10 +755,13 @@ class core_v(QObject):
         pass
 
     #@njit
-    def fileOpen(self):   #TODO: shift to controller, decompose in small submethods
-        '''acquires info about file to be opened and relays the following information to all other modules
+    def fileOpen(self):   #TODO: shift to controller
 
-	    - ["ismetadata"]
+        '''
+        
+        acquires info about file to be opened and relays the following information to all other modules
+
+        - ["ismetadata"]
         - ["metadata"]
         - ["f1"]
         - ["my_dirname"]

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'annotator_widget.ui'
+# Form implementation generated from reading ui file '.\annotator_widget.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.10
 #
@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_annotator_widget(object):
     def setupUi(self, annotator_widget):
         annotator_widget.setObjectName("annotator_widget")
-        annotator_widget.resize(1153, 709)
+        annotator_widget.resize(1212, 888)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -330,20 +330,6 @@ class Ui_annotator_widget(object):
         self.annotate_pushButtonBack.setAutoFillBackground(True)
         self.annotate_pushButtonBack.setObjectName("annotate_pushButtonBack")
         self.gridLayout_3.addWidget(self.annotate_pushButtonBack, 4, 7, 1, 1)
-        self.spinBox_res_digits = QtWidgets.QSpinBox(annotator_widget)
-        font = QtGui.QFont()
-        font.setPointSize(10)
-        self.spinBox_res_digits.setFont(font)
-        self.spinBox_res_digits.setMaximum(2)
-        self.spinBox_res_digits.setDisplayIntegerBase(10)
-        self.spinBox_res_digits.setObjectName("spinBox_res_digits")
-        self.gridLayout_3.addWidget(self.spinBox_res_digits, 4, 3, 1, 1)
-        self.label_4 = QtWidgets.QLabel(annotator_widget)
-        font = QtGui.QFont()
-        font.setPointSize(10)
-        self.label_4.setFont(font)
-        self.label_4.setObjectName("label_4")
-        self.gridLayout_3.addWidget(self.label_4, 4, 2, 1, 1)
         self.radioButton_export_xlsx = QtWidgets.QRadioButton(annotator_widget)
         font = QtGui.QFont()
         font.setPointSize(10)
@@ -352,6 +338,21 @@ class Ui_annotator_widget(object):
         self.radioButton_export_xlsx.setAutoExclusive(False)
         self.radioButton_export_xlsx.setObjectName("radioButton_export_xlsx")
         self.gridLayout_3.addWidget(self.radioButton_export_xlsx, 4, 6, 1, 1)
+        self.label_5 = QtWidgets.QLabel(annotator_widget)
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.label_5.setFont(font)
+        self.label_5.setObjectName("label_5")
+        self.gridLayout_3.addWidget(self.label_5, 4, 4, 1, 1)
+        self.peakBW_comboBox = QtWidgets.QComboBox(annotator_widget)
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.peakBW_comboBox.setFont(font)
+        self.peakBW_comboBox.setObjectName("peakBW_comboBox")
+        self.peakBW_comboBox.addItem("")
+        self.peakBW_comboBox.addItem("")
+        self.peakBW_comboBox.addItem("")
+        self.gridLayout_3.addWidget(self.peakBW_comboBox, 4, 5, 1, 1)
         self.gridLayout.addLayout(self.gridLayout_3, 0, 0, 1, 1)
 
         self.retranslateUi(annotator_widget)
@@ -360,6 +361,7 @@ class Ui_annotator_widget(object):
     def retranslateUi(self, annotator_widget):
         _translate = QtCore.QCoreApplication.translate
         annotator_widget.setWindowTitle(_translate("annotator_widget", "Form"))
+        self.label_18.setToolTip(_translate("annotator_widget", "TX site"))
         self.label_18.setText(_translate("annotator_widget", "TX-site"))
         self.label.setText(_translate("annotator_widget", "Status:"))
         self.Annotate_listWidget.setToolTip(_translate("annotator_widget", "space for stations list"))
@@ -375,9 +377,15 @@ class Ui_annotator_widget(object):
         self.radioButton_plotpreview.setToolTip(_translate("annotator_widget", "allow plotting of spectra during scanning"))
         self.radioButton_plotpreview.setText(_translate("annotator_widget", "plot preview"))
         self.label_11.setText(_translate("annotator_widget", "Filename:"))
+        self.label_17.setToolTip(_translate("annotator_widget", "name of the station/programme"))
         self.label_17.setText(_translate("annotator_widget", "Programme"))
+        self.label_16.setToolTip(_translate("annotator_widget", "country  of found transmitter"))
         self.label_16.setText(_translate("annotator_widget", "Country:"))
+        self.lineEdit.setToolTip(_translate("annotator_widget", "name of the station/programme"))
+        self.lineEdit_Country.setToolTip(_translate("annotator_widget", "country  of found transmitter"))
+        self.labelFrequency.setToolTip(_translate("annotator_widget", "shows frequency of current peak"))
         self.labelFrequency.setText(_translate("annotator_widget", "Freq:"))
+        self.lineEdit_TX_Site.setToolTip(_translate("annotator_widget", "TX site"))
         self.pushButtonAnnotate.setToolTip(_translate("annotator_widget", "assign peaks to candidates of stations"))
         self.pushButtonAnnotate.setText(_translate("annotator_widget", "Annotate"))
         self.pushButton_Scan.setToolTip(_translate("annotator_widget", "Scan record, extract peaks with SNR > min SNR"))
@@ -397,10 +405,16 @@ class Ui_annotator_widget(object):
         self.annotate_pushButtonBack.setToolTip(_translate("annotator_widget", "Add a station to the last frequency (e.g. interference)"))
         self.annotate_pushButtonBack.setText(_translate("annotator_widget", "Add station to last F"))
         self.annotate_pushButtonBack.setShortcut(_translate("annotator_widget", "Alt+Left"))
-        self.label_4.setText(_translate("annotator_widget", "Frequency resolution\n"
-" digits after comma"))
+        self.radioButton_export_xlsx.setToolTip(_translate("annotator_widget", "Export time series of found peaks to Excel xlsx Table"))
         self.radioButton_export_xlsx.setText(_translate("annotator_widget", "Export \n"
 " peaktraces"))
+        self.label_5.setToolTip(_translate("annotator_widget", "listing resolution of peak frequencies; e.g. 100 Hz means that a peak at 120.1 kHz shows up at 120.1 while a peak at 120.06 kHz shows up at 120.2 (rounding to next 0.1kHz)"))
+        self.label_5.setText(_translate("annotator_widget", "Peak detection\n"
+"Bandwidth"))
+        self.peakBW_comboBox.setToolTip(_translate("annotator_widget", "listing resolution of peak frequencies; e.g. 100 Hz means that a peak at 120.1 kHz shows up at 120.1 while a peak at 120.06 kHz shows up at 120.2 (rounding to next 0.1kHz)"))
+        self.peakBW_comboBox.setItemText(0, _translate("annotator_widget", "1 kHz"))
+        self.peakBW_comboBox.setItemText(1, _translate("annotator_widget", "100 Hz"))
+        self.peakBW_comboBox.setItemText(2, _translate("annotator_widget", "10Hz"))
 
 
 if __name__ == "__main__":

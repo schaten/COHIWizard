@@ -26,8 +26,8 @@ extensions = [
 
 autodoc_default_options = {
     'member-order': 'groupwise',
-    'special-members': '__init__',
-    'exclude-members': 'get_*, set_*',
+    'undoc-members': True,
+    'exclude-members': '',
 }
 
 # autodoc_default_options = {
@@ -77,6 +77,8 @@ html_static_path = ['_static']
 #
 import os
 import sys
+import fnmatch
+
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('..\\..\\sources'))
 sys.path.insert(0, os.path.abspath('..\\..\\sources\\annotator'))
@@ -84,6 +86,14 @@ sys.path.insert(0, os.path.abspath('..\\..\\sources\\player'))
 sys.path.insert(0, os.path.abspath('..\\..\\sources\\yaml_editor'))
 sys.path.insert(0, os.path.abspath('..\\..\\sources\\main'))
 
+def skip_methods(app, what, name, obj, skip, options):
+    exclude_patterns = ['get_**', 'set_*', 'Sig*']  # Add your patterns here
+    for pattern in exclude_patterns:
+        if fnmatch.fnmatch(name, pattern):
+            return True
+    return skip
 
+def setup(app):
+    app.connect('autodoc-skip-member', skip_methods)
 
 

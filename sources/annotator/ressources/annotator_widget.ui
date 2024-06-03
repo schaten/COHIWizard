@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1153</width>
-    <height>709</height>
+    <width>1212</width>
+    <height>888</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -37,6 +37,9 @@
         <font>
          <pointsize>10</pointsize>
         </font>
+       </property>
+       <property name="toolTip">
+        <string>TX site</string>
        </property>
        <property name="text">
         <string>TX-site</string>
@@ -379,6 +382,9 @@
          <pointsize>10</pointsize>
         </font>
        </property>
+       <property name="toolTip">
+        <string>name of the station/programme</string>
+       </property>
        <property name="text">
         <string>Programme</string>
        </property>
@@ -396,6 +402,9 @@
         <font>
          <pointsize>10</pointsize>
         </font>
+       </property>
+       <property name="toolTip">
+        <string>country  of found transmitter</string>
        </property>
        <property name="text">
         <string>Country:</string>
@@ -415,6 +424,9 @@
          <pointsize>10</pointsize>
         </font>
        </property>
+       <property name="toolTip">
+        <string>name of the station/programme</string>
+       </property>
        <property name="text">
         <string/>
        </property>
@@ -432,6 +444,9 @@
         <font>
          <pointsize>10</pointsize>
         </font>
+       </property>
+       <property name="toolTip">
+        <string>country  of found transmitter</string>
        </property>
        <property name="text">
         <string/>
@@ -451,6 +466,9 @@
          <pointsize>10</pointsize>
         </font>
        </property>
+       <property name="toolTip">
+        <string>shows frequency of current peak</string>
+       </property>
        <property name="text">
         <string>Freq:</string>
        </property>
@@ -468,6 +486,9 @@
         <font>
          <pointsize>10</pointsize>
         </font>
+       </property>
+       <property name="toolTip">
+        <string>TX site</string>
        </property>
        <property name="text">
         <string/>
@@ -670,6 +691,9 @@
          <pointsize>10</pointsize>
         </font>
        </property>
+       <property name="toolTip">
+        <string>Export time series of found peaks to Excel xlsx Table</string>
+       </property>
        <property name="layoutDirection">
         <enum>Qt::RightToLeft</enum>
        </property>
@@ -682,48 +706,47 @@
        </property>
       </widget>
      </item>
-     <item row="4" column="5">
-      <widget class="QSpinBox" name="spinBox_res_digits">
-       <property name="font">
-        <font>
-         <pointsize>10</pointsize>
-        </font>
-       </property>
-       <property name="maximum">
-        <number>2</number>
-       </property>
-       <property name="displayIntegerBase">
-        <number>10</number>
-       </property>
-      </widget>
-     </item>
      <item row="4" column="4">
-      <widget class="QLabel" name="label_4">
+      <widget class="QLabel" name="label_5">
        <property name="font">
         <font>
          <pointsize>10</pointsize>
         </font>
        </property>
+       <property name="toolTip">
+        <string>listing resolution of peak frequencies; e.g. 100 Hz means that a peak at 120.1 kHz shows up at 120.1 while a peak at 120.06 kHz shows up at 120.2 (rounding to next 0.1kHz)</string>
+       </property>
        <property name="text">
-        <string>Frequency resolution
- digits after comma</string>
+        <string>Peak detection
+Bandwidth</string>
        </property>
       </widget>
      </item>
-     <item row="4" column="3">
-      <widget class="QRadioButton" name="radioButton">
+     <item row="4" column="5">
+      <widget class="QComboBox" name="peakBW_comboBox">
        <property name="font">
         <font>
          <pointsize>10</pointsize>
         </font>
        </property>
-       <property name="text">
-        <string>advanced
- functions</string>
+       <property name="toolTip">
+        <string>listing resolution of peak frequencies; e.g. 100 Hz means that a peak at 120.1 kHz shows up at 120.1 while a peak at 120.06 kHz shows up at 120.2 (rounding to next 0.1kHz)</string>
        </property>
-       <property name="autoExclusive">
-        <bool>false</bool>
-       </property>
+       <item>
+        <property name="text">
+         <string>1 kHz</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>100 Hz</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>10Hz</string>
+        </property>
+       </item>
       </widget>
      </item>
     </layout>

@@ -25,7 +25,9 @@ def replace(file_path, text, subs, flags=0):
         file.write(file_contents)
 
     
-file_path = "./core/COHIWizard_GUI_v10_reduced.py"
+#file_path = "./core/COHIWizard_GUI_v10_reduced.py"
+file_path = "./core/COHIWizard_GUI_v10_scroll.py"
+
 text = "font.setPointSize(11)"
 subs = "font.setPointSize(11)"
 replace(file_path, text, subs)
@@ -40,7 +42,7 @@ subs = "self.menubar = QtWidgets.QMenuBar(MainWindow)"
 replace(file_path, text, subs)
 text = "from file import File"
 subs = "#from file import File"
-# replace(file_path, text, subs)
-# text = 'QPixmap("'
-# subs = 'QPixmap("./core/ressources/icons/'
-# replace(file_path, text, subs)
+replace(file_path, text, subs)
+text = 'QPixmap("'
+subs = 'QPixmap("./core/ressources/icons/'
+replace(file_path, text, subs)

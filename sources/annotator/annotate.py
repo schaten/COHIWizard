@@ -247,7 +247,7 @@ class autoscan_worker(QtCore.QThread):
     """
     __slots__ = ["GUI_parameters", "continue","pdata","progressvalue","horzscal",
              "filepath","readoffset","wavheader","datablocksize","baselineoffset",
-             "unions","annotation_filename","annotation","errormsg", "datasnaps", "round_digits"]
+             "unions","annotation_filename","annotation","errormsg", "datasnaps", "round_digits", "BW_peaklock"]
 
     SigUpdateUnions = pyqtSignal()
     SigUpdateGUI = pyqtSignal()
@@ -338,6 +338,10 @@ class autoscan_worker(QtCore.QThread):
         self.__slots__[15] = _value
     def get_round_digits(self):
         return(self.__slots__[15])
+    def set_BW_peaklock(self,_value): #currently unused
+        self.__slots__[16] = _value
+    def get_BW_peaklock(self):
+        return(self.__slots__[16])
 
     #@njit
     def autoscan_fun(self):
@@ -352,6 +356,8 @@ class autoscan_worker(QtCore.QThread):
         :rtype: none
         """
         round_digits = self.get_round_digits()
+        #BW_peaklock = self.get_BW_peaklock()
+
         locs_union = []
         freq_union = []
         self.SigUpdateGUI.emit()
@@ -410,12 +416,12 @@ class autoscan_worker(QtCore.QThread):
             #print(f'asf: basel   : {basel[peaklocs]}')
             #print(f'asf: SNR     : {pdata["datay"][peaklocs] - basel[peaklocs]}')
             #collect all peaks which have occurred at least once in an array
-            #self.peakvals_union = np.union1d(self.peakvals_union, ann_master[ix]["PEAKVALS"])  #TODO: UNSINN
             locs_union = np.union1d(locs_union, ann_master[ix]["PKS"])
-            #freq_union = np.union1d(freq_union, ann_master[ix]["FREQ"][ann_master[ix]["PKS"]])
+
+            #collect all frequencies with round_digits resolution (round_digits = # of digits after the kHz-comma)
             freq_union = np.union1d(freq_union, np.round(ann_master[ix]["FREQ"][ann_master[ix]["PKS"]],round_digits))
         # purge self.locs.union and remove elements the frequencies of which are
-        # within 1 kHz span 
+        # within X kHz span 
         #print(f"length freq_union: {len(freq_union)}, length locs_union: {len(locs_union)}")
         self.set_unions([locs_union,freq_union])
         self.SigUpdateUnions.emit() #TODO: what is this for ?
@@ -446,8 +452,13 @@ class autoscan_worker(QtCore.QThread):
             maxsnr = np.maximum(maxsnr, reannot["SNR"])
             #print("annotate worker findpeak")
         uniquefreqs = pd.unique(np.round(freq_union/1000,round_digits))
-        # ################# POSTHOC sorting
-        xyi, x_ix, y_ix = np.intersect1d(uniquefreqs, np.round(freq_union/1000,round_digits), return_indices=True)
+        # contract all 
+        #BW_peaklock = self.get_BW_peaklock()  ##TODO: make this collection BW flexible; might be larger than the peak identification resolution
+        #TODO TODO TODO: implement GUI element for chosing BW_round_digits with default value = round_digits
+        #(1): implement GUI element (2) define element readout slot (3) pass value from worker caller to worker via getter
+        #TODO TODO TODO: find other BW-search algorithm
+        BW_round_digits = round_digits
+        xyi, x_ix, y_ix = np.intersect1d(uniquefreqs, np.round(freq_union/1000,BW_round_digits), return_indices=True)
         #x_ix: kompakter Vektor [0 1 2 3 4]
         #y_ix: disperser Vektor mit z.B. [0,2,4,5,6]
         #contract all columns of the matrix between subsequent col indices in y_ix
@@ -458,6 +469,7 @@ class autoscan_worker(QtCore.QThread):
         B = np.array(datasnaps["PEAKVALS"])
         #print(f"shape of _res: {np.shape(_res)}")
         #print(f"A: {A}")
+        #sum up all columns within the selected bandwidth
         for ix in x_ix:
             if ix < len(x_ix)-1:
                 #print("########################################")
@@ -579,6 +591,7 @@ class annotate_c(QObject):
         self.autoscaninst.set_datablocksize(self.DATABLOCKSIZE)
         self.autoscaninst.set_baselineoffset(self.m["baselineoffset"])
         self.autoscaninst.set_round_digits(self.m["round_digits"])
+        #self.autoscaninst.set_BW_peaklock(self.m["BW_peaklock"])
         self.autoscaninst.set_annotation_filename(self.m["annotation_filename"])
         self.autoscanthread.started.connect(self.autoscaninst.autoscan_fun)
         self.autoscaninst.SigError.connect(self.errorsigtoannstations)
@@ -996,6 +1009,8 @@ class annotate_v(QObject):
         self.m["minSNR"] = self.gui.spinBoxminSNR.value()
 
         #connect ui element events with annotator methods
+        #self.gui.ann_spinBox_peakBW.setEnabled(False) ##TODO: enable once BW_peaklock method has been implemented in a clear manner
+        #self.gui.spinBox_res_digits.setVisible(False)
         self.gui.pushButton_Scan.clicked.connect(self.annotate_c.autoscan)
         self.gui.pushButtonAnnotate.clicked.connect(self.annotatehandler) 
         self.gui.pushButtonDiscard.clicked.connect(self.discard_annot_line) ####TODO TODO TODO in future must be the controller method
@@ -1003,7 +1018,9 @@ class annotate_v(QObject):
         self.gui.pushButtonENTER.clicked.connect(self.enterlinetoannotation) ####TODO TODO TODO in future must be the controller method
         self.gui.Annotate_listWidget.itemClicked.connect(self.cb_ListClicked)
         self.gui.spinBoxNumScan.valueChanged.connect(self.cb_numscanchange)
-        self.gui.spinBox_res_digits.valueChanged.connect(self.cb_res_digits_change)
+        # self.gui.spinBox_res_digits.valueChanged.connect(self.cb_res_digits_change)
+        # self.gui.ann_spinBox_peakBW.valueChanged.connect(self.cb_ann_spinBox_peakBW)
+        self.gui.peakBW_comboBox.currentIndexChanged.connect(self.cb_peakBW_comboBox)
         #self.gui.spinBoxminSNR.valueChanged.connect(self.cb_minSNRchange) #TODO: wozu ?
         self.gui.annotate_pushButtonBack.setEnabled(False)
         self.gui.annotate_pushButtonBack.clicked.connect(self.cb_backinfrequency)  ####TODO TODO TODO in future must be the controller method
@@ -1026,18 +1043,33 @@ class annotate_v(QObject):
     def cb_Butt_export(self):
         self.m["export_xlsx"] = self.gui.radioButton_export_xlsx.isChecked()
 
-    def cb_res_digits_change(self):
+    # def cb_res_digits_change(self):
+    #     """
+    #     slot function for resolution digits spinbox
+    #     :param : none
+    #     :return: none
+    #     """
+    #     self.m["round_digits"] = self.gui.spinBox_res_digits.value()
+    #     self.SigRelay.emit("cm_annotate_",["round_digits",self.m["round_digits"]])
+    #     self.gui.ann_spinBox_peakBW.setValue(int(1000/(10**self.m["round_digits"])))
+        
+    def cb_peakBW_comboBox(self):
         """
-        handles changes of the frequency resolution digits spinbox
+        slot function for resolution digits spinbox
         :param : none
-        :type : none
-        :raises [ErrorType]: [ErrorDescription]
         :return: none
-        :rtype: none
         """
-        self.m["round_digits"] = self.gui.spinBox_res_digits.value()
+        self.m["round_digits"] = self.gui.peakBW_comboBox.currentIndex()
         self.SigRelay.emit("cm_annotate_",["round_digits",self.m["round_digits"]])
 
+    # def cb_ann_spinBox_peakBW(self):
+    #     """
+    #     slot function for changes of the spinbox ann_spinBox_peakBW (Bandwidth within which peak frequencies scattered around a found peak value is assigned to a unique peak frequency)
+    #     :param : none
+    #     :return: none
+    #     """
+    #     self.m["BW_peaklock"] = self.gui.ann_spinBox_peakBW.value()
+    #     self.SigRelay.emit("cm_annotate_",["BW_peaklock",self.m["BW_peaklock"]])
 
     def rxhandler(self,_key,_value):
         """
@@ -1110,7 +1142,9 @@ class annotate_v(QObject):
     def getGUIvalues(self):
                 self.m["NumScan"] = self.gui.spinBoxNumScan.value()
                 self.m["minSNR"] = self.gui.spinBoxminSNR.value()
-                self.m["round_digits"] = self.gui.spinBox_res_digits.value()
+                #self.m["round_digits"] = self.gui.spinBox_res_digits.value()
+                #self.m["BW_peaklock"] = self.gui.ann_spinBox_peakBW.value()
+                self.m["round_digits"] = self.gui.peakBW_comboBox.currentIndex()
 
 
     def updateGUIelements(self):

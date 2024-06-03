@@ -170,11 +170,6 @@ continue restarting the same file as long as in endless <a href="#id7"><span cla
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="player.playrec.playrec_c.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">playrec_m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_c.__init__" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="player.playrec.playrec_c.cb_Butt_STOP">
 <span class="sig-name descname"><span class="pre">cb_Butt_STOP</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_c.cb_Butt_STOP" title="Link to this definition"></a></dt>
 <dd><p>Callback function for Stop Button; 
@@ -400,11 +395,6 @@ NOT YET IMPLEMENTED: reset playerbuttongroup and GUI</p>
 <dt class="sig sig-object py" id="player.playrec.playrec_m">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">player.playrec.</span></span><span class="sig-name descname"><span class="pre">playrec_m</span></span><a class="headerlink" href="#player.playrec.playrec_m" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="player.playrec.playrec_m.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_m.__init__" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
 <dl class="py attribute">
 <dt class="sig sig-object py" id="player.playrec.playrec_m.None">
 <span class="sig-name descname"><span class="pre">None</span></span><a class="headerlink" href="#player.playrec.playrec_m.None" title="Link to this definition"></a></dt>
@@ -426,11 +416,6 @@ TODO: gui.wavheader –&gt; something less general ?</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="player.playrec.playrec_v.Buttloopmanager">
 <span class="sig-name descname"><span class="pre">Buttloopmanager</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.Buttloopmanager" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="player.playrec.playrec_v.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gui</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">playrec_c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">playrec_m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.__init__" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -643,29 +628,6 @@ type: none
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="player.playrec.playrec_v.set_IP">
-<span class="sig-name descname"><span class="pre">set_IP</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.set_IP" title="Link to this definition"></a></dt>
-<dd><dl class="simple">
-<dt>set IP Address and save to config yaml</dt><dd><p>disable IP address line
-enable Button for editing address</p>
-</dd>
-</dl>
-<dl class="field-list simple">
-<dt class="field-odd">Param<span class="colon">:</span></dt>
-<dd class="field-odd"><p>none</p>
-</dd>
-<dt class="field-even">Type<span class="colon">:</span></dt>
-<dd class="field-even"><p>none</p>
-</dd>
-</dl>
-<p>…
-:raises warning message: Read error if config_wizard.yaml does not exist
-…
-:return: none
-:rtype: none</p>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="player.playrec.playrec_v.showRFdata">
 <span class="sig-name descname"><span class="pre">showRFdata</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_v.showRFdata" title="Link to this definition"></a></dt>
 <dd><p>_take over datasegment from player loop worker and caluclate from there the signal volume and present it in the volume indicator
@@ -831,56 +793,6 @@ __slots__[7]: formatlist: [formattag blockalign bitpsample]</p>
 </dl>
 </div></blockquote>
 <dl class="py method">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stemlabcontrolinst</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.__init__" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.get_0">
-<span class="sig-name descname"><span class="pre">get_0</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.get_0" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.get_1">
-<span class="sig-name descname"><span class="pre">get_1</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.get_1" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.get_2">
-<span class="sig-name descname"><span class="pre">get_2</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.get_2" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.get_3">
-<span class="sig-name descname"><span class="pre">get_3</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.get_3" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.get_4">
-<span class="sig-name descname"><span class="pre">get_4</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.get_4" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.get_5">
-<span class="sig-name descname"><span class="pre">get_5</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.get_5" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.get_6">
-<span class="sig-name descname"><span class="pre">get_6</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.get_6" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.get_7">
-<span class="sig-name descname"><span class="pre">get_7</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.get_7" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.get_8">
-<span class="sig-name descname"><span class="pre">get_8</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.get_8" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="player.playrec.playrec_worker.play_loop16">
 <span class="sig-name descname"><span class="pre">play_loop16</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.play_loop16" title="Link to this definition"></a></dt>
 <dd><p>worker loop for sending data to STEMLAB server
@@ -950,51 +862,6 @@ __slots__[7]: formatlist: [formattag blockalign bitpsample]
 <dl class="py method">
 <dt class="sig sig-object py" id="player.playrec.playrec_worker.resetCounter">
 <span class="sig-name descname"><span class="pre">resetCounter</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.resetCounter" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.set_0">
-<span class="sig-name descname"><span class="pre">set_0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.set_0" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.set_1">
-<span class="sig-name descname"><span class="pre">set_1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.set_1" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.set_2">
-<span class="sig-name descname"><span class="pre">set_2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.set_2" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.set_3">
-<span class="sig-name descname"><span class="pre">set_3</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.set_3" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.set_4">
-<span class="sig-name descname"><span class="pre">set_4</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.set_4" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.set_5">
-<span class="sig-name descname"><span class="pre">set_5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.set_5" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.set_6">
-<span class="sig-name descname"><span class="pre">set_6</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.set_6" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.set_7">
-<span class="sig-name descname"><span class="pre">set_7</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.set_7" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.set_8">
-<span class="sig-name descname"><span class="pre">set_8</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.set_8" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -1113,11 +980,6 @@ Sequence:   (1) stop server sdr-transceiver-wide on the STEMLAB.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.stemlab_control.StemlabControl.__init__" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.config_socket">
 <span class="sig-name descname"><span class="pre">config_socket</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configparams</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.stemlab_control.StemlabControl.config_socket" title="Link to this definition"></a></dt>
 <dd><p>initialize stream socket for communication to sdr_transceiver_wide on
@@ -1151,16 +1013,6 @@ undefined communication</p>
 <span class="sig-name descname"><span class="pre">sdrserverstop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.stemlab_control.StemlabControl.sdrserverstop" title="Link to this definition"></a></dt>
 <dd><p>Purpose: stop server sdr-transceiver-wide on the STEMLAB.</p>
 </dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.set_play">
-<span class="sig-name descname"><span class="pre">set_play</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.stemlab_control.StemlabControl.set_play" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.set_rec">
-<span class="sig-name descname"><span class="pre">set_rec</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.stemlab_control.StemlabControl.set_rec" title="Link to this definition"></a></dt>
-<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="player.stemlab_control.StemlabControl.sshsendcommandseq">

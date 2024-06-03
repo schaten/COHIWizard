@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1147</width>
-    <height>850</height>
+    <width>1070</width>
+    <height>889</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -18,8 +18,8 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>1147</width>
-    <height>850</height>
+    <width>1000</width>
+    <height>800</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -112,6 +112,9 @@
         <width>20</width>
         <height>20</height>
        </size>
+      </property>
+      <property name="movable">
+       <bool>false</bool>
       </property>
       <widget class="QWidget" name="tab_playrec">
        <attribute name="title">
@@ -3198,7 +3201,7 @@ UFL</string>
             <property name="icon">
              <iconset>
               <normaloff>../../play_v4.PNG</normaloff>
-              <normalon>../../play_v4.PNG</normalon>
+              <normalon>icons/play_v4.PNG</normalon>
               <activeoff>../../play_v4.PNG</activeoff>
               <activeon>../../play_v4.PNG</activeon>
               <selectedoff>../../play_v4.PNG</selectedoff>
@@ -3521,10 +3524,7 @@ UFL</string>
             </property>
             <property name="icon">
              <iconset>
-              <normaloff>../../rec_v4.PNG</normaloff>
-              <normalon>../../rec_v4.PNG</normalon>
-              <activeoff>../../rec_v4.PNG</activeoff>
-              <activeon>../../rec_v4.PNG</activeon>../../rec_v4.PNG</iconset>
+              <normaloff>icons/rec_v4.PNG</normaloff>icons/rec_v4.PNG</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -5422,7 +5422,7 @@ Track</string>
             <property name="icon">
              <iconset>
               <normaloff>../../stop_v4.PNG</normaloff>
-              <normalon>../../stop_v4.PNG</normalon>
+              <normalon>icons/stop_v4.PNG</normalon>
               <activeoff>../../stop_v4.PNG</activeoff>
               <activeon>../../stop_v4.PNG</activeon>
               <selectedoff>../../stop_v4.PNG</selectedoff>
@@ -5755,7 +5755,7 @@ Track</string>
             <property name="icon">
              <iconset>
               <normaloff>../../rew_v4.PNG</normaloff>
-              <normalon>../../rew_v4.PNG</normalon>../../rew_v4.PNG</iconset>
+              <normalon>icons/rew_v4.PNG</normalon>../../rew_v4.PNG</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -6876,7 +6876,7 @@ Track</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1147</width>
+     <width>1070</width>
      <height>26</height>
     </rect>
    </property>
