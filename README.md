@@ -24,3 +24,5 @@ Appropriate recordings can be played back on historic Radio receivers with exter
 7) run the main script: `python SDR_COHIWizard.py`
 
 SDR_COHIWizard.py starts up a GUI with a recorder/player and various utilities for e.g. visualization of the spectra, resampling, annotation (beta version) and editing of wav-headers.
+
+[source docu:](https://github.com/hermy-sf/COHIWizard/edit/cohiwizard_v1.2/docs/_build/html/index.html)
