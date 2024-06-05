@@ -618,6 +618,7 @@ class res_workers(QObject):
         segment_tstart = 0
         #print(f"LOshifter worker targetfilename: {targetfilename}, exp filesize: {expected_filesize}")
         print(expected_filesize)
+        psc_locker = False
         if os.path.exists(targetfilename) == True:
             #print("LOshift worker: target file has been found")
             file_stats = os.stat(targetfilename)
@@ -635,7 +636,10 @@ class res_workers(QObject):
                     y = rp +1j*ip        
                     tsus = np.arange(segment_tstart, segment_tstart+len(y)*dt, dt)[:len(y)]
                     segment_tstart = tsus[len(tsus)-1] + dt
-                    phasescaler = np.exp(2*np.pi*1j*centershift*tsus)
+                    # try to calculate this vector only once and measure time #TODO TODO TODO: implement accelerator for single calculation of phasescaler
+                    if not psc_locker:
+                        phasescaler = np.exp(2*np.pi*1j*centershift*tsus)
+                        #psc_locker = True
                     ys = np.multiply(y,phasescaler)
                     y_sh[0:ld:2] = (np.copy(np.real(ys)))
                     y_sh[1:ld:2] = (np.copy(np.imag(ys)))  
