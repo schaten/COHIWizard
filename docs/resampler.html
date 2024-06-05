@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>resampler package &mdash; COHIWizard_v1.2 1.2.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=4d6f9085"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="spectralviewer package" href="spectralviewer.html" />
+    <link rel="prev" title="player package" href="player.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            COHIWizard_v1.2
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">What is COHIWizard ?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="software_architecture.html">Software architecture</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">sources</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="COHIWizard.html">COHIWizard</a></li>
+<li class="toctree-l2"><a class="reference internal" href="abstract_module.html">abstract_module module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="annotator.html">annotator package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auxiliaries.html">auxiliaries module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="player.html">player package</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">resampler package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-resampler.resample">resampler.resample module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#resampler.resample.res_workers"><code class="docutils literal notranslate"><span class="pre">res_workers</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#resampler.resample.resample_c"><code class="docutils literal notranslate"><span class="pre">resample_c</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#resampler.resample.resample_m"><code class="docutils literal notranslate"><span class="pre">resample_m</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#resampler.resample.resample_v"><code class="docutils literal notranslate"><span class="pre">resample_v</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-resampler.resampler_widget">resampler.resampler_widget module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#resampler.resampler_widget.Ui_resampler_widget"><code class="docutils literal notranslate"><span class="pre">Ui_resampler_widget</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#resampler-set-fonts-module">resampler.set_fonts module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-resampler">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="spectralviewer.html">spectralviewer package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wavheader_editor.html">wavheader_editor package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="yaml_editor.html">yaml_editor package</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">COHIWizard_v1.2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">sources</a></li>
+      <li class="breadcrumb-item active">resampler package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/resampler.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="resampler-package">
+<h1>resampler package<a class="headerlink" href="#resampler-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-resampler.resample">
+<span id="resampler-resample-module"></span><h2>resampler.resample module<a class="headerlink" href="#module-resampler.resample" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="resampler.resample.res_workers">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">resampler.resample.</span></span><span class="sig-name descname"><span class="pre">res_workers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.res_workers" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
+<p>worker class for data streaming thread from PC to STEMLAB
+object for playback and recording thread
+:param : no regular parameters; as this is a thread worker communication occurs via</p>
+<blockquote>
+<div><p>__slots__: Dictionary with entries:
+__slots__[0]: soxstring Type: str
+__slots__[1]: return string from sox execution, type : str</p>
+</div></blockquote>
+<p>‘’’
+:raises [ErrorType]: none
+‘’’</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">return<span class="colon">:</span></dt>
+<dd class="field-odd"><p>none</p>
+</dd>
+<dt class="field-even">rtype<span class="colon">:</span></dt>
+<dd class="field-even"><p>none</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.res_workers.LO_shifter_worker">
+<span class="sig-name descname"><span class="pre">LO_shifter_worker</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.res_workers.LO_shifter_worker" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.res_workers.merge2G_worker">
+<span class="sig-name descname"><span class="pre">merge2G_worker</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.res_workers.merge2G_worker" title="Link to this definition"></a></dt>
+<dd><p>worker for merging all files in system_state[“list_out_files_resampled”]</p>
+<ol class="arabic simple">
+<li><p>loops through resampling playlist</p></li>
+</ol>
+<p>2. at each EOF of an input file it checks if there is a timegap between stop time of the current and start time of the next input file
+if there is a gap &lt; MAXGAP, then this gap is filled with null bytes (no signal), making sure that the lenght of the gapfiller is an integer multiple of 4 (Blockalign)
+MAXGAP is set by set_maxgap()</p>
+<ol class="arabic simple" start="3">
+<li><p>After (optional) gap filling different parameters are read from the next wav header (e.g. start/stop times, sampling rates …)</p></li>
+<li><p>while not EOF: fetch datachunks and write them to current output file until max size of outputfile is reached (currently 2G)</p></li>
+<li><p>on EOF (inputfile): close file and open next one, goto 2</p></li>
+<li><dl class="simple">
+<dt>if max length MAX_TARGETSIZE is reached:</dt><dd><ul class="simple">
+<li><p>finalize wav-header of current outputfile,</p></li>
+<li><p>close current outputfile</p></li>
+<li><p>rename current outputfile according to name convention and move to target folder</p></li>
+<li><p>open next outputfile</p></li>
+<li><p>write 216 null bytes (reserve for header)</p></li>
+<li><p>goto 2</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ol>
+<p>stopix is set true from outside via the function soxworker_terminate()</p>
+<img alt="../../source/images/merge2G_worker.svg" src="../../source/images/merge2G_worker.svg" /><dl class="field-list simple">
+<dt class="field-odd">Communication<span class="colon">:</span></dt>
+<dd class="field-odd"><p>with other threads via getters and setters</p>
+</dd>
+<dt class="field-even">Param<span class="colon">:</span></dt>
+<dd class="field-even"><p>none</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>none</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.res_workers.sox_writer">
+<span class="sig-name descname"><span class="pre">sox_writer</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.res_workers.sox_writer" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.res_workers.soxworker_terminate">
+<span class="sig-name descname"><span class="pre">soxworker_terminate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.res_workers.soxworker_terminate" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.res_workers.SigFinished">
+<span class="sig-name descname"><span class="pre">SigFinished</span></span><a class="headerlink" href="#resampler.resample.res_workers.SigFinished" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.res_workers.SigFinishedLOshifter">
+<span class="sig-name descname"><span class="pre">SigFinishedLOshifter</span></span><a class="headerlink" href="#resampler.resample.res_workers.SigFinishedLOshifter" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.res_workers.SigFinishedmerge2G">
+<span class="sig-name descname"><span class="pre">SigFinishedmerge2G</span></span><a class="headerlink" href="#resampler.resample.res_workers.SigFinishedmerge2G" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.res_workers.SigMergeerror">
+<span class="sig-name descname"><span class="pre">SigMergeerror</span></span><a class="headerlink" href="#resampler.resample.res_workers.SigMergeerror" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.res_workers.SigPupdate">
+<span class="sig-name descname"><span class="pre">SigPupdate</span></span><a class="headerlink" href="#resampler.resample.res_workers.SigPupdate" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.res_workers.SigSoxerror">
+<span class="sig-name descname"><span class="pre">SigSoxerror</span></span><a class="headerlink" href="#resampler.resample.res_workers.SigSoxerror" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.res_workers.centershift">
+<span class="sig-name descname"><span class="pre">centershift</span></span><a class="headerlink" href="#resampler.resample.res_workers.centershift" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.res_workers.expfs">
+<span class="sig-name descname"><span class="pre">expfs</span></span><a class="headerlink" href="#resampler.resample.res_workers.expfs" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.res_workers.inputfilelist">
+<span class="sig-name descname"><span class="pre">inputfilelist</span></span><a class="headerlink" href="#resampler.resample.res_workers.inputfilelist" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.res_workers.logger">
+<span class="sig-name descname"><span class="pre">logger</span></span><a class="headerlink" href="#resampler.resample.res_workers.logger" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.res_workers.maxgap">
+<span class="sig-name descname"><span class="pre">maxgap</span></span><a class="headerlink" href="#resampler.resample.res_workers.maxgap" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.res_workers.merge_delorig">
+<span class="sig-name descname"><span class="pre">merge_delorig</span></span><a class="headerlink" href="#resampler.resample.res_workers.merge_delorig" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.res_workers.progress">
+<span class="sig-name descname"><span class="pre">progress</span></span><a class="headerlink" href="#resampler.resample.res_workers.progress" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.res_workers.readoffset">
+<span class="sig-name descname"><span class="pre">readoffset</span></span><a class="headerlink" href="#resampler.resample.res_workers.readoffset" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.res_workers.readsegmentfn">
+<span class="sig-name descname"><span class="pre">readsegmentfn</span></span><a class="headerlink" href="#resampler.resample.res_workers.readsegmentfn" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.res_workers.ret">
+<span class="sig-name descname"><span class="pre">ret</span></span><a class="headerlink" href="#resampler.resample.res_workers.ret" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.res_workers.sBPS">
+<span class="sig-name descname"><span class="pre">sBPS</span></span><a class="headerlink" href="#resampler.resample.res_workers.sBPS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.res_workers.sSR">
+<span class="sig-name descname"><span class="pre">sSR</span></span><a class="headerlink" href="#resampler.resample.res_workers.sSR" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.res_workers.sfilename">
+<span class="sig-name descname"><span class="pre">sfilename</span></span><a class="headerlink" href="#resampler.resample.res_workers.sfilename" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.res_workers.soxstring">
+<span class="sig-name descname"><span class="pre">soxstring</span></span><a class="headerlink" href="#resampler.resample.res_workers.soxstring" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.res_workers.starttrim">
+<span class="sig-name descname"><span class="pre">starttrim</span></span><a class="headerlink" href="#resampler.resample.res_workers.starttrim" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.res_workers.stoptrim">
+<span class="sig-name descname"><span class="pre">stoptrim</span></span><a class="headerlink" href="#resampler.resample.res_workers.stoptrim" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.res_workers.sttime_atrim">
+<span class="sig-name descname"><span class="pre">sttime_atrim</span></span><a class="headerlink" href="#resampler.resample.res_workers.sttime_atrim" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.res_workers.tBPS">
+<span class="sig-name descname"><span class="pre">tBPS</span></span><a class="headerlink" href="#resampler.resample.res_workers.tBPS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.res_workers.tfname">
+<span class="sig-name descname"><span class="pre">tfname</span></span><a class="headerlink" href="#resampler.resample.res_workers.tfname" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.res_workers.wFormatTag">
+<span class="sig-name descname"><span class="pre">wFormatTag</span></span><a class="headerlink" href="#resampler.resample.res_workers.wFormatTag" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="resampler.resample.resample_c">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">resampler.resample.</span></span><span class="sig-name descname"><span class="pre">resample_c</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resample_m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_c" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
+<p>_methods for resampling (= resampling controller)
+this class defines a state machine for variable sequences of tasks during several different modes of resampling
+the class methods communicate via the class variables of the central data class ‘status’ and via signalling.
+the state machine is defined via the scheduler method which needs to be configured and launched via a signal from the main thread (here the main GUI)</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.LOshifter_new">
+<span class="sig-name descname"><span class="pre">LOshifter_new</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_c.LOshifter_new" title="Link to this definition"></a></dt>
+<dd><p>configures and starts LO shifting thread
+:param: none
+:type: none
+…
+:raises: none
+…
+:return: none 
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.PupdateSignalHandler">
+<span class="sig-name descname"><span class="pre">PupdateSignalHandler</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_c.PupdateSignalHandler" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.Soxerrorhandler">
+<span class="sig-name descname"><span class="pre">Soxerrorhandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">errorstring</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_c.Soxerrorhandler" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.accomplish_resampling">
+<span class="sig-name descname"><span class="pre">accomplish_resampling</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_c.accomplish_resampling" title="Link to this definition"></a></dt>
+<dd><p>_after sox-resampling a wav_fileheader is inserted into the resampled dat-File.
+Afterwards  and temporary files are removed
+this method is called via a signal from the soxwriter worker function sox_writer() after finishing the process
+communication occurs only via state variables, as this function is called asynchronously on signal emission</p>
+<blockquote>
+<div><p>self.m[“tgt_wavheader”]: wavheader to be inserted
+self.m[“new_name”]: name to which the temporary targetfile (targetfilename) should be renamed after processing
+self.m[“targetfilename”]: complete target file path
+self.m[“file_to_be_removed”]: temporary file to be removed if it exists</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Param<span class="colon">:</span></dt>
+<dd class="field-odd"><p>none</p>
+</dd>
+<dt class="field-even">Type<span class="colon">:</span></dt>
+<dd class="field-even"><p>none</p>
+</dd>
+</dl>
+<p>…
+:raises
+…
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.cancel_resampling">
+<span class="sig-name descname"><span class="pre">cancel_resampling</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_c.cancel_resampling" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.checkdiskspace">
+<span class="sig-name descname"><span class="pre">checkdiskspace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">expected_filesize</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_dir</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_c.checkdiskspace" title="Link to this definition"></a></dt>
+<dd><p>check if free diskspace is sufficient for writing expeczed_filesize bytes on directory _dir
+:param: expected_filesize
+:type: int
+:param: _dir
+:type: str
+…
+:raises: none
+…
+:return: True if enough space, False else
+:rtype: Boolean</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.cleanup">
+<span class="sig-name descname"><span class="pre">cleanup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_c.cleanup" title="Link to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Handle the process after either xoxworker or LOSHworker have finished. 2 cases:</dt><dd><dl class="simple">
+<dt>self.m[“emergency_stop”] is set because of ‘cancel’ operation: </dt><dd><p>terminate all and reset all GUIs
+reactivate normal state
+fileopened = false and Relay to all other tabs</p>
+</dd>
+<dt>else: (normal operation):</dt><dd><p>hand over to scheduler by signalling</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Param<span class="colon">:</span></dt>
+<dd class="field-odd"><p>none</p>
+</dd>
+<dt class="field-even">Type<span class="colon">:</span></dt>
+<dd class="field-even"><p>none</p>
+</dd>
+</dl>
+<p>…
+:raises: none
+…
+:return: none 
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.merge2G_cleanup">
+<span class="sig-name descname"><span class="pre">merge2G_cleanup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_file_list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_c.merge2G_cleanup" title="Link to this definition"></a></dt>
+<dd><p>cleanup temp files after merge2G thread has finished
+:param: none
+:type: none
+…
+:raises: none
+…
+:return: none 
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.merge2G_new">
+<span class="sig-name descname"><span class="pre">merge2G_new</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_file_list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_c.merge2G_new" title="Link to this definition"></a></dt>
+<dd><p>configures and starts worker for merging all files in system_state[“list_out_files_resampled”]
+:param: input_file_list
+:type: list
+…
+:raises none
+…
+:return: True if successful
+:rtype: Boolean</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.mergeerrorhandler">
+<span class="sig-name descname"><span class="pre">mergeerrorhandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_c.mergeerrorhandler" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.progressupdate_interface">
+<span class="sig-name descname"><span class="pre">progressupdate_interface</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_c.progressupdate_interface" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.res_scheduler">
+<span class="sig-name descname"><span class="pre">res_scheduler</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_c.res_scheduler" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.resamp_configheader">
+<span class="sig-name descname"><span class="pre">resamp_configheader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wavheader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header_config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_c.resamp_configheader" title="Link to this definition"></a></dt>
+<dd><p>inserts fields specified in header_config into wavheader
+:param: wavheader: dict of type wav_header (see main gui)
+:type: dict
+:param: header_config: list of fiels: wFormatTag; data_chkID, sdrtype_chckID, sdr_nChunksize, nBitsPerSample, nBlockalign, readoffset, centerfreq
+:type: dict
+…
+:raises: none
+…
+:return: mod_header (format wav_header)
+:rtype: dict</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.resample">
+<span class="sig-name descname"><span class="pre">resample</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_c.resample" title="Link to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>_generate soxstring from parameters</dt><dd><p>configurates and starts sox execution thread
+generates wavheader for the target file to be generated            
+gui: reference to main window object (WizardGUI)
+target_fn: target filename
+source_fn: source filename
+s_wavheader: same type as wavheader produced by SDR_wavheadertools
+tSR: target sampling rate in S/s
+tLO: target center freqiency in Hz
+sys_state: communication dictionary of data class status; accessed only by get and set methods</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Param<span class="colon">:</span></dt>
+<dd class="field-odd"><p>none</p>
+</dd>
+<dt class="field-even">Type<span class="colon">:</span></dt>
+<dd class="field-even"><p>none</p>
+</dd>
+</dl>
+<p>…
+:raises
+…
+:return: target_fn
+:rtype: string</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.schedule_A">
+<span class="sig-name descname"><span class="pre">schedule_A</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_c.schedule_A" title="Link to this definition"></a></dt>
+<dd><p>_definition of schedule for simple resampling without LO shift
+:param: none, communication only via self.m
+:type: none
+…
+:raises none
+…
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.schedule_B">
+<span class="sig-name descname"><span class="pre">schedule_B</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_c.schedule_B" title="Link to this definition"></a></dt>
+<dd><p>_definition of schedule for  resampling with previous LO shift
+do not use for files with BPS = 24bit; use version schedule_B24(self) in that case
+:param: none, communication only via self.m
+:type: none
+…
+:raises none
+…
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.schedule_B24">
+<span class="sig-name descname"><span class="pre">schedule_B24</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_c.schedule_B24" title="Link to this definition"></a></dt>
+<dd><p>_definition of schedule for  resampling with previous LO shift
+do not use for files with BPS = 24bit; use version schedule_B24(self) in that case
+:param: none, communication only via self.m
+:type: none
+…
+:raises none
+…
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.LOvars">
+<span class="sig-name descname"><span class="pre">LOvars</span></span><a class="headerlink" href="#resampler.resample.resample_c.LOvars" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.SigAccomplish">
+<span class="sig-name descname"><span class="pre">SigAccomplish</span></span><a class="headerlink" href="#resampler.resample.resample_c.SigAccomplish" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.SigActivateOtherTabs">
+<span class="sig-name descname"><span class="pre">SigActivateOtherTabs</span></span><a class="headerlink" href="#resampler.resample.resample_c.SigActivateOtherTabs" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.SigCancel">
+<span class="sig-name descname"><span class="pre">SigCancel</span></span><a class="headerlink" href="#resampler.resample.resample_c.SigCancel" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.SigConnectExternalMethods">
+<span class="sig-name descname"><span class="pre">SigConnectExternalMethods</span></span><a class="headerlink" href="#resampler.resample.resample_c.SigConnectExternalMethods" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.SigDisconnectExternalMethods">
+<span class="sig-name descname"><span class="pre">SigDisconnectExternalMethods</span></span><a class="headerlink" href="#resampler.resample.resample_c.SigDisconnectExternalMethods" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.SigGP">
+<span class="sig-name descname"><span class="pre">SigGP</span></span><a class="headerlink" href="#resampler.resample.resample_c.SigGP" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.SigLOshift">
+<span class="sig-name descname"><span class="pre">SigLOshift</span></span><a class="headerlink" href="#resampler.resample.resample_c.SigLOshift" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.SigProgress">
+<span class="sig-name descname"><span class="pre">SigProgress</span></span><a class="headerlink" href="#resampler.resample.resample_c.SigProgress" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.SigRelay">
+<span class="sig-name descname"><span class="pre">SigRelay</span></span><a class="headerlink" href="#resampler.resample.resample_c.SigRelay" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.SigResampGUIReset">
+<span class="sig-name descname"><span class="pre">SigResampGUIReset</span></span><a class="headerlink" href="#resampler.resample.resample_c.SigResampGUIReset" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.SigResample">
+<span class="sig-name descname"><span class="pre">SigResample</span></span><a class="headerlink" href="#resampler.resample.resample_c.SigResample" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.SigTerminate_Finished">
+<span class="sig-name descname"><span class="pre">SigTerminate_Finished</span></span><a class="headerlink" href="#resampler.resample.resample_c.SigTerminate_Finished" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.SigUpdateGUIelements">
+<span class="sig-name descname"><span class="pre">SigUpdateGUIelements</span></span><a class="headerlink" href="#resampler.resample.resample_c.SigUpdateGUIelements" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.resample_c.Sigincrscheduler">
+<span class="sig-name descname"><span class="pre">Sigincrscheduler</span></span><a class="headerlink" href="#resampler.resample.resample_c.Sigincrscheduler" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="resampler.resample.resample_m">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">resampler.resample.</span></span><span class="sig-name descname"><span class="pre">resample_m</span></span><a class="headerlink" href="#resampler.resample.resample_m" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.resample_m.None">
+<span class="sig-name descname"><span class="pre">None</span></span><a class="headerlink" href="#resampler.resample.resample_m.None" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.resample_m.SigModelXXX">
+<span class="sig-name descname"><span class="pre">SigModelXXX</span></span><a class="headerlink" href="#resampler.resample.resample_m.SigModelXXX" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="resampler.resample.resample_v">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">resampler.resample.</span></span><span class="sig-name descname"><span class="pre">resample_v</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gui</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resample_c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resample_m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
+<p>_view methods for resampling module
+TODO: gui.wavheader –&gt; something less general ?</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.GUI_reset_status">
+<span class="sig-name descname"><span class="pre">GUI_reset_status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.GUI_reset_status" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.addplaylistitem">
+<span class="sig-name descname"><span class="pre">addplaylistitem</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.addplaylistitem" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.canvasbuild">
+<span class="sig-name descname"><span class="pre">canvasbuild</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gui</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.canvasbuild" title="Link to this definition"></a></dt>
+<dd><p>sets up a canvas to which graphs can be plotted
+Use: calls the method auxi.generate_canvas with parameters self.gui.gridlayoutX to specify where the canvas 
+should be placed, the coordinates and extensions in the grid and a reference to the QMainwidget Object
+generated by __main__ during system startup. This object is relayed via signal to all modules at system initialization 
+and is automatically available (see rxhandler method)
+the reference to the canvas object is written to self.cref
+:param : gui
+:type : QMainWindow
+:raises [ErrorType]: [ErrorDescription]
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.cb_Butt_resample">
+<span class="sig-name descname"><span class="pre">cb_Butt_resample</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.cb_Butt_resample" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.cb_resample">
+<span class="sig-name descname"><span class="pre">cb_resample</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.cb_resample" title="Link to this definition"></a></dt>
+<dd><p>_summary_
+VIEW: cb of Tab resampler
+:return: _description_
+:rtype: _type_</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.cb_split2G_Button">
+<span class="sig-name descname"><span class="pre">cb_split2G_Button</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.cb_split2G_Button" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.enable_resamp_GUI_elemets">
+<span class="sig-name descname"><span class="pre">enable_resamp_GUI_elemets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">status</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.enable_resamp_GUI_elemets" title="Link to this definition"></a></dt>
+<dd><p>enables or disables resampling GUI elements depending on ‘status’: True or False
+:param [ParamName]: status
+:type [ParamName]: Boolean
+…
+:raises [ErrorType]: none
+…
+:return: [ReturnDescription]
+:rtype: [ReturnType]</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.ext_meth_connect">
+<span class="sig-name descname"><span class="pre">ext_meth_connect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctrl</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.ext_meth_connect" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.ext_meth_disconnect">
+<span class="sig-name descname"><span class="pre">ext_meth_disconnect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctrl</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.ext_meth_disconnect" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.fillplaylist">
+<span class="sig-name descname"><span class="pre">fillplaylist</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.fillplaylist" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.getCuttime">
+<span class="sig-name descname"><span class="pre">getCuttime</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.getCuttime" title="Link to this definition"></a></dt>
+<dd><p>calculate trimming values for trimming self.m[“stop_trim”] from the beginning of the first reslist file 
+and stopcut seconds from the beginning of the last reslist file to be passed to the soxstring synthesis
+(1) get wavheader of the first file and display it on all Tabs
+(2) get starttime from timeEdit_resample_startcut  and write to self.m[“starttrim”]
+(3) get stoptime from timeEdit_resample_stopcut and write to self.m[“stoptrim”]
+function is called by cb_resample in the reslist-handler both at the first listelement and the last list element.
+Function calculates the trimming information for soxstring generation and stores it in          
+self.m[“stop_trim_duration”] and self.m[“start_trim”] 
+:param [ParamName]: none
+:type [ParamName]: none
+…
+:raises [ErrorType]: [ErrorDescription]TODO
+…
+:return: [ReturnDescription]
+:rtype: [ReturnType]</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.init_resample_ui">
+<span class="sig-name descname"><span class="pre">init_resample_ui</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.init_resample_ui" title="Link to this definition"></a></dt>
+<dd><p>Resampler VIEW initialization
+initializes all GUI elements of the Tab resampler
+TODO: all references are still ‘self’, check !
+:param: npne
+:type: none
+:raises: none
+…
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.logfilehandler">
+<span class="sig-name descname"><span class="pre">logfilehandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.logfilehandler" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.plot_spectrum_resample">
+<span class="sig-name descname"><span class="pre">plot_spectrum_resample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">position</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.plot_spectrum_resample" title="Link to this definition"></a></dt>
+<dd><p>assign a plot window and a toolbar to the tab ‘resample’ and plot data from currently loaded file at position ‘position’
+:param : position: fractional position between 0 and 1
+:type : int
+:raises [ErrorType]: [ErrorDescription]
+:return: flag False or True, False on unsuccessful execution
+:rtype: Boolean</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.read_gain">
+<span class="sig-name descname"><span class="pre">read_gain</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.read_gain" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.reformat_targetLOpalette">
+<span class="sig-name descname"><span class="pre">reformat_targetLOpalette</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.reformat_targetLOpalette" title="Link to this definition"></a></dt>
+<dd><p>VIEW Element of Tab ‘resample</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.reset_GUI">
+<span class="sig-name descname"><span class="pre">reset_GUI</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.reset_GUI" title="Link to this definition"></a></dt>
+<dd><p>VIEW
+TODO: nach den einzelnen Tabs zerlegen
+reset GUI elements to their defaults, re-initialize important variables
+code is executed after new file open
+:param none
+:type: none
+:raises [ErrorType]: [ErrorDescription]TODO
+:return: True after completion, False if status-yaml not accessible
+:rtype: boolean</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.reset_resamp_GUI_elemets">
+<span class="sig-name descname"><span class="pre">reset_resamp_GUI_elemets</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.reset_resamp_GUI_elemets" title="Link to this definition"></a></dt>
+<dd><p>reset GUI elements depending which have been checked
+:param [ParamName]: status
+:type [ParamName]: Boolean
+…
+:raises [ErrorType]: none
+…
+:return: [ReturnDescription]
+:rtype: [ReturnType]</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.reslist_itemselected">
+<span class="sig-name descname"><span class="pre">reslist_itemselected</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.reslist_itemselected" title="Link to this definition"></a></dt>
+<dd><p>VIEW
+show clicked item in resampler list whenever an item is clicked
+:param: none
+:type: none
+…
+:raises: none
+…
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.reslist_update">
+<span class="sig-name descname"><span class="pre">reslist_update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.reslist_update" title="Link to this definition"></a></dt>
+<dd><p>VIEW
+updates resampler list whenever the playlist Widget is changed.
+(1) read self.m 
+(2) generate list of files ‘reslist’ to be resampled from the listWidget for with the files to be resampled (playlist_2)
+(3) write reslist to system state
+(4) set self.m[“f1] (file currently operated on) to the first listentry
+(5) set cutting start and stoptimes from wavheaders of first and last files in the list
+:param: none
+:type: none
+…
+:raises: none
+…
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.rxhandler">
+<span class="sig-name descname"><span class="pre">rxhandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.rxhandler" title="Link to this definition"></a></dt>
+<dd><p>handles remote calls from other modules via Signal SigRX(_key,_value)
+:param : _key
+:type : str
+:param : _value
+:type : object
+:raises [ErrorType]: [ErrorDescription]
+:return: flag False or True, False on unsuccessful execution
+:rtype: Boolean</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.selectall_reslist">
+<span class="sig-name descname"><span class="pre">selectall_reslist</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.selectall_reslist" title="Link to this definition"></a></dt>
+<dd><p>selects all items of the resampling sourcelist_2 and moves to the resampling-list in playlist_2
+:param: none
+:type: none
+…
+:raises: none
+…
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.toggle_advanced_sampling">
+<span class="sig-name descname"><span class="pre">toggle_advanced_sampling</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.toggle_advanced_sampling" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>[</strong><strong>ParamName</strong><strong>]</strong> (<em>none</em>) – none</p>
+</dd>
+</dl>
+<p>…
+:raises [ErrorType]: [ErrorDescription]TODO
+…
+:return: [ReturnDescription]
+:rtype: [ReturnType]</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.toggle_gain">
+<span class="sig-name descname"><span class="pre">toggle_gain</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.toggle_gain" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>[</strong><strong>ParamName</strong><strong>]</strong> (<em>none</em>) – none</p>
+</dd>
+</dl>
+<p>…
+:raises [ErrorType]: [ErrorDescription]TODO
+…
+:return: [ReturnDescription]
+:rtype: [ReturnType]</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.toggle_mergeselectall">
+<span class="sig-name descname"><span class="pre">toggle_mergeselectall</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.toggle_mergeselectall" title="Link to this definition"></a></dt>
+<dd><p>gets checkstatus of button for selecting all items of reslist and calls the respective handler
+:param: none
+:type: none
+…
+:raises: none
+…
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.unselectall_reslist">
+<span class="sig-name descname"><span class="pre">unselectall_reslist</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.unselectall_reslist" title="Link to this definition"></a></dt>
+<dd><p>unselects all items of the resampling playlist_2 and moves to the sourcelist_2
+:param: none
+:type: none
+…
+:raises: none
+…
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.updateGUIelements">
+<span class="sig-name descname"><span class="pre">updateGUIelements</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.updateGUIelements" title="Link to this definition"></a></dt>
+<dd><p>updates GUI elements , usually triggered by a Signal SigTabsUpdateGUIs to which 
+this method is connected in the __main__ of the core module
+:param : none
+:type : none
+:raises [ErrorType]: [ErrorDescription]
+:return: flag False or True, False on unsuccessful execution
+:rtype: Boolean</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.update_resample_GUI">
+<span class="sig-name descname"><span class="pre">update_resample_GUI</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.update_resample_GUI" title="Link to this definition"></a></dt>
+<dd><p>fills the control elements of the resample GUI with parameters from the wav header
+RESAMPLER VIEW !!
+:param [ParamName]: none
+:type [ParamName]: none
+…
+:raises [ErrorType]: [ErrorDescription]TODO
+…
+:return: [ReturnDescription]
+:rtype: [ReturnType]</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.updateprogress_resampling">
+<span class="sig-name descname"><span class="pre">updateprogress_resampling</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.updateprogress_resampling" title="Link to this definition"></a></dt>
+<dd><p>_duringr sox-resampling the progress of sox resampling is indicated in the progressbar.
+The active state is indicated by blinking of the label field label_36
+this method is called via a signal from the soxwriter worker function sox_writer() repetitively every second
+communication occurs only via state variables, as this function is called asynchronously on signal emission</p>
+<blockquote>
+<div><p>system_state[“res_blinkstate”]</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Param<span class="colon">:</span></dt>
+<dd class="field-odd"><p>none</p>
+</dd>
+<dt class="field-even">Type<span class="colon">:</span></dt>
+<dd class="field-even"><p>none</p>
+</dd>
+</dl>
+<p>…
+:raises
+…
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.SigActivateOtherTabs">
+<span class="sig-name descname"><span class="pre">SigActivateOtherTabs</span></span><a class="headerlink" href="#resampler.resample.resample_v.SigActivateOtherTabs" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.SigAny">
+<span class="sig-name descname"><span class="pre">SigAny</span></span><a class="headerlink" href="#resampler.resample.resample_v.SigAny" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.SigCancel">
+<span class="sig-name descname"><span class="pre">SigCancel</span></span><a class="headerlink" href="#resampler.resample.resample_v.SigCancel" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.SigRelay">
+<span class="sig-name descname"><span class="pre">SigRelay</span></span><a class="headerlink" href="#resampler.resample.resample_v.SigRelay" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.SigUpdateList">
+<span class="sig-name descname"><span class="pre">SigUpdateList</span></span><a class="headerlink" href="#resampler.resample.resample_v.SigUpdateList" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.SigUpdateOtherGUIs">
+<span class="sig-name descname"><span class="pre">SigUpdateOtherGUIs</span></span><a class="headerlink" href="#resampler.resample.resample_v.SigUpdateOtherGUIs" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.viewvars">
+<span class="sig-name descname"><span class="pre">viewvars</span></span><a class="headerlink" href="#resampler.resample.resample_v.viewvars" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-resampler.resampler_widget">
+<span id="resampler-resampler-widget-module"></span><h2>resampler.resampler_widget module<a class="headerlink" href="#module-resampler.resampler_widget" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="resampler.resampler_widget.Ui_resampler_widget">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">resampler.resampler_widget.</span></span><span class="sig-name descname"><span class="pre">Ui_resampler_widget</span></span><a class="headerlink" href="#resampler.resampler_widget.Ui_resampler_widget" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resampler_widget.Ui_resampler_widget.retranslateUi">
+<span class="sig-name descname"><span class="pre">retranslateUi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resampler_widget</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resampler_widget.Ui_resampler_widget.retranslateUi" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resampler_widget.Ui_resampler_widget.setupUi">
+<span class="sig-name descname"><span class="pre">setupUi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resampler_widget</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resampler_widget.Ui_resampler_widget.setupUi" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="resampler-set-fonts-module">
+<h2>resampler.set_fonts module<a class="headerlink" href="#resampler-set-fonts-module" title="Link to this heading"></a></h2>
+</section>
+<section id="module-resampler">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-resampler" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="player.html" class="btn btn-neutral float-left" title="player package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="spectralviewer.html" class="btn btn-neutral float-right" title="spectralviewer package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Hermann Scharfetter.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

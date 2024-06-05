@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>spectralviewer package &mdash; COHIWizard_v1.2 1.2.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=4d6f9085"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="wavheader_editor package" href="wavheader_editor.html" />
+    <link rel="prev" title="resampler package" href="resampler.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            COHIWizard_v1.2
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">What is COHIWizard ?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="software_architecture.html">Software architecture</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">sources</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="COHIWizard.html">COHIWizard</a></li>
+<li class="toctree-l2"><a class="reference internal" href="abstract_module.html">abstract_module module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="annotator.html">annotator package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auxiliaries.html">auxiliaries module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="player.html">player package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="resampler.html">resampler package</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">spectralviewer package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#spectralviewer-set-fonts-module">spectralviewer.set_fonts module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-spectralviewer.spectralviewer_widget">spectralviewer.spectralviewer_widget module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#spectralviewer.spectralviewer_widget.Ui_spectralviewer_widget"><code class="docutils literal notranslate"><span class="pre">Ui_spectralviewer_widget</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-spectralviewer.view_spectra">spectralviewer.view_spectra module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#spectralviewer.view_spectra.view_spectra_c"><code class="docutils literal notranslate"><span class="pre">view_spectra_c</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#spectralviewer.view_spectra.view_spectra_m"><code class="docutils literal notranslate"><span class="pre">view_spectra_m</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#spectralviewer.view_spectra.view_spectra_v"><code class="docutils literal notranslate"><span class="pre">view_spectra_v</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-spectralviewer">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="wavheader_editor.html">wavheader_editor package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="yaml_editor.html">yaml_editor package</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">COHIWizard_v1.2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">sources</a></li>
+      <li class="breadcrumb-item active">spectralviewer package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/spectralviewer.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="spectralviewer-package">
+<h1>spectralviewer package<a class="headerlink" href="#spectralviewer-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="spectralviewer-set-fonts-module">
+<h2>spectralviewer.set_fonts module<a class="headerlink" href="#spectralviewer-set-fonts-module" title="Link to this heading"></a></h2>
+</section>
+<section id="module-spectralviewer.spectralviewer_widget">
+<span id="spectralviewer-spectralviewer-widget-module"></span><h2>spectralviewer.spectralviewer_widget module<a class="headerlink" href="#module-spectralviewer.spectralviewer_widget" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="spectralviewer.spectralviewer_widget.Ui_spectralviewer_widget">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spectralviewer.spectralviewer_widget.</span></span><span class="sig-name descname"><span class="pre">Ui_spectralviewer_widget</span></span><a class="headerlink" href="#spectralviewer.spectralviewer_widget.Ui_spectralviewer_widget" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="spectralviewer.spectralviewer_widget.Ui_spectralviewer_widget.retranslateUi">
+<span class="sig-name descname"><span class="pre">retranslateUi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spectralviewer_widget</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#spectralviewer.spectralviewer_widget.Ui_spectralviewer_widget.retranslateUi" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectralviewer.spectralviewer_widget.Ui_spectralviewer_widget.setupUi">
+<span class="sig-name descname"><span class="pre">setupUi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spectralviewer_widget</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#spectralviewer.spectralviewer_widget.Ui_spectralviewer_widget.setupUi" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-spectralviewer.view_spectra">
+<span id="spectralviewer-view-spectra-module"></span><h2>spectralviewer.view_spectra module<a class="headerlink" href="#module-spectralviewer.view_spectra" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="spectralviewer.view_spectra.view_spectra_c">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spectralviewer.view_spectra.</span></span><span class="sig-name descname"><span class="pre">view_spectra_c</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">view_spectra_m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#spectralviewer.view_spectra.view_spectra_c" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
+<p>_view methods for resampling module
+TODO: gui.wavheader –&gt; something less general ?</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spectralviewer.view_spectra.view_spectra_c.SigAny">
+<span class="sig-name descname"><span class="pre">SigAny</span></span><a class="headerlink" href="#spectralviewer.view_spectra.view_spectra_c.SigAny" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spectralviewer.view_spectra.view_spectra_c.SigCancel">
+<span class="sig-name descname"><span class="pre">SigCancel</span></span><a class="headerlink" href="#spectralviewer.view_spectra.view_spectra_c.SigCancel" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spectralviewer.view_spectra.view_spectra_c.SigRelay">
+<span class="sig-name descname"><span class="pre">SigRelay</span></span><a class="headerlink" href="#spectralviewer.view_spectra.view_spectra_c.SigRelay" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spectralviewer.view_spectra.view_spectra_c.contvars">
+<span class="sig-name descname"><span class="pre">contvars</span></span><a class="headerlink" href="#spectralviewer.view_spectra.view_spectra_c.contvars" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spectralviewer.view_spectra.view_spectra_m">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spectralviewer.view_spectra.</span></span><span class="sig-name descname"><span class="pre">view_spectra_m</span></span><a class="headerlink" href="#spectralviewer.view_spectra.view_spectra_m" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spectralviewer.view_spectra.view_spectra_m.None">
+<span class="sig-name descname"><span class="pre">None</span></span><a class="headerlink" href="#spectralviewer.view_spectra.view_spectra_m.None" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spectralviewer.view_spectra.view_spectra_m.SigModelXXX">
+<span class="sig-name descname"><span class="pre">SigModelXXX</span></span><a class="headerlink" href="#spectralviewer.view_spectra.view_spectra_m.SigModelXXX" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="spectralviewer.view_spectra.view_spectra_v">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">spectralviewer.view_spectra.</span></span><span class="sig-name descname"><span class="pre">view_spectra_v</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gui</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">view_spectra_c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">view_spectra_m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#spectralviewer.view_spectra.view_spectra_v" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
+<p>_view methods for resampling module
+TODO: gui.wavheader –&gt; something less general ?</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="spectralviewer.view_spectra.view_spectra_v.ann_spectrum">
+<span class="sig-name descname"><span class="pre">ann_spectrum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dummy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#spectralviewer.view_spectra.view_spectra_v.ann_spectrum" title="Link to this definition"></a></dt>
+<dd><p>CONTROLLER
+generate a single spectrum from complex data
+scale x-axis as frequencies in the recorded AM band
+scale y-axis in dB
+calculate baseline basel from moving median filtering
+find spectral peaks (= transmitters) and calculate the corresponding properties
+requires the following properties to exist:</p>
+<blockquote>
+<div><p>self.DATABLOCKSIZE</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> (<em>object</em>) – An instance of the class containing attributes such as header information and filtering parameters.</p></li>
+<li><p><strong>dummy</strong> (<em>any</em>) – A dummy variable not used in the function.</p></li>
+<li><p><strong>data</strong> (<em>numpy.ndarray</em><em> of </em><em>float32</em><em>, </em><em>even entries = real odd entries = imaginary
+part</em><em> of </em><em>the IQ signal</em>) – A numpy array containing the complex data IQ data read from wav file</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>[</strong><strong>ErrorType</strong><strong>]</strong> – [ErrorDescription]</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A dictionary containing various arrays related to the spectral analysis:
+- datax: The frequency data.type: float32
+- datay: The amplitude data.type: float32
+- datay_filt: The filtered amplitude data.type: float32
+- peaklocs: The indices of the identified peaks in the amplitude data.type: float32
+- peakprops: Properties of the identified peaks, such as their height and width. type: dict
+- databasel: The baseline data used in the filtering process.type: float32</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectralviewer.view_spectra.view_spectra_v.canvasbuild">
+<span class="sig-name descname"><span class="pre">canvasbuild</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gui</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#spectralviewer.view_spectra.view_spectra_v.canvasbuild" title="Link to this definition"></a></dt>
+<dd><p>sets up a canvas to which graphs can be plotted
+Use: calls the method auxi.generate_canvas with parameters self.gui.gridlayoutX to specify where the canvas 
+should be placed, the coordinates and extensions in the grid and a reference to the QMainwidget Object
+generated by __main__ during system startup. This object is relayed via signal to all modules at system initialization 
+and is automatically available (see rxhandler method)
+the reference to the canvas object is written to self.cref
+:param : gui
+:type : QMainWindow
+:raises [ErrorType]: [ErrorDescription]
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectralviewer.view_spectra.view_spectra_v.cb_plot_spectrum">
+<span class="sig-name descname"><span class="pre">cb_plot_spectrum</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#spectralviewer.view_spectra.view_spectra_v.cb_plot_spectrum" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectralviewer.view_spectra.view_spectra_v.init_view_spectra_ui">
+<span class="sig-name descname"><span class="pre">init_view_spectra_ui</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#spectralviewer.view_spectra.view_spectra_v.init_view_spectra_ui" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectralviewer.view_spectra.view_spectra_v.logfilehandler">
+<span class="sig-name descname"><span class="pre">logfilehandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#spectralviewer.view_spectra.view_spectra_v.logfilehandler" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectralviewer.view_spectra.view_spectra_v.minPeakDistanceupdate">
+<span class="sig-name descname"><span class="pre">minPeakDistanceupdate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#spectralviewer.view_spectra.view_spectra_v.minPeakDistanceupdate" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectralviewer.view_spectra.view_spectra_v.minPeakwidthupdate">
+<span class="sig-name descname"><span class="pre">minPeakwidthupdate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#spectralviewer.view_spectra.view_spectra_v.minPeakwidthupdate" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectralviewer.view_spectra.view_spectra_v.minSNRupdate_ScannerTab">
+<span class="sig-name descname"><span class="pre">minSNRupdate_ScannerTab</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#spectralviewer.view_spectra.view_spectra_v.minSNRupdate_ScannerTab" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectralviewer.view_spectra.view_spectra_v.on_click">
+<span class="sig-name descname"><span class="pre">on_click</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#spectralviewer.view_spectra.view_spectra_v.on_click" title="Link to this definition"></a></dt>
+<dd><p>TODO for Walter: new method for data readout by clicking on CANVAS
+:param event
+:type: ??
+:raises [ErrorType]: [ErrorDescription]
+:return:
+:rtype:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectralviewer.view_spectra.view_spectra_v.plot_spectrum">
+<span class="sig-name descname"><span class="pre">plot_spectrum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dummy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">position</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#spectralviewer.view_spectra.view_spectra_v.plot_spectrum" title="Link to this definition"></a></dt>
+<dd><p>plot a segment at position ‘position’ of the spectrum or raw data from file f1. posiion is a fraction of the filesize between 0 and 1
+The filepath f1 must be set as self.m[“f1 before in another module (typically core)
+:param : dummy
+:type : none
+:param : position
+:type : float
+:raises [ErrorType]: [ErrorDescription]
+:return: flag False or True, False on unsuccessful execution
+:rtype: Boolean</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectralviewer.view_spectra.view_spectra_v.reset_GUI">
+<span class="sig-name descname"><span class="pre">reset_GUI</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#spectralviewer.view_spectra.view_spectra_v.reset_GUI" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectralviewer.view_spectra.view_spectra_v.rxhandler">
+<span class="sig-name descname"><span class="pre">rxhandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#spectralviewer.view_spectra.view_spectra_v.rxhandler" title="Link to this definition"></a></dt>
+<dd><p>handles remote calls from other modules via Signal SigRX(_key,_value)
+:param : _key
+:type : str
+:param : _value
+:type : object
+:raises [ErrorType]: [ErrorDescription]
+:return: flag False or True, False on unsuccessful execution
+:rtype: Boolean</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectralviewer.view_spectra.view_spectra_v.setkernelwidth">
+<span class="sig-name descname"><span class="pre">setkernelwidth</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#spectralviewer.view_spectra.view_spectra_v.setkernelwidth" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="spectralviewer.view_spectra.view_spectra_v.updateGUIelements">
+<span class="sig-name descname"><span class="pre">updateGUIelements</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#spectralviewer.view_spectra.view_spectra_v.updateGUIelements" title="Link to this definition"></a></dt>
+<dd><p>updates GUI elements , usually triggered by a Signal SigTabsUpdateGUIs to which 
+this method is connected in the __main__ of the core module
+:param : none
+:type : none
+:raises [ErrorType]: [ErrorDescription]
+:return: flag False or True, False on unsuccessful execution
+:rtype: Boolean</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spectralviewer.view_spectra.view_spectra_v.SigAny">
+<span class="sig-name descname"><span class="pre">SigAny</span></span><a class="headerlink" href="#spectralviewer.view_spectra.view_spectra_v.SigAny" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spectralviewer.view_spectra.view_spectra_v.SigCancel">
+<span class="sig-name descname"><span class="pre">SigCancel</span></span><a class="headerlink" href="#spectralviewer.view_spectra.view_spectra_v.SigCancel" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spectralviewer.view_spectra.view_spectra_v.SigRX">
+<span class="sig-name descname"><span class="pre">SigRX</span></span><a class="headerlink" href="#spectralviewer.view_spectra.view_spectra_v.SigRX" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spectralviewer.view_spectra.view_spectra_v.SigRelay">
+<span class="sig-name descname"><span class="pre">SigRelay</span></span><a class="headerlink" href="#spectralviewer.view_spectra.view_spectra_v.SigRelay" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spectralviewer.view_spectra.view_spectra_v.SigSyncGUIUpdatelist">
+<span class="sig-name descname"><span class="pre">SigSyncGUIUpdatelist</span></span><a class="headerlink" href="#spectralviewer.view_spectra.view_spectra_v.SigSyncGUIUpdatelist" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spectralviewer.view_spectra.view_spectra_v.SigUpdateOtherGUIs">
+<span class="sig-name descname"><span class="pre">SigUpdateOtherGUIs</span></span><a class="headerlink" href="#spectralviewer.view_spectra.view_spectra_v.SigUpdateOtherGUIs" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="spectralviewer.view_spectra.view_spectra_v.viewvars">
+<span class="sig-name descname"><span class="pre">viewvars</span></span><a class="headerlink" href="#spectralviewer.view_spectra.view_spectra_v.viewvars" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-spectralviewer">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-spectralviewer" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="resampler.html" class="btn btn-neutral float-left" title="resampler package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="wavheader_editor.html" class="btn btn-neutral float-right" title="wavheader_editor package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Hermann Scharfetter.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
