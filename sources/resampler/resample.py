@@ -1793,6 +1793,7 @@ class resample_v(QObject):
             # if  _value[0].find("plot_spectrum") == 0:
             #     self.plot_spectrum(0,_value[1])
             if  _value[0].find("updateGUIelements") == 0:
+                self.logger.debug("call updateGUIelements")
                 self.updateGUIelements()    
             if  _value[0].find("reset_GUI") == 0:
                 self.reset_GUI()
@@ -1895,6 +1896,7 @@ class resample_v(QObject):
         :return: flag False or True, False on unsuccessful execution
         :rtype: Boolean
         """
+        st = time.time()
         #print(f"resampler: updateGUIelements {self.m['progress']}")
         self.logger.debug("resampler: updateGUIelements progress: %f", self.m['progress'] )
         self.gui.label_Filename_resample.setText(self.m["my_filename"] + self.m["ext"])
@@ -1902,7 +1904,6 @@ class resample_v(QObject):
         self.gui.label_36.setFont(QFont('arial',self.m["label36Font"]))
         self.gui.label_36.setText(self.m["actionlabel"])
         
-
         self.gui.progressBar_resample.setProperty("value", self.m["progress"])
         if self.m["emergency_stop"]:
             self.GUI_reset_status()
@@ -1930,6 +1931,9 @@ class resample_v(QObject):
         #TODO TODO TODO: update plot spectrum
         #self.plot_spectrum_resample(0)
         self.plot_spectrum_resample(self.m["spectrum_position"])
+        et = time.time()
+        self.logger.debug(f"resampler segment etime: {et-st} s: updateGUIelements")
+
 
     def reset_GUI(self):
         """

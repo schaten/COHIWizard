@@ -6,6 +6,7 @@ from PyQt5 import QtGui
 import logging
 import numpy as np
 import os
+import time
 from datetime import datetime, timedelta, date
 #from datetime import timedelta
 import shutil
@@ -237,12 +238,15 @@ class waveditor_v(QObject):
         :return: flag False or True, False on unsuccessful execution
         :rtype: Boolean
         """
+        st = time.time()
         print("waveditor: updateGUIelements")
         self.fill_wavtable()
         #TODO TODO TODO: activate filename label window and line below:
         self.gui.label_Filename_WAVHeader.setText(self.m["my_filename"] + self.m["ext"])
         #self.gui.label_Filename_Player.setText(self.m["my_filename"] + self.m["ext"])
         #self.gui.DOSOMETHING
+        et = time.time()
+        self.logger.debug(f"wavheader edior segment etime: {et-st} s: updateGUIelements")
 
     # def update_GUI(self,_key): #TODO TODO: is this method still needed ? reorganize. gui-calls should be avoided, better only signalling and gui must call the routenes itself
     #     print(" view spectra updateGUI: new updateGUI in view spectra module reached")

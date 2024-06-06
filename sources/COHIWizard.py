@@ -850,7 +850,7 @@ class core_v(QObject):
                 return
         st = et
         et = time.time()
-        print(f"second segment etime: {et-st} s")
+        #print(f"second segment etime: {et-st} s")
 
         #Generate wavheader and distribute to all modules
         if filetype == "dat": # namecheck only if dat --> makes void all wav-related operation sin filenameextract
@@ -876,7 +876,7 @@ class core_v(QObject):
         self.SigRelay.emit("cm_all_",["wavheader",self.wavheader])
         st = et
         et = time.time()
-        print(f"3rd segment etime: {et-st} s: wav header read")
+        #print(f"3rd segment etime: {et-st} s: wav header read")
 
         # build up playlist selectors
         self.SigRelay.emit("cexex_playrec",["addplaylistitem",0])
@@ -887,7 +887,7 @@ class core_v(QObject):
 
         st = et
         et = time.time()
-        print(f"4th segment etime: {et-st} s: signalling 2")
+        #print(f"4th segment etime: {et-st} s: signalling 2")
 
         ### set readoffset and relay to modules: TODO TODO TODO: check if should be translated to modules (dangerous, may affect many instances)
         if self.wavheader['sdrtype_chckID'].find('rcvr') > -1:
@@ -910,7 +910,7 @@ class core_v(QObject):
 
         st = et
         et = time.time()
-        print(f"5th segment etime: {et-st} s: dump config yaml")
+        #print(f"5th segment etime: {et-st} s: dump config yaml")
 
         self.m["timescaler"] = self.wavheader['nSamplesPerSec']*self.wavheader['nBlockAlign']
         self.m["fileopened"] = True #check if obsolete because f1 == "" would do the same
@@ -918,7 +918,7 @@ class core_v(QObject):
 
         st = et
         et = time.time()
-        print(f"6A segment etime: {et-st} s: only relaying")
+        #print(f"6A segment etime: {et-st} s: only relaying")
 
         out_dirname = self.my_dirname + '/out'  #TODO TODO TODO should only be created if really necessary for resampling !
         if os.path.exists(out_dirname) == False:         #exist yaml file: create from yaml-editor
@@ -927,7 +927,7 @@ class core_v(QObject):
 
         st = et
         et = time.time()
-        print(f"6B segment etime: {et-st} s: make out directory")
+        #print(f"6B segment etime: {et-st} s: make out directory")
         self.logger.debug(f"6B segment etime: {et-st} s: make out directory")
 
 
@@ -935,6 +935,7 @@ class core_v(QObject):
         self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
         st = et
         et = time.time()
+        self.logger.debug(f"6C segment etime: {et-st} s: relay and updateGUIs of all modules")
         print(f"6C segment etime: {et-st} s: relay and updateGUIs of all modules")
 
         #TODO TODO TODO: track multiple calls of plot_spectrum: is that really necessary on each fileopen ? 
@@ -1043,6 +1044,7 @@ class core_v(QObject):
             #     self.SigGUIReset.emit()
             if  _value[0].find("updateGUIelements") == 0:
                 self.updateGUIelements()
+                self.logger.debug("call updateGUIelements")
             if  _value[0].find("updatetimer") == 0:
                 self.updatetimer()
             if  _value[0].find("stoptick") == 0:
@@ -1303,7 +1305,7 @@ if __name__ == '__main__':
         xcore_v.gui.playrec_comboBox_startuptab.setCurrentIndex(int(xcore_v.m["metadata"]["startup_tab"]))
         xcore_v.gui.tabWidget.setCurrentIndex(int(xcore_v.m["metadata"]["startup_tab"]))
     except:
-        xcore_v.logger.error("startup Tab not defined in configuration file config_wizard.yaml")
+        xcore_v.logger.debug("startup Tab not defined in configuration file config_wizard.yaml")
     xcore_v.gui.playrec_comboBox_startuptab.currentIndexChanged.connect(xcore_v.set_startuptab)
 
     # build connections for interpackage-Relaying system

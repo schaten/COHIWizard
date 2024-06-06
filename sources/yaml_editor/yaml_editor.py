@@ -11,6 +11,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 import yaml
 import logging
+import time
 #from auxiliaries import WAVheader_tools
 from auxiliaries import auxiliaries as auxi
 
@@ -122,9 +123,11 @@ class  yamleditor_v(QObject):
         :return: flag False or True, False on unsuccessful execution
         :rtype: Boolean
         """
+        st = time.time()
         self.logger.debug(" yamleditor: updateGUIelements")
         self.read_yaml_header()
-        
+        et = time.time()
+        self.logger.debug(f"yaml editor segment etime: {et-st} s: update GUI")
 
     def yaml_header_buttonfcn(self):
         """

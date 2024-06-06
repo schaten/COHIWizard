@@ -1090,6 +1090,7 @@ class annotate_v(QObject):
             _value[0](*_value[1])
         if _key.find("cexex_annotate") == 0  or _key.find("cexex_all_") == 0:
             if  _value[0].find("updateGUIelements") == 0:
+
                 self.updateGUIelements()
             if  _value[0].find("reset_GUI") == 0:
                 self.reset_GUI()
@@ -1157,8 +1158,11 @@ class annotate_v(QObject):
         :return: flag False or True, False on unsuccessful execution
         :rtype: Boolean
         """
-        #print("annotate: updateGUIelements")
+        print("annotate: updateGUIelements")
+        ### TODO: CHECK  if is working correctlydisconnect spinBox from Signalling to updateGUIelements if next line is called;; should only be done in spinbox callback
+        self.gui.spinBoxminSNR.valueChanged.disconnect(self.minSNRupdate) 
         self.gui.spinBoxminSNR.setProperty("value",self.m["prominence"])
+        self.gui.spinBoxminSNR.valueChanged.connect(self.minSNRupdate) 
         if self.m["fileopened"]:
             self.gui.label_Filename_Annotate.setText(self.m["my_filename"] + self.m["ext"])
         self.gui.label_6.setText("Baseline Offset:" + str(self.m["baselineoffset"]))
@@ -1339,11 +1343,14 @@ class annotate_v(QObject):
         """_summary_
         """
         self.m["prominence"] = self.gui.spinBoxminSNR.value()
-        self.m["minSNR"] = self.gui.spinBoxminSNR.value()
+        self.m["minSNR"] = self.gui.spinBoxminSNR.value()  #TODO: why assinment to 2 different variables ?
         ####################TODO TODO TODO: urgent no direct access of GUI replace by signalling
         #self.gui.spinBoxminSNR_ScannerTab.setProperty("value", self.m["prominence"])
         ####################################################################
-        self.SigRelay.emit("cm_all_",["prominence",self.m["prominence"]])
+        self.SigRelay.emit("cm_all_",["prominence",self.m["prominence"]])##############################################################
+        #TODO TODO TODO: interrupt endless elsf calling loop by emitting this only, if the SNR-buttons are pressed (here and in view spectra) and not if the value is only changed by 
+        #################################################
+        #code in updateGUIelements
         self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
 
     def activate_WAVEDIT(self):

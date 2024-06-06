@@ -216,14 +216,20 @@ class view_spectra_v(QObject):
         :return: flag False or True, False on unsuccessful execution
         :rtype: Boolean
         """
+        st = time.time()
+
         #print("view spectra: updateGUIelements")
+        self.gui.spinBoxminSNR_ScannerTab.valueChanged.disconnect(self.minSNRupdate_ScannerTab)
         self.gui.spinBoxminSNR_ScannerTab.setProperty("value",self.m["prominence"])
+        self.gui.spinBoxminSNR_ScannerTab.valueChanged.connect(self.minSNRupdate_ScannerTab)
         self.logger.debug("view spectra: updateGUIelements")
         self.gui.label_Filename_ViewSpectra.setText(self.m["my_filename"] + self.m["ext"])
         dummy = 0
         self.plot_spectrum(dummy,self.m["spectrum_position"])
         self.logger.debug("view spectra: emit baselineoffset %i", self.m["baselineoffset"])
         self.SigRelay.emit("cm_xcore",["baselineoffset",self.m["baselineoffset"]])
+        et = time.time()
+        self.logger.debug(f"view spectra update gui segment etime: {et-st} s: ")
 
 
     def reset_GUI(self):
@@ -362,6 +368,8 @@ class view_spectra_v(QObject):
                 - databasel: The baseline data used in the filtering process.type: float32
         :rtype: dict
         """
+        self.logger.debug("view_spectra ann_spectum reached")
+        st = time.time()
         # extract imaginary and real parts from complex data 
         realindex = np.arange(0,self.DATABLOCKSIZE,2)
         imagindex = np.arange(1,self.DATABLOCKSIZE,2)
@@ -384,6 +392,9 @@ class view_spectra_v(QObject):
             kernel_length += 1
         
         #databasel = sig.medfilt(datay,kernel_length)
+        et = time.time()
+        self.logger.debug(f"ann_spectrum segment plotting FFT etime: {et-st} s: update GUI")
+
         databasel = median_filter(datay,kernel_length, mode = 'constant')
         datay_filt[datay_filt < databasel] = databasel[datay_filt < databasel]
         # find all peaks which are self.PROMINENCE dB above baseline and 
@@ -395,6 +406,8 @@ class view_spectra_v(QObject):
                         prominence=(self.m["prominence"],None), distance=dist, width = wd)
         ret = {"datax": datax, "datay": datay, "datay_filt": datay_filt,
                 "peaklocs": peaklocs, "peakprops": peakprops, "databasel": databasel}
+        et = time.time()
+        self.logger.debug(f"ann_spectrum segment baseline and peakextract etime: {et-st} s: update GUI")
         return ret
 
     def minSNRupdate_ScannerTab(self):
@@ -404,23 +417,27 @@ class view_spectra_v(QObject):
         ########TODO TODO TODO: urgent, close this access as soon as possible
         #self.SigRelay.emit("cui_annotate",[self.gui.spinBoxminSNR.setProperty,["value",self.m["prominence"]]])
         #####################
+        #print("######################## minSNRupdate_ScannerTab reached")
         self.SigRelay.emit("cm_all_",["prominence", self.m["prominence"]])
         self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
         self.SigRelay.emit("cexex_annotate",["updateGUIelements",0])
 
     def set_baselineoffset(self):        
+        #print("######################## set_baselineoffset reached")
         baselineoffset = self.gui.spinBoxminBaselineoffset.value()
         self.SigRelay.emit("cm_all_",["baselineoffset",baselineoffset])
         self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
         self.SigRelay.emit("cexex_annotate",["updateGUIelements",0])
 
-    def setkernelwidth(self):               
+    def setkernelwidth(self):              
+        #print("######################## setkernelwidth reached") 
         filterkernel = self.gui.spinBoxKernelwidth.value()
         self.SigRelay.emit("cm_all_",["filterkernel",filterkernel])
         #self.SigRelay.emit("cm_view_spectra",["position",self.position])
         self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
 
     def minPeakwidthupdate(self):
+        #print("######################## minPeakwidthupdate reached")
         peakwidth = self.gui.spinBoxminPeakwidth.value()
         #position = self.gui.horizontalScrollBar_view_spectra.value()
         self.SigRelay.emit("cm_all_",["peakwidth",peakwidth])
@@ -428,6 +445,7 @@ class view_spectra_v(QObject):
         self.SigRelay.emit("cexex_annotate",["updateGUIelements",0]) #TODO: not necessary ?
 
     def minPeakDistanceupdate(self):
+        #print("######################## minPeakDistanceupdate reached")
         deltaf = self.gui.spinBoxminPeakDistance.value()
         self.SigRelay.emit("cm_all_",["deltaf",deltaf])
         self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])
