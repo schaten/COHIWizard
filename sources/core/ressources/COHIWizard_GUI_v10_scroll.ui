@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1208</width>
-    <height>889</height>
+    <width>1150</width>
+    <height>890</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -40,7 +40,7 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>1163</width>
+         <width>1105</width>
          <height>838</height>
         </rect>
        </property>
@@ -421,7 +421,7 @@
                  </sizepolicy>
                 </property>
                 <property name="text">
-                 <string>  </string>
+                 <string/>
                 </property>
                </widget>
               </item>
@@ -434,7 +434,7 @@
                  </sizepolicy>
                 </property>
                 <property name="text">
-                 <string>  </string>
+                 <string/>
                 </property>
                </widget>
               </item>
@@ -453,7 +453,7 @@
                  </size>
                 </property>
                 <property name="text">
-                 <string>  </string>
+                 <string/>
                 </property>
                </widget>
               </item>
@@ -466,7 +466,7 @@
                  </sizepolicy>
                 </property>
                 <property name="text">
-                 <string>  </string>
+                 <string/>
                 </property>
                </widget>
               </item>
@@ -2769,7 +2769,7 @@
                  </sizepolicy>
                 </property>
                 <property name="text">
-                 <string>    </string>
+                 <string/>
                 </property>
                </widget>
               </item>
@@ -6917,7 +6917,7 @@ UFL</string>
                  </sizepolicy>
                 </property>
                 <property name="text">
-                 <string>  </string>
+                 <string/>
                 </property>
                </widget>
               </item>
@@ -6930,7 +6930,7 @@ UFL</string>
                  </sizepolicy>
                 </property>
                 <property name="text">
-                 <string>  </string>
+                 <string/>
                 </property>
                </widget>
               </item>
@@ -7002,7 +7002,7 @@ UFL</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1208</width>
+     <width>1150</width>
      <height>26</height>
     </rect>
    </property>

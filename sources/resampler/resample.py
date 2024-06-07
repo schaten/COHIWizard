@@ -577,7 +577,7 @@ class res_workers(QObject):
 
     def LO_shifter_worker(self):
         self.stopix = False
-        DATABLOCKSIZE = 1024*4*256
+        t_DATABLOCKSIZE = 1024*4*256
         INCREMENT = 1000000
         #print("#############LOshifter_worker started##############")
         targetfilename = self.get_tfname()
@@ -607,7 +607,7 @@ class res_workers(QObject):
         #TODO: replace following by new readsegment call
         #ret = readsegmentfn(position,DATABLOCKSIZE) #TODO: transfer to auxiliary block
         #TODO: , define new readsegment-function, generalize to tBPS rather than 32 bit
-        ret = readsegmentfn(self,sourcefilename,position,readoffset,DATABLOCKSIZE,sBPS,32,wFormatTag)
+
         #readsegment_new(self,filepath,position,readoffset,DATABLOCKSIZE,sBPS,tBPS,wFormatTag)
         sSR = self.get_sSR()
         # print(f"LOshifter worker sSR: {sSR} sBPS: {sBPS} expfilesz: {expected_filesize}")
@@ -618,12 +618,40 @@ class res_workers(QObject):
         segment_tstart = 0
         #print(f"LOshifter worker targetfilename: {targetfilename}, exp filesize: {expected_filesize}")
         print(expected_filesize)
+        #try to calculate optimum data-blocksize fpr best phase transition between chuncks
         psc_locker = False
+
+        x = centershift/sSR
+        found_m = False
+        DATABLOCKSIZE = t_DATABLOCKSIZE
+
+        for k in range(1, 1000):  # Testen verschiedener k-Werte
+            m = round(k / x)  # Näherung für n
+            product = x * m
+            rounded_product = round(product, 3)
+            if abs(rounded_product - round(rounded_product)) <= 0.01:
+                found_m = True
+                break
+        if found_m and (2*m < t_DATABLOCKSIZE) and (m > 0):
+            #n = m * x
+            fractmin = t_DATABLOCKSIZE /(2*m)
+            DATABLOCKSIZE = int(np.ceil(fractmin)*m*2)
+            psc_locker = True
+            print(f"LOshifter: set fixed phasescaler for acceleration, turn to fast mode, m = {m}, psc_locker: {psc_locker}, DATABLOCKSIZE: {DATABLOCKSIZE}")
+        else:
+            print("LOshifter cannot find optimum DATABLOCKSIZE for acceleration, turn to slow mode")
+        # ###TODO TODO TODO: remove !
+        # DATABLOCKSIZE = t_DATABLOCKSIZE
+        # print(f"LOshifter: final DATABLOCKSIZE: {DATABLOCKSIZE}")
+
+        ret = readsegmentfn(self,sourcefilename,position,readoffset,DATABLOCKSIZE,sBPS,32,wFormatTag)
+        
         if os.path.exists(targetfilename) == True:
             #print("LOshift worker: target file has been found")
             file_stats = os.stat(targetfilename)
             progress_old = 0
             fsize_old = 0
+            first_lock_pass = True
             while ret["size"] > 0:
                 #TODO: implement cutstart/stop here
                 # cutstartoffset = seconds(cutstart);
@@ -639,7 +667,10 @@ class res_workers(QObject):
                     # try to calculate this vector only once and measure time #TODO TODO TODO: implement accelerator for single calculation of phasescaler
                     if not psc_locker:
                         phasescaler = np.exp(2*np.pi*1j*centershift*tsus)
-                        #psc_locker = True
+                    elif first_lock_pass:
+                        print("psc_locker, only one template loaded")
+                        phasescaler = np.exp(2*np.pi*1j*centershift*tsus)
+                        first_lock_pass = False
                     ys = np.multiply(y,phasescaler)
                     y_sh[0:ld:2] = (np.copy(np.real(ys)))
                     y_sh[1:ld:2] = (np.copy(np.imag(ys)))  
@@ -977,6 +1008,49 @@ class resample_c(QObject):
             startcutoffset = 216 + int(self.m["start_trim"].seconds*self.m["sSR"]*self.m["s_wavheader"]['nBlockAlign'])
             self.logger.debug(f'LOshifter: set starttrim = {self.m["start_trim"]} seconds to {startcutoffset} bytes ')
         
+#############################################
+        # import matplotlib.pyplot as plt
+
+        # t_DATABLOCKSIZE = 100
+        # sSR = self.m["sSR"]
+        # centershift = self.m["fshift"] +1000
+
+        # x = centershift/sSR
+        # found_m = False
+        # DATABLOCKSIZE = t_DATABLOCKSIZE
+
+        # for k in range(1, 1000):  # Testen verschiedener k-Werte
+        #     m = round(k / x)  # Näherung für n
+        #     product = x * m
+        #     rounded_product = round(product, 3)
+        #     if abs(rounded_product - round(rounded_product)) <= 0.01:
+        #         found_m = True
+        #         break
+        # if found_m and (m*x < t_DATABLOCKSIZE):
+        #     #n = m * x
+        #     fractmin = t_DATABLOCKSIZE /(2*m)
+        #     DATABLOCKSIZE = int(np.ceil(fractmin)*m)
+        #     psc_locker = True
+        # else:
+        #     print("LOshifter cannot find optimum DATABLOCKSIZE for acceleration, turn to slow mode")
+        
+        # ret = auxi.readsegment_new(self,source_fn,0,self.m["readoffset"],DATABLOCKSIZE,self.m["sBPS"],32,self.m["wFormatTag"])
+        # ld = len(ret["data"])  #TODO: remove and replace [0:ld:2] by [0::2]
+        # if abs(centershift) > 1e-5:
+        #     #print("LOworker shifting active")
+        #     rp = ret["data"][0:ld-1:2]
+        #     ip = ret["data"][1:ld:2]
+        #     y = rp +1j*ip        
+        # dt = 1/sSR
+        # tsus = np.arange(0, len(y)*dt, dt)[:len(y)]
+        # #segment_tstart = tsus[len(tsus)-1] + dt
+        # # try to calculate this vector only once and measure time #TODO TODO TODO: implement accelerator for single calculation of phasescaler
+        # phasescaler = np.exp(2*np.pi*1j*centershift*tsus)
+        # plt.plot(tsus,np.real(phasescaler),marker='o')
+        # plt.show()
+############################################
+
+
         self.LOsh_worker.set_starttrim(startcutoffset)
         self.LOsh_worker.set_ret("")
         self.LOsh_worker.set_tfname(target_fn )

@@ -50,8 +50,9 @@ import logging
 
 #from .COHIWizard_GUI_v10 import Ui_MainWindow as MyWizard  ##TODO: after transfer to core folder set other path
 from icons import Logos
-from core import COHIWizard_GUI_v10_reduced
+#from core import COHIWizard_GUI_v10_reduced
 #from core import COHIWizard_GUI_v10_scroll
+from core import COHIWizard_GUI_v10_scrollhv
 
 class starter(QMainWindow):
     """instantiates the central GUI object and calls its setupUI method; type QMainwindow
@@ -72,8 +73,9 @@ class starter(QMainWindow):
         self.splash = SplashScreen()
         self.splash.setFocus()
         self.splash.show()
-        self.gui = COHIWizard_GUI_v10_reduced.Ui_MainWindow()
+        #self.gui = COHIWizard_GUI_v10_reduced.Ui_MainWindow()
         #self.gui = COHIWizard_GUI_v10_scroll.Ui_MainWindow()
+        self.gui = COHIWizard_GUI_v10_scrollhv.Ui_MainWindow()
         self.gui.setupUi(self)
 
 # generate Player from individual widget
