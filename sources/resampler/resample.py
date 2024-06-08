@@ -620,30 +620,34 @@ class res_workers(QObject):
         print(expected_filesize)
         #try to calculate optimum data-blocksize fpr best phase transition between chuncks
         psc_locker = False
-
-        x = centershift/sSR
+        x = sSR/centershift # number of datapoints per period of centershifte
         found_m = False
         DATABLOCKSIZE = t_DATABLOCKSIZE
-
-        for k in range(1, 1000):  # Testen verschiedener k-Werte
-            m = round(k / x)  # Näherung für n
-            product = x * m
-            rounded_product = round(product, 3)
+        rangestop = int(np.floor(DATABLOCKSIZE/2/x))
+        rangestart = int(rangestop - max(1,np.floor(1000/x)))
+        for k in range(rangestart, rangestop):  # Testen verschiedener k-Werte
+            m = round(k * x)  # number of datapoints for k periods = total number of datapoints
+            #target: test conditio for k-values near max datablock size
+            #dtatblocksize = 2*m = 2*k*x; m =ca DATABLOCKSIZE --> k = m/x, endk = DATABLOCKSIZE/2/x
+            #k range = np.floor(DATABLOCKSIZE/2/x) - 1000
+            #m = k*x is the number of samples needed for being sSR a near integer multiple of the centershift period
+            product = m / x # total number of periods
+            rounded_product = round(product, 3) # deviation of rounded # periods from integer
             if abs(rounded_product - round(rounded_product)) <= 0.01:
                 found_m = True
                 break
         if found_m and (2*m < t_DATABLOCKSIZE) and (m > 0):
             #n = m * x
-            fractmin = t_DATABLOCKSIZE /(2*m)
-            DATABLOCKSIZE = int(np.ceil(fractmin)*m*2)
+            #fractmin = t_DATABLOCKSIZE /(2*m)
+            DATABLOCKSIZE = int(m*2)
             psc_locker = True
             print(f"LOshifter: set fixed phasescaler for acceleration, turn to fast mode, m = {m}, psc_locker: {psc_locker}, DATABLOCKSIZE: {DATABLOCKSIZE}")
         else:
             print("LOshifter cannot find optimum DATABLOCKSIZE for acceleration, turn to slow mode")
         # ###TODO TODO TODO: remove !
-        # DATABLOCKSIZE = t_DATABLOCKSIZE
+        #DATABLOCKSIZE = t_DATABLOCKSIZE
         # print(f"LOshifter: final DATABLOCKSIZE: {DATABLOCKSIZE}")
-
+        #psc_locker = False
         ret = readsegmentfn(self,sourcefilename,position,readoffset,DATABLOCKSIZE,sBPS,32,wFormatTag)
         
         if os.path.exists(targetfilename) == True:
@@ -905,7 +909,7 @@ class resample_c(QObject):
             self.m["blinkstate"] = False
             self.m["actionlabel"] = "JOB DONE"
             self.m["actionlabelbg"] = "lightgray"
-            #print("resampler merg2G_cleanup before SigProgress")
+            print("resampler merg2G_cleanup before SigProgress")
             self.m["blinking"] = False
             self.SigProgress.emit() #TODO ZODO TODO: no reaction !
             self.SigActivateOtherTabs.emit("Resample","activate",[])
@@ -1008,32 +1012,33 @@ class resample_c(QObject):
             startcutoffset = 216 + int(self.m["start_trim"].seconds*self.m["sSR"]*self.m["s_wavheader"]['nBlockAlign'])
             self.logger.debug(f'LOshifter: set starttrim = {self.m["start_trim"]} seconds to {startcutoffset} bytes ')
         
-#############################################
+############################################# TEST SEQUENCE FOR LOSHIFT prescaler 
         # import matplotlib.pyplot as plt
-
-        # t_DATABLOCKSIZE = 100
+        # t_DATABLOCKSIZE = 1024*4*256
         # sSR = self.m["sSR"]
-        # centershift = self.m["fshift"] +1000
-
-        # x = centershift/sSR
+        # centershift = self.m["fshift"]
+        # x = sSR/centershift # number of datapoints per period of centershifte
         # found_m = False
         # DATABLOCKSIZE = t_DATABLOCKSIZE
-
-        # for k in range(1, 1000):  # Testen verschiedener k-Werte
-        #     m = round(k / x)  # Näherung für n
-        #     product = x * m
-        #     rounded_product = round(product, 3)
+        # rangestop = int(np.floor(DATABLOCKSIZE/2/x))
+        # rangestart = int(rangestop - max(1,np.floor(1000/x)))
+        # for k in range(rangestart, rangestop):  # Testen verschiedener k-Werte
+        #     m = round(k * x)  # number of datapoints for k periods = total number of datapoints
+        #     #target: test conditio for k-values near max datablock size
+        #     #dtatblocksize = 2*m = 2*k*x; m =ca DATABLOCKSIZE --> k = m/x, endk = DATABLOCKSIZE/2/x
+        #     #k range = np.floor(DATABLOCKSIZE/2/x) - 1000
+        #     #m = k*x is the number of samples needed for being sSR a near integer multiple of the centershift period
+        #     product = m / x # total number of periods
+        #     rounded_product = round(product, 3) # deviation of rounded # periods from integer
         #     if abs(rounded_product - round(rounded_product)) <= 0.01:
         #         found_m = True
         #         break
-        # if found_m and (m*x < t_DATABLOCKSIZE):
-        #     #n = m * x
-        #     fractmin = t_DATABLOCKSIZE /(2*m)
-        #     DATABLOCKSIZE = int(np.ceil(fractmin)*m)
+        # if found_m and (2*m < t_DATABLOCKSIZE) and (m > 0):
+        #     DATABLOCKSIZE = int(m*2)
         #     psc_locker = True
+        #     print(f"LOshifter: set fixed phasescaler for acceleration, turn to fast mode, m = {m}, psc_locker: {psc_locker}, DATABLOCKSIZE: {DATABLOCKSIZE}")
         # else:
         #     print("LOshifter cannot find optimum DATABLOCKSIZE for acceleration, turn to slow mode")
-        
         # ret = auxi.readsegment_new(self,source_fn,0,self.m["readoffset"],DATABLOCKSIZE,self.m["sBPS"],32,self.m["wFormatTag"])
         # ld = len(ret["data"])  #TODO: remove and replace [0:ld:2] by [0::2]
         # if abs(centershift) > 1e-5:
@@ -1046,7 +1051,7 @@ class resample_c(QObject):
         # #segment_tstart = tsus[len(tsus)-1] + dt
         # # try to calculate this vector only once and measure time #TODO TODO TODO: implement accelerator for single calculation of phasescaler
         # phasescaler = np.exp(2*np.pi*1j*centershift*tsus)
-        # plt.plot(tsus,np.real(phasescaler),marker='o')
+        # plt.plot(tsus[-300:],np.real(phasescaler[-300:]),marker='o')
         # plt.show()
 ############################################
 
@@ -1074,12 +1079,26 @@ class resample_c(QObject):
         #z.B. schreibe die Referenz auf signal_state, damit sie der Scheduler dort abholen kann, schedule[n].["startsignal"] = diese Referenz
         #self.LOsh_worker.SigPupdate.connect(lambda: resample_v.updateprogress_resampling(self)) #TODO: eher aus der Klasse view, könnte auch ausserhalb geschehen
         self.LOsh_worker.SigPupdate.connect(self.PupdateSignalHandler)
+        # self.LOsh_worker.SigFinishedLOshifter.connect(self.LOshthread.quit)
+        # self.LOsh_worker.SigFinishedLOshifter.connect(lambda: print("LOshworker SigFinished emitted, LOshthread quit started"))
+        # self.LOsh_worker.SigFinishedLOshifter.connect(self.LOsh_worker.deleteLater)
+        # self.LOshthread.finished.connect(self.LOshthread.deleteLater)
+        # self.LOshthread.finished.connect(lambda: self.cleanup())
+        # self.LOshthread.finished.connect(lambda: print("LOshthread finished; Cleanup must have been launched"))
+
+        self.LOsh_worker.SigFinishedLOshifter.connect(lambda: print("LOshworker SigFinished emitted"))
         self.LOsh_worker.SigFinishedLOshifter.connect(self.LOshthread.quit)
-        self.LOsh_worker.SigFinishedLOshifter.connect(lambda: print("LOshworker SigFinished emitted, LOshthread quit started"))
+        self.LOsh_worker.SigFinishedLOshifter.connect(lambda: print("LOshthread quit called"))
         self.LOsh_worker.SigFinishedLOshifter.connect(self.LOsh_worker.deleteLater)
+        self.LOsh_worker.SigFinishedLOshifter.connect(lambda: print("LOshworker deleteLater called"))
+
+        self.LOshthread.finished.connect(lambda: print("LOshthread finished signal emitted"))
         self.LOshthread.finished.connect(self.LOshthread.deleteLater)
+        self.LOshthread.finished.connect(lambda: print("LOshthread deleteLater called"))
         self.LOshthread.finished.connect(lambda: self.cleanup())
-        self.LOshthread.finished.connect(lambda: print("LOshthread finished; Cleanup must have been launched"))
+        self.LOshthread.finished.connect(lambda: print("LOshthread finish cleanup called"))
+
+
 
         self.m["calling_worker"] = self.LOsh_worker 
         self.m["last_system_time"] = time.time()
