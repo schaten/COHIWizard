@@ -46,6 +46,7 @@ class resample_m(QObject):
         self.mdl["my_filename"] = ""
         self.mdl["ext"] = ""
         self.mdl["fileopened"] = False
+        self.mdl["fshift"] = 0
         # Create a custom logger
         logging.getLogger().setLevel(logging.DEBUG)
         # Erstelle einen Logger mit dem Modul- oder Skriptnamen
@@ -1349,6 +1350,7 @@ class resample_c(QObject):
         self.logger.debug("accomplish_resampling: soxstring thread finished")
         target_fn = self.m["source_fn"]  #TODO: define im GUI_Hauptprogramm bzw. im scheduler
         self.m["progress"] = 0
+        self.m["fshift"] = 0
         self.SigUpdateGUIelements.emit() #TODO replace by Relay method ?
         #gui.ui.progressBar_resample.setProperty("value", 0) #TODO: shift to a resample.view method, replace by signalling ?
         #self.soxthreadActive = False  #TODO: check is obsolete
@@ -2058,7 +2060,8 @@ class resample_v(QObject):
         self.gui.label_Filename_resample.setText(self.m["my_filename"] + self.m["ext"])
         if (not self.gui.radioButton_advanced_sampling.isChecked()) and (len(self.m["my_filename"]) > 0):
             self.gui.lineEdit_resample_targetnameprefix.setText(self.m["my_filename"])
-            self.gui.lineEdit_resample_targetLO.setText(str((self.m["wavheader"]["centerfreq"]/1000)))
+            ################TODO TODO TODO: set to correct value after definition of centershift
+            self.gui.lineEdit_resample_targetLO.setText(str(((self.m["wavheader"]["centerfreq"]-self.m["fshift"])/1000)))
         #TODO TODO TODO: update plot spectrum
         #self.plot_spectrum_resample(0)
         self.plot_spectrum_resample(self.m["spectrum_position"])
@@ -2082,6 +2085,7 @@ class resample_v(QObject):
         self.m["label36Font"] = 12
         self.m["actionlabel"] = "READY"
         self.m["emergency_stop"] = False
+        self.m["fshift"] = 0
         self.logger.debug("reset_GUI, emergency stop = False")
         #self.updateGUIelements()
         self.cref["ax"].clear()
