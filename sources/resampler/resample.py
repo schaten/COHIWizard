@@ -617,14 +617,14 @@ class res_workers(QObject):
         dt = 1/sSR
         segment_tstart = 0
         #print(f"LOshifter worker targetfilename: {targetfilename}, exp filesize: {expected_filesize}")
-        print(expected_filesize)
+        #print(expected_filesize)
         #try to calculate optimum data-blocksize fpr best phase transition between chuncks
         psc_locker = False
         x = sSR/centershift # number of datapoints per period of centershifte
         found_m = False
         DATABLOCKSIZE = t_DATABLOCKSIZE
         rangestop = int(np.floor(DATABLOCKSIZE/2/x))
-        rangestart = int(rangestop - max(1,np.floor(1000/x)))
+        rangestart = int(rangestop - max(1,np.floor(10000/x)))
         for k in range(rangestart, rangestop):  # Testen verschiedener k-Werte
             m = round(k * x)  # number of datapoints for k periods = total number of datapoints
             #target: test conditio for k-values near max datablock size
@@ -696,10 +696,11 @@ class res_workers(QObject):
                 delta = file_stats.st_size - fsize_old
 
                 if delta > INCREMENT: 
-                    progress_old = progress
+                    #progress_old = progress
                     fsize_old = file_stats.st_size
                     self.set_progress(progress)
                     self.SigPupdate.emit()
+                    #print(f"File size: {file_stats.st_size}, expected filesize: {expected_filesize}, progress: {progress}")
                 if self.stopix is True:
                     break
         else:
@@ -709,10 +710,42 @@ class res_workers(QObject):
             time.sleep(0.1)
         source_fileHandle.close()    
         target_fileHandle.close()
+
+        #DIAGNOSTICS for developers:
+
+        #print("######## LOSHworker: File status after close:", not os.path.exists(targetfilename))
+
+        # # Prozessinformationen überprüfen
+        # process = psutil.Process(os.getpid())
+        # open_files = process.open_files()
+        # #print("Open files:", open_files)
+        # file_open = any(f.path == targetfilename for f in open_files)
+        # print(f"File status for '{targetfilename}' after close:", not file_open)
+        # file_open = any(f.path == sourcefilename for f in open_files)
+        # print(f"File status for '{sourcefilename}' after close:", not file_open)
+
+        # files_closed = False
+        # while not files_closed:
+        #     open_files = process.open_files()
+        #     open_file_paths = [f.path for f in open_files]
+        #     files_closed = all(filename not in open_file_paths for filename in targetfilename)
+        #     if not files_closed:
+        #         print(f"Waiting for files to close: {targetfilename}")
+        #         time.sleep(0.1)  # Kurz warten, bevor erneut überprüft wird
+        # files_closed = False
+        # while not files_closed:
+        #     open_files = process.open_files()
+        #     open_file_paths = [f.path for f in open_files]
+        #     files_closed = all(filename not in open_file_paths for filename in sourcefilename)
+        #     if not files_closed:
+        #         print(f"Waiting for files to close: {sourcefilename}")
+        #         time.sleep(0.1)  # Kurz warten, bevor erneut überprüft wird
+
         print("#############Loshifter_worker finished##############")
         time.sleep(1)
         print("#############Loshifter_worker finished after sleep##############")
         self.SigFinishedLOshifter.emit()
+
 
 class resample_c(QObject):
     """_methods for resampling (= resampling controller)
@@ -896,6 +929,8 @@ class resample_c(QObject):
         :return: none 
         :rtype: none
         """
+        print("########Cleanup reached")
+        self.SigRelay.emit("cexex_resample",["reconnect_updateGUIelements",0])
         time.sleep(1)
         if self.m["emergency_stop"]:
             self.Sigincrscheduler.disconnect(self.res_scheduler)
@@ -926,6 +961,8 @@ class resample_c(QObject):
         else:
             self.logger.debug("cleanup: increment scheduler , NO emergency stop, tiggered either by sox or LOSHifter")
             self.Sigincrscheduler.emit()
+        print("########Cleanup finished")
+
 
     def merge2G_cleanup(self,input_file_list):
         """cleanup temp files after merge2G thread has finished
@@ -1054,8 +1091,6 @@ class resample_c(QObject):
         # plt.plot(tsus[-300:],np.real(phasescaler[-300:]),marker='o')
         # plt.show()
 ############################################
-
-
         self.LOsh_worker.set_starttrim(startcutoffset)
         self.LOsh_worker.set_ret("")
         self.LOsh_worker.set_tfname(target_fn )
@@ -1077,39 +1112,28 @@ class resample_c(QObject):
         self.Sigincrscheduler.connect(self.res_scheduler)
         #self.LOsh_worker.SigFinishedLOshifter.connect(lambda: self.Sigincrscheduler.emit()): --> cleanup()
         #z.B. schreibe die Referenz auf signal_state, damit sie der Scheduler dort abholen kann, schedule[n].["startsignal"] = diese Referenz
-        #self.LOsh_worker.SigPupdate.connect(lambda: resample_v.updateprogress_resampling(self)) #TODO: eher aus der Klasse view, könnte auch ausserhalb geschehen
         self.LOsh_worker.SigPupdate.connect(self.PupdateSignalHandler)
-        # self.LOsh_worker.SigFinishedLOshifter.connect(self.LOshthread.quit)
-        # self.LOsh_worker.SigFinishedLOshifter.connect(lambda: print("LOshworker SigFinished emitted, LOshthread quit started"))
-        # self.LOsh_worker.SigFinishedLOshifter.connect(self.LOsh_worker.deleteLater)
-        # self.LOshthread.finished.connect(self.LOshthread.deleteLater)
-        # self.LOshthread.finished.connect(lambda: self.cleanup())
-        # self.LOshthread.finished.connect(lambda: print("LOshthread finished; Cleanup must have been launched"))
+        self.LOsh_worker.SigFinishedLOshifter.connect(lambda: self.SigRelay.emit("cexex_resample",["disconnect_updateGUIelements",0]), type=Qt.DirectConnection)
+        #self.LOsh_worker.SigFinishedLOshifter.connect(lambda: print("LOshworker SigFinished emitted"), type=Qt.DirectConnection)
+        self.LOsh_worker.SigFinishedLOshifter.connect(lambda: QTimer.singleShot(0, self.LOshthread.quit))
+        #self.LOsh_worker.SigFinishedLOshifter.connect(lambda: print("LOshthread quit called"), type=Qt.DirectConnection)
+        self.LOsh_worker.SigFinishedLOshifter.connect(self.LOsh_worker.deleteLater, type=Qt.DirectConnection)
+        #self.LOsh_worker.SigFinishedLOshifter.connect(lambda: print("LOshworker deleteLater called"), type=Qt.DirectConnection)
 
-        self.LOsh_worker.SigFinishedLOshifter.connect(lambda: print("LOshworker SigFinished emitted"))
-        self.LOsh_worker.SigFinishedLOshifter.connect(self.LOshthread.quit)
-        self.LOsh_worker.SigFinishedLOshifter.connect(lambda: print("LOshthread quit called"))
-        self.LOsh_worker.SigFinishedLOshifter.connect(self.LOsh_worker.deleteLater)
-        self.LOsh_worker.SigFinishedLOshifter.connect(lambda: print("LOshworker deleteLater called"))
-
-        self.LOshthread.finished.connect(lambda: print("LOshthread finished signal emitted"))
-        self.LOshthread.finished.connect(self.LOshthread.deleteLater)
-        self.LOshthread.finished.connect(lambda: print("LOshthread deleteLater called"))
-        self.LOshthread.finished.connect(lambda: self.cleanup())
-        self.LOshthread.finished.connect(lambda: print("LOshthread finish cleanup called"))
-
-
-
+        #self.LOshthread.finished.connect(lambda: print("LOshthread finished signal emitted"), type=Qt.DirectConnection)
+        self.LOshthread.finished.connect(self.LOshthread.deleteLater, type=Qt.DirectConnection)
+        self.LOshthread.finished.connect(lambda: print("LOshthread deleteLater called"), type=Qt.DirectConnection)
+        self.LOshthread.finished.connect(lambda: self.cleanup(), type=Qt.DirectConnection)
+        self.LOshthread.finished.connect(lambda: print("LOshthread finish cleanup called"), type=Qt.DirectConnection)
         self.m["calling_worker"] = self.LOsh_worker 
         self.m["last_system_time"] = time.time()
-
 
         self.logger.debug("about to leave LOshifter actionmethod")
         #self.sys_state.set_status(system_state)
         time.sleep(0.0001)
         self.LOshthread.start()
         if self.LOshthread.isRunning():
-            self.logger.debug("LOsh thread started")
+            self.logger.debug("LOshifter thread started")
         time.sleep(0.01) # wait state so that the soxworker has already opened the file
         self.logger.debug("LOshifter action method sleep over")
 
@@ -1269,11 +1293,19 @@ class resample_c(QObject):
         #self.sys_state.set_status(self.m)
 
     def PupdateSignalHandler(self):
+        try:
+            self.LOsh_worker.SigPupdate.disconnect(self.PupdateSignalHandler)
+        except:
+            pass
         progress = self.m["calling_worker"].get_progress()
         self.m["progress"] = progress
         self.m["progress_source"] = "normal"
         self.logger.debug(f"PupdateSiganlHandler: progress: {progress}, emit SigUpdateGUIelements")
         self.SigUpdateGUIelements.emit() #TODO replace by Relay method ?
+        try:
+            self.LOsh_worker.SigPupdate.connect(self.PupdateSignalHandler)
+        except:
+            pass
 
     def Soxerrorhandler(self,errorstring):
 
@@ -1885,6 +1917,13 @@ class resample_v(QObject):
         if _key.find("cexex_resample") == 0  or _key.find("cexex_all_") == 0:
             # if  _value[0].find("plot_spectrum") == 0:
             #     self.plot_spectrum(0,_value[1])
+            if  _value[0].find("reconnect_updateGUIelements") == 0:
+                self.logger.debug("reconnect updateGUIelements")
+                self.resample_c.SigUpdateGUIelements.connect(self.updateGUIelements)
+            if  _value[0].find("disconnect_updateGUIelements") == 0:
+                self.logger.debug("rxh: disconnect updateGUIelements")
+                self.resample_c.SigUpdateGUIelements.disconnect(self.updateGUIelements)
+                
             if  _value[0].find("updateGUIelements") == 0:
                 self.logger.debug("call updateGUIelements")
                 self.updateGUIelements()    
@@ -1990,7 +2029,6 @@ class resample_v(QObject):
         :rtype: Boolean
         """
         st = time.time()
-        #print(f"resampler: updateGUIelements {self.m['progress']}")
         self.logger.debug("resampler: updateGUIelements progress: %f", self.m['progress'] )
         self.gui.label_Filename_resample.setText(self.m["my_filename"] + self.m["ext"])
         self.gui.label_36.setStyleSheet("background-color: " + self.m["actionlabelbg"])
@@ -2026,7 +2064,6 @@ class resample_v(QObject):
         self.plot_spectrum_resample(self.m["spectrum_position"])
         et = time.time()
         self.logger.debug(f"resampler segment etime: {et-st} s: updateGUIelements")
-
 
     def reset_GUI(self):
         """
