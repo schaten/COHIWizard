@@ -14,6 +14,7 @@ import subprocess
 import shutil
 from PyQt5 import QtWidgets
 from matplotlib.patches import Rectangle
+from pathlib import Path
 #from SDR_wavheadertools_v2 import WAVheader_tools
 #import system_module as wsys
 from auxiliaries import auxiliaries as auxi
@@ -47,6 +48,7 @@ class resample_m(QObject):
         self.mdl["ext"] = ""
         self.mdl["fileopened"] = False
         self.mdl["fshift"] = 0
+        self.mdl["MAX_GAP"] = 300 #max time gap in seconds between subsequent recordings for merging in resampler
         # Create a custom logger
         logging.getLogger().setLevel(logging.DEBUG)
         # Erstelle einen Logger mit dem Modul- oder Skriptnamen
@@ -777,7 +779,7 @@ class resample_c(QObject):
     def __init__(self, resample_m):
         super().__init__()
         self.m = resample_m.mdl
-        self.MAX_GAP = 300 # seconds allowable between two subsequent source files
+        self.MAX_GAP = self.m["MAX_GAP"] # TODO: resolve double variables; seconds allowable between two subsequent source files300 # seconds allowable between two subsequent source files
         self.CHUNKSIZE = 1024**2 # data chunk size for reading/writing files
         #TODO: check condition early
         self.TEST = True
@@ -930,7 +932,7 @@ class resample_c(QObject):
         :return: none 
         :rtype: none
         """
-        print("########Cleanup reached")
+        #print("########Cleanup reached")
         self.SigRelay.emit("cexex_resample",["reconnect_updateGUIelements",0])
         time.sleep(1)
         if self.m["emergency_stop"]:
@@ -2746,6 +2748,7 @@ class resample_v(QObject):
         #TODO: alternativ: Gain wird als neuer Parameter bei plot spectrum eingeführt
         #TODO: Scrollbar des plot_spectrum wird aktuell mit Position nicht nachgezogen: core_methode die selbes Signal abonniert und nachzieht
 
+
     def cb_split2G_Button(self):
         #system_state = self.sys_state.get_status()
         #gui = system_state["gui_reference"] #TODO: --> self.gui
@@ -2791,6 +2794,63 @@ class resample_v(QObject):
         self.m["basename"] = self.gui.lineEdit_resample_targetnameprefix.text()
         self.resample_c.merge2G_new(reslist)
         self.gui.pushButton_resample_split2G.clicked.connect(self.cb_split2G_Button)
+
+
+
+    def check_listconsistency(self):
+        """check if all files in the list to be resampled have the same sampling parameters
+        check if the time gap between subsequent files is below a certain threshold
+
+        :parameters: none
+        :return: none
+        """
+        #return ##########TODO TODO TODO: remove after tests
+        lw = self.gui.listWidget_playlist_2
+        reslist_len = self.gui.listWidget_playlist_2.count()
+        item = lw.item(0)
+        filename_prev, ext = os.path.splitext(item.text())
+        filename = self.m["my_dirname"] + '/' + item.text()
+        check_wavheader_prev = WAVheader_tools.get_sdruno_header(self,filename)
+        offending_items = []
+        error = False
+        for reslist_ix in range(1,reslist_len):
+            item = lw.item(reslist_ix)
+            tfilename, ext = os.path.splitext(item.text())
+            filename = self.m["my_dirname"] + '/' + item.text()
+            check_wavheader = WAVheader_tools.get_sdruno_header(self,filename)
+            #"resampler: updateGUIelements progress: %f", self.m['progress'] 
+            if not (check_wavheader_prev['wFormatTag'] == check_wavheader['wFormatTag']):
+                offending_items.append("FormatTag, ")
+            if not (check_wavheader_prev["nSamplesPerSec"] == check_wavheader["nSamplesPerSec"]):
+                offending_items.append("Sampling Rate, ")
+            if not (check_wavheader_prev['nBlockAlign'] == check_wavheader['nBlockAlign']):
+                offending_items.append("Byter per Sample, ")
+            if not (check_wavheader_prev["centerfreq"] == check_wavheader["centerfreq"]):
+                offending_items.append("LO frequency, ")
+            if not (check_wavheader_prev['sdrtype_chckID'] == check_wavheader['sdrtype_chckID']):
+                offending_items.append("SDR_CheckID, ")
+            if len(offending_items) > 0:
+                errortext = "mismatch in wav-parameter settings between files " +  filename_prev + " and " + tfilename + ",\n mismatch in: \n" + str(offending_items)
+                auxi.standard_errorbox(errortext + "\n \n Please correct resampling file list !")
+                error = True
+                break            
+            timegap = check_wavheader['starttime_dt'] - check_wavheader_prev['stoptime_dt']
+            if timegap.seconds > self.m["MAX_GAP"]:
+                errortext = "time gap between start-time of " + tfilename + "and stop-time of " + filename_prev + ": \n" + str(timegap.seconds) + " seconds. \nMax allowed = " + str(self.m["MAX_GAP"]) + " seconds"
+                auxi.standard_errorbox(errortext + "\n \n Please correct resampling file list !")
+                error = True
+                break
+            check_wavheader_prev = check_wavheader
+            filename_prev = tfilename
+        if error:
+            return False
+        return True
+
+
+            # get starttime, stoptime; diff(starttime, stoptime (previous) < threshold ?)
+            
+
+
 
     def cb_resample(self):
         """_summary_
@@ -2859,6 +2919,10 @@ class resample_v(QObject):
         self.gui.pushButton_resample_cancel.clicked.connect(self.resample_c.cancel_resampling)
         #loop through file list to be resampled
         reslist_len = self.gui.listWidget_playlist_2.count()
+        if not self.check_listconsistency():
+            self.SigActivateOtherTabs.emit("Resample","activate",[])
+            self.enable_resamp_GUI_elemets(True)
+            return
         if reslist_len > 0: #file list has at least one entry
             if self.m["reslist_ix"] < reslist_len:    #file list not yet finished
                 self.logger.debug(f"cb_resample: reslist index: {self.m['reslist_ix']}")
