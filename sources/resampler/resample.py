@@ -14,7 +14,6 @@ import subprocess
 import shutil
 from PyQt5 import QtWidgets
 from matplotlib.patches import Rectangle
-from pathlib import Path
 #from SDR_wavheadertools_v2 import WAVheader_tools
 #import system_module as wsys
 from auxiliaries import auxiliaries as auxi
@@ -577,7 +576,6 @@ class res_workers(QObject):
     def soxworker_terminate(self):
         self.stopix = True
 
-
     def LO_shifter_worker(self):
         self.stopix = False
         t_DATABLOCKSIZE = 1024*4*256
@@ -757,7 +755,6 @@ class resample_c(QObject):
     the state machine is defined via the scheduler method which needs to be configured and launched via a signal from the main thread (here the main GUI)
     """
     __slots__ = ["LOvars"]
-    #SigUpdateGUI = pyqtSignal(str)
     SigGP = pyqtSignal()
     SigResample = pyqtSignal()
     SigAccomplish = pyqtSignal()
@@ -768,8 +765,6 @@ class resample_c(QObject):
     SigCancel = pyqtSignal()
     SigResampGUIReset = pyqtSignal()
     SigActivateOtherTabs = pyqtSignal(str,str,object)
-    #SigSyncTabs = pyqtSignal(object)
-    #SigUpdateGUI = pyqtSignal()
     SigUpdateGUIelements = pyqtSignal()
     SigDisconnectExternalMethods = pyqtSignal(str)
     SigConnectExternalMethods = pyqtSignal(str)
@@ -1997,7 +1992,6 @@ class resample_v(QObject):
         if ctrl.find("cancel_resampling") == 0:
             self.gui.pushButton_resample_cancel.clicked.connect(self.resample_c.cancel_resampling)
         else:
-            self.logger.debug("error in resample_v, ext_meth_connect ")
             self.logger.error("error in resample_v, ext_meth_connect ")
 
     def GUI_reset_status(self):
@@ -2286,30 +2280,25 @@ class resample_v(QObject):
         """
         gets checkstatus of button for selecting all items of reslist and calls the respective handler
         :param: none
-        :type: none
-        ...
-        :raises: none
-        ...
         :return: none
-        :rtype: none
         """
         if self.gui.checkBox_merge_selectall.isChecked():
             self.selectall_reslist()
         else:
             self.unselectall_reslist()
 
-    def selectall_reslist(self): #TODO: not yet used
+    def selectall_reslist(self):
         """
+        handler for toggle_mergeselectall:
         selects all items of the resampling sourcelist_2 and moves to the resampling-list in playlist_2
         :param: none
-        :type: none
-        ...
-        :raises: none
-        ...
         :return: none
-        :rtype: none
         """
-        self.gui.listWidget_playlist_2.clear()
+        #TODO: remove commented lines after tests; state 13-06-2024
+        # for row in range(self.gui.listWidget_playlist_2.count()):
+        #     item = self.gui.listWidget_playlist_2.item(row)
+        #     self.gui.listWidget_sourcelist_2.addItem(item.text())
+        # self.gui.listWidget_playlist_2.clear()
         for row in range(self.gui.listWidget_sourcelist_2.count()-1):
             item = self.gui.listWidget_sourcelist_2.item(row)
             self.gui.listWidget_playlist_2.addItem(item.text())
@@ -2317,21 +2306,21 @@ class resample_v(QObject):
 
     def unselectall_reslist(self): #TODO: not yet used
         """
+        handler for toggle_mergeselectall:
         unselects all items of the resampling playlist_2 and moves to the sourcelist_2
         :param: none
-        :type: none
-        ...
-        :raises: none
-        ...
         :return: none
-        :rtype: none
         """ 
-        self.gui.listWidget_sourcelist_2.clear()
+        #TODO: remove commented lines after tests; state 13-06-2024
+        # # for row in range(self.gui.listWidget_sourcelist_2.count()-1):
+        #     item = self.gui.listWidget_sourcelist_2.item(row)
+        #     self.gui.listWidget_playlist_2.addItem(item.text())
+        # self.gui.listWidget_sourcelist_2.clear()
         for row in range(self.gui.listWidget_playlist_2.count()):
             item = self.gui.listWidget_playlist_2.item(row)
             self.gui.listWidget_sourcelist_2.addItem(item.text())
-        item = QtWidgets.QListWidgetItem()
-        self.gui.listWidget_sourcelist_2.addItem(item)
+        #item = QtWidgets.QListWidgetItem()
+        #self.gui.listWidget_sourcelist_2.addItem(item)
         self.gui.listWidget_playlist_2.clear()
 
 
