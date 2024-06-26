@@ -16,7 +16,7 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from scipy import signal as sig
 from scipy.ndimage.filters import median_filter
 import pandas as pd  #TODO: check, not installed under this name
@@ -730,7 +730,8 @@ class annotate_c(QObject):
             xax[1:,0] = np.linspace(0,duration,num = np.shape(B)[0]-1)
             D = np.concatenate((xax,B),1)
             try:
-                plt.clear()
+                plt.cla()
+                plt.clf()
             except:
                 pass
             plt.plot(xax[1:],B[1:,:])
