@@ -2,11 +2,11 @@ import numpy as np
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
-from PyQt5 import QtGui
+#from PyQt5 import QtGui
 from scipy import signal as sig
 from scipy.ndimage.filters import median_filter
 #from SDR_wavheadertools_v2 import WAVheader_tools
-from auxiliaries import WAVheader_tools
+#from auxiliaries import WAVheader_tools
 import time
 from auxiliaries import auxiliaries as auxi
 import logging

@@ -107,16 +107,6 @@ class starter(QMainWindow):
 #
 # then access all elements of Ui_ISO_testgui by tabUI_Player.elements
 
-# generate Player from individual widget
-# tab_player_widget = QtWidgets.QWidget()
-# tab_player_widget.setObjectName("tab_player_widget")
-# then call:
-# from player_widget import Ui_player_widget
-# tabUI_Player = Ui_player_widget() in __main__
-# tabUI_Player.setupUi(tab_player_widget)
-# gui.gui.tabWidget.addTab(tab_player_widget, "")
-#
-# then access all elements of Ui_ISO_testgui by tabUI_Player.elements
 
 class core_m(QObject):
     """core model class, holds all common module variables as a dictionary self.mdl

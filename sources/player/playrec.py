@@ -7,29 +7,29 @@ Created on Feb 24 2024
 import time
 #from datetime import timedelta
 from socket import socket, AF_INET, SOCK_STREAM
-from struct import pack, unpack
+from struct import unpack
 import numpy as np
 import os
 import pytz
 from pathlib import Path, PureWindowsPath
-from PyQt5 import QtWidgets, QtCore, QtGui
+from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5 import QtGui
-from scipy import signal as sig
+#from scipy import signal as sig
 import yaml
 import shutil
+import pyqtgraph as pg
+import logging
 from auxiliaries import auxiliaries as auxi
-from auxiliaries import WAVheader_tools, timer_worker
-import random
+from auxiliaries import WAVheader_tools
 from datetime import datetime
 import datetime as ndatetime
 from player import stemlab_control
 #import matplotlib.pyplot as plt
 #from stemlab_control import StemlabControl
-import pyqtgraph as pg
-import logging
+
 
 class playrec_worker(QObject):
     """ worker class for data streaming thread from PC to STEMLAB
@@ -1790,6 +1790,9 @@ class playrec_v(QObject):
         self.plot_widget.setBackground('w')
         self.xdata = np.linspace(0, 10, 100)
         self.ydata = np.sin(self.xdata)
+        ymin = -120
+        ymax = 0
+        self.plot_widget.setYRange(ymin, ymax)
         self.curve = self.plot_widget.plot(self.xdata, self.ydata)
         #xdata = np.linspace(0, 10, 100)
         #ydata = np.sin(xdata)
@@ -1843,27 +1846,18 @@ class playrec_v(QObject):
             #sys_state.set_status(system_state)
             return False
         
-
         ####TODO: check spectrum for debugging
       
         if self.m["SPECDEBUG"]:
-            #self.cref["ax"].clear()
             spr = np.abs(np.fft.fft(cv))
             N = len(spr)
-            spr = np.fft.fftshift(spr)/N
+            spr = np.fft.fftshift(spr)/N/scl
             flo = self.m["wavheader"]['centerfreq'] - self.m["wavheader"]['nSamplesPerSec']/2
             freq0 = np.linspace(0,self.m["wavheader"]['nSamplesPerSec'],N)
             freq = freq0 + flo
-            datax = freq
+            datax = (np.floor(freq/1000))
             datay = 20*np.log10(spr)
             self.curve.setData(datax, datay)
-            #self.plot_widget.plot(datax, datay)
-
-            #self.cref["ax"].plot(datax,datay, '-')
-            #self.cref["ax"].tick_params(axis='both', which='major', labelsize=6)
-            #self.cref["ax"].set_xlabel('frequency (Hz)')
-            #self.cref["ax"].set_ylabel('amplitude (dB)')
-            #self.cref["canvas"].draw()
 
         if self.m["TEST"]:
             return
