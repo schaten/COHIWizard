@@ -7,7 +7,7 @@ from PyQt5.QtCore import *
 from PyQt5 import QtGui
 import datetime as ndatetime
 import logging
-import signal
+#import signal
 import psutil
 import os 
 import subprocess

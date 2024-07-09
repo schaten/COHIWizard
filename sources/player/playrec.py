@@ -541,7 +541,7 @@ class playrec_c(QObject):
         if self.m["TEST"] is False:
             if self.stemlabcontrol.sdrserverstart(self.m["sdr_configparams"]) is False:
                 self.SigRelay.emit("cexex_playrec",["reset_GUI",0]) #TODO remove after tests
-                self.SigRelay.emit("cexex_playrec",["reset_playerbuttongoup",0])
+                self.SigRelay.emit("cexex_playrec",["reset_playerbuttongroup",0])
                 return False
             self.logger.info(f'play_manager configparams: {self.m["sdr_configparams"]}')
             if self.stemlabcontrol.config_socket(self.m["sdr_configparams"]):
@@ -844,7 +844,7 @@ class playrec_c(QObject):
                     self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
                     self.cb_Butt_STOP()
                     self.SigRelay.emit("cexex_playrec",["reset_GUI",0]) #TODO remove after tests
-                    self.SigRelay.emit("cexex_playrec",["reset_playerbuttongoup",0])
+                    self.SigRelay.emit("cexex_playrec",["reset_playerbuttongroup",0])
                     return()
                 if self.m["wavheader"]['sdrtype_chckID'].find('rcvr') > -1:
                     self.m["readoffset"] = 86
@@ -890,7 +890,7 @@ class playrec_c(QObject):
                 self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
                 self.cb_Butt_STOP()
                 self.SigRelay.emit("cexex_playrec",["reset_GUI",0]) #TODO remove after tests
-                self.SigRelay.emit("cexex_playrec",["reset_playerbuttongoup",0])
+                self.SigRelay.emit("cexex_playrec",["reset_playerbuttongroup",0])
                
         else:
             #no next file,no endless loop --> stop player
@@ -924,14 +924,14 @@ class playrec_c(QObject):
             self.m["fileopened"] = False ###CHECK
             self.SigRelay.emit("cm_all_",["fileopened",False])
             #self.SigRelay.emit("cexex_playrec",["reset_GUI",0]) #TODO remove after tests
-            self.SigRelay.emit("cexex_playrec",["reset_playerbuttongoup",0])
+            self.SigRelay.emit("cexex_playrec",["reset_playerbuttongroup",0])
             return
         else:
             self.playrec_tworker.stop_loop()
         if self.m["TEST"] is False:
             self.stemlabcontrol.sdrserverstop()
         self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
-        self.SigRelay.emit("cexex_playrec",["reset_playerbuttongoup",0])
+        self.SigRelay.emit("cexex_playrec",["reset_playerbuttongroup",0])
         self.SigRelay.emit("cexex_all_",["reset_GUI",0])
         #TODO TODO TODO: activate other tabs
         self.SigActivateOtherTabs.emit("Player","activate",[])
@@ -1219,15 +1219,17 @@ class playrec_v(QObject):
             #target_datetime = current_datetime.addSecs(hours * 3600 + minutes * 60 + seconds)
             # Differenz berechnen
             remaining_time = current_datetime.secsTo(self.target_datetime)
+            self.gui.lineEditCurTime.setText(str(time.strftime("%H:%M:%S", time.gmtime(remaining_time))))
+            
             #print(f"playrec countdown residual time : {remaining_time}")
             if remaining_time == 0:
                 self.playrec_c.cb_Butt_STOP()
             return
+        countdown =  self.gui.playrec_RECSTART_dateTimeEdit.dateTime().toPyDateTime() - datetime.now()
         if self.gui.playrec_radioButton_RECAUTOSTART.isChecked():
-            countdown =  self.gui.playrec_RECSTART_dateTimeEdit.dateTime().toPyDateTime() - datetime.now()
-            self.gui.lineEditCurTime.setText(str(countdown).split('.')[0])
-            #print(countdown.total_seconds())
+            print(countdown.total_seconds())
             if countdown.total_seconds() <= 0:
+                self.gui.lineEditCurTime.setText("")
                 self.cb_Butt_REC()
                 self.gui.playrec_radioButton_RECAUTOSTART.setChecked(False)
                 self.gui.playrec_label_REC_duration.setStyleSheet("background-color : yellow")
@@ -1236,6 +1238,10 @@ class playrec_v(QObject):
                 font.setPointSize(14)
                 self.gui.playrec_label_REC_duration.setFont(font)
                 self.toggleRecAutostart()
+            else:
+                self.gui.lineEditCurTime.setText(str(countdown).split('.')[0])
+
+            
             
     def blinkrec(self):
         if self.m["recstate"] == False:
@@ -1354,7 +1360,7 @@ class playrec_v(QObject):
         if _key.find("cexex_playrec") == 0  or _key.find("cexex_all_") == 0:
             if  _value[0].find("updateGUIelements") == 0:
                 self.updateGUIelements()
-            if  _value[0].find("reset_playerbuttongoup") == 0:
+            if  _value[0].find("reset_playerbuttongroup") == 0:
                 self.reset_playerbuttongroup()
             if  _value[0].find("reset_GUI") == 0:
                 self.reset_GUI()
@@ -1715,6 +1721,8 @@ class playrec_v(QObject):
         font.setPointSize(14)
         self.gui.playrec_label_REC_duration.setFont(font)
         self.playrec_c.recordingsequence()
+        self.reftime = datetime.now()
+        
         #self.m["recstate"] = True
 
     def reset_playerbuttongroup(self):
@@ -1757,6 +1765,7 @@ class playrec_v(QObject):
         self.gui.label_32.setStyleSheet("background-color : lightgrey")
         self.gui.label_32.setEnabled(False)
         self.m["playlist_active"] = False
+        self.gui.lineEditCurTime.setText("")
 
     def indicate_bufoverflow(self):
         """_indicate if during recording a buffer underflow occurred

@@ -7,10 +7,10 @@
 #self.menubar = QtWidgets.QMenuBar(MainWindow)
 #pyinstaller --icon=COHIWizard_ico4.ico –F COHIWizard.py
 #pyuic5 -x  COHIWizard_GUI_v10.ui -o COHIWizard_GUI_v10.py
-# For reducing to RFCorder: place the following just before the line with 
+# For reducing to RFCorder: disable import of all addon packages except resample
 #check if sox is installed so as to throw an error message on resampling, if not
 #        self.soxlink = "https://sourceforge.net/projects/sox/files/sox/14.4.2/"
-#Bei Änderungen des Gridlayouts und Neuplazierung der canvas:
+#Bei Änderungen des Gridlayouts und Neuplatzierung der canvas:
 #self.generate_canvas(self,self.gui.gridLayout_5,[4,0,7,4],[-1,-1,-1,-1],self.Tabref["Resample"])
 #in init_Tabref()
 # in the GUI init method:
@@ -1094,6 +1094,7 @@ if __name__ == '__main__':
     from wavheader_editor import wavheader_editor
     from yaml_editor import yaml_editor
     from annotator import annotate
+    from synthesizer import synthesizer
     gui.show()
 
     #TODOTODO TODO: this is an individual entry in __main__ for including the plaer Tab with an individual GUI ISO_testgui.py/ui
@@ -1177,6 +1178,17 @@ if __name__ == '__main__':
         a = gui.gui.tabWidget.addTab(tab_resampler_widget, "")
         gui.gui.tabWidget.setTabText(a,"Resampler")
 
+    if 'synthesizer' in sys.modules: #(c) aktiviere neuen Tab; 
+        from synthesizer import synthesizer_widget
+        tabUI_synthesizer = synthesizer_widget.Ui_synthesizer_widget()######TODO TODO TODO: change acc to indivitial widgets rather than one big GUI
+        tab_synthesizer_widget = QtWidgets.QWidget()
+        tab_synthesizer_widget.setObjectName("tab_synthesizer_widget")
+        tab_synthesizer_widget.setWindowTitle("synthesizer")
+        tab_synthesizer_widget.setWindowIconText("synthesizer")
+        tabUI_synthesizer.setupUi(tab_synthesizer_widget)
+        a = gui.gui.tabWidget.addTab(tab_synthesizer_widget, "")
+        gui.gui.tabWidget.setTabText(a,"Synthesizer")
+
     #########################################################################################################################
     #ZUgriff auf elements of tabUI_Player via tabUI_Player instance ! not gui.gui.
 
@@ -1242,13 +1254,23 @@ if __name__ == '__main__':
     #if 'resampler_module_v5' in sys.modules:
     if 'resampler' in sys.modules: #(d) Instanzierung, referenzierung und connecting für neuen Tab; 
         resample_m = resample.resample_m() #TODO: wird gui in _m jemals gebraucht ? ich denke nein !
-        resample_c = resample.resample_c(resample_m) #TODO: replace sys_state
-        #resample_v = rsmp.resample_v(xcore_v.gui,resample_c, resample_m) #TODO: replace sys_state
-        resample_v = resample.resample_v(tabUI_Resampler,resample_c,resample_m) #ZUM TESTEN FREISCHALTEN
+        resample_c = resample.resample_c(resample_m)
+        resample_v = resample.resample_v(tabUI_Resampler,resample_c,resample_m)
         tab_dict["list"].append("resample")
         tab_dict["tabname"].append("Resampler")
         resample_v.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
         resample_c.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
+
+    if 'synthesizer' in sys.modules: #(d) Instanzierung, referenzierung und connecting für neuen Tab; 
+        synthesizer_m = synthesizer.synthesizer_m() #TODO: wird gui in _m jemals gebraucht ? ich denke nein !
+        synthesizer_c = synthesizer.synthesizer_c(synthesizer_m)
+        synthesizer_v = synthesizer.synthesizer_v(tabUI_synthesizer,synthesizer_c,synthesizer_m)
+        tab_dict["list"].append("synthesizer")
+        tab_dict["tabname"].append("synthesizer")
+        synthesizer_v.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
+        synthesizer_c.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
+
+    ###  ADD NEW MODULE TABDICTSYNTESIS HERE ### 
 
     page = xcore_v.gui.tabWidget.findChild(QWidget, "tab_configuration")  ###TODO TODO TODO: remove after complete reconfiguration
     c_index = xcore_v.gui.tabWidget.indexOf(page)
@@ -1305,7 +1327,6 @@ if __name__ == '__main__':
         for tabitem2 in tab_dict["list"]:
             eval(tabitem1 + "_v.SigRelay.connect(" + tabitem2 + "_v.rxhandler)")
             xcore_v.logger.debug(f' {tabitem1 + "_v.SigRelay.connect(" + tabitem2 + "_v.rxhandler)"}')
-    
 
     #make tab dict visible to core module
     xcore_v.tab_dict = tab_dict 
@@ -1324,9 +1345,6 @@ if __name__ == '__main__':
     # Annotate UI: Scan und Annotate Button Fontsize 10
     # Player: Inactivate Playlist Button, when no file loaded, reset to base state when file closed
     #
-    # check why loading of file takes so long:
-    # look at logfile: GUI update in view_spectra is called 3x !!!!!!!!!!!!!!!!!!!!!!!!!!
-    # reason unknown
     # lon process = ann_spectrum: is that really necessary, unless annotation takes place ?
     #
     # check after file load if annotaton file is complete; if yes release yml editor pushbutton self.SigRelay.emit("cexex_yamleditor",["setWriteyamlButton",True])
