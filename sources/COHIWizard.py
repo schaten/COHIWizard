@@ -1088,7 +1088,8 @@ if __name__ == '__main__':
     from auxiliaries import WAVheader_tools
     from auxiliaries import auxiliaries as auxi
     from auxiliaries import timer_worker as tw
-    from player import playrec  ######TODO TODO TODO: import only on demand via config file
+    from player import playrec
+    ######TODO TODO TODO: the following import only on demand via config file
     from resampler import resample
     from spectralviewer import view_spectra
     from wavheader_editor import wavheader_editor
@@ -1295,7 +1296,8 @@ if __name__ == '__main__':
     #view_spectra_v.SigSyncGUIUpdatelist.connect(win.generate_GUIupdaterlist)
     #resample_v.SigUpdateOtherGUIs.connect(xcore_v.sendupdateGUIs)    #TODO TODO TODO schwer zu finden, sollte so nicht connected werden
     resample_c.SigUpdateGUIelements.connect(resample_v.updateGUIelements)
-    xcore_v.SigUpdateOtherGUIs.connect(view_spectra_v.updateGUIelements)
+    if 'spectralviewer' in sys.modules:
+        xcore_v.SigUpdateOtherGUIs.connect(view_spectra_v.updateGUIelements)
     resample_v.SigUpdateOtherGUIs.connect(xcore_v.updateGUIelements)
 
     #TODO: check what to do if tab_names do not exist any more because tabWidget is empty or rudimentary ?

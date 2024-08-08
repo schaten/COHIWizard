@@ -1,5 +1,6 @@
 #IMPORT WHATEVER IS NEEDED
 from PyQt5.QtWidgets import *
+
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5 import QtGui
@@ -104,6 +105,33 @@ class waveditor_c(QObject):
     #         return true_nextfilename
         
 
+# class MyDelegate(QStyledItemDelegate):
+#     def createEditor(self, parent, option, index):
+#         editor = QPlainTextEdit(parent)
+#         editor.ensureCursorVisible()
+#         return editor
+
+#     def setEditorData(self, editor, index):
+#         text = index.model().data(index, Qt.EditRole)
+#         editor.setPlainText(text)
+
+#     def setModelData(self, editor, model, index):
+#         model.setData(index, editor.toPlainText(), Qt.EditRole)
+
+class MyDelegate(QStyledItemDelegate):
+    def createEditor(self, parent, option, index):
+        editor = QLineEdit(parent)
+        editor.setMaxLength(10000)
+        editor.setMinimumWidth(500)
+        return editor
+
+    def setEditorData(self, editor, index):
+        text = index.model().data(index, Qt.EditRole)
+        editor.setText(text)
+
+    def setModelData(self, editor, model, index):
+        model.setData(index, editor.text(), Qt.EditRole)
+
 class waveditor_v(QObject):
     """_view methods for resampling module
     TODO: gui.wavheader --> something less general ?
@@ -138,6 +166,7 @@ class waveditor_v(QObject):
         self.gui.tableWidget_basisfields.setEnabled(False)
         self.gui.tableWidget_starttime.setEnabled(False)
         self.gui.tableWidget_3.setEnabled(False)
+        #self.gui.tableWidget_3.
         self.gui.label_Filename_WAVHeader.setText('')
         self.gui.pushButton_subtract.clicked.connect(lambda: self.calculate_timediff("subtract"))
         self.gui.pushButton_add.clicked.connect(lambda: self.calculate_timediff("add"))
@@ -379,12 +408,38 @@ class waveditor_v(QObject):
         # write other info to table 3 (strings)                    
         self.gui.tableWidget_3.item(2, 0).setText(start_str)
         self.gui.tableWidget_3.item(1, 0).setText(str(self.m["wavheader"]['sdrtype_chckID']))
-        self.gui.tableWidget_3.item(0, 0).setText(str(self.m["wavheader"]['nextfilename']))
-        
+        self.gui.tableWidget_3.item(0, 0).setText(str((self.m["wavheader"]['nextfilename'])).rstrip('\x00'))
+        self.gui.tableWidget_3.item(0, 0).setFlags(self.gui.tableWidget_3.item(0, 0).flags() | Qt.ItemIsEditable)
+        self.gui.tableWidget_3.setItemDelegateForColumn(0, MyDelegate(self.gui.tableWidget_3))
+        #self.gui.tableWidget_3.setItemDelegateForColumn(0, self.create_delegate())
+
+        self.gui.tableWidget_3.cellClicked.connect(self.scroll_to_end)
+        #clean_string = original_string.rstrip('\x00')
         duration = (self.m["wavheader"]["stoptime_dt"] - self.m["wavheader"]["starttime_dt"]).seconds
         self.gui.tableWidget_3.item(4, 0).setText(str(duration))
         duration_bytes = self.m["wavheader"]['data_nChunkSize'] / self.m["wavheader"]['nBlockAlign'] / self.m["wavheader"]['nSamplesPerSec']
         self.gui.tableWidget_3.item(5, 0).setText(str(duration_bytes))
+
+    def create_delegate(self):
+        editor = QLineEdit()
+        #editor.setReadOnly(True)  # Optional, wenn du es nicht bearbeitbar machen möchtest
+        return editor
+    
+    def scroll_to_end(self, row, column):
+        #print(f"itemindices: {row}, {column}")
+        item = self.gui.tableWidget_3.item(row, column)
+        #item.setFlags(item.flags() | Qt.ItemIsEditable)
+        self.gui.tableWidget_3.item(row, column).setFlags(self.gui.tableWidget_3.item(row, column).flags() | Qt.ItemIsEditable)
+        if item:
+            self.gui.tableWidget_3.cellClicked.disconnect()  # Trenne das Signal
+            # Setze den Cursor an das Ende des Textes
+            self.gui.tableWidget_3.editItem(item)  # Aktiviert den Bearbeitungsmodus
+            editor = self.gui.tableWidget_3.cellWidget(row, column)
+            if editor:
+                editor.setCursorPosition(len(item.text()))
+                #editor.ensureCursorVisible()
+                editor.setMinimumWidth(1000) 
+            self.gui.tableWidget_3.cellClicked.connect(self.scroll_to_end)
 
     def check_consistency(self,item,dtype,label):
         typetab = {"long": [-2147483648, 2147483647], "ulong": [0, 4294967295], 

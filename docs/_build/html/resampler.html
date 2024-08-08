@@ -192,36 +192,6 @@ MAXGAP is set by set_maxgap()</p>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="resampler.resample.res_workers.SigFinished">
-<span class="sig-name descname"><span class="pre">SigFinished</span></span><a class="headerlink" href="#resampler.resample.res_workers.SigFinished" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="resampler.resample.res_workers.SigFinishedLOshifter">
-<span class="sig-name descname"><span class="pre">SigFinishedLOshifter</span></span><a class="headerlink" href="#resampler.resample.res_workers.SigFinishedLOshifter" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="resampler.resample.res_workers.SigFinishedmerge2G">
-<span class="sig-name descname"><span class="pre">SigFinishedmerge2G</span></span><a class="headerlink" href="#resampler.resample.res_workers.SigFinishedmerge2G" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="resampler.resample.res_workers.SigMergeerror">
-<span class="sig-name descname"><span class="pre">SigMergeerror</span></span><a class="headerlink" href="#resampler.resample.res_workers.SigMergeerror" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="resampler.resample.res_workers.SigPupdate">
-<span class="sig-name descname"><span class="pre">SigPupdate</span></span><a class="headerlink" href="#resampler.resample.res_workers.SigPupdate" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="resampler.resample.res_workers.SigSoxerror">
-<span class="sig-name descname"><span class="pre">SigSoxerror</span></span><a class="headerlink" href="#resampler.resample.res_workers.SigSoxerror" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
 <dt class="sig sig-object py" id="resampler.resample.res_workers.centershift">
 <span class="sig-name descname"><span class="pre">centershift</span></span><a class="headerlink" href="#resampler.resample.res_workers.centershift" title="Link to this definition"></a></dt>
 <dd></dd></dl>
@@ -358,8 +328,8 @@ the state machine is defined via the scheduler method which needs to be configur
 <dt class="sig sig-object py" id="resampler.resample.resample_c.accomplish_resampling">
 <span class="sig-name descname"><span class="pre">accomplish_resampling</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_c.accomplish_resampling" title="Link to this definition"></a></dt>
 <dd><p>_after sox-resampling a wav_fileheader is inserted into the resampled dat-File.
-Afterwards  and temporary files are removed
-this method is called via a signal from the soxwriter worker function sox_writer() after finishing the process
+Afterwards temporary files are removed
+this method is called via a signal from the scheduler after finishing a resampling process with sox
 communication occurs only via state variables, as this function is called asynchronously on signal emission</p>
 <blockquote>
 <div><p>self.m[“tgt_wavheader”]: wavheader to be inserted
@@ -371,15 +341,10 @@ self.m[“file_to_be_removed”]: temporary file to be removed if it exists</p>
 <dt class="field-odd">Param<span class="colon">:</span></dt>
 <dd class="field-odd"><p>none</p>
 </dd>
-<dt class="field-even">Type<span class="colon">:</span></dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>none</p>
 </dd>
 </dl>
-<p>…
-:raises
-…
-:return: none
-:rtype: none</p>
 </dd></dl>
 
 <dl class="py method">
@@ -470,21 +435,44 @@ fileopened = false and Relay to all other tabs</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="resampler.resample.resample_c.res_scheduler">
 <span class="sig-name descname"><span class="pre">res_scheduler</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_c.res_scheduler" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>handles workflow according to schedule defined in self.m[“res_schedule”]</p>
+<p>the next action according to self.m[“r_sch_counter”] is configured and triggered</p>
+<p>configure text and blinking state of the GUI action label</p>
+<img alt="../../source/images/res_scheduler.svg" src="../../source/images/res_scheduler.svg" /><dl class="field-list simple">
+<dt class="field-odd">Param<span class="colon">:</span></dt>
+<dd class="field-odd"><p>none</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>none</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="resampler.resample.resample_c.resamp_configheader">
 <span class="sig-name descname"><span class="pre">resamp_configheader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wavheader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header_config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_c.resamp_configheader" title="Link to this definition"></a></dt>
-<dd><p>inserts fields specified in header_config into wavheader
-:param: wavheader: dict of type wav_header (see main gui)
-:type: dict
-:param: header_config: list of fiels: wFormatTag; data_chkID, sdrtype_chckID, sdr_nChunksize, nBitsPerSample, nBlockalign, readoffset, centerfreq
-:type: dict
-…
-:raises: none
-…
-:return: mod_header (format wav_header)
-:rtype: dict</p>
+<dd><p>inserts fields specified in header_config into wavheader</p>
+<dl class="field-list">
+<dt class="field-odd">Param<span class="colon">:</span></dt>
+<dd class="field-odd"><p>wavheader: dict of type wav_header (see main gui)</p>
+</dd>
+<dt class="field-even">Type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+<dt class="field-odd">Param<span class="colon">:</span></dt>
+<dd class="field-odd"><p>header_config with fields</p>
+<p>wFormatTag; data_chkID, sdrtype_chckID, sdr_nChunksize, nBitsPerSample, nBlockalign, readoffset, centerfreq</p>
+</dd>
+<dt class="field-even">Type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>mod_header (format wav_header)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -563,76 +551,6 @@ do not use for files with BPS = 24bit; use version schedule_B24(self) in that ca
 <span class="sig-name descname"><span class="pre">LOvars</span></span><a class="headerlink" href="#resampler.resample.resample_c.LOvars" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="resampler.resample.resample_c.SigAccomplish">
-<span class="sig-name descname"><span class="pre">SigAccomplish</span></span><a class="headerlink" href="#resampler.resample.resample_c.SigAccomplish" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="resampler.resample.resample_c.SigActivateOtherTabs">
-<span class="sig-name descname"><span class="pre">SigActivateOtherTabs</span></span><a class="headerlink" href="#resampler.resample.resample_c.SigActivateOtherTabs" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="resampler.resample.resample_c.SigCancel">
-<span class="sig-name descname"><span class="pre">SigCancel</span></span><a class="headerlink" href="#resampler.resample.resample_c.SigCancel" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="resampler.resample.resample_c.SigConnectExternalMethods">
-<span class="sig-name descname"><span class="pre">SigConnectExternalMethods</span></span><a class="headerlink" href="#resampler.resample.resample_c.SigConnectExternalMethods" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="resampler.resample.resample_c.SigDisconnectExternalMethods">
-<span class="sig-name descname"><span class="pre">SigDisconnectExternalMethods</span></span><a class="headerlink" href="#resampler.resample.resample_c.SigDisconnectExternalMethods" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="resampler.resample.resample_c.SigGP">
-<span class="sig-name descname"><span class="pre">SigGP</span></span><a class="headerlink" href="#resampler.resample.resample_c.SigGP" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="resampler.resample.resample_c.SigLOshift">
-<span class="sig-name descname"><span class="pre">SigLOshift</span></span><a class="headerlink" href="#resampler.resample.resample_c.SigLOshift" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="resampler.resample.resample_c.SigProgress">
-<span class="sig-name descname"><span class="pre">SigProgress</span></span><a class="headerlink" href="#resampler.resample.resample_c.SigProgress" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="resampler.resample.resample_c.SigRelay">
-<span class="sig-name descname"><span class="pre">SigRelay</span></span><a class="headerlink" href="#resampler.resample.resample_c.SigRelay" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="resampler.resample.resample_c.SigResampGUIReset">
-<span class="sig-name descname"><span class="pre">SigResampGUIReset</span></span><a class="headerlink" href="#resampler.resample.resample_c.SigResampGUIReset" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="resampler.resample.resample_c.SigResample">
-<span class="sig-name descname"><span class="pre">SigResample</span></span><a class="headerlink" href="#resampler.resample.resample_c.SigResample" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="resampler.resample.resample_c.SigTerminate_Finished">
-<span class="sig-name descname"><span class="pre">SigTerminate_Finished</span></span><a class="headerlink" href="#resampler.resample.resample_c.SigTerminate_Finished" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="resampler.resample.resample_c.SigUpdateGUIelements">
-<span class="sig-name descname"><span class="pre">SigUpdateGUIelements</span></span><a class="headerlink" href="#resampler.resample.resample_c.SigUpdateGUIelements" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="resampler.resample.resample_c.Sigincrscheduler">
-<span class="sig-name descname"><span class="pre">Sigincrscheduler</span></span><a class="headerlink" href="#resampler.resample.resample_c.Sigincrscheduler" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -642,11 +560,6 @@ do not use for files with BPS = 24bit; use version schedule_B24(self) in that ca
 <dl class="py attribute">
 <dt class="sig sig-object py" id="resampler.resample.resample_m.None">
 <span class="sig-name descname"><span class="pre">None</span></span><a class="headerlink" href="#resampler.resample.resample_m.None" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="resampler.resample.resample_m.SigModelXXX">
-<span class="sig-name descname"><span class="pre">SigModelXXX</span></span><a class="headerlink" href="#resampler.resample.resample_m.SigModelXXX" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -692,15 +605,55 @@ the reference to the canvas object is written to self.cref
 <dt class="sig sig-object py" id="resampler.resample.resample_v.cb_resample">
 <span class="sig-name descname"><span class="pre">cb_resample</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.cb_resample" title="Link to this definition"></a></dt>
 <dd><p>_summary_
-VIEW: cb of Tab resampler
-:return: _description_
-:rtype: _type_</p>
+slot method when pressing the ‘resample’ button.</p>
+<ol class="arabic simple">
+<li><p>handling of errors and inconsistencies:
+- sox not available
+- filepath not opened
+- inconsistent wav-headers in files of resampling list
+- inconsistent time information in wav headers</p></li>
+<li><p>handling of the resampling list: 
+- identify next item
+- highlight next item
+- handle cutting information
+- modify wavheaders on cutting
+- select processing schedule according to LO shifting, SR selection, source resolution, cutting requests
+- trigger next scheduler pipeline</p></li>
+<li><p>handle auto merge to series of 2GB files after resampling</p></li>
+<li><p>handle emergency exit (cancel)</p></li>
+</ol>
+<img alt="../../source/images/cb_resample.svg" src="../../source/images/cb_resample.svg" /><dl class="field-list simple">
+<dt class="field-odd">Param<span class="colon">:</span></dt>
+<dd class="field-odd"><p>none</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if successful, False else</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Boolean</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="resampler.resample.resample_v.cb_split2G_Button">
 <span class="sig-name descname"><span class="pre">cb_split2G_Button</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.cb_split2G_Button" title="Link to this definition"></a></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.check_listconsistency">
+<span class="sig-name descname"><span class="pre">check_listconsistency</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.check_listconsistency" title="Link to this definition"></a></dt>
+<dd><p>check if all files in the list to be resampled have the same sampling parameters
+check if the time gap between subsequent files is below a certain threshold</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p>none</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>none</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="resampler.resample.resample_v.enable_resamp_GUI_elemets">
@@ -867,14 +820,10 @@ updates resampler list whenever the playlist Widget is changed.
 <dl class="py method">
 <dt class="sig sig-object py" id="resampler.resample.resample_v.selectall_reslist">
 <span class="sig-name descname"><span class="pre">selectall_reslist</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.selectall_reslist" title="Link to this definition"></a></dt>
-<dd><p>selects all items of the resampling sourcelist_2 and moves to the resampling-list in playlist_2
+<dd><p>handler for toggle_mergeselectall:
+selects all items of the resampling sourcelist_2 and moves to the resampling-list in playlist_2
 :param: none
-:type: none
-…
-:raises: none
-…
-:return: none
-:rtype: none</p>
+:return: none</p>
 </dd></dl>
 
 <dl class="py method">
@@ -912,25 +861,16 @@ updates resampler list whenever the playlist Widget is changed.
 <span class="sig-name descname"><span class="pre">toggle_mergeselectall</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.toggle_mergeselectall" title="Link to this definition"></a></dt>
 <dd><p>gets checkstatus of button for selecting all items of reslist and calls the respective handler
 :param: none
-:type: none
-…
-:raises: none
-…
-:return: none
-:rtype: none</p>
+:return: none</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="resampler.resample.resample_v.unselectall_reslist">
 <span class="sig-name descname"><span class="pre">unselectall_reslist</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.unselectall_reslist" title="Link to this definition"></a></dt>
-<dd><p>unselects all items of the resampling playlist_2 and moves to the sourcelist_2
+<dd><p>handler for toggle_mergeselectall:
+unselects all items of the resampling playlist_2 and moves to the sourcelist_2
 :param: none
-:type: none
-…
-:raises: none
-…
-:return: none
-:rtype: none</p>
+:return: none</p>
 </dd></dl>
 
 <dl class="py method">
@@ -983,36 +923,6 @@ communication occurs only via state variables, as this function is called asynch
 :return: none
 :rtype: none</p>
 </dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="resampler.resample.resample_v.SigActivateOtherTabs">
-<span class="sig-name descname"><span class="pre">SigActivateOtherTabs</span></span><a class="headerlink" href="#resampler.resample.resample_v.SigActivateOtherTabs" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="resampler.resample.resample_v.SigAny">
-<span class="sig-name descname"><span class="pre">SigAny</span></span><a class="headerlink" href="#resampler.resample.resample_v.SigAny" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="resampler.resample.resample_v.SigCancel">
-<span class="sig-name descname"><span class="pre">SigCancel</span></span><a class="headerlink" href="#resampler.resample.resample_v.SigCancel" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="resampler.resample.resample_v.SigRelay">
-<span class="sig-name descname"><span class="pre">SigRelay</span></span><a class="headerlink" href="#resampler.resample.resample_v.SigRelay" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="resampler.resample.resample_v.SigUpdateList">
-<span class="sig-name descname"><span class="pre">SigUpdateList</span></span><a class="headerlink" href="#resampler.resample.resample_v.SigUpdateList" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="resampler.resample.resample_v.SigUpdateOtherGUIs">
-<span class="sig-name descname"><span class="pre">SigUpdateOtherGUIs</span></span><a class="headerlink" href="#resampler.resample.resample_v.SigUpdateOtherGUIs" title="Link to this definition"></a></dt>
-<dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="resampler.resample.resample_v.viewvars">

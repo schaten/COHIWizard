@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5 import QtGui
+from pathlib import Path, PureWindowsPath
 import datetime as ndatetime
 import logging
 #import signal
@@ -21,6 +22,7 @@ from auxiliaries import WAVheader_tools
 
 #import auxiliaries as auxi
 
+#setKeyboardTracking(False)
 
 #TODO: define class resample_model()
 #transfer most of 'system_state'  and respective class instance gui_state to internal dictionary 
@@ -304,7 +306,7 @@ class res_workers(QObject):
                 with open(input_file, 'rb') as input_file:
                     self.logger.debug(f"next input file: {input_file} ")
                     fillchunk = bytes([0x00] * self.CHUNKSIZE)
-                    print(f"mergeworker file:{input_file}, fillchunksize: {self.CHUNKSIZE}")
+                    #print(f"mergeworker file:{input_file}, fillchunksize: {self.CHUNKSIZE}")
                     self.logger.debug(f"next input file: {input_file} , fillchunksize: {self.CHUNKSIZE}")
                     while True:
                         if self.stopix is True:
@@ -381,11 +383,11 @@ class res_workers(QObject):
                                 jx = 0
                                 while jx <1:
                                     try:
-                                        print(f"merge2Gworker try shutil {current_output_file_path} to {new_name}")
+                                        #print(f"merge2Gworker try shutil {current_output_file_path} to {new_name}")
                                         shutil.move(current_output_file_path, new_name)
                                     except:
                                         jx += 1
-                                        print(f"merge2Gworker renamefile trial {str(jx)}")
+                                        #print(f"merge2Gworker renamefile trial {str(jx)}")
                                         time.sleep(0.5)
                                 # if jx == 10:
                                 #     auxi.standard_errorbox("The output file was written, but the temp file could not be renamed for unknown reason . Please repeat the merging process")                                    
@@ -399,7 +401,7 @@ class res_workers(QObject):
                             #insert wav header
                             duration = (current_output_file_size - 216)/wavheader["nAvgBytesPerSec"]
                             if firstpass:
-                                print(f"merge2G: first write file reached, ix = 0")
+                                #print(f"merge2G: first write file reached, ix = 0")
                                 #TODO: write first starttime from cut_times
                                 firstpass = False
                                 stt = self.get_sttime_atrim()
@@ -417,7 +419,6 @@ class res_workers(QObject):
                             wavheader['filesize'] = current_output_file_size
                             wavheader['data_nChunkSize'] = wavheader['filesize'] - 208
                             nametrunk = f"{os.path.dirname(current_output_file_path)}/{basename}_{str(current_output_file_index)}_"
-                            next_nametrunk = f"{basename}_{str(current_output_file_index + 1)}_" 
                             aux = str(wavheader['starttime_dt'])
                             if aux.find('.') < 1:
                                 SDRUno_suff = aux
@@ -426,6 +427,10 @@ class res_workers(QObject):
                             SDRUno_suff = SDRUno_suff.replace(" ","_")
                             SDRUno_suff = SDRUno_suff.replace(":","")
                             SDRUno_suff = SDRUno_suff.replace("-","")
+                            new_name = nametrunk + str(SDRUno_suff) + '_' + str(int(np.round(wavheader["centerfreq"]/1000))) + 'kHz.wav'
+
+                            # generate name for the wav-header 'nextfilename'
+                            next_nametrunk = f"{basename}_{str(current_output_file_index + 1)}_" 
                             aux = str(wavheader['stoptime_dt'])
                             if aux.find('.') < 1:
                                 next_suff = aux
@@ -435,7 +440,6 @@ class res_workers(QObject):
                             next_suff = next_suff.replace(":","")
                             next_suff = next_suff.replace("-","")
                             next_name = next_nametrunk + str(next_suff) + '_' + str(int(np.round(wavheader["centerfreq"]/1000))) + 'kHz.wav'
-                            new_name = nametrunk + str(SDRUno_suff) + '_' + str(int(np.round(wavheader["centerfreq"]/1000))) + 'kHz.wav'
                             wavheader['nextfilename'] = next_name
                             WAVheader_tools.write_sdruno_header(self,current_output_file.name,wavheader,True) ##TODO TODO TODO Linux conf: self.m["f1"],self.m["wavheader"] must be in Windows format
 
@@ -453,7 +457,7 @@ class res_workers(QObject):
                             current_output_file_size = 0
                             current_output_file_index += 1
                             current_output_file_path = f"{output_file_prefix}_{current_output_file_index}.dat"
-                            print(f"merge2G next outputfile {current_output_file_path}")
+                            #print(f"merge2G next outputfile {current_output_file_path}")
                             current_output_file = open(current_output_file_path, 'wb')
                             current_output_file.write(b'\x00' * 216)  # Schreibe die ersten 216 Bytes mit Nullen
                         # write data to target file: if last file: nextfile = ''
@@ -485,7 +489,7 @@ class res_workers(QObject):
         tlr = subprocess.run('tasklist /NH | findstr /B /I sox', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell = True)
         output_lines = tlr.stdout.decode('cp1252').splitlines()
         pids = [line.split()[1] for line in output_lines]        
-        print(f"________ sox writer process ids: {pids}")
+        #print(f"________ sox writer process ids: {pids}")
         self.mutex.unlock()
         if os.path.exists(targetfilename) == True:
             #print("soxwriter: temp file has been created")
@@ -596,7 +600,7 @@ class res_workers(QObject):
         startoffset = self.get_starttrim()
         #print(f"LOshifter worker startoffset (bytes): {startoffset}")
         readoffset = self.get_readoffset()
-        source_fileHandle.seek(readoffset+startoffset, 1) #TODO: check if offset larger than filesize
+        source_fileHandle.seek(readoffset+startoffset, 1) #TODO TODO TODO:: check if is not overwritten by readsegment always; maybe no effect ! offset larger than filesize
         expected_filesize = self.get_expfs()
         readsegmentfn = self.get_readsegment()
         centershift = self.get_centershift()
@@ -604,7 +608,9 @@ class res_workers(QObject):
         sBPS = self.get_sBPS()
         tBPS = self.get_tBPS()
         wFormatTag = self.get_wFormatTag()
-        position = 0
+        #position = 0 #TODO TODO TODO for start cut: check new implementation after 15-07-2024
+        position = startoffset
+        #print(f"LOS Worker position: {position}")
         #TODO: replace following by new readsegment call
         #ret = readsegmentfn(position,DATABLOCKSIZE) #TODO: transfer to auxiliary block
         #TODO: , define new readsegment-function, generalize to tBPS rather than 32 bit
@@ -621,30 +627,33 @@ class res_workers(QObject):
         #print(expected_filesize)
         #try to calculate optimum data-blocksize fpr best phase transition between chuncks
         psc_locker = False
-        x = sSR/centershift # number of datapoints per period of centershifte
-        found_m = False
         DATABLOCKSIZE = t_DATABLOCKSIZE
-        rangestop = int(np.floor(DATABLOCKSIZE/2/x))
-        rangestart = int(rangestop - max(1,np.floor(10000/x)))
-        for k in range(rangestart, rangestop):  # Testen verschiedener k-Werte
-            m = round(k * x)  # number of datapoints for k periods = total number of datapoints
-            #target: test conditio for k-values near max datablock size
-            #dtatblocksize = 2*m = 2*k*x; m =ca DATABLOCKSIZE --> k = m/x, endk = DATABLOCKSIZE/2/x
-            #k range = np.floor(DATABLOCKSIZE/2/x) - 1000
-            #m = k*x is the number of samples needed for being sSR a near integer multiple of the centershift period
-            product = m / x # total number of periods
-            rounded_product = round(product, 3) # deviation of rounded # periods from integer
-            if abs(rounded_product - round(rounded_product)) <= 0.01:
-                found_m = True
-                break
-        if found_m and (2*m < t_DATABLOCKSIZE) and (m > 0):
-            #n = m * x
-            #fractmin = t_DATABLOCKSIZE /(2*m)
-            DATABLOCKSIZE = int(m*2)
-            psc_locker = True
-            print(f"LOshifter: set fixed phasescaler for acceleration, turn to fast mode, m = {m}, psc_locker: {psc_locker}, DATABLOCKSIZE: {DATABLOCKSIZE}")
+        if centershift > 1e-5:
+            x = sSR/centershift # number of datapoints per period of centershifte
+            found_m = False
+            rangestop = int(np.floor(DATABLOCKSIZE/2/x))
+            rangestart = int(rangestop - max(1,np.floor(10000/x)))
+            for k in range(rangestart, rangestop):  # Testen verschiedener k-Werte
+                m = round(k * x)  # number of datapoints for k periods = total number of datapoints
+                #target: test conditio for k-values near max datablock size
+                #dtatblocksize = 2*m = 2*k*x; m =ca DATABLOCKSIZE --> k = m/x, endk = DATABLOCKSIZE/2/x
+                #k range = np.floor(DATABLOCKSIZE/2/x) - 1000
+                #m = k*x is the number of samples needed for being sSR a near integer multiple of the centershift period
+                product = m / x # total number of periods
+                rounded_product = round(product, 3) # deviation of rounded # periods from integer
+                if abs(rounded_product - round(rounded_product)) <= 0.01:
+                    found_m = True
+                    break
+            if found_m and (2*m < t_DATABLOCKSIZE) and (m > 0):
+                #n = m * x
+                #fractmin = t_DATABLOCKSIZE /(2*m)
+                DATABLOCKSIZE = int(m*2)
+                psc_locker = True
+                print(f"LOshifter: set fixed phasescaler for acceleration, turn to fast mode, m = {m}, psc_locker: {psc_locker}, DATABLOCKSIZE: {DATABLOCKSIZE}")
+            else:
+                print("LOshifter cannot find optimum DATABLOCKSIZE for acceleration, turn to slow mode")
         else:
-            print("LOshifter cannot find optimum DATABLOCKSIZE for acceleration, turn to slow mode")
+            print(f"LOshifter: no shifting required, no blocksize optimization, just copy, startoffset = {readoffset + startoffset}")
         # ###TODO TODO TODO: remove !
         #DATABLOCKSIZE = t_DATABLOCKSIZE
         # print(f"LOshifter: final DATABLOCKSIZE: {DATABLOCKSIZE}")
@@ -755,11 +764,11 @@ class resample_c(QObject):
     the state machine is defined via the scheduler method which needs to be configured and launched via a signal from the main thread (here the main GUI)
     """
     __slots__ = ["LOvars"]
-    SigGP = pyqtSignal()
+    SigGP = pyqtSignal()  #TODO: seems never used
     SigResample = pyqtSignal()
     SigAccomplish = pyqtSignal()
     SigLOshift = pyqtSignal()
-    SigProgress = pyqtSignal()
+    SigProgress = pyqtSignal()   #TODO: seems not to be connected to any method
     Sigincrscheduler = pyqtSignal()
     SigTerminate_Finished = pyqtSignal()
     SigCancel = pyqtSignal()
@@ -767,7 +776,7 @@ class resample_c(QObject):
     SigActivateOtherTabs = pyqtSignal(str,str,object)
     SigUpdateGUIelements = pyqtSignal()
     SigDisconnectExternalMethods = pyqtSignal(str)
-    SigConnectExternalMethods = pyqtSignal(str)
+    SigConnectExternalMethods = pyqtSignal(str) ###TODO: never used ???
     SigRelay = pyqtSignal(str,object)
 
     #TODO: replace all gui by respective state references if appropriate
@@ -800,13 +809,14 @@ class resample_c(QObject):
     
     def resamp_configheader(self,wavheader,header_config):
         """inserts fields specified in header_config into wavheader
+
         :param: wavheader: dict of type wav_header (see main gui)
         :type: dict
-        :param: header_config: list of fiels: wFormatTag; data_chkID, sdrtype_chckID, sdr_nChunksize, nBitsPerSample, nBlockalign, readoffset, centerfreq
+        :param: header_config with fields
+         
+           wFormatTag; data_chkID, sdrtype_chckID, sdr_nChunksize, nBitsPerSample, nBlockalign, readoffset, centerfreq
+
         :type: dict
-        ...
-        :raises: none
-        ...
         :return: mod_header (format wav_header)
         :rtype: dict
         """
@@ -865,7 +875,7 @@ class resample_c(QObject):
             return False
         self.m["res_blinkstate"] = True
         output_file_prefix = self.m["out_dirname"] + self.m["mergeprefix"]
-        #TODO: check necessary diskfile for the filelist: get filesize of listfiles, add up, check
+        #TODO: check necessary diskspace for the filelist: get filesize of listfiles, add up, check
         # if resampler.checkdiskspace(, system_state["out_dirname"]) is False:
         #     return(False)
         self.logger.debug("merge2G: configure merge2G_ thread et al")
@@ -920,12 +930,7 @@ class resample_c(QObject):
             else: (normal operation):
                 hand over to scheduler by signalling
         :param: none
-        :type: none
-        ...
-        :raises: none
-        ...
         :return: none 
-        :rtype: none
         """
         #print("########Cleanup reached")
         self.SigRelay.emit("cexex_resample",["reconnect_updateGUIelements",0])
@@ -942,46 +947,46 @@ class resample_c(QObject):
             self.m["blinkstate"] = False
             self.m["actionlabel"] = "JOB DONE"
             self.m["actionlabelbg"] = "lightgray"
-            print("resampler merg2G_cleanup before SigProgress")
+            print("resampler_cleanup before SigProgress")
             self.m["blinking"] = False
             self.SigProgress.emit() #TODO ZODO TODO: no reaction !
             self.SigActivateOtherTabs.emit("Resample","activate",[])
-            #Therefore send a signal Siginactivate_except("resample") with the parameter indicating which tab should not be inactivated
-            #The inactivation of the rest should be done by core.view
             self.m["fileopened"] = False
             self.SigRelay.emit("cm_all_",["fileopened",False])  #TODO TODO TODO: das geht nicht
             self.m["list_out_files_resampled"] = []
             self.SigResampGUIReset.emit()
             self.SigRelay.emit("cexex_resample",["relay_toall_reset_GUI",0])
             self.m["cancelflag"] = False
-            #TODO TODO TODO: close and cleaup all temporary files in /out and /temp
+            #TODO TODO TODO: close and cleanup all temporary files in /out and /temp
 
         else:
             self.logger.debug("cleanup: increment scheduler , NO emergency stop, tiggered either by sox or LOSHifter")
             self.Sigincrscheduler.emit()
-        print("########Cleanup finished")
+        #print("########Cleanup finished")
 
 
     def merge2G_cleanup(self,input_file_list):
-        """cleanup temp files after merge2G thread has finished
+        """ reset GUI state after after merge2G thread has finished
+
+        (1) cleanup temp files 
+        (2) reset all model state variables relevant for resampling
+        (3) reset resampling Tab GUI elements
+        (4) send signal for resetting all other Tab GUIs
+        (5) send file closed info 
+
         :param: none
-        :type: none
-        ...
-        :raises: none
-        ...
         :return: none 
-        :rtype: none
         """
         if self.m["emergency_stop"]:
             #self.m["emergency_stop"] = False
             self.m["cancelflag"] = False
 
-            
         if self.m["merge2G_deleteoriginal"]:
             for input_file in input_file_list:
                 self.logger.debug(f"remove {input_file} if exists")
                 if os.path.exists(input_file) == True:
                     os.remove(input_file)
+
         self.m["clearlist"] = True
         #print("resampler merg2G_cleanup before SigUpdateGUIelements")
         self.logger.debug("merg2G_cleanup before SigUpdateGUIelements")
@@ -997,12 +1002,8 @@ class resample_c(QObject):
         self.m["blinking"] = False
         self.SigProgress.emit()
         self.SigActivateOtherTabs.emit("Resample","activate",[])
-        #Therefore send a signal Siginactivate_except("resample") with the parameter indicating which tab should not be inactivated
-        #The inactivation of the rest should be done by core.view
         self.m["fileopened"] = False
-        #print("resampler merg2G_cleanup before SigSyncTabs")
         self.logger.debug("merg2G_cleanup before SigSyncTabs")
-        #self.SigSyncTabs.emit(["test","resample","a","fileopened",False])
         self.SigRelay.emit("cm_all_",["fileopened",False])  #TODO TODO TODO: das geht nicht
         self.m["list_out_files_resampled"] = []
         self.SigResampGUIReset.emit()
@@ -1041,12 +1042,13 @@ class resample_c(QObject):
         self.LOsh_worker = res_workers()
         self.LOsh_worker.moveToThread(self.LOshthread)
         #TODO: generate stop and starttrim read offsets if appropriate
-        startcutoffset = 0 
+        startcutoffset = 0
+        #TODO: revert CUTPROJECT
         if self.m["starttrim"]:
-            #TODO: check if offset larger than filesize
-            startcutoffset = 216 + int(self.m["start_trim"].seconds*self.m["sSR"]*self.m["s_wavheader"]['nBlockAlign'])
+        #     #TODO: check if offset larger than filesize
+            startcutoffset = int(self.m["start_trim"].seconds*self.m["sSR"]*self.m["s_wavheader"]['nBlockAlign'])
             self.logger.debug(f'LOshifter: set starttrim = {self.m["start_trim"]} seconds to {startcutoffset} bytes ')
-        
+        #TODO: revert CUTPROJECT end
 ############################################# TEST SEQUENCE FOR LOSHIFT prescaler 
         # import matplotlib.pyplot as plt
         # t_DATABLOCKSIZE = 1024*4*256
@@ -1089,6 +1091,7 @@ class resample_c(QObject):
         # plt.plot(tsus[-300:],np.real(phasescaler[-300:]),marker='o')
         # plt.show()
 ############################################
+
         self.LOsh_worker.set_starttrim(startcutoffset)
         self.LOsh_worker.set_ret("")
         self.LOsh_worker.set_tfname(target_fn )
@@ -1105,7 +1108,7 @@ class resample_c(QObject):
         #self.LOsh_worker.set_readsegment(gui.readsegment_new)  #TODO: readsegment should be part of an aux module rather than gui (== core)
         self.LOsh_worker.set_readsegment(auxi.readsegment_new)
         self.LOsh_worker.set_sBPS(self.m["sBPS"])
-        print(f"LOshifter new: set sBPS: {self.m['sBPS']}")
+        #print(f"LOshifter new: set sBPS: {self.m['sBPS']}")
         self.LOshthread.started.connect(self.LOsh_worker.LO_shifter_worker)
         self.Sigincrscheduler.connect(self.res_scheduler)
         #self.LOsh_worker.SigFinishedLOshifter.connect(lambda: self.Sigincrscheduler.emit()): --> cleanup()
@@ -1225,15 +1228,16 @@ class resample_c(QObject):
         #soxstring = 'sox --norm=-3 -e ' + wFormatTag_TYPE + ' -t  ' + sox_filetype + ' -r ' + str(self.m["sSR"]) + ' -b '+ str(self.m["sBPS"]) + ' -c 2 ' + '"' + source_fn  + '"' + ' -e signed-integer -t raw -r ' + str(int(tSR)) + ' -b ' + str(self.m["tBPS"]) + ' -c 2 '  + '"' + target_fn  + '"' 
         soxstring = 'sox -e ' + wFormatTag_TYPE + ' -t  ' + sox_filetype + ' -r ' + str(self.m["sSR"]) + ' -b '+ str(self.m["sBPS"]) + ' -c 2 ' + '"' + source_fn  + '"' + ' -e signed-integer -t raw -r ' + str(int(tSR)) + ' -b ' + str(self.m["tBPS"]) + ' -c 2 '  + '"' + target_fn  + '"' + ' gain ' + str(self.m["resampling_gain"])
         trimextension =""
-        #include trim command if self.m["starttrim"] or self.m["stoptrim"] are True
-        if self.m["starttrim"]:
-            trimextension = " trim " + str(self.m["start_trim"])
-        if self.m["stoptrim"]:
-            trimextension = " trim 0 " + str(self.m["stop_trim_duration"]) 
-        if self.m["starttrim"] and self.m["stoptrim"]:
-            trimextension = " trim " + str(self.m["start_trim"]) + " " + str(self.m["stop_trim_reduced_duration"])
+        # #include trim command if self.m["starttrim"] or self.m["stoptrim"] are True
+        # if self.m["starttrim"]:
+        #     trimextension = " trim " + str(self.m["start_trim"])
+        # if self.m["stoptrim"]:
+        #     trimextension = " trim 0 " + str(self.m["stop_trim_duration"]) 
+        # if self.m["starttrim"] and self.m["stoptrim"]:
+        #     trimextension = " trim " + str(self.m["start_trim"]) + " " + str(self.m["stop_trim_reduced_duration"])
         #soxstring = soxstring + trimextension
-            #TODO: trim shift to LOSHIFTER et al before sox, sox is too complex
+        #TODO: trim shift to LOSHIFTER et al before sox, sox is too complex
+        #TODO TODO TODO: Check: starttrim is already pre-implemented in LOshifter, maybe only needs to be activated
         
         self.logger.debug(f"method resample: <<<<resampler: soxstring: {soxstring}")
         expected_filesize = self.m["t_filesize"]
@@ -1319,23 +1323,17 @@ class resample_c(QObject):
         
     def accomplish_resampling(self):
         """_after sox-resampling a wav_fileheader is inserted into the resampled dat-File.
-        Afterwards  and temporary files are removed
-        this method is called via a signal from the soxwriter worker function sox_writer() after finishing the process
+        Afterwards temporary files are removed
+        this method is called via a signal from the scheduler after finishing a resampling process with sox
         communication occurs only via state variables, as this function is called asynchronously on signal emission
                 self.m["tgt_wavheader"]: wavheader to be inserted
                 self.m["new_name"]: name to which the temporary targetfile (targetfilename) should be renamed after processing
                 self.m["targetfilename"]: complete target file path
                 self.m["file_to_be_removed"]: temporary file to be removed if it exists
+
         :param: none
-        :type: none
-        ...
-        :raises
-        ...
         :return: none
-        :rtype: none
         """
-        #system_state = self.sys_state.get_status()
-        #gui = self.sys_state["gui_reference"]
         schedule_objdict = self.m["schedule_objdict"]
         schedule_objdict["signal"]["accomplish"].disconnect(schedule_objdict["connect"]["accomplish"])
         time.sleep(0.1)
@@ -1362,11 +1360,36 @@ class resample_c(QObject):
         tgt_wavheader['data_nChunkSize'] = tgt_wavheader['filesize'] - 208
         tgt_wavheader['nSamplesPerSec'] = int(self.m["tSR"])
 
-        ###############TODOTODOTODO######################################################
-        #entferne nextfilename und korrigiere nAvgBytesPerSec
+        if len(self.m["nextfilename"]) > 0:
+            auxpath = Path(self.m["f1"]).parent.joinpath(self.m["nextfilename"]).as_posix()
+            nextwavheader = WAVheader_tools.get_sdruno_header(self,auxpath)
+            aux = str(nextwavheader['starttime_dt'])
+            if aux.find('.') < 1:
+                next_suff = aux
+            else:
+                next_suff = aux[:aux.find('.')]
+            next_suff = next_suff.replace(" ","_")
+            next_suff = next_suff.replace(":","")
+            next_suff = next_suff.replace("-","")
+            next_name = self.m["nextfilename"].rstrip(".wav") + "_resamp_" + str(next_suff) + '_' + str(int(np.round(tgt_wavheader["centerfreq"]/1000))) + 'kHz.wav'
+            next_name = Path(next_name).stem
+            tgt_wavheader['nextfilename'] = next_name + '.wav '
+        else:
+            tgt_wavheader['nextfilename'] = ""
+
+        #?? entferne nextfilename und korrigiere nAvgBytesPerSec
+
         header_config = [int(1),"data","auxi",int(164),self.m["tBPS"],int(self.m["tBPS"]/4),int(self.m["readoffset"]),int(self.m["tLO"])] #TODO check obsolete ?
         tgt_wavheader = self.resamp_configheader(tgt_wavheader,header_config)
         tgt_wavheader['nAvgBytesPerSec'] = int(tgt_wavheader['nSamplesPerSec']*int(self.m["tBPS"]/4))
+
+        #TODO revert cutting insert wav header info, if cutting requested 
+        if self.m["starttrim"]:
+            stt = self.m["starttime_after_trim"]       
+            tgt_wavheader["starttime"] = [stt.year, stt.month, 0, stt.day, stt.hour, stt.minute, stt.second, int(stt.microsecond/1000)] 
+        tgt_wavheader['nAvgBytesPerSec']
+        #TODO revert end
+
         ovwrt_flag = True
         time.sleep(1)
         WAVheader_tools.write_sdruno_header(self,target_fn,tgt_wavheader,ovwrt_flag) ##TODO TODO TODO Linux conf: self.m["f1"],self.m["wavheader"] must be in Windows format
@@ -1401,8 +1424,23 @@ class resample_c(QObject):
 
     
     def res_scheduler(self):
+        """
+        handles workflow according to schedule defined in self.m["res_schedule"]
+
+        the next action according to self.m["r_sch_counter"] is configured and triggered
+
+        configure text and blinking state of the GUI action label 
+
+        .. image:: ../../source/images/res_scheduler.svg
+
+        :param: none
+        :return: none
+        """
         #TODO: check if logsox.txt file contains error message
         #if yes: terminate running schedule and print error message
+
+        
+
 
         #system_state = self.sys_state.get_status()
                             ###################AKTUELLER HALTEPUNKT
@@ -1418,7 +1456,7 @@ class resample_c(QObject):
             #TODO: besser: cnt auf length(sch) setzen
             self.logger.debug(f"emergency exit, length (sch) = {len(sch)}")
             cnt = len(sch) - 1
-            sch[cnt]["action"] = 'terminate'#Obsolete, remove after tests
+            #sch[cnt]["action"] = 'terminate'#Obsolete, remove after tests
 
         self.Sigincrscheduler.disconnect(self.res_scheduler)##############TODOTODOTODO
         self.logger.debug("res_scheduler: reached scheduler")
@@ -1435,7 +1473,7 @@ class resample_c(QObject):
         self.m["t_filesize"] = sch[cnt]["t_filesize"]
         self.m["target_fn"] = self.m["temp_directory"] + "/temp_" + str(cnt) + '.dat' #<<< NEW vs LOshifter : filename automatism
 
-        fid = open(self.m["target_fn"], 'w')
+        fid = open(self.m["target_fn"], 'w') #?? why open and close imediately ??
         fid.close()
         if cnt == 0:
             self.m["accomp_label"] = False
@@ -1528,7 +1566,7 @@ class resample_c(QObject):
             schedule_objdict["signal"]["LOshift"].connect(schedule_objdict["connect"]["LOshift"])
             schedule_objdict["signal"]["LOshift"].emit()
         if sch[cnt]["action"].find('progress') == 0:
-            self.logger.debug("res_scheduler:  progressupdate rechaed, no action")
+            self.logger.debug("res_scheduler:  progressupdate reached, no action")
 
     def schedule_A(self):
         """_definition of schedule for simple resampling without LO shift
@@ -1818,12 +1856,16 @@ class resample_v(QObject):
         self.gui = gui #gui_state["gui_reference"]#system_state["gui_reference"]
         self.init_resample_ui() #TODO TODO TODO: activate after tests
         self.gui.radioButton_resgain.setChecked(False)
+        self.gui.checkBox_Cut.setChecked(False)
         #self.gui.label_8.setEnabled(False)  #TODO: maybe remove, Unidentified
         self.gui.pushButton_resample_cancel.clicked.connect(self.resample_c.cancel_resampling) #TODO: shift to a resample.view method
         self.resample_c.SigDisconnectExternalMethods.connect(self.ext_meth_disconnect)
-        self.resample_c.SigConnectExternalMethods.connect(self.ext_meth_connect)
+        self.resample_c.SigConnectExternalMethods.connect(self.ext_meth_connect) ###TODO: never used ???
         self.gui.listWidget_playlist_2.itemClicked.connect(self.reslist_itemselected) #TODO transfer to resemplar view
         self.gui.listWidget_playlist_2.itemChanged.connect(self.reslist_update)
+        #self.gui.listWidget_playlist_2.model().rowsInserted.connect(self.reslist_update)
+        self.gui.listWidget_playlist_2.model().rowsRemoved.connect(self.reslist_update)
+
         self.gui.checkBox_merge_selectall.clicked.connect(self.toggle_mergeselectall)
         self.gui.checkBox_merge_selectall.setEnabled(False)
         #self.sys_state.set_status(system_state)
@@ -1880,7 +1922,10 @@ class resample_v(QObject):
         self.gui.pushButton_resample_resample.clicked.connect(self.cb_Butt_resample)
         self.gui.comboBox_resample_targetSR.setCurrentIndex(5)
         self.gui.comboBox_resample_targetSR.currentIndexChanged.connect(lambda: self.plot_spectrum_resample(self.m["spectrum_position"]))
+        #TODO TODO TODO check: Keyboardtracking off bei Eingabe einer Zahl
+        #self.gui.lineEdit_resample_targetLO.setKeyboardTracking(False)
         self.gui.lineEdit_resample_targetLO.textChanged.connect(lambda: self.plot_spectrum_resample(self.m["spectrum_position"]))
+
         self.gui.radioButton_advanced_sampling.clicked.connect(lambda: self.toggle_advanced_sampling())
         self.gui.radioButton_resgain.clicked.connect(lambda: self.toggle_gain())
         self.gui.lineEdit_resample_targetLO.textChanged.connect(lambda: self.reformat_targetLOpalette)
@@ -1892,6 +1937,8 @@ class resample_v(QObject):
         self.gui.radioButton_resgain.setEnabled(True)
         self.gui.label_Filename_resample.setText('')
         self.gui.pushButton_resample_split2G.clicked.connect(self.cb_split2G_Button)
+        self.gui.checkBox_Cut.setEnabled(False)
+
         #self.gui.checkBox_writelog.clicked.connect(self.togglelogmodus) #TODO TODO TODO: logfilemodus anders implementieren
 
         #TODO TODO TODO: mache das targetfilenameprefix KONFIGURIERBAR ???
@@ -2100,13 +2147,14 @@ class resample_v(QObject):
         self.gui.label_36.setFont(QFont('arial',12))
         self.gui.label_36.setStyleSheet("background-color: lightgray")
         self.gui.radioButton_advanced_sampling.setChecked(False)
+        self.gui.checkBox_Cut.setChecked(False)
 
     def addplaylistitem(self):
         item = QtWidgets.QListWidgetItem()
         self.gui.listWidget_sourcelist_2.addItem(item)
 
     def fillplaylist(self):
-        playlist = []
+        #playlist = []
         ix = 0
         for x in os.listdir(self.m["my_dirname"]):
             if x.endswith(".wav"):
@@ -2129,8 +2177,8 @@ class resample_v(QObject):
             fnt = _item.font()
             fnt.setPointSize(11)
             _item.setFont(fnt)
-            playlist.append(self.m["f1"])
-            self.m["playlist"] = playlist
+            #playlist.append(self.m["f1"])
+            #self.m["playlist"] = playlist
         self.gui.listWidget_playlist_2.setEnabled(False)
         self.gui.listWidget_sourcelist_2.setEnabled(False)
 
@@ -2179,14 +2227,28 @@ class resample_v(QObject):
         :return: none
         :rtype: none
         """
+        self.gui.listWidget_playlist_2.itemChanged.disconnect(self.reslist_update)
         #print("#######!!!!!!!!!!!!!!    reslist_update !!!!!!!! ############")
         #print("reslist_update: resampling list updated")  
         self.logger.debug("reslist_update: resampling list updated")
+        #print("reslist is being updated")
         time.sleep(0.1)
         lw = self.gui.listWidget_playlist_2
+        if lw.count() < 1:
+            auxi.standard_errorbox("Resampling list is empty, please enter an item")
+            return
         reslist = []
         for x in range(lw.count()):
             item = lw.item(x)
+            #TODO: revert for CUTPROJECT
+            #checkfilename = self.m["my_dirname"] + '/' + item.text()
+            #checkwavheader = WAVheader_tools.get_sdruno_header(self,checkfilename)
+            # if not WAVheader_tools.check_wavheader_timeconsistency(self, checkwavheader):
+            #     auxi.standard_errorbox(f"Filesize of file {item.text()} deviates from the one which is expected from starttime/stoptime: Check wavheader, file cannot be processed")
+            #     #print("This file does not have a known SDR wav header - cannot be loaded")
+            #     self.logger.error("Filesize of first list entry file smaller than expected from starttime/stoptime")
+            #     return(False)
+            #TODO: revert for CUTPROJECT end
             reslist.append(item.text())
         self.m["reslist"] = reslist
         #print(f"reslist_update:reslist: {reslist}")
@@ -2204,14 +2266,17 @@ class resample_v(QObject):
 
         #self.gui.showfilename()
         ############SET CORRECT FILENAME
+        self.m["ext"] = Path(self.m["f1"]).suffix
+        self.m["my_filename"] = Path(self.m["f1"]).stem
         self.gui.label_Filename_resample.setText(self.m["my_filename"] + self.m["ext"])
         #self.gui.label_Filename_resample.setText(self.my_filename + self.ext)
-
+        
         self.plot_spectrum_resample(0)
 
         #TODO: fetch starttime of the first file and stoptime of the last file to copy the values to the starttime_cut and stoptime_cut windows of the GUI
         wavheader1 = WAVheader_tools.get_sdruno_header(self,(self.m["my_dirname"] + '/' + self.m["reslist"][0]))
         wavheader2 = WAVheader_tools.get_sdruno_header(self,(self.m["my_dirname"] + '/' + self.m["reslist"][-1]))
+        
         if not wavheader1:
             auxi.standard_errorbox("This file does not have a known SDR wav header - cannot be loaded")
             #print("This file does not have a known SDR wav header - cannot be loaded")
@@ -2234,6 +2299,10 @@ class resample_v(QObject):
         #print("reslist_update:resampler view reslist terminated")
         self.logger.debug("reslist_update:resampler view reslist terminated")
         #self.sys_state.set_status(system_state)
+        #TODO TODO TODO: activate whole Wizard to last listentry
+        item = lw.item(lw.count()-1)
+        self.reslist_itemselected(item)
+        self.gui.listWidget_playlist_2.itemChanged.connect(self.reslist_update)
 
 
     def reslist_itemselected(self,item):
@@ -2262,7 +2331,6 @@ class resample_v(QObject):
 
         #################TODO: implement next line newly with Relay after tarnsfer of wavedit module 
         #self.gui.fill_wavtable()
-        self.SigRelay.emit("cexex_waveditor",["updateGUIelements",0])
         ##################DONE
         self.update_resample_GUI()
         #TODO: update also spectra view
@@ -2271,6 +2339,7 @@ class resample_v(QObject):
         self.SigRelay.emit("cm_all_",["f1",self.m["f1"]])
         self.SigRelay.emit("cm_all_",["wavheader",self.m["wavheader"]])
         self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])      ####################RELAY PATTERN############
+        self.SigRelay.emit("cexex_waveditor",["updateGUIelements",0])
 
 
         #self.plot_spectrum_resample(0)
@@ -2598,9 +2667,10 @@ class resample_v(QObject):
             self.gui.listWidget_playlist_2.setEnabled(True)
             self.gui.listWidget_playlist_2.clear()
             #self.gui.timeEdit_resample_stopcut.setEnabled(True)
-            #self.gui.timeEdit_resample_startcut.setEnabled(True)
+            self.gui.timeEdit_resample_startcut.setEnabled(True)
             self.gui.checkBox_merge_selectall.setEnabled(True)
             self.gui.lineEdit_resample_targetnameprefix.setEnabled(True)
+            self.gui.checkBox_Cut.setEnabled(True)
             # gui.ui.lineEdit_resample_Gain.setEnabled(True)
             # gui.ui.radioButton_resgain.setEnabled(True)
         else:
@@ -2608,8 +2678,9 @@ class resample_v(QObject):
             self.gui.listWidget_playlist_2.setEnabled(False)
             self.gui.timeEdit_resample_stopcut.setEnabled(False)
             self.gui.timeEdit_resample_startcut.setEnabled(False)
-            self.gui.lineEdit_resample_Gain.setEnabled(True)
+            self.gui.lineEdit_resample_Gain.setEnabled(False)
             self.gui.checkBox_merge_selectall.setEnabled(False)
+            self.gui.checkBox_Cut.setEnabled(False)
             #self.gui.lineEdit_resample_targetnameprefix.setEnabled(False)
             # gui.ui.radioButton_resgain.setChecked(False)
             # gui.ui.radioButton_resgain.setEnabled(False)
@@ -2630,6 +2701,7 @@ class resample_v(QObject):
         self.gui.listWidget_playlist_2.clear()
         self.gui.lineEdit_resample_Gain.setText("0")
         self.gui.radioButton_advanced_sampling.setChecked(False)
+        self.gui.checkBox_Cut.setChecked(False)
         self.gui.checkBox_merge_selectall.setChecked(False)
         self.gui.radioButton_resgain.setChecked(False)
         self.gui.checkBox_AutoMerge2G.setChecked(False)
@@ -2791,7 +2863,8 @@ class resample_v(QObject):
         check if the time gap between subsequent files is below a certain threshold
 
         :parameters: none
-        :return: none
+        :return: True if successful, False if inconsistency
+        :rtype: Boolean
         """
         #return ##########TODO TODO TODO: remove after tests
         lw = self.gui.listWidget_playlist_2
@@ -2802,6 +2875,7 @@ class resample_v(QObject):
         check_wavheader_prev = WAVheader_tools.get_sdruno_header(self,filename)
         offending_items = []
         error = False
+        #TODO range from 1, because else inconsistencies occur in casse of single files
         for reslist_ix in range(1,reslist_len):
             item = lw.item(reslist_ix)
             tfilename, ext = os.path.splitext(item.text())
@@ -2818,6 +2892,7 @@ class resample_v(QObject):
                 offending_items.append("LO frequency, ")
             if not (check_wavheader_prev['sdrtype_chckID'] == check_wavheader['sdrtype_chckID']):
                 offending_items.append("SDR_CheckID, ")
+
             if len(offending_items) > 0:
                 errortext = "mismatch in wav-parameter settings between files " +  filename_prev + " and " + tfilename + ",\n mismatch in: \n" + str(offending_items)
                 auxi.standard_errorbox(errortext + "\n \n Please correct resampling file list !")
@@ -2835,17 +2910,68 @@ class resample_v(QObject):
             return False
         return True
 
+    def check_cut_time_consistency(self):
+        """checks the first and the last file in the list to be resampled
+        checks if the start/stoptime entries in the wave header are compatible with the filesize. 
+        If not then this may cause a program crash during file cutting (advanced resampling method)
 
-            # get starttime, stoptime; diff(starttime, stoptime (previous) < threshold ?)
-            
-
-
+        :parameters: none
+        :return: True if successful, False if inconsistency
+        :rtype: Boolean
+        """
+        lw = self.gui.listWidget_playlist_2
+        reslist_len = self.gui.listWidget_playlist_2.count()
+        item = lw.item(0)
+        #tfilename, ext = os.path.splitext(item.text())
+        filename = self.m["my_dirname"] + '/' + item.text()
+        check_wavheader = WAVheader_tools.get_sdruno_header(self,filename)
+        if not WAVheader_tools.check_wavheader_timeconsistency(filename, check_wavheader):
+            errortext = "start and stoptime entries in the wavheader of the first file to be resampled are incompatible with the filesize."
+            errortext += "The discrepancy is " + str(np.abs(check_wavheader['diff']  - check_wavheader['true_datachunksize'])) 
+            errortext += "Bytes. This prevents correct cutting of the file (may cause a program crash). Thus please either correct the wav-header with the aid of the wavheader-editor,"
+            errortext += "or uncheck the cutting option (cut start/stop)"
+            auxi.standard_errorbox(errortext)
+            return False
+        item = lw.item(reslist_len-1)
+        #tfilename, ext = os.path.splitext(item.text())
+        filename = self.m["my_dirname"] + '/' + item.text()
+        check_wavheader = WAVheader_tools.get_sdruno_header(self,filename)
+        if not WAVheader_tools.check_wavheader_timeconsistency(filename, check_wavheader):
+            errortext = "error"
+            # errortext = "start and stoptime entries in the wavheader of the last file to be resampled are incompatible with the filesize."
+            # errortext  += "The discrepancy is " + str(np.abs(check_wavheader['diff']  - check_wavheader['true_datachunksize'])) 
+            # errortext  += "Bytes. This prevents correct cutting of the file (may cause a program crash). Thus please correct the wav-header with the aid of the wavheader-editor"
+            auxi.standard_errorbox(errortext)
+            return False
+        return True
 
     def cb_resample(self):
         """_summary_
-        VIEW: cb of Tab resampler
-        :return: _description_
-        :rtype: _type_
+        slot method when pressing the 'resample' button. 
+
+        (1) handling of errors and inconsistencies:
+            - sox not available
+            - filepath not opened
+            - inconsistent wav-headers in files of resampling list
+            - inconsistent time information in wav headers
+
+        (2) handling of the resampling list: 
+            - identify next item
+            - highlight next item
+            - handle cutting information
+            - modify wavheaders on cutting
+            - select processing schedule according to LO shifting, SR selection, source resolution, cutting requests
+            - trigger next scheduler pipeline
+
+        (3) handle auto merge to series of 2GB files after resampling
+
+        (4) handle emergency exit (cancel)
+
+        .. image:: ../../source/images/cb_resample.svg
+
+        :param: none
+        :return: True if successful, False else
+        :rtype: Boolean
         """
         #inactivate all tabs except own and View spectra
         self.SigActivateOtherTabs.emit("Resample","inactivate",["Resample"])
@@ -2872,7 +2998,7 @@ class resample_v(QObject):
             time.sleep(0.1)
             self.m["fileopened"] = False
             self.gui.listWidget_playlist_2.itemChanged.connect(self.reslist_update)
-
+            #TODO TODO TODO: also remove operation reconnect
             self.m["list_out_files_resampled"] = []
             self.GUI_reset_status()
             return False
@@ -2908,10 +3034,25 @@ class resample_v(QObject):
         self.gui.pushButton_resample_cancel.clicked.connect(self.resample_c.cancel_resampling)
         #loop through file list to be resampled
         reslist_len = self.gui.listWidget_playlist_2.count()
+        #TODO: revert for CUTPROJECT: Dieser Teil war schon vorher da ! Belassen !
         if not self.check_listconsistency():
             self.SigActivateOtherTabs.emit("Resample","activate",[])
             self.enable_resamp_GUI_elemets(True)
-            return
+            #self.resample_c.merge2G_cleanup()
+            ########TODO TODO TODO better errorhandler; reset all resampler functions, complete list etc
+            return False
+        if self.gui.checkBox_Cut.isChecked() and not self.check_cut_time_consistency():
+            self.SigActivateOtherTabs.emit("Resample","activate",[])
+            self.enable_resamp_GUI_elemets(True)     
+            self.resample_c.merge2G_cleanup()
+        # revert for CUTPROJECT end
+        #TODO: revert for CUTPROJECT
+
+            # if not WAVheader_tools.check_wavheader_timeconsistency(filename, check_wavheader):
+            #     offending_items.append("filesize is inconsistent with wavheader starttime/stoptime, ")
+        # revert for CUTPROJECT end
+
+
         if reslist_len > 0: #file list has at least one entry
             if self.m["reslist_ix"] < reslist_len:    #file list not yet finished
                 self.logger.debug(f"cb_resample: reslist index: {self.m['reslist_ix']}")
@@ -2928,18 +3069,37 @@ class resample_v(QObject):
                 #set filename in all other tabs: CHECK: maybe necessary in view spectra but not necessarily in others ?
                 #self.SigSyncTabs.emit(["dum","resample","a","my_filename",self.m["my_filename"]])
                 #self.SigSyncTabs.emit(["dum","resample","a","ext",self.m["ext"]])
+                try:
+                    self.m["nextfilename"] = lw.item(self.m["reslist_ix"]+1).text()
+                except:
+                    self.m["nextfilename"] = ""
                 self.SigRelay.emit("cm_all_",["my_filename",self.m["my_filename"]])
                 self.SigRelay.emit("cm_all_",["ext",self.m["ext"]])
                 
                 self.SigUpdateOtherGUIs.emit()
 
-                # TODO: check for cutting information
-                if self.m["reslist_ix"] == 0:
+                # TODO TODO TODO: check for cutting information, new values provided by getCuttime:
+                # self.m["stop_trim_duration"]
+                # self.m["stop_trim_reduced_duration"]
+                # self.m["start_trim"] = (startcut - self.m["reslist_starttime1"]): time offset after cutting i PyDateTime format 
+                # self.m["starttime_after_trim"] =  in PyDateTime format = start trim time as entered in GUI
+                ###TODO: CHECK: this check is also done in reslist_update 
+                if (self.m["reslist_ix"] == 0) and self.gui.checkBox_Cut.isChecked():
                     self.m["starttrim"] = True
                     _valid,errortext = self.getCuttime()
-                if self.m["reslist_ix"] == reslist_len-1:
+                    #TODO TODO TODO: set label for signalling to accomplish_resample() that this is the first list file
+                    #TODO TODO TODO: react to _valid; if False: display errortext and leave resampling
+                if (self.m["reslist_ix"] == reslist_len-1) and self.gui.checkBox_Cut.isChecked():
                     self.m["stoptrim"] = True
                     _valid,errortext = self.getCuttime()
+                    #TODO TODO TODO: react to _valid; if False: display errortext and leave resampling
+                #TODO: the info for entry in tgt wavheader is available from getCuttime as Py DateTime objects:
+                # self.m["stop_trim_duration"] = (stopcut - self.m["reslist_starttime2"])
+                # self.m["start_trim"] = (startcut - self.m["reslist_starttime1"])
+                # self.m["starttime_after_trim"] = startcut
+                # TODO: info must be converted to time entry array acc to starttime, stoptime
+                # this can be done in accomplish
+
                 #TODO: check must be done wrt complementary ime (stop, start) of the same file, in a list they are different --> wavheadr info important
             else: #file list has been finished finished
                 self.m["reslist_ix"] = 0
@@ -2969,7 +3129,7 @@ class resample_v(QObject):
                     self.SigUpdateOtherGUIs.emit()
                     self.SigActivateOtherTabs.emit("Resample","activate",[])
                     self.gui.listWidget_playlist_2.itemChanged.connect(self.reslist_update)
-                    if not self.gui.checkBox_AutoMerge2G.isChecked():
+                    if not self.gui.checkBox_AutoMerge2G.isChecked():  ##not tracked in flowchart
                         self.reset_GUI()
                     self.m["list_out_files_resampled"] = []
                     self.SigRelay.emit("cexex_all_",["reset_GUI",0])
@@ -2979,7 +3139,8 @@ class resample_v(QObject):
                 self.gui.listWidget_playlist_2.itemChanged.connect(self.reslist_update)
                 #                 if not self.gui.checkBox_AutoMerge2G.isChecked():
                 #                     self.reset_GUI()
-                return
+                return True
+
         else: #file list is empty
             auxi.standard_errorbox("No files to be resampled have been selected; please drag items to the 'selected file' area")
             #self.sys_state.set_status(system_state)
@@ -2995,19 +3156,33 @@ class resample_v(QObject):
             return False
 
         #generate SDRUno TimeDate suffix in Filename
-        SDRUno_suffix = str(self.m["wavheader"]['starttime_dt'])
+        if self.m["starttrim"]:
+            #TODO: revert cuttime tests
+            SDRUno_suffix = str(self.m["starttime_after_trim"])
+            #TODO: revert end 
+            #TODO on revert always: SDRUno_suffix = str(self.m["wavheader"]['starttime_dt'])
+            #pass
+        else:
+            SDRUno_suffix = str(self.m["wavheader"]['starttime_dt'])
         SDRUno_suffix = SDRUno_suffix.replace(" ","_")
         SDRUno_suffix = SDRUno_suffix.replace(":","")
         SDRUno_suffix = SDRUno_suffix.replace("-","")
         #TODO: OBSOLETE ?:
-        targetfilename = self.m["my_dirname"] + "/" + self.m["f1"] + "_rspli16_" + str(SDRUno_suffix) + '_' + str(int(np.round(self.m["wavheader"]["centerfreq"]/1000))) + 'kHz.dat'
+        ####### FLOW CHART current state ##########################
+
+        # targetfilename = self.m["my_dirname"] + "/" + self.m["f1"] + "_rspli16_" + str(SDRUno_suffix) + '_' + str(int(np.round(self.m["wavheader"]["centerfreq"]/1000))) + 'kHz.dat'
+        #TODO: check/test: masked out 20-07-2024
         # get info on frequency shifting, and target parameters:
+        self.m["target_fn"] =  self.m["my_dirname"] + "/" + self.m["f1"] + "_rspli16_" + str(SDRUno_suffix) + '_' + str(int(np.round(self.m["wavheader"]["centerfreq"]/1000))) + 'kHz.dat'
+        #TODO: check/test: entered (change from 2-line-version) 20-07-2024
+
         self.m["tLO"] = target_LO*1000 #TODO: define im scheduler ??
         self.m["fshift"] = self.m["wavheader"]["centerfreq"] - self.m["tLO"]
         self.m["tSR"] = float(target_SR)*1000 # tSR #TODO: define im scheduler ??
         self.m["s_wavheader"] = self.m["wavheader"]  #TODO: define im scheduler ?
         self.m["source_fn"] = self.m["f1"] #TODO: define im scheduler ?
-        self.m["target_fn"] = targetfilename #TODO: obsolete ? define im scheduler ?
+        #TODO: obsolete ? define im scheduler ?
+        #self.m["target_fn"] = targetfilename #TODO: check/test: masked out 20-07-2024
 
         #TODO TODO TODO: Abfragen, ob genug Speicherplatz für temp und Zielfiles
         if self.m["wavheader"]['sdrtype_chckID'].find('auxi') == -1:
@@ -3019,9 +3194,8 @@ class resample_v(QObject):
         time.sleep(0.01)
 
             ####TODO CHECK !!!!!!!!!!!!!!!!!!!!! filesize wird hier falsch ermittelt, wenn rcvr files o.ä.
-
+        #TODO TODO TODO Target LO muss bei Ändern der Listentry automatisch auf das geltende File aktualisiert werden (so wie die Cutting Time)
         #Generate schedules for the scheduler event loop
-        #CASE 1: normal resampling without LOshift, LOshift is ignored
         if abs(self.m["fshift"]) > 1e-5: #LOShift wanted
             if self.m["wavheader"]['nBitsPerSample'] == 24:
                 self.resample_c.schedule_B24()
@@ -3033,7 +3207,17 @@ class resample_v(QObject):
                 else:
                     self.logger.debug("generate schedule for 32/16 LOshifting with downsampling")
                     self.resample_c.schedule_B()
-        else: #no LOShift
+        #TODO TODO TODO: CHECK and Testing 11-07-2024, if cut is wanted: schedule B !
+        #TODO TODO TODO: change start cut window entry after updating selected file list (playlist2)
+        #TODO TODO TODO: inactivate startcut window if new file is loaded (reset GUI !)
+        #BUG BUG BUG: Cutstart wird immer zurückgesetzt auf Originalwert, wenn man resample drückt.
+        #Problem mit Reaktion auf Listwidget-Updates (item dazu, item weg. item dazu geht nicht mit object call, weil auch ausgelöst, wenn man vom code aus was dazufügt)
+        #TODO: revert for CUTPROJECT
+        elif self.m["start_trim"].seconds > 1e-5:
+            self.resample_c.schedule_B()
+            self.logger.debug("generate schedule for simple resampling")
+        #TODO: revert for CUTPROJECT end
+        else:
             self.resample_c.schedule_A()
             self.logger.debug("generate schedule for simple resampling")
 

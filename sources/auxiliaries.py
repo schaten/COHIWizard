@@ -1,6 +1,7 @@
 from struct import pack, unpack
 import numpy as np
 import time
+import os
 #import system_module as wsys
 #from SDR_wavheadertools_v2 import WAVheader_tools
 from datetime import datetime
@@ -401,14 +402,12 @@ class WAVheader_tools():
             wavheader['starttime_dt'] =  datetime(starttime[0],starttime[1],starttime[3],starttime[4],starttime[5],starttime[6])
             wavheader['stoptime_dt'] =  datetime(stoptime[0],stoptime[1],stoptime[3],stoptime[4],stoptime[5],stoptime[6])
             ccc = (self.fileHandle.read(4)).decode('utf-8')
+            wavheader['diff'] = 0
             wavheader['data_ckID'] = ccc
-
             wavheader['data_nChunkSize'] = int.from_bytes(self.fileHandle.read(4), byteorder='little')
         else:
             if wavheader['sdrtype_chckID'].find('rcvr') > -1:
-
                 ##print('rcvr reached in wavheader reader')
-
                 wavheader['centerfreq'] = int.from_bytes(self.fileHandle.read(4), byteorder='little')
                 wavheader['SamplingRateIdx'] = int.from_bytes(self.fileHandle.read(4), byteorder='little')
                 wavheader['starttime_epoch'] = int.from_bytes(self.fileHandle.read(4), byteorder='little')
@@ -450,17 +449,38 @@ class WAVheader_tools():
                 # recode starttime and stoptime to auxi format
                 wavheader['starttime'] = [startt.year, startt.month, 0, startt.day, startt.hour, startt.minute, startt.second, 0]
                 wavheader['stoptime'] = [stoptt.year, stoptt.month, 0, stoptt.day, stoptt.hour, stoptt.minute, stoptt.second, 0]
-
                 wavheader['nextfilename'] = ('')    
             else:
                 #TODO: implement raw format if wanted
                 ##print('unrecognized SDR')
                 return False
-
+            #self.check_wavheader_timeconsistency(filename, wavheader)
+        #checking informatio for timestamps
+        diff = (wavheader['stoptime_dt']-wavheader['starttime_dt']).seconds + (wavheader['stoptime'][7] - wavheader['starttime'][7])/1000
+        diff *= wavheader['nSamplesPerSec']
+        wavheader['diff'] = int(np.ceil(diff) * wavheader['nBlockAlign'])
+        wavheader['true_datachunksize'] = os.stat(filename).st_size - 216
 
         self.fileHandle.close()
         return(wavheader)
-    
+
+    def check_wavheader_timeconsistency(self, wavheader):
+        """check if the difference between starttime and stoptime in the wavheader is consistent with the filesize
+        the tolerance is currently 1s of discrepancy; usually the discrepancy is caused by slightly wrong entries in the
+        fields for stop and starttimes of the recording; frequently the milliseconds entry is questionable
+
+        :parameters: wavheader
+        :type: dict
+        :returns: True if consistent, False if inconsistent
+        :rtype: Boolean
+        """
+        tolerance = np.ceil((wavheader['nSamplesPerSec'] * wavheader['nBlockAlign']))
+        discrepancy = np.abs(wavheader['diff']  - wavheader['true_datachunksize'])
+        if discrepancy > tolerance:
+            print("filezize is inconsistent with headertimes; some functions will be blocked")
+            return False
+        return True
+
     def write_sdruno_header(self,wavfilename,wavheader,ovwrt_flag):       
         """write wavheader to the beginning of the current file 'wavfilename'
         if ovwrt_flag == True: 

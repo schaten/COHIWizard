@@ -54,7 +54,6 @@
 <li class="toctree-l3"><a class="reference internal" href="#COHIWizard.core_c"><code class="docutils literal notranslate"><span class="pre">core_c</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#COHIWizard.core_c.recording_path_checker"><code class="docutils literal notranslate"><span class="pre">core_c.recording_path_checker()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#COHIWizard.core_c.recording_path_setter"><code class="docutils literal notranslate"><span class="pre">core_c.recording_path_setter()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#COHIWizard.core_c.SigRelay"><code class="docutils literal notranslate"><span class="pre">core_c.SigRelay</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#COHIWizard.core_m"><code class="docutils literal notranslate"><span class="pre">core_m</span></code></a></li>
@@ -75,8 +74,6 @@
 <li class="toctree-l4"><a class="reference internal" href="#COHIWizard.core_v.updateConfigElements"><code class="docutils literal notranslate"><span class="pre">core_v.updateConfigElements()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#COHIWizard.core_v.updateGUIelements"><code class="docutils literal notranslate"><span class="pre">core_v.updateGUIelements()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#COHIWizard.core_v.updatetimer"><code class="docutils literal notranslate"><span class="pre">core_v.updatetimer()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#COHIWizard.core_v.SigRelay"><code class="docutils literal notranslate"><span class="pre">core_v.SigRelay</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#COHIWizard.core_v.SigUpdateOtherGUIs"><code class="docutils literal notranslate"><span class="pre">core_v.SigUpdateOtherGUIs</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#COHIWizard.starter"><code class="docutils literal notranslate"><span class="pre">starter</span></code></a></li>
@@ -188,26 +185,6 @@ if not: ask for target pathname and store in config.wizard.yaml</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>none</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="COHIWizard.core_c.SigRelay">
-<span class="sig-name descname"><span class="pre">SigRelay</span></span><a class="headerlink" href="#COHIWizard.core_c.SigRelay" title="Link to this definition"></a></dt>
-<dd><p>signal for relaying data and messages to other module’s rxhandler method; emitted as SigRelay(_key,_value)</p>
-<dl class="field-list simple">
-<dt class="field-odd">Param<span class="colon">:</span></dt>
-<dd class="field-odd"><p>_key</p>
-</dd>
-<dt class="field-even">Type<span class="colon">:</span></dt>
-<dd class="field-even"><p>str</p>
-</dd>
-<dt class="field-odd">Param<span class="colon">:</span></dt>
-<dd class="field-odd"><p>_value</p>
-</dd>
-<dt class="field-even">Type<span class="colon">:</span></dt>
-<dd class="field-even"><p>object</p>
 </dd>
 </dl>
 </dd></dl>
@@ -523,36 +500,6 @@ this method is connected in the __main__ of the core module
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>none</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="COHIWizard.core_v.SigRelay">
-<span class="sig-name descname"><span class="pre">SigRelay</span></span><a class="headerlink" href="#COHIWizard.core_v.SigRelay" title="Link to this definition"></a></dt>
-<dd><p>signal for relaying data and messages to other module’s rxhandler method; emitted as SigRelay(_key,_value)</p>
-<dl class="field-list simple">
-<dt class="field-odd">Param<span class="colon">:</span></dt>
-<dd class="field-odd"><p>_key</p>
-</dd>
-<dt class="field-even">Type<span class="colon">:</span></dt>
-<dd class="field-even"><p>str</p>
-</dd>
-<dt class="field-odd">Param<span class="colon">:</span></dt>
-<dd class="field-odd"><p>_value</p>
-</dd>
-<dt class="field-even">Type<span class="colon">:</span></dt>
-<dd class="field-even"><p>object</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="COHIWizard.core_v.SigUpdateOtherGUIs">
-<span class="sig-name descname"><span class="pre">SigUpdateOtherGUIs</span></span><a class="headerlink" href="#COHIWizard.core_v.SigUpdateOtherGUIs" title="Link to this definition"></a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">TODO<span class="colon">:</span></dt>
-<dd class="field-odd"><p>check if this signal is ever used !</p>
 </dd>
 </dl>
 </dd></dl>

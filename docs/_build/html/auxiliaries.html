@@ -55,6 +55,7 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">auxiliaries module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#auxiliaries.WAVheader_tools"><code class="docutils literal notranslate"><span class="pre">WAVheader_tools</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#auxiliaries.WAVheader_tools.basic_wavheader"><code class="docutils literal notranslate"><span class="pre">WAVheader_tools.basic_wavheader()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#auxiliaries.WAVheader_tools.check_wavheader_timeconsistency"><code class="docutils literal notranslate"><span class="pre">WAVheader_tools.check_wavheader_timeconsistency()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#auxiliaries.WAVheader_tools.write_sdruno_header"><code class="docutils literal notranslate"><span class="pre">WAVheader_tools.write_sdruno_header()</span></code></a></li>
 </ul>
 </li>
@@ -74,8 +75,6 @@
 <li class="toctree-l3"><a class="reference internal" href="#auxiliaries.timer_worker"><code class="docutils literal notranslate"><span class="pre">timer_worker</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#auxiliaries.timer_worker.stoptick"><code class="docutils literal notranslate"><span class="pre">timer_worker.stoptick()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#auxiliaries.timer_worker.tick"><code class="docutils literal notranslate"><span class="pre">timer_worker.tick()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#auxiliaries.timer_worker.SigFinished"><code class="docutils literal notranslate"><span class="pre">timer_worker.SigFinished</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#auxiliaries.timer_worker.SigTick"><code class="docutils literal notranslate"><span class="pre">timer_worker.SigTick</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -140,6 +139,28 @@ Important: no check for the right datatypes in wavheader; if incorrect –&gt; p
 :raises : none
 :return: wavheader
 :rtype: dictionary</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="auxiliaries.WAVheader_tools.check_wavheader_timeconsistency">
+<span class="sig-name descname"><span class="pre">check_wavheader_timeconsistency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wavheader</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#auxiliaries.WAVheader_tools.check_wavheader_timeconsistency" title="Link to this definition"></a></dt>
+<dd><p>check if the difference between starttime and stoptime in the wavheader is consistent with the filesize
+the tolerance is currently 1s of discrepancy; usually the discrepancy is caused by slightly wrong entries in the
+fields for stop and starttimes of the recording; frequently the milliseconds entry is questionable</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p>wavheader</p>
+</dd>
+<dt class="field-even">Type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if consistent, False if inconsistent</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Boolean</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -300,16 +321,6 @@ output format is 16 or 32bit according to value specified in tBPS. No other BPS 
 :return: none
 :rtype: none</p>
 </dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="auxiliaries.timer_worker.SigFinished">
-<span class="sig-name descname"><span class="pre">SigFinished</span></span><a class="headerlink" href="#auxiliaries.timer_worker.SigFinished" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="auxiliaries.timer_worker.SigTick">
-<span class="sig-name descname"><span class="pre">SigTick</span></span><a class="headerlink" href="#auxiliaries.timer_worker.SigTick" title="Link to this definition"></a></dt>
-<dd></dd></dl>
 
 </dd></dl>
 

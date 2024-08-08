@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1104</width>
-    <height>690</height>
+    <width>997</width>
+    <height>682</height>
    </rect>
   </property>
   <property name="font">
@@ -1093,6 +1093,13 @@
        </property>
        <property name="selectionMode">
         <enum>QAbstractItemView::SingleSelection</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1">
+      <widget class="QCheckBox" name="checkBox_Cut">
+       <property name="text">
+        <string>Cut Start / End</string>
        </property>
       </widget>
      </item>
