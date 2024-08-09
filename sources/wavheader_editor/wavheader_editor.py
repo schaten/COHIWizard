@@ -410,10 +410,10 @@ class waveditor_v(QObject):
         self.gui.tableWidget_3.item(1, 0).setText(str(self.m["wavheader"]['sdrtype_chckID']))
         self.gui.tableWidget_3.item(0, 0).setText(str((self.m["wavheader"]['nextfilename'])).rstrip('\x00'))
         self.gui.tableWidget_3.item(0, 0).setFlags(self.gui.tableWidget_3.item(0, 0).flags() | Qt.ItemIsEditable)
-        self.gui.tableWidget_3.setItemDelegateForColumn(0, MyDelegate(self.gui.tableWidget_3))
+        #self.gui.tableWidget_3.setItemDelegateForColumn(0, MyDelegate(self.gui.tableWidget_3))
         #self.gui.tableWidget_3.setItemDelegateForColumn(0, self.create_delegate())
 
-        self.gui.tableWidget_3.cellClicked.connect(self.scroll_to_end)
+        #self.gui.tableWidget_3.cellClicked.connect(self.scroll_to_end)
         #clean_string = original_string.rstrip('\x00')
         duration = (self.m["wavheader"]["stoptime_dt"] - self.m["wavheader"]["starttime_dt"]).seconds
         self.gui.tableWidget_3.item(4, 0).setText(str(duration))
@@ -459,6 +459,21 @@ class waveditor_v(QObject):
         #system_state = sys_state.get_status()
         crit1 = False
         #TODO : ?Sonderzeichencheck ??
+        _c = self.gui.tableWidget_3.item(1, 0).text()
+        valid_strings = {"auxi", "rcvr"}  # Erlaubte Zeichenketten
+        if not _c in valid_strings:
+            auxi.standard_errorbox("SDR type must be a string with 4 characters, only 'auxi' and 'rcvr' are allowed")
+            self.SigRelay.emit("cm_all_",["wavheader",self.m["wavheader"]])
+            #sys_state.set_status(system_state)
+            return False
+        if not _c.find('auxi') == 0:
+            auxi.standard_errorbox("rcvr headers cannot be overwritten; please change to auxi before - the original rcvr header , however, will then be lost")
+            self.SigRelay.emit("cm_all_",["wavheader",self.m["wavheader"]])
+            #sys_state.set_status(system_state)
+            return False
+
+        self.m["wavheader"]['sdrtype_chckID'] = _c
+
         self.m["wavheader"]['nextfilename'] = self.gui.tableWidget_3.item(0, 0).text()
         preview = {}
         for ix in range(0,8):
@@ -514,6 +529,7 @@ class waveditor_v(QObject):
                 auxi.standard_errorbox("Template wavheader File is being written, useful ?")
             else: 
                 wav_filename = self.m["f1"]            
+            
             WAVheader_tools.write_sdruno_header(self,wav_filename,self.m["wavheader"],self.m["ovwrt_flag"])
         #sys_state.set_status(system_state)
 

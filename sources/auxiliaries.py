@@ -497,8 +497,7 @@ class WAVheader_tools():
         :param : ovwrt_flag
         :type : boolean
         :raises : none
-        :return: 
-        :rtype: 
+        :return: none
         """
         ###print("wavheader writer reached")
         if wavheader['filesize'] > 2147483647:
