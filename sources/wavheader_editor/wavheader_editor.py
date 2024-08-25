@@ -467,7 +467,7 @@ class waveditor_v(QObject):
             #sys_state.set_status(system_state)
             return False
         if not _c.find('auxi') == 0:
-            auxi.standard_errorbox("rcvr headers cannot be overwritten; please change to auxi before - the original rcvr header , however, will then be lost")
+            auxi.standard_errorbox("rcvr headers cannot be overwritten; you can change to auxi before by editing the respective field. HOWEVER WARNING!!  - the original rcvr header will then be lost and in case of 24bit sampling the data is shifted by 2 bytes, which will compromise reproduction on usual playback systems; You then must insert 2 extra dummy bytes at the beginning of the data segment (4 bytes after the 'data' label) with a HEX editor")
             self.SigRelay.emit("cm_all_",["wavheader",self.m["wavheader"]])
             #sys_state.set_status(system_state)
             return False
@@ -529,7 +529,7 @@ class waveditor_v(QObject):
                 auxi.standard_errorbox("Template wavheader File is being written, useful ?")
             else: 
                 wav_filename = self.m["f1"]            
-            
+            self.m["wavheader"]["data_ckID"] = 'data'
             WAVheader_tools.write_sdruno_header(self,wav_filename,self.m["wavheader"],self.m["ovwrt_flag"])
         #sys_state.set_status(system_state)
 

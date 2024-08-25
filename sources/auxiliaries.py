@@ -482,13 +482,15 @@ class WAVheader_tools():
         return True
 
     def write_sdruno_header(self,wavfilename,wavheader,ovwrt_flag):       
-        """write wavheader to the beginning of the current file 'wavfilename'
+        """write auxi wavheader to the beginning of the current file 'wavfilename'
         if ovwrt_flag == True: 
             overwrite the first 216 bytes of an existing file with wavheader
         else:
             write a new file with the wavheader only; size is always 216 bytes
         
         Important: no check for the right datatypes in wavheader; if incorrect --> program crashes
+        only auxi Format can be written. rcvr is not supported
+        The Formattag is preserved
 
         :param : wavtargetfilename
         :type : str
@@ -504,6 +506,7 @@ class WAVheader_tools():
             wavheader['filesize'] = int(2147483647)
             wavheader['data_nChunkSize'] = int(wavheader['filesize'] - 208)
             #print(wavheader['fmt_nChunkSize'])
+        wavheader['sdr_nChunkSize'] = 164
         if ovwrt_flag == True:
             fid = open(wavfilename, 'r+b')
             fid.seek(0)
@@ -545,6 +548,7 @@ class WAVheader_tools():
                 fid.write(pack('<c', b' '))
 
         # Write data_ckID and data_nChunkSize
+        wavheader['data_ckID'] = 'data'
         fid.write(pack("<4sl", wavheader['data_ckID'][0:4].encode('ascii'), wavheader['data_nChunkSize']))
         fid.close()
 

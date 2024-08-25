@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1469</width>
+    <width>1247</width>
     <height>912</height>
    </rect>
   </property>
@@ -61,7 +61,7 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>1424</width>
+         <width>1222</width>
          <height>838</height>
         </rect>
        </property>
@@ -7081,7 +7081,7 @@ UFL</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1469</width>
+     <width>1247</width>
      <height>26</height>
     </rect>
    </property>
