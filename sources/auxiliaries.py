@@ -350,19 +350,23 @@ class WAVheader_tools():
         return(wavheader)
 
 
-    def get_sdruno_header(self,filename):
+    def get_sdruno_header(self,*argv):
         """
         opens a file with name self.f1
         extracts meta information from SDR-wav-header_
         recognized formats: SDRUno, PERSEUS, SpectraVue
         closes file after headerreading
 
-        :param : none
-        :type : none
-        :raises : none
+        :param : argv: tuple of parameters, the first one is mandatory: filename
+        :general: (filename, wav type, )
+        : option wav type: 'sdr','audio'. If set to 'audio' check for auxi/riff is skipped and an audio file is assumed
+        :     then the header info is only valid until the sdrtype-field
+        :type : tuple
         :return: dictionary wavheader containing the individual metadata items or False if unsuccessful
         :rtype: dictionary or Boolean
         """
+        filename = argv[0]
+
         self.fileHandle = open(filename, 'rb')#TODO:replace self.f1 durch f1 als Übergabeparamezet
         wavheader={}
         wavheader['riff_chckID'] = str(self.fileHandle.read(4))
@@ -380,6 +384,11 @@ class WAVheader_tools():
         wavheader['nBitsPerSample'] = int.from_bytes(self.fileHandle.read(2), byteorder='little')
         bbb = (self.fileHandle.read(4)).decode('utf-8')
         wavheader['sdrtype_chckID'] = bbb
+        if len(argv) > 1:
+            if argv[1].find('audio') > -1 and not((wavheader['sdrtype_chckID'].find('auxi') > -1) or (wavheader['sdrtype_chckID'].find('rcvr') > -1)):
+                return wavheader
+            else:
+                return False
         #####TODO: if sdrtype == 'auxi' do the next, else if 'rcvr' do PERSEUS, else error
         wavheader['sdr_nChunkSize'] = int.from_bytes(self.fileHandle.read(4), byteorder='little')
         if  wavheader['sdrtype_chckID'].find('auxi') > -1:
