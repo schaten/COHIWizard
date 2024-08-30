@@ -725,7 +725,9 @@ class synthesizer_v(QObject):
 
         self.readFileList[self.m["carrier_ix"]] = [self.gui.listWidget_playlist.item(i).text() for i in range(self.gui.listWidget_playlist.count())]
         self.playlist_purge()
-        self.show_playlength()
+        duration = self.show_playlength()
+        self.show_fillprogress(duration)
+
         print("playlist_update")
         # try:
         #     for file in readFileList:
