@@ -1,4 +1,4 @@
-#Version 1.8, last stable version before new annotator method; bugs in SNR calculation in annotator method not yet resolved
+#Version 1.2.12
 #
 #
 # -*- coding: utf-8 -*-logfile

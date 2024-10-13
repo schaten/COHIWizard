@@ -1227,6 +1227,13 @@ class resample_c(QObject):
             sox_filetype = 'wav'
         #soxstring = 'sox --norm=-3 -e ' + wFormatTag_TYPE + ' -t  ' + sox_filetype + ' -r ' + str(self.m["sSR"]) + ' -b '+ str(self.m["sBPS"]) + ' -c 2 ' + '"' + source_fn  + '"' + ' -e signed-integer -t raw -r ' + str(int(tSR)) + ' -b ' + str(self.m["tBPS"]) + ' -c 2 '  + '"' + target_fn  + '"' 
         soxstring = 'sox -e ' + wFormatTag_TYPE + ' -t  ' + sox_filetype + ' -r ' + str(self.m["sSR"]) + ' -b '+ str(self.m["sBPS"]) + ' -c 2 ' + '"' + source_fn  + '"' + ' -e signed-integer -t raw -r ' + str(int(tSR)) + ' -b ' + str(self.m["tBPS"]) + ' -c 2 '  + '"' + target_fn  + '"' + ' gain ' + str(self.m["resampling_gain"])
+
+        # Versuch einer Bandpassfilterung
+        # aktuell nur für positive Frequenzen möglich (also >= centerfreq)
+        # test_notch_centerfreq = 1770000 - self.m["wavheader"]["centerfreq"]
+        # test_notch_BW = 2000
+        # 
+        # soxstring = 'sox -e ' + wFormatTag_TYPE + ' -t  ' + sox_filetype + ' -r ' + str(self.m["sSR"]) + ' -b '+ str(self.m["sBPS"]) + ' -c 2 ' + '"' + source_fn  + '"' + ' -e signed-integer -t raw -r ' + str(int(tSR)) + ' -b ' + str(self.m["tBPS"]) + ' -c 2 '  + '"' + target_fn  + '"' + ' gain ' + str(self.m["resampling_gain"]) + ' sinc -n 512 ' + str(int(test_notch_centerfreq-test_notch_BW/2)) +'-' + str(int(test_notch_centerfreq+test_notch_BW/2))
         trimextension =""
         # #include trim command if self.m["starttrim"] or self.m["stoptrim"] are True
         # if self.m["starttrim"]:

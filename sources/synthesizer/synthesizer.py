@@ -7,6 +7,8 @@ from PyQt5 import QtWidgets, QtGui
 import numpy as np
 import os
 import logging
+import matplotlib.pyplot as plt
+import pyfda.pyfdax
 from auxiliaries import auxiliaries as auxi
 import logging
 import yaml
@@ -15,7 +17,8 @@ import time
 import wave
 import contextlib
 import struct
-
+import soundfile as sf
+from scipy.signal import sosfilt, butter, resample
 
 class synthesizer_m(QObject):
     SigModelXXX = pyqtSignal()
@@ -38,6 +41,7 @@ class synthesizer_m(QObject):
         self.mdl["audioBW"] = 4.5
         self.mdl["carrier_distance"] = 9
         self.mdl["carrier_ix"] = 0
+        self.mdl["carrierarray"] = np.arange(0, 1, 1)
         # Create a custom logger
         logging.getLogger().setLevel(logging.DEBUG)
         # Erstelle einen Logger mit dem Modul- oder Skriptnamen
@@ -184,6 +188,8 @@ class synthesizer_v(QObject):
         self.gui.comboBox_cur_carrierfreq.currentIndexChanged.connect(self.carrier_ix_changed)
         self.gui.pushButton_saveproject.clicked.connect(self.save_project)
         self.gui.pushButton_loadproject.clicked.connect(self.load_project)
+        self.gui.synthesizer_pushbutton_create.clicked.connect(self.create_band)
+        self.gui.timeEdit_reclength.timeChanged.connect(self.carrier_ix_changed)
 
         #self.gui.lineEdit_carrierdistance.textEdited.connect(self.carriedistance_update)
         #editingFinished #editingFinished
@@ -200,6 +206,310 @@ class synthesizer_v(QObject):
         #     self.m["STM_IP_address"] = self.gui.lineEdit_IPAddress.text()
         #     self.logger.error("reset_gui: cannot get metadata")
         #     pass
+
+    def create_band(self):
+        # Beispielhafte Anwendung
+        sample_rate = int(self.gui.comboBox_targetSR.currentText())*1000 # Gemeinsame Abtastrate für Hf-Signal
+
+        cutoff_freq = float(self.gui.lineEdit_audiocutoff_freq.text())*1000   # Tiefpass-Grenzfrequenz   float32(self.gui.lineEdit_audiocutoff_freq.text())
+        modulation_depth = float(self.gui.lineEdit_modfactor.text())  # Modulationstiefe 
+        playlists = [[f"{path.rstrip('/')}/{file}" for file, path in zip(files, paths)] for files, paths in zip(self.readFileList, self.readFilePath)]
+        carrier_frequencies = self.m["carrierarray"]
+        output_base_name = 'combined_output'
+        block_size = 2**16   # Maximalblocklänge für die Verarbeitung
+        total_reclength = self.get_reclength()
+        exp_num_samples = total_reclength * sample_rate
+        exp_num_blocks = exp_num_samples/block_size
+        self.process_multiple_carriers_blockwise(carrier_frequencies, playlists, sample_rate, block_size, cutoff_freq, modulation_depth, output_base_name, exp_num_samples)
+        #TODO TODO TODO: 
+        # zero pad all rows in modulated_signals to greatest subsignal length
+        # Beispielhafte Liste von modulated_signals (np-Arrays)
+            # modulated_signals = [
+            #     np.array([1.0, 2.0, 3.0]),        # Signal 1
+            #     np.array([0.5, 1.5, 2.5, 3.5]),   # Signal 2
+            #     np.array([0.2, 0.8])              # Signal 3
+            # ]
+
+        # # 1. Länge des längsten Arrays bestimmen
+        #max_length = max(len(signal) for signal in modulated_signals)
+
+        # # 2. Alle Arrays auf die Länge des längsten Arrays zero-padden
+        #padded_signals = [np.pad(signal, (0, max_length - len(signal)), mode='constant') for signal in modulated_signals]
+
+        # # 3. Alle Arrays elementweise addieren
+        #combined_signal = np.sum(padded_signals, axis=0)
+        pass
+        # write modulated signals to output wav file
+        # generate wav header
+        
+            # %Write wav-header
+            # currtime=datetime('now');
+            # starttime=currtime - seconds(C_PLAYLENGTH);
+            # wavinfo.FILENAME = [C_TargetFILENAME '.dat'];
+            # wavinfo.PATHNAME = [WPATHNAME];
+            # %Diagnostic:     [header,type] = read_wavheader_func_v1(wavinfo);
+            # wavinfo.OVERWRITEHEADERONLY = true;
+            # wavinfo.riff_ckID = 'RIFF';
+            # wavinfo.nextfilename = '';
+            # wavinfo.filesize = length(tsr)*numsegments*4-8;
+            # wavinfo.nBitsPerSample = 16;
+            # wavinfo.nSamplesPerSec=C_SRR;
+            # wavinfo.nAvgBytesPerSec=C_SRR*4;
+            # wavinfo.stoptime = [year(currtime) month(currtime) 0 day(currtime) hour(currtime) minute(currtime) second(currtime) 0];
+            # wavinfo.starttime = [year(starttime) month(starttime) 0 day(starttime) hour(starttime) minute(starttime) second(starttime) 0];
+            # wavinfo.centerfreq = C_fc;
+            # wavinfo.data_nChunkSize = wavinfo.filesize - 216;
+            # aaa=dir([WPATHNAME '\' C_TargetFILENAME '.dat']);
+            # checkfilesize = aaa.bytes-8; %strange 8 bytes offset, filesize must be by 8 smaller than true filesize for SDRUno, reason unknown
+            # checkfilesize - wavinfo.filesize;    %####################
+            # wavinfo.headerfilename = [WPATHNAME '\' C_TargetFILENAME '.dat']; %write header to the first 216 bytes of the dat file
+            # wavinfo.nBlockAlign = 4;
+            # wavinfo.wFormatTag = 1;
+            # wavinfo.sdr_nChunkSize = 164;
+            # wavinfo.wave_string = 'WAVE';
+            # wavinfo.fmt_ckID = 'fmt ';
+            # wavinfo.fmt_nChunkSize = 16;%4
+            # wavinfo.nChannels = 2;
+            # wavinfo.sdr_ckID = 'auxi';
+            # wavinfo.ADFrequency = 0;
+            # wavinfo.IFFrequency = 0;
+            # wavinfo.Bandwidth = 0;
+            # wavinfo.IQOffset = 0;
+            # wavinfo.Unused = [0 0 0 0];
+            # wavinfo.data_ckID = 'data';
+            # wavinfo.data_nChunkSize = wavinfo.filesize - 208;
+            # write_wav_header_func_v2(wavinfo);
+        # convert modulated signals to IQ-data
+        # append IQ-data to wav header file
+        
+            # MATLAB-Original:
+            # y = b.*(1+C_m*x_audio_int_lp)';
+            # %re-format to dat-byteorder: 16bit real - 16 bit imag
+            # lend=2*length(y);
+            # y_res(1:2:lend-1)=real(y);
+            # y_res(2:2:lend)=imag(y);
+            #y_res_total = y_res_total + y_res; %add current station to existing spectrum
+
+
+    def resample_audio(self,audio_data, original_rate, target_rate):
+        """
+        Resample audio data to the target sample rate.
+        """
+        num_samples = int(len(audio_data) * target_rate / original_rate)
+        return resample(audio_data, num_samples)
+
+    def convert_to_mono(self,audio_data, num_channels):
+        """
+        Convert multi-channel audio to mono by averaging channels.
+        """
+        if num_channels > 1:
+            return np.mean(audio_data, axis=1)
+        return audio_data
+
+    def process_block(self,audio_block, sos, zi):
+        """Apply the low-pass filter blockwise and maintain filter state (zi)."""
+        filtered_block, zi = sosfilt(sos, audio_block, zi=zi)
+        return filtered_block, zi
+
+    # def modulate_signal(self,filtered_signal, carrier_freq, sample_rate, block_start, block_size, modulation_depth):
+    #     """Modulate the filtered signal onto a carrier frequency with adjustable modulation depth."""
+
+    #     #carrier_freq = C_f0 + (station_ix-1)*C_carrierdistance;
+
+    #     t = np.arange(block_start, block_start + block_size) / sample_rate
+    #     carrier = np.exp(2 * np.pi * 1j *carrier_freq * t)
+    #     # untersuche ob man komplexe Formulierung wählen sollte ? np.exp(2*np.pi*1j*centershift*tsus)
+    #     #MATLAB Original: b = C_gain*exp(2*pi*1j*station(station_ix).fc*tsr');    %generate i-th carrier from current RF time vector
+    #     # wenn carrier alle reelle Signale sind (keine Startphasen ungleich 0), kann man auch den Imag 0 machen ?
+        
+    #     # Modulation: Signal amplitude-modulates the carrier with the given depth
+    #     modulated_signal = (1 + modulation_depth * filtered_signal) * carrier
+    #     return modulated_signal
+    
+    def modulate_signal(self,filtered_signal, carrier_freq, sample_rate, sample_offset, modulation_depth):
+        """Modulate the filtered signal onto a carrier frequency with adjustable modulation depth."""
+        # Zeitvektor basierend auf dem sample_offset
+        t = np.arange(sample_offset, sample_offset + len(filtered_signal)) / sample_rate
+        carrier = np.exp(2 * np.pi * 1j *carrier_freq * t)
+        
+        # Modulation: Signal amplitude-modulates the carrier with the given depth
+        modulated_signal = (1 + modulation_depth * filtered_signal) * carrier
+        return modulated_signal
+
+    def read_and_process_audio_blockwise(self, file_list, carrier_freq, target_sample_rate, block_size, cutoff_freq, modulation_depth, zi, sample_offset, current_file_index, file_handles):
+        """
+        Read and process audio blockwise from the current file in the file_list, keeping the file handle open.
+        Process only one block and move to the next file when the current one is finished.
+        
+        Args:
+        - file_list: List of audio file paths for the current carrier.
+        - carrier_freq: Carrier frequency for modulation.
+        - target_sample_rate: Target sample rate for processing.
+        - block_size: Size of the audio block to be processed.
+        - cutoff_freq: Cutoff frequency for the low-pass filter.
+        - modulation_depth: Depth of modulation.
+        - zi: Filter state to maintain continuity across blocks.
+        - sample_offset: Current sample offset for phase continuity in modulation.
+        - current_file_index: Index of the current file in the file_list.
+        - file_handles: Dictionary of file handles to keep files open.
+
+        Returns:
+        - modulated_output: Modulated block of audio.
+        - zi: Updated filter state.
+        - sample_offset: Updated sample offset.
+        - current_file_index: Updated file index (incremented if necessary).
+        """
+        sos = butter(4, cutoff_freq, btype='low', fs=target_sample_rate, output='sos')
+
+        while current_file_index < len(file_list):
+            file_path = file_list[current_file_index]
+
+            # Überprüfen, ob das File bereits offen ist, falls nicht, öffne es und speichere den Handle
+            if current_file_index not in file_handles:
+                file_handles[current_file_index] = sf.SoundFile(file_path, 'r')
+
+            f = file_handles[current_file_index]
+            original_sample_rate = f.samplerate
+            num_channels = f.channels
+
+            # Blockweises Lesen
+            audio_block = f.read(block_size)
+            if len(audio_block) == 0:
+                # Datei ist fertig, zum nächsten File wechseln und Datei schließen
+                f.close()
+                del file_handles[current_file_index]  # Handle entfernen
+                current_file_index += 1
+                continue  # Weiter zur nächsten Datei
+
+            # Mono-Konvertierung falls notwendig
+            audio_block = self.convert_to_mono(audio_block, num_channels)
+
+            # Resampling falls notwendig
+            if original_sample_rate != target_sample_rate:
+                audio_block = self.resample_audio(audio_block, original_sample_rate, target_sample_rate)
+
+            # Low-Pass-Filter anwenden
+            filtered_block, zi = self.process_block(audio_block, sos, zi)
+
+            # Modulation auf den Träger anwenden
+            modulated_block = self.modulate_signal(filtered_block, carrier_freq, target_sample_rate, sample_offset, modulation_depth)
+
+            # Aktualisierung von sample_offset für den nächsten Block
+            sample_offset += len(modulated_block)
+
+            return modulated_block, zi, sample_offset, current_file_index
+
+        # Alle Dateien wurden verarbeitet, kehre None zurück
+        return None, zi, sample_offset, current_file_index
+
+    def process_multiple_carriers_blockwise(self, carrier_frequencies, playlists, sample_rate, block_size, cutoff_freq, modulation_depth, output_base_name, exp_num_samples):
+        """
+        Process audio from multiple playlists blockwise, each corresponding to a different carrier frequency.
+        Write the combined output to multiple WAV files if the 2 GB limit is exceeded.
+        """
+        # Set the 2GB limit and calculate the maximum samples per file (for 16-bit PCM WAV files)
+        max_file_size = 2 * 1024**3  # 2 GB in bytes
+        max_samples_per_file = max_file_size // 4  # complex 16-bit PCM = 4 bytes per sample
+        perc_progress_old = 0
+        # Initialize filter states for each carrier
+        #zis = [np.zeros((4, 2)) for _ in carrier_frequencies]  # Filter state buffer for each carrier (4th order filter)
+        zis = [np.zeros((2, 2)) for _ in carrier_frequencies]  # Filter state buffer for each carrier (4th order filter)
+        
+        # Initialisiere sample_offset und current_file_index für jeden Carrier
+        sample_offsets = [0] * len(carrier_frequencies)
+        current_file_indices = [0] * len(carrier_frequencies)  # Track current file index for each carrier
+        
+        # **Initialisiere file_handles als Liste von Dictionaries für jeden Carrier**
+        file_handles = [{} for _ in carrier_frequencies]  # Für jeden Carrier ein eigenes Dictionary von Datei-Handles
+
+        total_samples_written = 0
+        file_index = 0
+
+        # Open first output file to write combined signal blockwise
+        output_file_name = f"{output_base_name}_{file_index}.wav"
+        out_file = sf.SoundFile(output_file_name, 'w', samplerate=sample_rate, channels=1, subtype='PCM_16')
+
+        done = False
+
+        #write 216 - 44 =  172 Null Bytes so as to leave room for the SDR-wavheader which will finally overwrite the current header
+        prephaser = np.zeros(172)
+        out_file.write(prephaser)
+
+        while not done:
+            combined_signal_block = None  # Buffer for combined signal block
+            done = True  # Assume done unless we find more data
+            
+            # Process each carrier for the current block
+            for i, (carrier_freq, zi) in enumerate(zip(carrier_frequencies, zis)):
+                modulated_block, new_zi, sample_offsets[i], current_file_indices[i] = self.read_and_process_audio_blockwise(
+                    playlists[i], carrier_freq*1000, sample_rate, block_size, cutoff_freq, modulation_depth, zi, sample_offsets[i], current_file_indices[i], file_handles[i])
+                
+                # Wenn modulated_block None ist, dann ist das Playlist-Ende erreicht
+                if modulated_block is None:
+                    continue
+
+                # Dynamically adjust combined signal block size based on modulated block size
+                if combined_signal_block is None or len(combined_signal_block) < len(modulated_block):
+                    combined_signal_block = np.zeros(len(modulated_block), dtype = np.complex128)
+
+                combined_signal_block[:len(modulated_block)] += 0.1 * modulated_block ####TODO TODO TODO: Gain control einbauen, 0.1 ist nur ein erster Versuch
+                
+                # If we processed any blocks, we're not done
+                done = False
+
+                # Update filter state for this carrier
+                zis[i] = new_zi
+            
+            # If all files are done, break the loop
+            if done:
+                break
+
+            # Write the combined block to the current output file
+            samples_to_write = len(combined_signal_block)
+            
+            if samples_to_write + total_samples_written > max_samples_per_file:
+                # If the file exceeds 2GB, close the current file and start a new one
+                out_file.close()
+                file_index += 1
+                output_file_name = f"{output_base_name}_{file_index}.wav"
+                out_file = sf.SoundFile(output_file_name, 'w', samplerate=sample_rate, channels=1, subtype='PCM_16')
+                total_samples_written = 0  # Reset the sample counter for the new file
+            #convert complex 128 into 2 x float 64
+            lend=2*len(combined_signal_block)
+            block_to_write = np.zeros(lend)
+            block_to_write[1::2] = np.imag(combined_signal_block)
+            block_to_write[0::2] = np.real(combined_signal_block)
+            # block_to_write[0:2:lend-1] = np.real(combined_signal_block)
+            # block_to_write[1:2:lend] = np.imag(combined_signal_block)
+            try:
+                out_file.write(block_to_write)
+            except:
+                print("write error")
+            total_samples_written += samples_to_write
+            perc_progress = 100*total_samples_written / exp_num_samples
+            if perc_progress - perc_progress_old > 1:
+                perc_progress_old = perc_progress
+                print(f"percentage completed: {str(perc_progress)}")
+                spr = np.abs(np.fft.fft(combined_signal_block[0:min(2**16,len(combined_signal_block))]))
+                N = len(spr)
+                spr = np.fft.fftshift(spr)/N
+                fax = np.linspace(-1,1,len(spr))
+                plt.plot(fax,spr)
+                #plt.legend((np.round(self.freq_union,self.m["round_digits"])).astype('str'), loc="lower right")
+                plt.xlabel("norm freq (-)")
+                plt.ylabel("peak value")
+                plt.title("spectrum of block")
+                plt.show()
+
+
+        # Close the final output file
+        out_file.close()
+        ####TODO TODO TODO: write true SDRUno-Header into the first 216 bytes of the closed file
+
+        # **Am Ende sicherstellen, dass alle Datei-Handles geschlossen werden**
+        for file_handle_dict in file_handles:
+            for handle in file_handle_dict.values():
+                handle.close()
 
     def save_project(self):
         """_save current settings and all playlists to a project file (*.proj) via intermediate dictionary pr
@@ -220,6 +530,11 @@ class synthesizer_v(QObject):
         pr["projectdata"]["audio_BW"] = self.m["audioBW"]
         pr["projectdata"]["current_listdir"] = self.current_listdir
         pr["projectdata"]["targetSR_index"] = self.gui.comboBox_targetSR.currentIndex()
+        #pr["projectdata"]["preset_time"] = 
+        qtimeedit = self.gui.timeEdit_reclength
+        time_from_qtimeedit = qtimeedit.time()
+        pr["projectdata"]["preset_time"] = [time_from_qtimeedit.hour(), time_from_qtimeedit.minute(), time_from_qtimeedit.second()]
+         
         #TODO TODO TODO: add all settings to be saved:
         #reclength
         #self.comboBox_targetSR_2.setCurrentIndex(###)
@@ -264,6 +579,10 @@ class synthesizer_v(QObject):
             self.gui.spinBox_numcarriers.valueChanged.connect(self.freq_carriers_update)
             self.m["carrier_ix"] = 0
             self.gui.comboBox_cur_carrierfreq.setCurrentIndex(self.m["carrier_ix"])
+            #######preset_time = QTime(00, 30, 00) 
+            aux_preset_time = pr["projectdata"]["preset_time"]
+            preset_time = QTime(aux_preset_time[0],aux_preset_time[1],aux_preset_time[2]) 
+            self.gui.timeEdit_reclength.setTime(preset_time)
 
             self.load_index = True
             self.fillplaylist()
@@ -393,10 +712,7 @@ class synthesizer_v(QObject):
                 'data_format': data_format
             }
 
-    def show_fillprogress(self,duration):
-        """show completion percentage of the current carrier track
-
-        """
+    def get_reclength(self):
         qtimeedit = self.gui.timeEdit_reclength
         time_from_qtimeedit = qtimeedit.time()       
         # Zeit aus dem QTimeEdit-Objekt zu aktuellen Datum hinzufügen
@@ -404,9 +720,16 @@ class synthesizer_v(QObject):
         minutes = time_from_qtimeedit.minute()
         seconds = time_from_qtimeedit.second()
         total_reclength = hours*3600 + minutes * 60 + seconds
+        return total_reclength
+
+    def show_fillprogress(self,duration):
+        """show completion percentage of the current carrier track
+
+        """
+        total_reclength = self.get_reclength()
         progfract = duration/total_reclength * 100
 
-        self.gui.progressBar_fillPlaylist.setValue(int(np.floor(progfract)))
+        self.gui.progressBar_fillPlaylist.setValue(min(100,int(np.floor(progfract))))
         if progfract > 100:
             self.gui.progressBar_fillPlaylist.setStyleSheet("QProgressBar::chunk "
                     "{"
@@ -428,6 +751,7 @@ class synthesizer_v(QObject):
         get corresponding carrier index and call playlist update
         """
         self.m["carrier_ix"] = self.gui.comboBox_cur_carrierfreq.currentIndex()
+        
         print(f"carrier index changed to: {self.m['carrier_ix']}")
         self.fillplaylist()
 
@@ -512,7 +836,6 @@ class synthesizer_v(QObject):
         #   add to playtime
         #   set progress bar value and color on overtime
         #
-        pass
 
     def carrierselect_update(self):
         #generate combobox entry list
@@ -521,6 +844,7 @@ class synthesizer_v(QObject):
         self.gui.comboBox_cur_carrierfreq.clear()
         for cf in carrierselector:
             self.gui.comboBox_cur_carrierfreq.addItem(str(cf))
+        self.m["carrierarray"] = carrier_array
 
 
     def freq_carriers_update(self):
@@ -864,3 +1188,91 @@ class synthesizer_v(QObject):
 # Jedes File der Playlist wird gecheckt, ob es einen gültigen wavheader hat und die Spieldauer wird aus dem Header und der Filesize ermittelt:
 # wavheader-tool getsdruno_header() wurde erweitert, um auch Audio-header auszulesen
 # test = WAVheader_tools.get_sdruno_header(self,self.m["f1"],'audio')
+# import numpy as np
+# from scipy.signal import iirnotch, lfilter_zi, lfilter
+
+# def design_notch_filter(fn, BN, fs):
+#     """
+#     Entwirft einen Notch-Filter bei Mittenfrequenz fn mit Bandbreite BN.
+
+#     Parameters:
+#     - fn: Mittenfrequenz des Notch-Filters (Hz)
+#     - BN: Notch-Bandbreite (Hz)
+#     - fs: Abtastrate (Hz)
+
+#     Returns:
+#     - b, a: Notch-Filterkoeffizienten
+#     """
+#     Q = fn / BN  # Berechnung des Qualitätsfaktors Q
+#     b, a = iirnotch(fn / (fs / 2), Q)
+#     return b, a
+
+# def process_block(input_block, b, a, zi_real, zi_imag):
+#     """
+#     Filtert einen Datenblock mit dem Notch-Filter und verwendet den Filterzustand.
+
+#     Parameters:
+#     - input_block: Block von komplexen Daten (1D-Array)
+#     - b, a: Notch-Filterkoeffizienten
+#     - zi_real, zi_imag: Filterzustände für Real- und Imaginärteil
+
+#     Returns:
+#     - Gefilterter Block von komplexen Daten (1D-Array)
+#     - Neuer Filterzustand für den nächsten Block
+#     """
+#     # Filterung des Realteils und Aktualisierung des Filterzustands
+#     filtered_real, zi_real = lfilter(b, a, np.real(input_block), zi=zi_real)
+    
+#     # Filterung des Imaginärteils und Aktualisierung des Filterzustands
+#     filtered_imag, zi_imag = lfilter(b, a, np.imag(input_block), zi=zi_imag)
+    
+#     # Rückgabe des gefilterten komplexen Signals und des neuen Zustands
+#     filtered_block = filtered_real + 1j * filtered_imag
+#     return filtered_block, zi_real, zi_imag
+
+# def notch_filter_file(input_file, output_file, fn, BN, fs, block_size=1024):
+#     """
+#     Liest ein komplexes Zeit-Signal blockweise, filtert es mit einem Notch-Filter
+#     und speichert das Ergebnis in eine Datei. Der Filterzustand wird zwischen
+#     den Blöcken gespeichert.
+
+#     Parameters:
+#     - input_file: Pfad zur Eingabedatei (komplexe Rohdaten im Binary-Format).
+#     - output_file: Pfad zur Ausgabedatei (gefilterte Daten).
+#     - fn: Mittenfrequenz des Notch-Filters (Hz).
+#     - BN: Bandbreite des Notch-Filters (Hz).
+#     - fs: Abtastrate des Signals (Hz).
+#     - block_size: Anzahl der Samples pro Block (Standard: 1024).
+#     """
+#     # Entwerfen des Notch-Filters
+#     b, a = design_notch_filter(fn, BN, fs)
+    
+#     # Initialisierung des Filterzustands (zi) für Real- und Imaginärteil
+#     zi_real = lfilter_zi(b, a) * 0  # Nullinitialisierung
+#     zi_imag = lfilter_zi(b, a) * 0
+
+#     # Öffne die Input- und Output-Dateien im Binärmodus
+#     with open(input_file, 'rb') as f_in, open(output_file, 'wb') as f_out:
+#         while True:
+#             # Blockweises Lesen der Daten
+#             input_block = np.fromfile(f_in, dtype=np.complex64, count=block_size)
+            
+#             # Wenn keine Daten mehr vorhanden sind, beenden
+#             if len(input_block) == 0:
+#                 break
+
+#             # Filtere den Datenblock und aktualisiere den Filterzustand
+#             filtered_block, zi_real, zi_imag = process_block(input_block, b, a, zi_real, zi_imag)
+
+#             # Schreibe den gefilterten Block in die Ausgabedatei
+#             filtered_block.astype(np.complex64).tofile(f_out)
+
+# # Beispielaufruf
+# input_file = 'input_signal.dat'   # Pfad zur Eingabedatei
+# output_file = 'filtered_signal.dat' # Pfad zur Ausgabedatei
+# fs = 1000.0  # Abtastrate in Hz
+# fn = 60.0    # Mittenfrequenz des Notch-Filters in Hz
+# BN = 1.0     # Bandbreite des Notch-Filters in Hz
+# block_size = 4096  # Größe der zu lesenden Blöcke
+
+# notch_filter_file(input_file, output_file, fn, BN, fs, block_size)
