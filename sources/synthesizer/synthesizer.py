@@ -7,6 +7,8 @@ from PyQt5 import QtWidgets, QtGui
 import numpy as np
 import os
 import logging
+from datetime import datetime
+import datetime as ndatetime
 import matplotlib.pyplot as plt
 #import pyfda.pyfdax
 from auxiliaries import auxiliaries as auxi
@@ -14,12 +16,14 @@ import logging
 import yaml
 import copy
 import time
+import pytz
 import wave
 import pyqtgraph as pg
 #import contextlib
 import struct
 import soundfile as sf
 from scipy.signal import sosfilt, butter, resample
+from pathlib import Path
 from auxiliaries import WAVheader_tools
 
 
@@ -29,7 +33,7 @@ class modulate_worker(QObject):
         __slots__: Dictionary with parameters
     :return: none
     """
-    __slots__ = ["carrier_frequencies", "playlists","sample_rate","block_size","cutoff_freq","modulation_depth","output_base_name","exp_num_samples","progress","logger","combined_signal_block"]
+    __slots__ = ["carrier_frequencies", "playlists","sample_rate","block_size","cutoff_freq","modulation_depth","output_base_name","exp_num_samples","progress","logger","combined_signal_block","LO_freq","gain"]
     SigFinished = pyqtSignal()
     SigPupdate = pyqtSignal()
     #SigFinishedLOshifter = pyqtSignal()
@@ -87,6 +91,15 @@ class modulate_worker(QObject):
         self.__slots__[10] = _value
     def get_combined_signal_block(self):
         return(self.__slots__[10])
+    def set_LO_freq(self,_value):
+        self.__slots__[11] = _value
+    def get_LO_freq(self):
+        return(self.__slots__[11])
+    def set_gain(self,_value):
+        self.__slots__[12] = _value
+    def get_gain(self):
+        return(self.__slots__[12])
+    
     
     def modulate_terminate(self):
         self.stopix = True
@@ -134,6 +147,11 @@ class modulate_worker(QObject):
         # Modulation: Signal amplitude-modulates the carrier with the given depth
         modulated_signal = (1 + modulation_depth * filtered_signal) * carrier
         return modulated_signal
+
+    def display_signal_level(self,signal):
+        """
+        calculate the RMS and peak values of a signal
+        """
 
     def read_and_process_audio_blockwise(self, file_list, carrier_freq, target_sample_rate, block_size, cutoff_freq, modulation_depth, zi, sample_offset, current_file_index, file_handles):
         """
@@ -208,12 +226,15 @@ class modulate_worker(QObject):
         # TODO CHECK Set the 2GB limit and calculate the maximum samples per file (for 16-bit PCM WAV files)
         self.stopix = False
         max_file_size = 2 * 1024**3  # 2 GB in bytes
+        #TODO TODO TODO: only test
+        #max_file_size = 128 * 1024**2  # bytes
+        self.logger.debug(f"process_multiple_carriers_blockwise: expected overall filesize: {4*exp_num_samples}")
         max_samples_per_file = max_file_size // 4  # complex 16-bit PCM = 4 bytes per sample
         perc_progress_old = 0
         # Initialize filter states for each carrier
         #zis = [np.zeros((4, 2)) for _ in carrier_frequencies]  # Filter state buffer for each carrier (4th order filter)
         zis = [np.zeros((2, 2)) for _ in carrier_frequencies]  # Filter state buffer for each carrier (4th order filter)
-        
+
         # Initialisiere sample_offset und current_file_index für jeden Carrier
         sample_offsets = [0] * len(carrier_frequencies)
         current_file_indices = [0] * len(carrier_frequencies)  # Track current file index for each carrier
@@ -222,17 +243,19 @@ class modulate_worker(QObject):
         file_handles = [{} for _ in carrier_frequencies]  # Für jeden Carrier ein eigenes Dictionary von Datei-Handles
 
         total_samples_written = 0
+        overall_samples_written = 0
         file_index = 0
 
         # Open first output file to write combined signal blockwise
         output_file_name = f"{output_base_name}_{file_index}.wav"
         out_file = sf.SoundFile(output_file_name, 'w', samplerate=sample_rate, channels=1, subtype='PCM_16')
-
         done = False
-
         #write 216 - 44 =  172 Null Bytes so as to leave room for the SDR-wavheader which will finally overwrite the current header
         prephaser = np.zeros(172)
         out_file.write(prephaser)
+        #generate starting timestamp for wavheader
+        next_starttime = datetime.now()
+        next_starttime = next_starttime.astimezone(pytz.utc)
 
         while not done:
             combined_signal_block = None  # Buffer for combined signal block
@@ -250,8 +273,8 @@ class modulate_worker(QObject):
                 # Dynamically adjust combined signal block size based on modulated block size
                 if combined_signal_block is None or len(combined_signal_block) < len(modulated_block):
                     combined_signal_block = np.zeros(len(modulated_block), dtype = np.complex128)
-
-                combined_signal_block[:len(modulated_block)] += 0.1 * modulated_block ####TODO TODO TODO: Gain control einbauen, 0.1 ist nur ein erster Versuch
+                gain = self.get_gain()
+                combined_signal_block[:len(modulated_block)] += gain * modulated_block ####TODO TODO TODO: Gain control einbauen, 0.1 ist nur ein erster Versuch
                 
                 # If we processed any blocks, we're not done
                 done = False
@@ -269,16 +292,21 @@ class modulate_worker(QObject):
 
             # Write the combined block to the current output file
             samples_to_write = len(combined_signal_block)
-            
+
             if samples_to_write + total_samples_written > max_samples_per_file:
-                # If the file exceeds 2GB, close the current file and start a new one
+                # If the file exceeds 2GB, close the current file, enter the wav-header and start a new one
                 out_file.close()
-                self.wav_header_generator(output_file_name)
+                filesize = max_samples_per_file*4
+                self.logger.debug(f"process_multiple_carriers_blockwise: nest starttime {next_starttime}")
+                output_file_name_wavheader = output_file_name
                 file_index += 1
                 output_file_name = f"{output_base_name}_{file_index}.wav"
+                next_starttime = self.wav_header_generator(output_file_name_wavheader,filesize,sample_rate,next_starttime,output_file_name)
+                print("wavheader written")
                 out_file = sf.SoundFile(output_file_name, 'w', samplerate=sample_rate, channels=1, subtype='PCM_16')
                 total_samples_written = 0  # Reset the sample counter for the new file
 
+        
             #convert complex 128 into 2 x float 64
             lend=2*len(combined_signal_block)
             block_to_write = np.zeros(lend)
@@ -291,7 +319,8 @@ class modulate_worker(QObject):
             except:
                 print("write error")
             total_samples_written += samples_to_write
-            perc_progress = 100*total_samples_written / exp_num_samples
+            overall_samples_written += samples_to_write
+            perc_progress = 100*overall_samples_written / exp_num_samples
             if perc_progress - perc_progress_old > 1:
                 perc_progress_old = perc_progress
                 #self.logger.debug(f"percentage completed: {str(perc_progress)}")
@@ -302,214 +331,44 @@ class modulate_worker(QObject):
                 self.SigPupdate.emit()
                 if perc_progress > 100:
                     break
-                # spr = np.abs(np.fft.fft(combined_signal_block[0:min(2**16,len(combined_signal_block))]))
-                # N = len(spr)
-                # spr = np.fft.fftshift(spr)/N
-                # fax = np.linspace(-1,1,len(spr))
-                # plt.plot(fax,spr)
-                # #plt.legend((np.round(self.freq_union,self.m["round_digits"])).astype('str'), loc="lower right")
-                # plt.xlabel("norm freq (-)")
-                # plt.ylabel("peak value")
-                # plt.title("spectrum of block")
-                # plt.show()
 
         # Close the final output file
         out_file.close()
+        filesize = total_samples_written*4
+        self.logger.debug(f"synthesizer modulate: filesize last out file: {filesize}")
+        self.logger.debug(f"write last wavheader into {output_file_name_wavheader}")
+        output_file_name_wavheader = output_file_name
+        self.wav_header_generator(output_file_name_wavheader,filesize,sample_rate,next_starttime,"")
+        
         ####TODO TODO TODO: write true SDRUno-Header into the first 216 bytes of the closed file
         for file_handle_dict in file_handles:
             for handle in file_handle_dict.values():
                 handle.close()
         self.logger.debug(f"synthesizer modulate task completed")
 
-    def wav_header_generator(self,output_file_name):
-        # if firstpass:
-        #     wavheader = WAVheader_tools.get_sdruno_header(self,input_file)
-        # if firstsource:     ##########NEW AFTER GAPFIXING
-        #     wavheader = WAVheader_tools.get_sdruno_header(self,input_file)
-        #     prev_stoptime = wavheader['stoptime_dt']
-        #     prev_stoptime_ms = wavheader['stoptime'][7]
-        #     gap = 0
-        # else:
-        #     aux_wavheader = WAVheader_tools.get_sdruno_header(self,input_file)
-        #     aux_starttime = aux_wavheader['starttime_dt']
-        #     gap = (aux_starttime - prev_stoptime).seconds + (aux_wavheader['starttime'][7] - prev_stoptime_ms)/1000
-        #     prev_stoptime = aux_wavheader['stoptime_dt']
-        #     prev_stoptime_ms = aux_wavheader['stoptime'][7]
-        #     if firstpass:
-        #         firstpass = False
-        #         stt = self.get_sttime_atrim()
-        #         self.logger.debug(f"merge2G: last == first write file reached, ix = 0")
-        #         wavheader['starttime_dt'] = stt
-        #         wavheader['starttime'] = [stt.year, stt.month, 0, stt.day, stt.hour, stt.minute, stt.second, int(stt.microsecond/1000)] 
-        #     else:
-        #         stt = wavheader["starttime_dt"]
-        #     spt = stt + ndatetime.timedelta(seconds = np.floor(duration)) + ndatetime.timedelta(milliseconds = 1000*(duration - np.floor(duration)))
-        #     wavheader['stoptime_dt'] = spt
-        #     wavheader['stoptime'] = [spt.year, spt.month, 0, spt.day, spt.hour, spt.minute, spt.second, int(spt.microsecond/1000)] 
-        #     wavheader['filesize'] = current_output_file_size
-        #     wavheader['data_nChunkSize'] = wavheader['filesize'] - 208
-        #     wavheader['nextfilename'] = ""
-        #     WAVheader_tools.write_sdruno_header(self,current_output_file.name,wavheader,True) ##TODO TODO TODO Linux conf: self.m["f1"],self.m["wavheader"] must be in Windows format
+    def wav_header_generator(self, output_file_name, filesize,sample_rate, starttime, next_output_file_name):
+        """generate wavheader for output_file_name:
+        :param: output_file_name
+        """
+        LO_freq = self.get_LO_freq()
+        playtime = filesize/4/sample_rate
+        self.mutex.lock()
+        self.logger.debug(f"wav_header_generator: playtime of file {playtime}")
+        self.logger.debug(f"wav_header_generator: calculated filesize of file {filesize}")
+        #generate basic SDR wavheader
+        wavheader = WAVheader_tools.basic_wavheader(self,0,int(np.floor(sample_rate)),LO_freq,16,filesize,starttime)
+        wavheader["starttime"] = [starttime.year, starttime.month, 0, starttime.day, starttime.hour, starttime.minute, starttime.second, int(starttime.microsecond/1000)]  
+        wavheader["starttime_dt"] = starttime
+        wavheader["stoptime_dt"] = wavheader["starttime_dt"] + ndatetime.timedelta(seconds = np.floor(playtime))
+        spt = wavheader["stoptime_dt"] 
+        wavheader["stoptime"] = [spt.year, spt.month, 0, spt.day, spt.hour, spt.minute, spt.second, int(spt.microsecond/1000)] 
+        wavheader["nextfilename"] = Path(next_output_file_name).stem + Path(next_output_file_name).suffix
+        self.logger.debug(f"wav_header_generator: wavheader {wavheader}")
 
-        pass
-            # generate wav header
-        
-            # %Write wav-header
-            # currtime=datetime('now');
-            # starttime=currtime - seconds(C_PLAYLENGTH);
-            # wavinfo.FILENAME = [C_TargetFILENAME '.dat'];
-            # wavinfo.PATHNAME = [WPATHNAME];
-            # %Diagnostic:     [header,type] = read_wavheader_func_v1(wavinfo);
-            # wavinfo.OVERWRITEHEADERONLY = true;
-            # wavinfo.riff_ckID = 'RIFF';
-            # wavinfo.nextfilename = '';
-            # wavinfo.filesize = length(tsr)*numsegments*4-8;
-            # wavinfo.nBitsPerSample = 16;
-            # wavinfo.nSamplesPerSec=C_SRR;
-            # wavinfo.nAvgBytesPerSec=C_SRR*4;
-            # wavinfo.stoptime = [year(currtime) month(currtime) 0 day(currtime) hour(currtime) minute(currtime) second(currtime) 0];
-            # wavinfo.starttime = [year(starttime) month(starttime) 0 day(starttime) hour(starttime) minute(starttime) second(starttime) 0];
-            # wavinfo.centerfreq = C_fc;
-            # wavinfo.data_nChunkSize = wavinfo.filesize - 216;
-            # aaa=dir([WPATHNAME '\' C_TargetFILENAME '.dat']);
-            # checkfilesize = aaa.bytes-8; %strange 8 bytes offset, filesize must be by 8 smaller than true filesize for SDRUno, reason unknown
-            # checkfilesize - wavinfo.filesize;    %####################
-            # wavinfo.headerfilename = [WPATHNAME '\' C_TargetFILENAME '.dat']; %write header to the first 216 bytes of the dat file
-            # wavinfo.nBlockAlign = 4;
-            # wavinfo.wFormatTag = 1;
-            # wavinfo.sdr_nChunkSize = 164;
-            # wavinfo.wave_string = 'WAVE';
-            # wavinfo.fmt_ckID = 'fmt ';
-            # wavinfo.fmt_nChunkSize = 16;%4
-            # wavinfo.nChannels = 2;
-            # wavinfo.sdr_ckID = 'auxi';
-            # wavinfo.ADFrequency = 0;
-            # wavinfo.IFFrequency = 0;
-            # wavinfo.Bandwidth = 0;
-            # wavinfo.IQOffset = 0;
-            # wavinfo.Unused = [0 0 0 0];
-            # wavinfo.data_ckID = 'data';
-            # wavinfo.data_nChunkSize = wavinfo.filesize - 208;
-            # write_wav_header_func_v2(wavinfo);
+        WAVheader_tools.write_sdruno_header(self,output_file_name,wavheader,True) ##TODO TODO TODO Linux conf: self.m["f1"],self.m["wavheader"] must be in Windows format
+        self.mutex.unlock()
+        return wavheader["stoptime_dt"]
 
-                            # if list_ix > (lenlist-1):
-                            #     self.logger.debug(f"merge2G: last write file reached, ix = {lenlist}")
-                            #     #write last wavheader
-                            #     duration = (current_output_file_size - 216)/wavheader["nAvgBytesPerSec"]
-                            #     #TODO: this is wrong except for the last file! must be the stoptime of the last output file
-                            #     if firstpass:
-                            #         firstpass = False
-                            #         stt = self.get_sttime_atrim()
-                            #         self.logger.debug(f"merge2G: last == first write file reached, ix = 0")
-                            #         wavheader['starttime_dt'] = stt
-                            #         wavheader['starttime'] = [stt.year, stt.month, 0, stt.day, stt.hour, stt.minute, stt.second, int(stt.microsecond/1000)] 
-                            #     else:
-                            #         stt = wavheader["starttime_dt"]
-                            #     spt = stt + ndatetime.timedelta(seconds = np.floor(duration)) + ndatetime.timedelta(milliseconds = 1000*(duration - np.floor(duration)))
-                            #     wavheader['stoptime_dt'] = spt
-                            #     wavheader['stoptime'] = [spt.year, spt.month, 0, spt.day, spt.hour, spt.minute, spt.second, int(spt.microsecond/1000)] 
-                            #     wavheader['filesize'] = current_output_file_size
-                            #     wavheader['data_nChunkSize'] = wavheader['filesize'] - 208
-                            #     wavheader['nextfilename'] = ""
-                            #     WAVheader_tools.write_sdruno_header(self,current_output_file.name,wavheader,True) ##TODO TODO TODO Linux conf: self.m["f1"],self.m["wavheader"] must be in Windows format
-                            #     #TODO: rename to newfile
-                            #     nametrunk, extension = os.path.splitext(current_output_file.name)
-                            #     nametrunk = f"{os.path.dirname(current_output_file_path)}/{basename}_{str(current_output_file_index)}_"
-                            #     aux = str(wavheader['starttime_dt'])
-                            #     if aux.find('.') < 1:
-                            #         SDRUno_suff = aux
-                            #     else:
-                            #         SDRUno_suff = aux[:aux.find('.')]
-                            #     SDRUno_suff = SDRUno_suff.replace(" ","_")
-                            #     SDRUno_suff = SDRUno_suff.replace(":","")
-                            #     SDRUno_suff = SDRUno_suff.replace("-","")
-                            #     new_name = nametrunk + str(SDRUno_suff) + '_' + str(int(np.round(wavheader["centerfreq"]/1000))) + 'kHz.wav'
-                            #     current_output_file.close()
-                            #     time.sleep(0.01)
-                            #     jx = 0
-                            #     while jx <1:
-                            #         try:
-                            #             #print(f"merge2Gworker try shutil {current_output_file_path} to {new_name}")
-                            #             shutil.move(current_output_file_path, new_name)
-                            #         except:
-                            #             jx += 1
-                            #             #print(f"merge2Gworker renamefile trial {str(jx)}")
-                            #             time.sleep(0.5)
-                            #     # if jx == 10:
-                            #     #     auxi.standard_errorbox("The output file was written, but the temp file could not be renamed for unknown reason . Please repeat the merging process")                                    
-                            # self.logger.debug("break merget2Gworker")
-
-                        # # check if output file exceeds maximum size
-                        # if current_output_file_size + len(data_chunk) > MAX_TARGETFILE_SIZE: #TEST: 50 * 1024**2: #TODO: zurückstellen nach Test self.MAX_TARGETFILE_SIZE:
-                        #     #generate individual wavheaders, generate nextfilename
-                        #     current_output_file.close()
-                        #     #insert wav header
-                        #     duration = (current_output_file_size - 216)/wavheader["nAvgBytesPerSec"]
-                        #     if firstpass:
-                        #         #print(f"merge2G: first write file reached, ix = 0")
-                        #         #TODO: write first starttime from cut_times
-                        #         firstpass = False
-                        #         stt = self.get_sttime_atrim()
-                        #         wavheader['starttime_dt'] = stt
-                        #         wavheader['starttime'] = [stt.year, stt.month, 0, stt.day, stt.hour, stt.minute, stt.second, int(stt.microsecond/1000)] 
-                        #     else:
-                        #         #TODO: 
-                        #         #aktuell: wenn aktuelles Ausgabefile fertig, hole Startzeit vom Header des aktuellen
-                        #         #Ausgabefiles, addiere Dauer und generiere daraus den nächsten wavheader
-                        #         #beim ersten Listeneintrag hole Startzit von starttime after trim
-                        #         stt = wavheader["starttime_dt"]
-                        #     spt = stt + ndatetime.timedelta(seconds= np.floor(duration))  + ndatetime.timedelta(milliseconds = 1000*(duration - np.floor(duration)))
-                        #     wavheader['stoptime_dt'] = spt
-                        #     wavheader['stoptime'] = [spt.year, spt.month, 0, spt.day, spt.hour, spt.minute, spt.second, int(spt.microsecond/1000)] 
-                        #     wavheader['filesize'] = current_output_file_size
-                        #     wavheader['data_nChunkSize'] = wavheader['filesize'] - 208
-                        #     nametrunk = f"{os.path.dirname(current_output_file_path)}/{basename}_{str(current_output_file_index)}_"
-                        #     aux = str(wavheader['starttime_dt'])
-                        #     if aux.find('.') < 1:
-                        #         SDRUno_suff = aux
-                        #     else:
-                        #         SDRUno_suff = aux[:aux.find('.')]
-                        #     SDRUno_suff = SDRUno_suff.replace(" ","_")
-                        #     SDRUno_suff = SDRUno_suff.replace(":","")
-                        #     SDRUno_suff = SDRUno_suff.replace("-","")
-                        #     new_name = nametrunk + str(SDRUno_suff) + '_' + str(int(np.round(wavheader["centerfreq"]/1000))) + 'kHz.wav'
-
-                        #     # generate name for the wav-header 'nextfilename'
-                        #     next_nametrunk = f"{basename}_{str(current_output_file_index + 1)}_" 
-                        #     aux = str(wavheader['stoptime_dt'])
-                        #     if aux.find('.') < 1:
-                        #         next_suff = aux
-                        #     else:
-                        #        next_suff = aux[:aux.find('.')]
-                        #     next_suff = next_suff.replace(" ","_")
-                        #     next_suff = next_suff.replace(":","")
-                        #     next_suff = next_suff.replace("-","")
-                        #     next_name = next_nametrunk + str(next_suff) + '_' + str(int(np.round(wavheader["centerfreq"]/1000))) + 'kHz.wav'
-                        #     wavheader['nextfilename'] = next_name
-                        #     WAVheader_tools.write_sdruno_header(self,current_output_file.name,wavheader,True) ##TODO TODO TODO Linux conf: self.m["f1"],self.m["wavheader"] must be in Windows format
-
-                            # while True:
-                            #     try:
-                            #         shutil.move(current_output_file_path, new_name)
-                            #         break
-                            #     except:
-                            #         print("Warning 202 merge2Gworker: cannot access temp file, retry in 2 s")
-                            #         time.sleep(2)
-
-                            # # prepare next wavheader starttime
-                            # wavheader['starttime_dt'] = wavheader['stoptime_dt']
-                            # wavheader['starttime'] = wavheader['stoptime']
-                            # current_output_file_size = 0
-        #                     current_output_file_index += 1
-        #                     current_output_file_path = f"{output_file_prefix}_{current_output_file_index}.dat"
-        #                     #print(f"merge2G next outputfile {current_output_file_path}")
-        #                     current_output_file = open(current_output_file_path, 'wb')
-        #                     current_output_file.write(b'\x00' * 216)  # Schreibe die ersten 216 Bytes mit Nullen
-        #                 # write data to target file: if last file: nextfile = ''
-        #                 current_output_file.write(data_chunk)
-        #                 current_output_file_size += len(data_chunk)
-        # self.logger.debug("#################_______________merge2G: merge files done")
-        # self.SigFinishedmerge2G.emit()
 
 
 
@@ -607,6 +466,7 @@ class synthesizer_v(QObject):
         self.STD_CARRIERDISTANCE = "9"
         self.STD_fclow = "783"
         self.STD_LO = "1125"
+        self.GAINOFFSET = 80
         self.gui = gui
         self.synthesizer_c = synthesizer_c
         #self.norepeat = False
@@ -626,9 +486,6 @@ class synthesizer_v(QObject):
         self.DATABLOCKSIZE = 1024*32
         self.gui = gui #gui_state["gui_reference"]#system_state["gui_reference"]
         self.logger = synthesizer_m.logger
-        self.synthesizer_c.SigRelay.connect(self.rxhandler)
-        self.synthesizer_c.SigRelay.connect(self.SigRelay.emit)
-        self.synthesizer_c.SigRelay.connect(self.SigRelay.emit)
 
         self.init_synthesizer_ui()
 
@@ -688,23 +545,74 @@ class synthesizer_v(QObject):
         #self.gui.synthesizer_pushbutton_create.clicked.connect(self.create_band)
         self.gui.timeEdit_reclength.timeChanged.connect(self.carrier_ix_changed)
         self.gui.synthesizer_pushbutton_cancel.clicked.connect(self.cancel_modulate)
+        self.gui.verticalSlider_Gain.setProperty("value", 80) #percent
+
+        self.gui.verticalSlider_Gain.valueChanged.connect(self.setgain)
         self.canvasbuild()
         #self.gui.lineEdit_carrierdistance.textEdited.connect(self.carriedistance_update)
-        #editingFinished #editingFinished
-        ###########TODO TODO TODO: remove after transfer to config Tab
-        # try:
-        #     stream = open("config_wizard.yaml", "r")
-        #     self.metadata = yaml.safe_load(stream)
-        #     stream.close()
-        #     self.ismetadata = True
-        #     if 'STM_IP_address' in self.metadata.keys():
-        #         self.gui.lineEdit_IPAddress.setText(self.metadata["STM_IP_address"]) #TODO: Remove after transfer of playrec
-        #         self.m["STM_IP_address"] = self.metadata["STM_IP_address"] #TODO: Remove after transfer of playrec
-        # except:
-        #     self.m["STM_IP_address"] = self.gui.lineEdit_IPAddress.text()
-        #     self.logger.error("reset_gui: cannot get metadata")
-        #     pass
 
+    def setgain(self):
+        """set gain which is set by the gain slider and pass it to the modulator worker
+        """
+        gain = 10**((self.gui.verticalSlider_Gain.value()/100*90 - self.GAINOFFSET)/20)
+        self.logger.debug("cb_setgain, gain: %f",self.m["gain"])
+        try:
+            self.modulate_worker.set_gain(gain)
+        except:
+            pass
+        print(f"synthesizer, set gain: {gain}")
+
+
+    def showRFdata(self):
+        """_take over datasegment from player loop worker and caluclate from there the signal volume and present it in the volume indicator
+        read gain value and present it in the player Tab on the 'progressbar' Widget 'progressBar_volume'
+        Parameters: a = length form top to 0dB tick
+        b = length between -80 and 0 dB ticks
+        c = length between bottom and -80dB tick
+        a+b+c = total length of the indicator and hence of the progress-bar volume 
+        GUI Element
+        :return: _False if error, True on succes_
+        :rtype: _Boolean_
+        """
+        #scal_NEW = True
+        # geometry scaling; absolute numbers are not relevant, only relative lengths
+        #a = #10/139.5 #7/86  
+        c = 11/89 #16.5/139.5 #8/86
+        b = 72/89 #(139.5 - 10 -16.5)/139.5 #(86 -7 -8)/86
+        data = self.modulate_worker.get_combined_signal_block()
+        #use RMS value as indicator for signal strength 
+        refvol = 0.71 #could be used for rescaling to amplitude values
+        volume = np.linalg.norm(data)/refvol
+        self.logger.debug(f"synthesizer showRFdata volume: {volume} ")
+        span = 80
+        #vol = 1.5*np.std(volume)/scl/refvol
+        dBvol = 20*np.log10(volume)
+        rawvol = c + b + dBvol/span*b
+        if dBvol > 0:
+            dispvol = min(100, rawvol*100)
+        elif (dBvol < 0) and (dBvol > -span):
+            dispvol = rawvol*100
+        elif dBvol < -span:
+            dispvol = c*0.8*100
+        if np.any(np.isnan(dispvol)):
+            return
+        #print(f"vol: {vol} dB: {dBvol} std: {np.std(cv)/scl} dispvol: {dispvol} rv: {np.std(cv)/scl}")
+        self.gui.progressBar_volume.setValue(int(np.floor(dispvol*10))) 
+        if dBvol > -7:
+            self.gui.progressBar_volume.setStyleSheet("QProgressBar::chunk "
+                    "{"
+                        "background-color: red;"
+                    "}")
+        elif dBvol < -70:
+            self.gui.progressBar_volume.setStyleSheet("QProgressBar::chunk "
+                    "{"
+                        "background-color: yellow;"
+                    "}")           
+        else:
+            self.gui.progressBar_volume.setStyleSheet("QProgressBar::chunk "
+                    "{"
+                        "background-color: green;"
+                    "}")
 
     def cancel_modulate(self):
         #TODO check how to handle and delete after change to model
@@ -718,9 +626,6 @@ class synthesizer_v(QObject):
         time.sleep(0.001)
         for i in range(5):
             self.logger.debug("**** 5 x BLOCK *****___cancel_synthesizer reached")
-        # self.m["emergency_stop"] = True
-        # print(f"Cance_resamapling: emergency stop: {self.m['emergency_stop']}")
-        # self.logger.debug("Cance_resamapling: emergency stop: %s", self.m['emergency_stop'])
         try:
             self.modulate_worker.modulate_terminate()
         except:
@@ -745,7 +650,7 @@ class synthesizer_v(QObject):
         # self.cref = auxi.generate_canvas(self,self.gui.gridLayout_10,[13,11,1,2],[-1,-1,-1,-1],gui)
         # self.cref["ax"].tick_params(axis='both', which='major', labelsize=6)
         self.plot_widget = pg.PlotWidget()
-        self.gui.gridLayout_synthesizer.addWidget(self.plot_widget,1,8,1,2)
+        self.gui.gridLayout_synthesizer.addWidget(self.plot_widget,0,7,3,2)
         self.plot_widget.getAxis('left').setStyle(tickFont=pg.QtGui.QFont('Arial', 6))
         self.plot_widget.getAxis('bottom').setStyle(tickFont=pg.QtGui.QFont('Arial', 6))
         self.plot_widget.setBackground('w')
@@ -757,38 +662,38 @@ class synthesizer_v(QObject):
         self.curve = self.plot_widget.plot(self.xdata, self.ydata, pen=pg.mkPen('k'))
 
 
-    # def create_band(self):
-    #     #TODO TODO TODO: start and manage thread for modulator_worker
-    #     #TODO TODO TODO: write method for progressbar update
-    #     #
-    #     #
-    #     # Beispielhafte Anwendung
-    #     sample_rate = int(self.gui.comboBox_targetSR.currentText())*1000 # Gemeinsame Abtastrate für Hf-Signal
-    #     cutoff_freq = float(self.gui.lineEdit_audiocutoff_freq.text())*1000   # Tiefpass-Grenzfrequenz   float32(self.gui.lineEdit_audiocutoff_freq.text())
-    #     modulation_depth = float(self.gui.lineEdit_modfactor.text())  # Modulationstiefe 
-    #     playlists = [[f"{path.rstrip('/')}/{file}" for file, path in zip(files, paths)] for files, paths in zip(self.readFileList, self.readFilePath)]
-    #     carrier_frequencies = self.m["carrierarray"]
-    #     output_base_name = 'combined_output'
-    #     block_size = 2**16   # Maximalblocklänge für die Verarbeitung
-    #     total_reclength = self.get_reclength()
-    #     exp_num_samples = total_reclength * sample_rate
-    #     #exp_num_blocks = exp_num_samples/block_size
-    #     self.process_multiple_carriers_blockwise(carrier_frequencies, playlists, sample_rate, block_size, cutoff_freq, modulation_depth, output_base_name, exp_num_samples)
-    #     #TODO TODO TODO: 
-    #     # zero pad all rows in modulated_signals to greatest subsignal length
-
     def create_band_thread(self):
+        #TODO TODO TODO: exit if no project defined
+        print("recording path received")
+        print(self.m["recording_path"])
+        playlists = [[f"{path.rstrip('/')}/{file}" for file, path in zip(files, paths)] for files, paths in zip(self.readFileList, self.readFilePath)]
+        cumlen = 0
+        for elem in playlists:
+            cumlen = cumlen + len(elem)
+        if cumlen == 0:
+            auxi.standard_errorbox("no playlists defined yet, cannot create anything")
+            return
         self.SigActivateOtherTabs.emit("synthesizer","inactivate",["Synthesizer"])
         self.gui.progressBar_synth.setValue(0)
-        self.gui.synthesizer_pushbutton_create.setEnabled(False)
+        self.activate_control_elements(False)
         self.logger.debug("modulate: configure modulate_worker thread et al")
         self.m["cancelflag"] = False
         sample_rate = int(self.gui.comboBox_targetSR.currentText())*1000 # samplingrate of RF-Signal
         cutoff_freq = float(self.gui.lineEdit_audiocutoff_freq.text())*1000   # Lowpass cutoff frequency   
         modulation_depth = float(self.gui.lineEdit_modfactor.text())  # Modulation depth 
         playlists = [[f"{path.rstrip('/')}/{file}" for file, path in zip(files, paths)] for files, paths in zip(self.readFileList, self.readFilePath)]
+        LO_frequency = int(int(self.gui.lineEdit_LO.text())*1000)
         carrier_frequencies = self.m["carrierarray"]
-        output_base_name = 'combined_output'
+
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog  # Verwende das Qt-eigene Dialogfenster
+        output_base_name, _ = QFileDialog.getSaveFileName(self.m["QTMAINWINDOWparent"], 
+                                                   "Save File", 
+                                                   self.m["recording_path"],  # Standard rec path, Standardmäßig kein voreingestellter Dateiname
+                                                   "wav Files (*.wav)",  # Filter für Dateitypen
+                                                   options=options)
+
+
         block_size = 2**16   # Maximum block length
         total_reclength = self.get_reclength()
         exp_num_samples = total_reclength * sample_rate
@@ -805,6 +710,8 @@ class synthesizer_v(QObject):
         self.modulate_worker.set_output_base_name(output_base_name)
         self.modulate_worker.set_exp_num_samples(exp_num_samples)
         self.modulate_worker.set_logger(self.logger)
+        self.modulate_worker.set_LO_freq(LO_frequency)
+        self.setgain()
         self.modulate_thread.started.connect(self.modulate_worker.start_modulator)
         self.modulate_worker.SigPupdate.connect(self.PupdateSignalHandler)
         self.modulate_worker.SigFinished.connect(self.modulate_thread.quit)
@@ -828,9 +735,36 @@ class synthesizer_v(QObject):
         return(True)
     
     def cleanup(self):
-        self.gui.synthesizer_pushbutton_create.setEnabled(True)
+        self.activate_control_elements(True)
         self.SigActivateOtherTabs.emit("synthesizer","activate",[])
+        auxi.standard_infobox("synthesis has been completed, files can be found in the recording path defined on the Player tab")
         self.gui.progressBar_synth.setValue(0)
+
+    def activate_control_elements(self,value):
+        """enable or disable all control elements of the tab via value
+        value = True: enable
+        value = False: disable
+        :param: value
+        :type: Boolean
+        """  
+        #self.gui.verticalSlider_Gain.setEnabled(value)
+        self.gui.synthesizer_pushbutton_create.setEnabled(value)
+        self.gui.comboBox_cur_carrierfreq.setEnabled(value)
+        self.gui.pushButton_saveproject.setEnabled(value)
+        self.gui.pushButton_loadproject.setEnabled(value)
+        self.gui.pushButton_select_source.setEnabled(value)
+        self.gui.comboBox_targetSR.setEnabled(value)
+        self.gui.lineEdit_LO.setEnabled(value)
+        self.gui.comboBox_targetSR_2.setEnabled(value)
+        self.gui.lineEdit_fc_low.setEnabled(value)
+        self.gui.lineEdit_carrierdistance.setEnabled(value)
+        self.gui.lineEdit_modfactor.setEnabled(value)
+        self.gui.spinBox_numcarriers.setEnabled(value)
+        self.gui.lineEdit_audiocutoff_freq.setEnabled(value)
+        self.gui.timeEdit_reclength.setEnabled(value)
+        self.gui.synthesizer_radioBut_diagnosticmode.setEnabled(value)
+        self.gui.lineEdit_Scalefactor.setEnabled(value)
+        self.gui.playrec_radioButton_RECAUTOSTART_2.setEnabled(value)
 
 
     def PupdateSignalHandler(self):
@@ -841,19 +775,13 @@ class synthesizer_v(QObject):
         print(f"progress: {progress}")
         combined_signal_block = self.modulate_worker.get_combined_signal_block()
         self.gui.progressBar_synth.setValue(min(100,int(np.floor(progress))))
-        if self.gui.synthesizer_radioBut_diagnosticmode.isChecked():
+        if True: #self.gui.synthesizer_radioBut_diagnosticmode.isChecked():
             self.logger.debug(f"percentage completed: {str(progress)}")
             spr = np.abs(np.fft.fft(combined_signal_block[0:min(2**16,len(combined_signal_block))]))
             N = len(spr)
             spr = np.fft.fftshift(spr)/N
             fax = np.linspace(-1,1,len(spr))
-            # plt.plot(fax,spr)
-            # #plt.legend((np.round(self.freq_union,self.m["round_digits"])).astype('str'), loc="lower right")
-            # plt.xlabel("norm freq (-)")
-            # plt.ylabel("peak value")
-            # plt.title("spectrum of block")
-            # plt.show()
-
+            #TODO TODO TODO: scale f-axis properly
             #flo = self.m["wavheader"]['centerfreq'] - self.m["wavheader"]['nSamplesPerSec']/2
             #freq0 = np.linspace(0,self.m["wavheader"]['nSamplesPerSec'],N)
             #freq = freq0 + flo
@@ -861,213 +789,7 @@ class synthesizer_v(QObject):
             datax = fax
             datay = 20*np.log10(spr)
             self.curve.setData(datax, datay)
-
-
-    def resample_audio(self,audio_data, original_rate, target_rate):
-        """
-        Resample audio data to the target sample rate.
-        """
-        num_samples = int(len(audio_data) * target_rate / original_rate)
-        return resample(audio_data, num_samples)
-
-    def convert_to_mono(self,audio_data, num_channels):
-        """
-        Convert multi-channel audio to mono by averaging channels.
-        """
-        if num_channels > 1:
-            return np.mean(audio_data, axis=1)
-        return audio_data
-
-    def process_block(self,audio_block, sos, zi):
-        """Apply the low-pass filter blockwise and maintain filter state (zi)."""
-        filtered_block, zi = sosfilt(sos, audio_block, zi=zi)
-        return filtered_block, zi
-    
-    def modulate_signal(self,filtered_signal, carrier_freq, sample_rate, sample_offset, modulation_depth):
-        """Modulate the filtered signal onto a carrier frequency with adjustable modulation depth."""
-        # Zeitvektor basierend auf dem sample_offset
-        t = np.arange(sample_offset, sample_offset + len(filtered_signal)) / sample_rate
-        carrier = np.exp(2 * np.pi * 1j *carrier_freq * t)
-        
-        # Modulation: Signal amplitude-modulates the carrier with the given depth
-        modulated_signal = (1 + modulation_depth * filtered_signal) * carrier
-        return modulated_signal
-
-    def read_and_process_audio_blockwise(self, file_list, carrier_freq, target_sample_rate, block_size, cutoff_freq, modulation_depth, zi, sample_offset, current_file_index, file_handles):
-        """
-        Read and process audio blockwise from the current file in the file_list, keeping the file handle open.
-        Process only one block and move to the next file when the current one is finished.
-        
-        Args:
-        - file_list: List of audio file paths for the current carrier.
-        - carrier_freq: Carrier frequency for modulation.
-        - target_sample_rate: Target sample rate for processing.
-        - block_size: Size of the audio block to be processed.
-        - cutoff_freq: Cutoff frequency for the low-pass filter.
-        - modulation_depth: Depth of modulation.
-        - zi: Filter state to maintain continuity across blocks.
-        - sample_offset: Current sample offset for phase continuity in modulation.
-        - current_file_index: Index of the current file in the file_list.
-        - file_handles: Dictionary of file handles to keep files open.
-
-        Returns:
-        - modulated_output: Modulated block of audio.
-        - zi: Updated filter state.
-        - sample_offset: Updated sample offset.
-        - current_file_index: Updated file index (incremented if necessary).
-        """
-        sos = butter(4, cutoff_freq, btype='low', fs=target_sample_rate, output='sos')
-
-        while current_file_index < len(file_list):
-            file_path = file_list[current_file_index]
-
-            # Überprüfen, ob das File bereits offen ist, falls nicht, öffne es und speichere den Handle
-            if current_file_index not in file_handles:
-                file_handles[current_file_index] = sf.SoundFile(file_path, 'r')
-
-            f = file_handles[current_file_index]
-            original_sample_rate = f.samplerate
-            num_channels = f.channels
-
-            # Blockweises Lesen
-            audio_block = f.read(block_size)
-            if len(audio_block) == 0:
-                # Datei ist fertig, zum nächsten File wechseln und Datei schließen
-                f.close()
-                del file_handles[current_file_index]  # Handle entfernen
-                current_file_index += 1
-                continue  # Weiter zur nächsten Datei
-
-            # Mono-Konvertierung falls notwendig
-            audio_block = self.convert_to_mono(audio_block, num_channels)
-
-            # Resampling falls notwendig
-            if original_sample_rate != target_sample_rate:
-                audio_block = self.resample_audio(audio_block, original_sample_rate, target_sample_rate)
-
-            # Low-Pass-Filter anwenden
-            filtered_block, zi = self.process_block(audio_block, sos, zi)
-
-            # Modulation auf den Träger anwenden
-            modulated_block = self.modulate_signal(filtered_block, carrier_freq, target_sample_rate, sample_offset, modulation_depth)
-
-            # Aktualisierung von sample_offset für den nächsten Block
-            sample_offset += len(modulated_block)
-
-            return modulated_block, zi, sample_offset, current_file_index
-
-        # Alle Dateien wurden verarbeitet, kehre None zurück
-        return None, zi, sample_offset, current_file_index
-
-    def process_multiple_carriers_blockwise(self, carrier_frequencies, playlists, sample_rate, block_size, cutoff_freq, modulation_depth, output_base_name, exp_num_samples):
-        """
-        Process audio from multiple playlists blockwise, each corresponding to a different carrier frequency.
-        Write the combined output to multiple WAV files if the 2 GB limit is exceeded.
-        """
-        # Set the 2GB limit and calculate the maximum samples per file (for 16-bit PCM WAV files)
-        max_file_size = 2 * 1024**3  # 2 GB in bytes
-        max_samples_per_file = max_file_size // 4  # complex 16-bit PCM = 4 bytes per sample
-        perc_progress_old = 0
-        # Initialize filter states for each carrier
-        #zis = [np.zeros((4, 2)) for _ in carrier_frequencies]  # Filter state buffer for each carrier (4th order filter)
-        zis = [np.zeros((2, 2)) for _ in carrier_frequencies]  # Filter state buffer for each carrier (4th order filter)
-        
-        # Initialisiere sample_offset und current_file_index für jeden Carrier
-        sample_offsets = [0] * len(carrier_frequencies)
-        current_file_indices = [0] * len(carrier_frequencies)  # Track current file index for each carrier
-        
-        # **Initialisiere file_handles als Liste von Dictionaries für jeden Carrier**
-        file_handles = [{} for _ in carrier_frequencies]  # Für jeden Carrier ein eigenes Dictionary von Datei-Handles
-
-        total_samples_written = 0
-        file_index = 0
-
-        # Open first output file to write combined signal blockwise
-        output_file_name = f"{output_base_name}_{file_index}.wav"
-        out_file = sf.SoundFile(output_file_name, 'w', samplerate=sample_rate, channels=1, subtype='PCM_16')
-
-        done = False
-
-        #write 216 - 44 =  172 Null Bytes so as to leave room for the SDR-wavheader which will finally overwrite the current header
-        prephaser = np.zeros(172)
-        out_file.write(prephaser)
-
-        while not done:
-            combined_signal_block = None  # Buffer for combined signal block
-            done = True  # Assume done unless we find more data
-            
-            # Process each carrier for the current block
-            for i, (carrier_freq, zi) in enumerate(zip(carrier_frequencies, zis)):
-                modulated_block, new_zi, sample_offsets[i], current_file_indices[i] = self.read_and_process_audio_blockwise(
-                    playlists[i], carrier_freq*1000, sample_rate, block_size, cutoff_freq, modulation_depth, zi, sample_offsets[i], current_file_indices[i], file_handles[i])
-                
-                # Wenn modulated_block None ist, dann ist das Playlist-Ende erreicht
-                if modulated_block is None:
-                    continue
-
-                # Dynamically adjust combined signal block size based on modulated block size
-                if combined_signal_block is None or len(combined_signal_block) < len(modulated_block):
-                    combined_signal_block = np.zeros(len(modulated_block), dtype = np.complex128)
-
-                combined_signal_block[:len(modulated_block)] += 0.1 * modulated_block ####TODO TODO TODO: Gain control einbauen, 0.1 ist nur ein erster Versuch
-                
-                # If we processed any blocks, we're not done
-                done = False
-
-                # Update filter state for this carrier
-                zis[i] = new_zi
-            
-            # If all files are done, break the loop
-            if done:
-                break
-
-            # Write the combined block to the current output file
-            samples_to_write = len(combined_signal_block)
-            
-            if samples_to_write + total_samples_written > max_samples_per_file:
-                # If the file exceeds 2GB, close the current file and start a new one
-                out_file.close()
-                file_index += 1
-                output_file_name = f"{output_base_name}_{file_index}.wav"
-                out_file = sf.SoundFile(output_file_name, 'w', samplerate=sample_rate, channels=1, subtype='PCM_16')
-                total_samples_written = 0  # Reset the sample counter for the new file
-            #convert complex 128 into 2 x float 64
-            lend=2*len(combined_signal_block)
-            block_to_write = np.zeros(lend)
-            block_to_write[1::2] = np.imag(combined_signal_block)
-            block_to_write[0::2] = np.real(combined_signal_block)
-            # block_to_write[0:2:lend-1] = np.real(combined_signal_block)
-            # block_to_write[1:2:lend] = np.imag(combined_signal_block)
-            try:
-                out_file.write(block_to_write)
-            except:
-                print("write error")
-            total_samples_written += samples_to_write
-            perc_progress = 100*total_samples_written / exp_num_samples
-            if perc_progress - perc_progress_old > 1:
-                perc_progress_old = perc_progress
-                self.logger.debug(f"percentage completed: {str(perc_progress)}")
-                print(f"percentage completed: {str(perc_progress)}")
-                spr = np.abs(np.fft.fft(combined_signal_block[0:min(2**16,len(combined_signal_block))]))
-                N = len(spr)
-                spr = np.fft.fftshift(spr)/N
-                fax = np.linspace(-1,1,len(spr))
-                plt.plot(fax,spr)
-                #plt.legend((np.round(self.freq_union,self.m["round_digits"])).astype('str'), loc="lower right")
-                plt.xlabel("norm freq (-)")
-                plt.ylabel("peak value")
-                plt.title("spectrum of block")
-                plt.show()
-
-
-        # Close the final output file
-        out_file.close()
-        ####TODO TODO TODO: write true SDRUno-Header into the first 216 bytes of the closed file
-
-        # **Am Ende sicherstellen, dass alle Datei-Handles geschlossen werden**
-        for file_handle_dict in file_handles:
-            for handle in file_handle_dict.values():
-                handle.close()
+        self.showRFdata()
 
     def save_project(self):
         """_save current settings and all playlists to a project file (*.proj) via intermediate dictionary pr
@@ -1099,8 +821,6 @@ class synthesizer_v(QObject):
         time_from_qtimeedit = qtimeedit.time()
         pr["projectdata"]["preset_time"] = [time_from_qtimeedit.hour(), time_from_qtimeedit.minute(), time_from_qtimeedit.second()]
          
-
-
         filename = self.save_file_dialog()
         stream = open(filename, "w") ###replace project.yaml with filename
         yaml.dump(pr["projectdata"], stream)
@@ -1671,6 +1391,10 @@ class synthesizer_v(QObject):
         if _key.find("cm_synthesizer") == 0 or _key.find("cm_all_") == 0:
             #set mdl-value
             self.m[_value[0]] = _value[1]
+            if _value[0] == "recording_path":
+                print("recording path received")
+                print(_value)
+                print(self.m["recording_path"])
         if _key.find("cui_synthesizer") == 0:
             _value[0](_value[1]) #STILL UNCLEAR
         if _key.find("cexex_synthesizer") == 0  or _key.find("cexex_all_") == 0:

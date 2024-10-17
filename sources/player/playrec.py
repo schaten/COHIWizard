@@ -1480,6 +1480,7 @@ class playrec_v(QObject):
         self.logger.debug("cb_setgain, gain: %f",self.m["gain"])
         self.playrec_c.playrec_tworker.set_6(self.m["gain"])   #############TODO TODO TODO
         print(f"cab_set gain gain: {self.m['gain']}")
+
     def popup(self,i):
         """    
         """

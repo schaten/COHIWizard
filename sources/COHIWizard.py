@@ -244,7 +244,7 @@ class core_c(QObject):
         self.m["recording_path"] = self.m["metadata"]["recording_path"] #TODO: check ? obsolete ?
         self.logger.debug("playrec recording button recording path: %s", self.m["recording_path"])
         #print("core_c send recordingpath to all")
-        self.SigRelay.emit("cm_all_",["recording_path",self.m["recording_path"]])        
+        self.SigRelay.emit("cm_all_",["recording_path",self.m["recording_path"]])      
         self.SigRelay.emit("cexex_xcore",["updateConfigElements",0])
 
 class core_v(QObject):
@@ -511,6 +511,8 @@ class core_v(QObject):
         """
         try:
             self.gui.playrec_lineEdit_recordingpath.setText(self.m["recording_path"])    #should be part of the playrec module ?
+            self.SigRelay.emit("cm_all_",["recording_path",self.m["recording_path"]])
+            #self.SigRelay.emit("cm_all_",["QTMAINWINDOWparent",self.m["QTMAINWINDOWparent"]])
         except:
             self.core_c.recording_path_checker()
             #self.configuration_c.recording_path_setter()
@@ -1337,7 +1339,9 @@ if __name__ == '__main__':
     ################### end remove ###########################
 
     #all tab initializations occur in connect_init() in core module
-    xcore_v.connect_init() 
+    xcore_v.connect_init()
+    # enable relaying startup settings to all modules if required
+    xcore_v.updateConfigElements() 
     xcore_v.SigRelay.emit("cexex_all_",["canvasbuild",gui])   # communicate reference to gui instance to all modules which instanciate a canvas with auxi.generate_canvas(self,gridref,gridc,gridt,gui)
     sys.exit(app.exec_())
 
