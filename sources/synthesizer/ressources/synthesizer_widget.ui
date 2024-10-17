@@ -314,7 +314,7 @@
        <bool>true</bool>
       </property>
       <property name="text">
-       <string>Scale factor (def = auto)</string>
+       <string>AGC</string>
       </property>
       <property name="autoExclusive">
        <bool>false</bool>
@@ -2134,34 +2134,6 @@
       </property>
      </widget>
     </item>
-    <item row="6" column="8">
-     <widget class="QLineEdit" name="lineEdit_Scalefactor">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-        <kerning>false</kerning>
-       </font>
-      </property>
-      <property name="toolTip">
-       <string>enter LO frequency here (kHz)</string>
-      </property>
-      <property name="autoFillBackground">
-       <bool>true</bool>
-      </property>
-      <property name="text">
-       <string>0.8</string>
-      </property>
-      <property name="frame">
-       <bool>true</bool>
-      </property>
-     </widget>
-    </item>
     <item row="1" column="2">
      <widget class="QPushButton" name="pushButton_loadproject">
       <property name="text">
@@ -2392,7 +2364,7 @@
      </widget>
     </item>
     <item row="15" column="5">
-     <widget class="QRadioButton" name="synthesizer_radioBut_diagnosticmode">
+     <widget class="QRadioButton" name="synthesizer_radioBut_Timedomain">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
         <horstretch>0</horstretch>
@@ -2556,7 +2528,7 @@
        <bool>true</bool>
       </property>
       <property name="text">
-       <string>Diagnostics on</string>
+       <string>Time domain</string>
       </property>
      </widget>
     </item>
@@ -4097,7 +4069,6 @@
    <zorder>label_presetband_3</zorder>
    <zorder>label_BP</zorder>
    <zorder>playrec_radioButton_RECAUTOSTART_2</zorder>
-   <zorder>lineEdit_Scalefactor</zorder>
    <zorder>playrec_label_REC_duration</zorder>
    <zorder>timeEdit_reclength</zorder>
    <zorder>label_MF_2</zorder>
@@ -4117,7 +4088,7 @@
    <zorder>label_4</zorder>
    <zorder>synthesizer_pushbutton_create</zorder>
    <zorder>synthesizer_pushbutton_cancel</zorder>
-   <zorder>synthesizer_radioBut_diagnosticmode</zorder>
+   <zorder>synthesizer_radioBut_Timedomain</zorder>
    <zorder>progressBar_synth</zorder>
    <zorder>label_5</zorder>
   </widget>

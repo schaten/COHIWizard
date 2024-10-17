@@ -336,9 +336,10 @@ class modulate_worker(QObject):
         out_file.close()
         filesize = total_samples_written*4
         self.logger.debug(f"synthesizer modulate: filesize last out file: {filesize}")
-        self.logger.debug(f"write last wavheader into {output_file_name_wavheader}")
+
         output_file_name_wavheader = output_file_name
         self.wav_header_generator(output_file_name_wavheader,filesize,sample_rate,next_starttime,"")
+        self.logger.debug(f"write last wavheader into {output_file_name_wavheader}")
         
         ####TODO TODO TODO: write true SDRUno-Header into the first 216 bytes of the closed file
         for file_handle_dict in file_handles:
@@ -545,7 +546,7 @@ class synthesizer_v(QObject):
         #self.gui.synthesizer_pushbutton_create.clicked.connect(self.create_band)
         self.gui.timeEdit_reclength.timeChanged.connect(self.carrier_ix_changed)
         self.gui.synthesizer_pushbutton_cancel.clicked.connect(self.cancel_modulate)
-        self.gui.verticalSlider_Gain.setProperty("value", 80) #percent
+        self.gui.verticalSlider_Gain.setProperty("value", 76) #percent
 
         self.gui.verticalSlider_Gain.valueChanged.connect(self.setgain)
         self.canvasbuild()
@@ -555,7 +556,8 @@ class synthesizer_v(QObject):
         """set gain which is set by the gain slider and pass it to the modulator worker
         """
         gain = 10**((self.gui.verticalSlider_Gain.value()/100*90 - self.GAINOFFSET)/20)
-        self.logger.debug("cb_setgain, gain: %f",self.m["gain"])
+        print(f"synthesizer gain: {gain}, slidervalue: {self.gui.verticalSlider_Gain.value()}")
+        self.logger.debug("cb_setgain, gain: %f %i",gain,self.gui.verticalSlider_Gain.value())
         try:
             self.modulate_worker.set_gain(gain)
         except:
@@ -582,7 +584,7 @@ class synthesizer_v(QObject):
         data = self.modulate_worker.get_combined_signal_block()
         #use RMS value as indicator for signal strength 
         refvol = 0.71 #could be used for rescaling to amplitude values
-        volume = np.linalg.norm(data)/refvol
+        volume = np.linalg.norm(data)/refvol/np.sqrt(len(data))
         self.logger.debug(f"synthesizer showRFdata volume: {volume} ")
         span = 80
         #vol = 1.5*np.std(volume)/scl/refvol
@@ -598,12 +600,12 @@ class synthesizer_v(QObject):
             return
         #print(f"vol: {vol} dB: {dBvol} std: {np.std(cv)/scl} dispvol: {dispvol} rv: {np.std(cv)/scl}")
         self.gui.progressBar_volume.setValue(int(np.floor(dispvol*10))) 
-        if dBvol > -7:
+        if dBvol > -3:
             self.gui.progressBar_volume.setStyleSheet("QProgressBar::chunk "
                     "{"
                         "background-color: red;"
                     "}")
-        elif dBvol < -70:
+        elif dBvol < -40:
             self.gui.progressBar_volume.setStyleSheet("QProgressBar::chunk "
                     "{"
                         "background-color: yellow;"
@@ -693,6 +695,26 @@ class synthesizer_v(QObject):
                                                    "wav Files (*.wav)",  # Filter für Dateitypen
                                                    options=options)
 
+        # # system_state = sys_state.get_status()
+        # if self.m["fileopened"] is False:
+        #     return False
+        # msg = QMessageBox()
+        # msg.setIcon(QMessageBox.Question)
+        # msg.setText("overwrite wav header")
+        # msg.setInformativeText("you are about to overwrite the header of the current wav file with the values in the tables of Tab 'WAV Header'. Do you really want to proceed ?")
+        # msg.setWindowTitle("overwrite")
+        # msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        # msg.buttonClicked.connect(self.popup)
+        # msg.exec_()
+
+        # if self.yesno == "&Yes":
+        #     self.m["ovwrt_flag"] = True
+        #     self.write_edited_wavheader()
+        # else:
+        #     #sys_state.set_status(system_state)
+        #     return False
+
+
 
         block_size = 2**16   # Maximum block length
         total_reclength = self.get_reclength()
@@ -762,8 +784,7 @@ class synthesizer_v(QObject):
         self.gui.spinBox_numcarriers.setEnabled(value)
         self.gui.lineEdit_audiocutoff_freq.setEnabled(value)
         self.gui.timeEdit_reclength.setEnabled(value)
-        self.gui.synthesizer_radioBut_diagnosticmode.setEnabled(value)
-        self.gui.lineEdit_Scalefactor.setEnabled(value)
+        #self.gui.synthesizer_radioBut_Timedomain.setEnabled(value)
         self.gui.playrec_radioButton_RECAUTOSTART_2.setEnabled(value)
 
 
@@ -775,7 +796,20 @@ class synthesizer_v(QObject):
         print(f"progress: {progress}")
         combined_signal_block = self.modulate_worker.get_combined_signal_block()
         self.gui.progressBar_synth.setValue(min(100,int(np.floor(progress))))
-        if True: #self.gui.synthesizer_radioBut_diagnosticmode.isChecked():
+        if self.gui.synthesizer_radioBut_Timedomain.isChecked():
+            datay = np.real(combined_signal_block[0:min(2**16,len(combined_signal_block))])
+            fax = np.linspace(0,1,len(datay))
+            #TODO TODO TODO: scale time-axis properly
+            #flo = self.m["wavheader"]['centerfreq'] - self.m["wavheader"]['nSamplesPerSec']/2
+            #freq0 = np.linspace(0,self.m["wavheader"]['nSamplesPerSec'],N)
+            #freq = freq0 + flo
+            #datax = (np.floor(freq/1000))
+            datax = fax
+            self.curve.setData(datax, datay)
+            self.plot_widget.setYRange(-1, 1)
+            #self.plot_widget.enableAutoRange(axis='y')
+        else:
+            
             self.logger.debug(f"percentage completed: {str(progress)}")
             spr = np.abs(np.fft.fft(combined_signal_block[0:min(2**16,len(combined_signal_block))]))
             N = len(spr)
@@ -788,7 +822,9 @@ class synthesizer_v(QObject):
             #datax = (np.floor(freq/1000))
             datax = fax
             datay = 20*np.log10(spr)
+            self.plot_widget.setYRange(-120, 0)
             self.curve.setData(datax, datay)
+            
         self.showRFdata()
 
     def save_project(self):
@@ -1404,31 +1440,6 @@ class synthesizer_v(QObject):
                 self.reset_GUI()
             if  _value[0].find("logfilehandler") == 0:
                 self.logfilehandler(_value[1])
-            # if  _value[0].find("canvasbuild") == 0:
-            #     self.canvasbuild(_value[1])
-
-            #handle method
-            # if  _value[0].find("plot_spectrum") == 0: #EXAMPLE
-            #     self.plot_spectrum(0,_value[1])   #EXAMPLE
-
-    # def canvasbuild(self,gui):
-    #     """
-    #     sets up a canvas to which graphs can be plotted
-    #     Use: calls the method auxi.generate_canvas with parameters self.gui.gridlayoutX to specify where the canvas 
-    #     should be placed, the coordinates and extensions in the grid and a reference to the QMainwidget Object
-    #     generated by __main__ during system startup. This object is relayed via signal to all modules at system initialization 
-    #     and is automatically available (see rxhandler method)
-    #     the reference to the canvas object is written to self.cref
-    #     :param : gui
-    #     :type : QMainWindow
-    #     :raises [ErrorType]: [ErrorDescription]
-    #     :return: none
-    #     :rtype: none
-    #     """
-    #     #TODO: activate call correctly, this is just an example
-    #     #self.cref = auxi.generate_canvas(self,self.gui.gridLayout_5,[6,0,6,4],[-1,-1,-1,-1],gui)
-    #     pass
-
 
     def logfilehandler(self,_value):
         if _value is False:
