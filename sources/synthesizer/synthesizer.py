@@ -479,7 +479,7 @@ class synthesizer_v(QObject):
         self.m["wavheader"]['centerfreq'] = 0
         self.m["icorr"] = 0
         self.m["cancelflag"] = False
-        
+        self.blinkstate = False         
         self.logger = synthesizer_m.logger
         self.synthesizer_c.SigRelay.connect(self.rxhandler)
         self.synthesizer_c.SigRelay.connect(self.SigRelay.emit)
@@ -487,7 +487,7 @@ class synthesizer_v(QObject):
         self.DATABLOCKSIZE = 1024*32
         self.gui = gui #gui_state["gui_reference"]#system_state["gui_reference"]
         self.logger = synthesizer_m.logger
-
+        self.syntesisrunning = False
         self.init_synthesizer_ui()
 
         self.m["numcarriers"] = self.gui.spinBox_numcarriers.value()
@@ -620,7 +620,6 @@ class synthesizer_v(QObject):
         #TODO check how to handle and delete after change to model
         #schedule_objdict = self.m["schedule_objdict"]
         #TODO: look why that was used self.SigDisconnectExternalMethods.emit("cancel_resampling")
-        self.cleanup()
         if self.m["cancelflag"]:
             self.logger.debug("cancel_modulation: **** suppressed because cancelflag ___cancel_resamp reached")
             return
@@ -633,7 +632,8 @@ class synthesizer_v(QObject):
         except:
             self.logger.debug("cancel synthesizer modulation: modulate worker could not be terminated")
             pass
-        #TODO TODO TODO: delete out files produced so far
+        #TODO TODO TODO: delete out files produced so far ? or leave them ?
+        #self.cleanup()
 
     def canvasbuild(self):
         """
@@ -665,6 +665,9 @@ class synthesizer_v(QObject):
 
 
     def create_band_thread(self):
+        palette = self.gui.synthesizer_pushbutton_create.palette()
+        self.cancel_background_color = palette.color(self.gui.synthesizer_pushbutton_create.backgroundRole())
+        self.syntesisrunning = False
         #TODO TODO TODO: exit if no project defined
         print("recording path received")
         print(self.m["recording_path"])
@@ -687,34 +690,30 @@ class synthesizer_v(QObject):
         LO_frequency = int(int(self.gui.lineEdit_LO.text())*1000)
         carrier_frequencies = self.m["carrierarray"]
 
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog  # Verwende das Qt-eigene Dialogfenster
-        output_base_name, _ = QFileDialog.getSaveFileName(self.m["QTMAINWINDOWparent"], 
-                                                   "Save File", 
-                                                   self.m["recording_path"],  # Standard rec path, Standardmäßig kein voreingestellter Dateiname
-                                                   "wav Files (*.wav)",  # Filter für Dateitypen
-                                                   options=options)
+        existcheck = True
+        while existcheck:
+            options = QFileDialog.Options()
+            options |= QFileDialog.DontUseNativeDialog  # Verwende das Qt-eigene Dialogfenster
+            output_base_name, _ = QFileDialog.getSaveFileName(self.m["QTMAINWINDOWparent"], 
+                                                    "Save File", 
+                                                    self.m["recording_path"],  # Standard rec path, Standardmäßig kein voreingestellter Dateiname
+                                                    "wav Files (*.wav)",  # Filter für Dateitypen
+                                                    options=options)
 
-        # # system_state = sys_state.get_status()
-        # if self.m["fileopened"] is False:
-        #     return False
-        # msg = QMessageBox()
-        # msg.setIcon(QMessageBox.Question)
-        # msg.setText("overwrite wav header")
-        # msg.setInformativeText("you are about to overwrite the header of the current wav file with the values in the tables of Tab 'WAV Header'. Do you really want to proceed ?")
-        # msg.setWindowTitle("overwrite")
-        # msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-        # msg.buttonClicked.connect(self.popup)
-        # msg.exec_()
-
-        # if self.yesno == "&Yes":
-        #     self.m["ovwrt_flag"] = True
-        #     self.write_edited_wavheader()
-        # else:
-        #     #sys_state.set_status(system_state)
-        #     return False
-
-
+            if output_base_name:
+                if (os.path.exists(output_base_name) or os.path.exists(output_base_name + "_0.wav")):
+                    msg = QMessageBox()
+                    msg.setIcon(QMessageBox.Question)
+                    msg.setText("overwrite file")
+                    msg.setInformativeText("you are about to overwrite an existing file. Do you really want to proceed ?")
+                    msg.setWindowTitle("overwrite")
+                    msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+                    msg.buttonClicked.connect(self.popup)
+                    msg.exec_()
+                    if self.yesno == "&Yes":
+                        existcheck = False
+                else:
+                    existcheck = False
 
         block_size = 2**16   # Maximum block length
         total_reclength = self.get_reclength()
@@ -751,16 +750,20 @@ class synthesizer_v(QObject):
         self.modulate_thread.start()
         if self.modulate_thread.isRunning():
             self.logger.debug("modulate: modulate_ thread started")
+            self.syntesisrunning = True
         time.sleep(0.01) # wait state for worker to start up
         #print("modulate_ action method sleep over")
         #self.SigProgress.emit()       
         return(True)
     
     def cleanup(self):
+        self.syntesisrunning = False
         self.activate_control_elements(True)
         self.SigActivateOtherTabs.emit("synthesizer","activate",[])
         auxi.standard_infobox("synthesis has been completed, files can be found in the recording path defined on the Player tab")
         self.gui.progressBar_synth.setValue(0)
+        self.gui.synthesizer_pushbutton_create.setStyleSheet("background-color: lightgray; color: black;")
+
 
     def activate_control_elements(self,value):
         """enable or disable all control elements of the tab via value
@@ -1440,6 +1443,9 @@ class synthesizer_v(QObject):
                 self.reset_GUI()
             if  _value[0].find("logfilehandler") == 0:
                 self.logfilehandler(_value[1])
+            if  _value[0].find("timertick") == 0:
+                    if self.syntesisrunning:
+                        self.blinkstate = self.blinksynth(self.blinkstate)
 
     def logfilehandler(self,_value):
         if _value is False:
@@ -1448,6 +1454,17 @@ class synthesizer_v(QObject):
         else:
             self.logger.debug("abstract module: REACTIVATE LOGGING")
             self.logger.setLevel(logging.DEBUG)
+
+    def blinksynth(self,state):
+        """
+        let create button blink
+        """
+        if state:
+            self.gui.synthesizer_pushbutton_create.setStyleSheet("background-color: " + self.cancel_background_color.name() + "; color: black;")
+        else:
+            self.gui.synthesizer_pushbutton_create.setStyleSheet("background-color: lightblue; color: black;")
+        state = not state
+        return state
 
 
     def updateGUIelements(self):

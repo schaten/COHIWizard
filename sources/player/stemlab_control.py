@@ -185,8 +185,9 @@ class StemlabControl(QObject):
         if self.startssh(configparams) is False:
             return False
         self.sdrserverstop()  #TODO ?is this necessary ?
-        time.sleep(0.1)
+        time.sleep(0.2)     # wait state for letting the server react before it is being accessed; issue after tetst unter LINUX Debian 12 
         self.sshsendcommandseq(shcomm)
+        time.sleep(0.2)     # wait state for letting the server react before it is being accessed; issue after tetst unter LINUX Debian 12
         self.SigMessage.emit("transmit ssh command for ssh start")
 
     def sdrserverstop(self):
