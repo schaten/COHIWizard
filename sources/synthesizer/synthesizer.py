@@ -143,7 +143,8 @@ class modulate_worker(QObject):
         # Zeitvektor basierend auf dem sample_offset
         t = np.arange(sample_offset, sample_offset + len(filtered_signal)) / sample_rate
         carrier = np.exp(2 * np.pi * 1j *carrier_freq * t)
-        
+        print(f"modulator carrier-freq: {carrier_freq}")
+        print(f"modulator samplerate: {sample_rate}, ts: {t[1] - t[0]}")
         # Modulation: Signal amplitude-modulates the carrier with the given depth
         modulated_signal = (1 + modulation_depth * filtered_signal) * carrier
         return modulated_signal
@@ -177,6 +178,7 @@ class modulate_worker(QObject):
         - current_file_index: Updated file index (incremented if necessary).
         """
         sos = butter(4, cutoff_freq, btype='low', fs=target_sample_rate, output='sos')
+        #print(f"carrier-freq: {carrier_freq}")
 
         while current_file_index < len(file_list):
             file_path = file_list[current_file_index]
@@ -257,6 +259,7 @@ class modulate_worker(QObject):
         next_starttime = datetime.now()
         next_starttime = next_starttime.astimezone(pytz.utc)
         self.logger.debug(f"synthesizer worker sample rate before modulating: {sample_rate}")
+
         while not done:
             combined_signal_block = None  # Buffer for combined signal block
             done = True  # Assume done unless we find more data
@@ -312,6 +315,7 @@ class modulate_worker(QObject):
             block_to_write = np.zeros(lend)
             block_to_write[1::2] = np.imag(combined_signal_block)
             block_to_write[0::2] = np.real(combined_signal_block)
+            #block_to_write = np.float32(block_to_write)
             # block_to_write[0:2:lend-1] = np.real(combined_signal_block)
             # block_to_write[1:2:lend] = np.imag(combined_signal_block)
             try:
@@ -692,7 +696,7 @@ class synthesizer_v(QObject):
         playlists = [[f"{path.rstrip('/')}/{file}" for file, path in zip(files, paths)] for files, paths in zip(self.readFileList, self.readFilePath)]
         LO_frequency = int(int(self.gui.lineEdit_LO.text())*1000)
         self.m["LO"] = LO_frequency
-        carrier_frequencies = self.m["carrierarray"]
+        carrier_frequencies = self.m["carrierarray"] - int(np.ceil(LO_frequency/1000))
 
         existcheck = True
         while existcheck:
@@ -809,7 +813,9 @@ class synthesizer_v(QObject):
             tax = np.linspace(0,1,len(datay))
             datax = tax * ts
             self.curve.setData(datax, datay)
-            self.plot_widget.setYRange(0, datax(-1))
+            self.plot_widget.setXRange(0, datax(-1))
+            self.plot_widget.setYRange(-1,1)
+
         else:
             
             self.logger.debug(f"percentage completed: {str(progress)}")
@@ -824,10 +830,11 @@ class synthesizer_v(QObject):
             #freq0 = np.linspace(0,self.m["wavheader"]['nSamplesPerSec'],N)
             freq0  = np.linspace(0,self.m["sample_rate"],N)
             freq = freq0 + flo
-            datax = (np.floor(freq/1000))
+            datax = (freq/1000)
             #datax = fax
+            self.plot_widget.setXRange(flo/1000, freq[-1]/1000)
+            self.plot_widget.setYRange(-120, 0)
             datay = 20*np.log10(spr)
-            #self.plot_widget.setYRange(-120, 0)
             self.curve.setData(datax, datay)
             
         self.showRFdata()
