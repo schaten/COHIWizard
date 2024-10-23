@@ -238,7 +238,7 @@ class modulate_worker(QObject):
         # Initialisiere sample_offset und current_file_index für jeden Carrier
         sample_offsets = [0] * len(carrier_frequencies)
         current_file_indices = [0] * len(carrier_frequencies)  # Track current file index for each carrier
-        
+        self.logger.debug(f"synthesizer worker carrier frequencies: {carrier_frequencies}")
         # **Initialisiere file_handles als Liste von Dictionaries für jeden Carrier**
         file_handles = [{} for _ in carrier_frequencies]  # Für jeden Carrier ein eigenes Dictionary von Datei-Handles
 
@@ -256,7 +256,7 @@ class modulate_worker(QObject):
         #generate starting timestamp for wavheader
         next_starttime = datetime.now()
         next_starttime = next_starttime.astimezone(pytz.utc)
-
+        self.logger.debug(f"synthesizer worker sample rate before modulating: {sample_rate}")
         while not done:
             combined_signal_block = None  # Buffer for combined signal block
             done = True  # Assume done unless we find more data
@@ -397,6 +397,8 @@ class synthesizer_m(QObject):
         self.mdl["carrier_ix"] = 0
         self.mdl["carrierarray"] = np.arange(0, 1, 1)
         self.mdl["cancelflag"] = True
+        self.mdl["sample_rate"] = 0
+        self.mdl["LO"] = 0
         # Create a custom logger
         logging.getLogger().setLevel(logging.DEBUG)
         # Erstelle einen Logger mit dem Modul- oder Skriptnamen
@@ -684,10 +686,12 @@ class synthesizer_v(QObject):
         self.logger.debug("modulate: configure modulate_worker thread et al")
         self.m["cancelflag"] = False
         sample_rate = int(self.gui.comboBox_targetSR.currentText())*1000 # samplingrate of RF-Signal
+        self.m["sample_rate"] = sample_rate
         cutoff_freq = float(self.gui.lineEdit_audiocutoff_freq.text())*1000   # Lowpass cutoff frequency   
         modulation_depth = float(self.gui.lineEdit_modfactor.text())  # Modulation depth 
         playlists = [[f"{path.rstrip('/')}/{file}" for file, path in zip(files, paths)] for files, paths in zip(self.readFileList, self.readFilePath)]
         LO_frequency = int(int(self.gui.lineEdit_LO.text())*1000)
+        self.m["LO"] = LO_frequency
         carrier_frequencies = self.m["carrierarray"]
 
         existcheck = True
@@ -799,33 +803,31 @@ class synthesizer_v(QObject):
         print(f"progress: {progress}")
         combined_signal_block = self.modulate_worker.get_combined_signal_block()
         self.gui.progressBar_synth.setValue(min(100,int(np.floor(progress))))
+        ts = 1/self.m["sample_rate"]
         if self.gui.synthesizer_radioBut_Timedomain.isChecked():
             datay = np.real(combined_signal_block[0:min(2**16,len(combined_signal_block))])
-            fax = np.linspace(0,1,len(datay))
-            #TODO TODO TODO: scale time-axis properly
-            #flo = self.m["wavheader"]['centerfreq'] - self.m["wavheader"]['nSamplesPerSec']/2
-            #freq0 = np.linspace(0,self.m["wavheader"]['nSamplesPerSec'],N)
-            #freq = freq0 + flo
-            #datax = (np.floor(freq/1000))
-            datax = fax
+            tax = np.linspace(0,1,len(datay))
+            datax = tax * ts
             self.curve.setData(datax, datay)
-            self.plot_widget.setYRange(-1, 1)
-            #self.plot_widget.enableAutoRange(axis='y')
+            self.plot_widget.setYRange(0, datax(-1))
         else:
             
             self.logger.debug(f"percentage completed: {str(progress)}")
             spr = np.abs(np.fft.fft(combined_signal_block[0:min(2**16,len(combined_signal_block))]))
             N = len(spr)
             spr = np.fft.fftshift(spr)/N
-            fax = np.linspace(-1,1,len(spr))
+            #fax = np.linspace(-1,1,len(spr))
             #TODO TODO TODO: scale f-axis properly
             #flo = self.m["wavheader"]['centerfreq'] - self.m["wavheader"]['nSamplesPerSec']/2
+            flo = self.m["LO"] - self.m["sample_rate"]/2
+            print(f"LO frequency: {flo}")
             #freq0 = np.linspace(0,self.m["wavheader"]['nSamplesPerSec'],N)
-            #freq = freq0 + flo
-            #datax = (np.floor(freq/1000))
-            datax = fax
+            freq0  = np.linspace(0,self.m["sample_rate"],N)
+            freq = freq0 + flo
+            datax = (np.floor(freq/1000))
+            #datax = fax
             datay = 20*np.log10(spr)
-            self.plot_widget.setYRange(-120, 0)
+            #self.plot_widget.setYRange(-120, 0)
             self.curve.setData(datax, datay)
             
         self.showRFdata()
