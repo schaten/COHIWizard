@@ -143,8 +143,8 @@ class modulate_worker(QObject):
         # Zeitvektor basierend auf dem sample_offset
         t = np.arange(sample_offset, sample_offset + len(filtered_signal)) / sample_rate
         carrier = np.exp(2 * np.pi * 1j *carrier_freq * t)
-        print(f"modulator carrier-freq: {carrier_freq}")
-        print(f"modulator samplerate: {sample_rate}, ts: {t[1] - t[0]}")
+        #print(f"modulator carrier-freq: {carrier_freq}")
+        #print(f"modulator samplerate: {sample_rate}, ts: {t[1] - t[0]}")
         # Modulation: Signal amplitude-modulates the carrier with the given depth
         modulated_signal = (1 + modulation_depth * filtered_signal) * carrier
         return modulated_signal
@@ -300,12 +300,12 @@ class modulate_worker(QObject):
                 # If the file exceeds 2GB, close the current file, enter the wav-header and start a new one
                 out_file.close()
                 filesize = max_samples_per_file*4
-                self.logger.debug(f"process_multiple_carriers_blockwise: nest starttime {next_starttime}")
+                self.logger.debug(f"process_multiple_carriers_blockwise: next starttime {next_starttime}")
                 output_file_name_wavheader = output_file_name
                 file_index += 1
                 output_file_name = f"{output_base_name}_{file_index}.wav"
                 next_starttime = self.wav_header_generator(output_file_name_wavheader,filesize,sample_rate,next_starttime,output_file_name)
-                print("wavheader written")
+                #print("wavheader written")
                 out_file = sf.SoundFile(output_file_name, 'w', samplerate=sample_rate, channels=1, subtype='PCM_16')
                 total_samples_written = 0  # Reset the sample counter for the new file
 
@@ -328,7 +328,7 @@ class modulate_worker(QObject):
             if perc_progress - perc_progress_old > 1:
                 perc_progress_old = perc_progress
                 #self.logger.debug(f"percentage completed: {str(perc_progress)}")
-                print(f"percentage completed: {str(perc_progress)}")
+                #print(f"percentage completed: {str(perc_progress)}")
                 #print(f"merge2Gworker renamefile trial {str(jx)}")
                 self.set_progress(perc_progress)
                 self.set_combined_signal_block(combined_signal_block)
@@ -562,13 +562,13 @@ class synthesizer_v(QObject):
         """set gain which is set by the gain slider and pass it to the modulator worker
         """
         gain = 10**((self.gui.verticalSlider_Gain.value()/100*90 - self.GAINOFFSET)/20)
-        print(f"synthesizer gain: {gain}, slidervalue: {self.gui.verticalSlider_Gain.value()}")
+        #print(f"synthesizer gain: {gain}, slidervalue: {self.gui.verticalSlider_Gain.value()}")
         self.logger.debug("cb_setgain, gain: %f %i",gain,self.gui.verticalSlider_Gain.value())
         try:
             self.modulate_worker.set_gain(gain)
         except:
             pass
-        print(f"synthesizer, set gain: {gain}")
+        #print(f"synthesizer, set gain: {gain}")
 
 
     def showRFdata(self):
@@ -675,8 +675,8 @@ class synthesizer_v(QObject):
         self.cancel_background_color = palette.color(self.gui.synthesizer_pushbutton_create.backgroundRole())
         self.syntesisrunning = False
         #TODO TODO TODO: exit if no project defined
-        print("recording path received")
-        print(self.m["recording_path"])
+        #print("recording path received")
+        #print(self.m["recording_path"])
         playlists = [[f"{path.rstrip('/')}/{file}" for file, path in zip(files, paths)] for files, paths in zip(self.readFileList, self.readFilePath)]
         cumlen = 0
         for elem in playlists:
@@ -804,7 +804,7 @@ class synthesizer_v(QObject):
         update progress bar and handle other state display elements
         """
         progress = self.modulate_worker.get_progress()
-        print(f"progress: {progress}")
+        #print(f"progress: {progress}")
         combined_signal_block = self.modulate_worker.get_combined_signal_block()
         self.gui.progressBar_synth.setValue(min(100,int(np.floor(progress))))
         ts = 1/self.m["sample_rate"]
@@ -826,7 +826,7 @@ class synthesizer_v(QObject):
             #TODO TODO TODO: scale f-axis properly
             #flo = self.m["wavheader"]['centerfreq'] - self.m["wavheader"]['nSamplesPerSec']/2
             flo = self.m["LO"] - self.m["sample_rate"]/2
-            print(f"LO frequency: {flo}")
+            #print(f"LO frequency: {flo}")
             #freq0 = np.linspace(0,self.m["wavheader"]['nSamplesPerSec'],N)
             freq0  = np.linspace(0,self.m["sample_rate"],N)
             freq = freq0 + flo
@@ -1076,7 +1076,7 @@ class synthesizer_v(QObject):
         """
         self.m["carrier_ix"] = self.gui.comboBox_cur_carrierfreq.currentIndex()
         
-        print(f"carrier index changed to: {self.m['carrier_ix']}")
+        #print(f"carrier index changed to: {self.m['carrier_ix']}")
         self.fillplaylist()
 
     def fillplaylist(self):
@@ -1135,7 +1135,7 @@ class synthesizer_v(QObject):
             try:
                 file_path =  self.readFilePath[self.m["carrier_ix"]][ix] + "/" + x
             except:
-                print(f"show readFilePath index out of range at index: {self.m['carrier_ix']} [{ix}]")
+                #print(f"show readFilePath index out of range at index: {self.m['carrier_ix']} [{ix}]")
                 return duration
             if not len(self.readFilePath[self.m["carrier_ix"]][ix] + x) < 1:
                 wav_info = self.get_wav_info(file_path)
@@ -1149,7 +1149,7 @@ class synthesizer_v(QObject):
         # print(f"Abtastrate: {wav_info['framerate']} Hz")
         # print(f"Sample-Breite: {wav_info['sampwidth_bytes']} Bytes")
         # print(f"Datenformat: {wav_info['data_format']}")
-        print(f"full duration of this carrier track: {duration}")
+        #print(f"full duration of this carrier track: {duration}")
         return duration
         #TODO TODO: write progress bar update
         #for x in self.readFileList[self.m["carrier_ix"]]:
@@ -1266,7 +1266,7 @@ class synthesizer_v(QObject):
             return False
         self.m["audioBW"] = float(self.gui.lineEdit_audiocutoff_freq.text())
         self.freq_carriers_update()
-        print(f"carrier spacing: {self.m['audioBW']}")
+        #print(f"carrier spacing: {self.m['audioBW']}")
 
     def fc_low_update(self):
         #TODO TODO TODO: implement hibound, lowbound as lineEdit_LO - comboBox_targetSR/2
@@ -1288,7 +1288,7 @@ class synthesizer_v(QObject):
         self.freq_carriers_update()
         self.m["fc_low"] = float(self.gui.lineEdit_fc_low.text())
         self.freq_carriers_update()
-        print(f"carrier spacing: {self.m['fc_low']}")
+        #print(f"carrier spacing: {self.m['fc_low']}")
 
     def carrierdistance_update(self):
         #TODO: check if integer !
@@ -1306,7 +1306,7 @@ class synthesizer_v(QObject):
             return False
         self.m["carrier_distance"] = float(self.gui.lineEdit_carrierdistance.text())
         self.freq_carriers_update()
-        print(f"carrier spacing: {self.m['carrier_distance']}")
+        #print(f"carrier spacing: {self.m['carrier_distance']}")
 
     def select_tree(self):
         """
@@ -1356,7 +1356,7 @@ class synthesizer_v(QObject):
                     self.current_listdir = rootdir
 
     def playlist_update_delayed(self,dum,first,last):
-        print(f"playlist_update, signal addrow: first ix: {first}, last ix: {last}")
+        #print(f"playlist_update, signal addrow: first ix: {first}, last ix: {last}")
         QTimer.singleShot(0, self.playlist_update)
 
     def playlist_update(self):
@@ -1376,7 +1376,7 @@ class synthesizer_v(QObject):
         duration = self.show_playlength()
         self.show_fillprogress(duration)
 
-        print("playlist_update")
+        #print("playlist_update")
         # try:
         #     for file in readFileList:
         #         with open(file) as lstf:
@@ -1396,7 +1396,7 @@ class synthesizer_v(QObject):
                 self.readFilePath[self.m["carrier_ix"]] = self.delete_at_index(self.readFilePath[self.m["carrier_ix"]], ix_diff)
             else:
                 self.readFilePath[self.m["carrier_ix"]] = self.insert_or_append(self.readFilePath[self.m["carrier_ix"]], ix_diff, self.current_listdir)
-            print(f"playlist purge: change index: {ix_diff}, playlist: {self.readFileList[self.m['carrier_ix']] }, pathlist: {self.readFilePath[self.m['carrier_ix']]}")
+            #print(f"playlist purge: change index: {ix_diff}, playlist: {self.readFileList[self.m['carrier_ix']] }, pathlist: {self.readFilePath[self.m['carrier_ix']]}")
         except:
             print("playlist purge: no difference, no action")
 
@@ -1486,7 +1486,7 @@ class synthesizer_v(QObject):
         :return: flag False or True, False on unsuccessful execution
         :rtype: Boolean
         """
-        print("synthesizer: updateGUIelements")
+        #print("synthesizer: updateGUIelements")
         #self.gui.DOSOMETHING
 
     def reset_GUI(self):
