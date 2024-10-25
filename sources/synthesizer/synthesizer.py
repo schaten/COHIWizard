@@ -494,6 +494,7 @@ class synthesizer_v(QObject):
         self.gui = gui #gui_state["gui_reference"]#system_state["gui_reference"]
         self.logger = synthesizer_m.logger
         self.syntesisrunning = False
+        self.cf_LO = False
         self.init_synthesizer_ui()
 
         self.m["numcarriers"] = self.gui.spinBox_numcarriers.value()
@@ -539,6 +540,9 @@ class synthesizer_v(QObject):
         self.gui.lineEdit_carrierdistance.editingFinished.connect(self.carrierdistance_update)
         self.gui.lineEdit_audiocutoff_freq.editingFinished.connect(self.audioBW_update)
         self.gui.lineEdit_fc_low.editingFinished.connect(self.fc_low_update)
+        self.gui.lineEdit_LO.editingFinished.connect(self.LO_update)
+        self.gui.comboBox_targetSR_2.setCurrentIndex(1)
+        self.gui.comboBox_targetSR_2.currentIndexChanged.connect(self.preset_SR_LO)
         self.gui.listWidget_playlist.model().rowsInserted.connect(self.playlist_update_delayed)
         self.gui.listWidget_playlist.model().rowsRemoved.connect(self.playlist_update_delayed) 
         self.gui.listWidget_playlist.setSelectionMode(QListWidget.ExtendedSelection)
@@ -669,7 +673,6 @@ class synthesizer_v(QObject):
         self.plot_widget.setYRange(ymin, ymax)
         self.curve = self.plot_widget.plot(self.xdata, self.ydata, pen=pg.mkPen('k'))
 
-
     def create_band_thread(self):
         palette = self.gui.synthesizer_pushbutton_create.palette()
         self.cancel_background_color = palette.color(self.gui.synthesizer_pushbutton_create.backgroundRole())
@@ -773,6 +776,37 @@ class synthesizer_v(QObject):
         self.gui.synthesizer_pushbutton_create.setStyleSheet("background-color: lightgray; color: black;")
 
 
+
+    def preset_SR_LO(self):
+        text = self.gui.comboBox_targetSR_2.currentText()
+        if text.find("LW") == 0:
+            self.gui.lineEdit_LO.setText("220")
+            self.gui.comboBox_targetSR.setCurrentIndex(3)
+        if text.find("MW") == 0:
+            self.gui.lineEdit_LO.setText("1125")
+            self.gui.comboBox_targetSR.setCurrentIndex(5)
+        if text.find("SW 49m") == 0:
+            self.gui.lineEdit_LO.setText("6050")
+            self.gui.comboBox_targetSR.setCurrentIndex(4)
+        if text.find("SW 41m") == 0:
+            self.gui.lineEdit_LO.setText("7325")
+            self.gui.comboBox_targetSR.setCurrentIndex(3)
+        if text.find("SW 31m") == 0:
+            self.gui.lineEdit_LO.setText("9650")
+            self.gui.comboBox_targetSR.setCurrentIndex(4)
+        if text.find("SW 25m") == 0:
+            self.gui.lineEdit_LO.setText("11850")
+            self.gui.comboBox_targetSR.setCurrentIndex(4)
+        if text.find("SW 22m") == 0:
+            self.gui.lineEdit_LO.setText("13720")
+            self.gui.comboBox_targetSR.setCurrentIndex(4)
+        if text.find("SW 19m") == 0:
+            self.gui.lineEdit_LO.setText("15450")
+            self.gui.comboBox_targetSR.setCurrentIndex(5)
+        self.LO_update()
+
+
+
     def activate_control_elements(self,value):
         """enable or disable all control elements of the tab via value
         value = True: enable
@@ -788,6 +822,7 @@ class synthesizer_v(QObject):
         self.gui.pushButton_select_source.setEnabled(value)
         self.gui.comboBox_targetSR.setEnabled(value)
         self.gui.lineEdit_LO.setEnabled(value)
+
         self.gui.comboBox_targetSR_2.setEnabled(value)
         self.gui.lineEdit_fc_low.setEnabled(value)
         self.gui.lineEdit_carrierdistance.setEnabled(value)
@@ -859,11 +894,9 @@ class synthesizer_v(QObject):
         pr["projectdata"]["current_listdir"] = self.current_listdir
         pr["projectdata"]["targetSR_index"] = self.gui.comboBox_targetSR.currentIndex()
         #pr["projectdata"]["preset_time"] = 
-        #pr["projectdata"]["LO"] = self.gui.lineEdit_LO.setText("1125") #TODO TODO TODO, diese Variable wird aktuell noch nirgends verwendet (--> wav header)
         #TODO TODO TODO: add all settings to be saved:
         #self.comboBox_targetSR_2.setCurrentIndex(###)
-        #scale factor
-        #modulation factor
+        pr["projectdata"]["modfactor"] = self.gui.lineEdit_modfactor.text()
         #Target filename
         qtimeedit = self.gui.timeEdit_reclength
         time_from_qtimeedit = qtimeedit.time()
@@ -908,21 +941,23 @@ class synthesizer_v(QObject):
             aux_preset_time = pr["projectdata"]["preset_time"]
             preset_time = QTime(aux_preset_time[0],aux_preset_time[1],aux_preset_time[2]) 
             self.gui.timeEdit_reclength.setTime(preset_time)
+            self.cf_LO = pr["projectdata"]["carrier_f_LO"]
+            self.gui.comboBox_targetSR.setCurrentIndex(pr["projectdata"]["targetSR_index"])
+            self.gui.lineEdit_modfactor.setText(str(pr["projectdata"]["modfactor"])) 
 
             self.load_index = True
             self.fillplaylist()
             self.current_listdir = pr["projectdata"]["current_listdir"]
             self.fillsourcelist(self.current_listdir)
+            self.carrierdistance_update()
             self.audioBW_update()
             self.fc_low_update()
-            self.carrierdistance_update()
             self.load_index = False
 
             #TODO TODO TODO load all remaining settings
-            #self.comboBox_targetSR_2.setCurrentIndex(###)
-            #self.gui.comboBox_targetSR.setCurrentIndex(pr["projectdata"]["targetSR_index"])
-            #scale factor
+            #self.comboBox_targetSR_2.setCurrentIndex(###) Preset menu
             #modulation factor
+
             #Target filename
 
         except:
@@ -1192,8 +1227,8 @@ class synthesizer_v(QObject):
                 self.oldFileList[curlen + i] = []
                 self.readFilePath.append([])
                 self.readFilePath[curlen + i] = []
-        else:
-            #TODO TODO TESTING ! delete n list elements and ask if that is wanted
+        elif numcar < self.numcarriers_old:
+            #TODO TODO TODO TESTING ! delete n list elements and ask if that is wanted
             delta = self.numcarriers_old - numcar
             if not self.load_index:
                 msg = QMessageBox()
@@ -1268,10 +1303,19 @@ class synthesizer_v(QObject):
         self.freq_carriers_update()
         #print(f"carrier spacing: {self.m['audioBW']}")
 
+    def LO_update(self):
+        cf_LO = int(self.gui.lineEdit_LO.text())
+        if not self.isint(cf_LO):
+            auxi.standard_errorbox("invalid characters, must be numeric integer value !")
+            return False
+        else:
+            self.cf_LO = int(self.gui.lineEdit_LO.text())
+
     def fc_low_update(self):
         #TODO TODO TODO: implement hibound, lowbound as lineEdit_LO - comboBox_targetSR/2
         fclowbound = 0
         fchibound = 1000
+        self.gui.lineEdit_LO.setText(str(self.cf_LO))
         fc_low = self.gui.lineEdit_fc_low.text()
         if not self.isint(fc_low):
             auxi.standard_errorbox("invalid characters, must be numeric integer value !")
@@ -1300,12 +1344,13 @@ class synthesizer_v(QObject):
         else:
             self.m["carrier_distance"] = float(self.gui.lineEdit_carrierdistance.text())
         
-        if self.m["carrier_distance"] < 2*self.m["audioBW"]:
+        if self.m["carrier_distance"] < 2*self.m["audioBW"] and not self.load_index:
             auxi.standard_errorbox("carrier spacing is less than 2*audio bandwidth, please either increase carrier spacing or reduce audio bandwidth")
             self.gui.lineEdit_carrierdistance.setText(self.STD_CARRIERDISTANCE)
             return False
         self.m["carrier_distance"] = float(self.gui.lineEdit_carrierdistance.text())
         self.freq_carriers_update()
+        self.load_index = False
         #print(f"carrier spacing: {self.m['carrier_distance']}")
 
     def select_tree(self):

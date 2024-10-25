@@ -574,6 +574,11 @@
       </item>
       <item>
        <property name="text">
+        <string>SW 22m</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
         <string>SW 19m</string>
        </property>
       </item>
