@@ -495,6 +495,7 @@ class synthesizer_v(QObject):
         self.logger = synthesizer_m.logger
         self.syntesisrunning = False
         self.cf_LO = False
+        self.load_index = False
         self.init_synthesizer_ui()
 
         self.m["numcarriers"] = self.gui.spinBox_numcarriers.value()
@@ -847,9 +848,10 @@ class synthesizer_v(QObject):
             datay = np.real(combined_signal_block[0:min(2**16,len(combined_signal_block))])
             tax = np.linspace(0,1,len(datay))
             datax = tax * ts
-            self.curve.setData(datax, datay)
-            self.plot_widget.setXRange(0, datax(-1))
+            self.plot_widget.setXRange(0, datax[-1])
             self.plot_widget.setYRange(-1,1)
+            self.curve.setData(datax, datay)
+
 
         else:
             
