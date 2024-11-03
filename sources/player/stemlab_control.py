@@ -224,7 +224,9 @@ class StemlabControl(QObject):
         msg.setWindowTitle("SHUTDOWN")
         msg.exec_()
         self.sdrserverstop()
-        stdin, stdout, stderr = self.ssh.exec_command("/sbin/halt >&1 2>&1")
+        #stdin, stdout, stderr = self.ssh.exec_command("/sbin/halt >&1 2>&1")
+        stdin, stdout, stderr = self.ssh.exec_command("/sbin/poweroff >&1 2>&1")
+        #TODO check schnellere Variante mit poweroff statt halt
         chout = stdout.channel
         textout = ""
         while True:

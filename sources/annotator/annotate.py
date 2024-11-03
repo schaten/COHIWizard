@@ -33,13 +33,6 @@ class statlst_gen_worker(QtCore.QThread):
     SigProgressBar = pyqtSignal()
     SigFinished = pyqtSignal()
 
-    def __init__(self, host_window):
-        super(statlst_gen_worker, self).__init__()
-        self.host = host_window
-        self.__slots__[2] = []
-        self.__slots__[3] = []
-        self.mutex = QtCore.QMutex()
-        self.logger = self.get_logger()
 
     def set_continue(self,_value):
         self.__slots__[0] = _value
@@ -90,15 +83,21 @@ class statlst_gen_worker(QtCore.QThread):
     def get_logger(self):  
         return(self.__slots__[11]) 
     
+    def __init__(self, host_window):
+        super(statlst_gen_worker, self).__init__()
+        self.host = host_window
+        self.__slots__[2] = []
+        self.__slots__[3] = []
+        self.mutex = QtCore.QMutex()
+        #self.logger = self.get_logger()
+
     #@njit
     def stationsloop(self):
         """[Summary]TODO
 
         :param [ParamName]: [ParamDescription], defaults to [DefaultParamVal]
         :type [ParamName]: [ParamType](, optional)
-        ...
         :raises [ErrorType]: [ErrorDescription]
-        ...
         :return: [ReturnDescription]
         :rtype: [ReturnType]
         """
@@ -107,6 +106,7 @@ class statlst_gen_worker(QtCore.QThread):
         rectime = self.get_rectime()
         stichtag = self.get_stichtag()
         annotation = self.get_annotation()
+        self.logger = self.get_logger()
 
         try:
             f = open(self.get_stations_filename(), 'w', encoding='utf-8')
@@ -160,11 +160,17 @@ class statlst_gen_worker(QtCore.QThread):
                         #self.logger.debug(f"stationsloop: Hurraa 1, stdcheck: {stdcheck}")
                         # für jeden index ix2 in ixf zum Peak ix prüfe ob es den String 'INACTI' in der Stationsspalte der MWTabelle gibt
                         inactcheck = 'INACTI' in curr_station
+                        #a = inactcheck + curr_station
                         # logisches label falls ()'ex ' oder 'INACT') und recording-time > Stichtag der MWTabellen-Erstellung
                         # kennzeichnet, wenn ein Sender sicher zum Zeitpunkt der Aufnahme geschlossen war
                         auto_closedlabel = (stdcheck or inactcheck) and (rectime >= stichtag)
-                        #self.logger.debug(f"stationsloop: auto_closedlabel: {auto_closedlabel}")
-                        if not ((self.__slots__[3][ix2] - rectime).days <= 0 or auto_closedlabel):
+                        #print(f"potential: freq: {str(annotation['FREQ'][ix])}; curr_station {curr_station} ; ## stdcheck: {str(stdcheck)} ; ## auto_closedlabel: {str(auto_closedlabel)} ;## days from stichtag: {str((self.__slots__[3][ix2] - rectime).days)}")
+                        #self.logger.debug("dummy")
+                        #self.logger.debug(f"potential: freq: {str(annotation['FREQ'][ix])}; curr_station {curr_station} ; ## stdcheck: {str(stdcheck)} ; ## auto_closedlabel: {str(auto_closedlabel)} ;## days from stichtag: {str((self.__slots__[3][ix2] - rectime).days)}")
+                        # self.logger.debug(curr_station + ";## stcheck : " + str(stdcheck) + "; ##autoclosedlabel: " + str(auto_closedlabel) + ";## daydiff :" + str((self.__slots__[3][ix2] - rectime).days))
+                        if not ((self.__slots__[3][ix2] - rectime).days < 0 or auto_closedlabel):
+                            #print(f"accepted: curr_station {curr_station} ; ## stdcheck: {str(stdcheck)} ; ## auto_closedlabel: {str(auto_closedlabel)} ;## days from stichtag: {str((self.__slots__[3][ix2] - rectime).days)}")                        #self.logger.debug(f"stationsloop: auto_closedlabel: {auto_closedlabel}")
+                            #self.logger.debug(f"potential: freq: {str(annotation['FREQ'][ix])}; curr_station {curr_station} ; ## stdcheck: {str(stdcheck)} ; ## auto_closedlabel: {str(auto_closedlabel)} ;## days from stichtag: {str((self.__slots__[3][ix2] - rectime).days)}")
                             #self.logger.debug("ifnot case Hurraa 2")
                             #wenn NICHT (geschlossen oder recording-time >= explizite Schließzeit in der Spalte closed) --> Sender ist Kandidat
                             # Progeamm und Station aus MWTabelle übernehmen
@@ -188,6 +194,10 @@ class statlst_gen_worker(QtCore.QThread):
                             #self.logger.debug("stationsloop: end of ifnot case quest reached")
                     #self.logger.debug(f"stationsloop: annotate after first loop: ix2: {ix2}")
                     #print(f"stationsloop: annotate after first loop: ix2: {ix2}")
+                        else:
+                            #self.logger.debug(f"rejected: freq: {str(annotation['FREQ'][ix])}; curr_station {curr_station} ; ## stdcheck: {str(stdcheck)} ; ## auto_closedlabel: {str(auto_closedlabel)} ;## days from closing: {str((self.__slots__[3][ix2] - rectime).days)}")
+                            #self.logger.debug(f"diffcheck rectime: {str(rectime)}, stichtag: {stichtag}, slots: {self.__slots__[3][ix2]}")
+                            pass
                     ix2 = -1
                     for ix2 in range(len(sortedtable)):
                         
