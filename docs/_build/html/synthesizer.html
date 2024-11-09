@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>synthesizer package &mdash; COHIWizard_v1.2 1.2.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=4d6f9085"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="wavheader_editor package" href="wavheader_editor.html" />
+    <link rel="prev" title="spectralviewer package" href="spectralviewer.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            COHIWizard_v1.2
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">What is COHIWizard ?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="software_architecture.html">Software architecture</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">sources</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="COHIWizard.html">COHIWizard</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Trash.html">Trash package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="abstract_module.html">abstract_module module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="annotator.html">annotator package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auxiliaries.html">auxiliaries module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_yaml_generator.html">config_yaml_generator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icons.html">icons module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="player.html">player package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="resampler.html">resampler package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spectralviewer.html">spectralviewer package</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">synthesizer package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#synthesizer-abstract-module-module">synthesizer.abstract_module module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#synthesizer-set-fonts-module">synthesizer.set_fonts module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#synthesizer-synthesizer-module">synthesizer.synthesizer module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#synthesizer-synthesizer-widget-module">synthesizer.synthesizer_widget module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-synthesizer">Module contents</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#synthesizer.modulate_worker"><code class="docutils literal notranslate"><span class="pre">modulate_worker</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#synthesizer.synthesizer_c"><code class="docutils literal notranslate"><span class="pre">synthesizer_c</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#synthesizer.synthesizer_m"><code class="docutils literal notranslate"><span class="pre">synthesizer_m</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#synthesizer.synthesizer_v"><code class="docutils literal notranslate"><span class="pre">synthesizer_v</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="wavheader_editor.html">wavheader_editor package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="yaml_editor.html">yaml_editor package</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">COHIWizard_v1.2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">sources</a></li>
+      <li class="breadcrumb-item active">synthesizer package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/synthesizer.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="synthesizer-package">
+<h1>synthesizer package<a class="headerlink" href="#synthesizer-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="synthesizer-abstract-module-module">
+<h2>synthesizer.abstract_module module<a class="headerlink" href="#synthesizer-abstract-module-module" title="Link to this heading"></a></h2>
+</section>
+<section id="synthesizer-set-fonts-module">
+<h2>synthesizer.set_fonts module<a class="headerlink" href="#synthesizer-set-fonts-module" title="Link to this heading"></a></h2>
+</section>
+<section id="synthesizer-synthesizer-module">
+<h2>synthesizer.synthesizer module<a class="headerlink" href="#synthesizer-synthesizer-module" title="Link to this heading"></a></h2>
+</section>
+<section id="synthesizer-synthesizer-widget-module">
+<h2>synthesizer.synthesizer_widget module<a class="headerlink" href="#synthesizer-synthesizer-widget-module" title="Link to this heading"></a></h2>
+</section>
+<section id="module-synthesizer">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-synthesizer" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="synthesizer.modulate_worker">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">synthesizer.</span></span><span class="sig-name descname"><span class="pre">modulate_worker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.modulate_worker" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
+<p>worker class for generating modulated signals in a separate thread
+:param : no regular parameters; as this is a thread worker communication occurs via</p>
+<blockquote>
+<div><p>__slots__: Dictionary with parameters</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>none</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.modulate_worker.convert_to_mono">
+<span class="sig-name descname"><span class="pre">convert_to_mono</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">audio_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_channels</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.modulate_worker.convert_to_mono" title="Link to this definition"></a></dt>
+<dd><p>Convert multi-channel audio to mono by averaging channels.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.modulate_worker.display_signal_level">
+<span class="sig-name descname"><span class="pre">display_signal_level</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.modulate_worker.display_signal_level" title="Link to this definition"></a></dt>
+<dd><p>calculate the RMS and peak values of a signal</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.modulate_worker.modulate_signal">
+<span class="sig-name descname"><span class="pre">modulate_signal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filtered_signal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">carrier_freq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_offset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modulation_depth</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.modulate_worker.modulate_signal" title="Link to this definition"></a></dt>
+<dd><p>Modulate the filtered signal onto a carrier frequency with adjustable modulation depth.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.modulate_worker.modulate_terminate">
+<span class="sig-name descname"><span class="pre">modulate_terminate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.modulate_worker.modulate_terminate" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.modulate_worker.process_block">
+<span class="sig-name descname"><span class="pre">process_block</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">audio_block</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zi</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.modulate_worker.process_block" title="Link to this definition"></a></dt>
+<dd><p>Apply the low-pass filter blockwise and maintain filter state (zi).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.modulate_worker.process_multiple_carriers_blockwise">
+<span class="sig-name descname"><span class="pre">process_multiple_carriers_blockwise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">carrier_frequencies</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">playlists</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff_freq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modulation_depth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_base_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_num_samples</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.modulate_worker.process_multiple_carriers_blockwise" title="Link to this definition"></a></dt>
+<dd><p>Process audio from multiple playlists blockwise, each corresponding to a different carrier frequency.
+Write the combined output to multiple WAV files if the 2 GB limit is exceeded.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.modulate_worker.read_and_process_audio_blockwise">
+<span class="sig-name descname"><span class="pre">read_and_process_audio_blockwise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">carrier_freq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_sample_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff_freq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modulation_depth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_offset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_file_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_handles</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.modulate_worker.read_and_process_audio_blockwise" title="Link to this definition"></a></dt>
+<dd><p>Read and process audio blockwise from the current file in the file_list, keeping the file handle open.
+Process only one block and move to the next file when the current one is finished.</p>
+<p>Args:
+- file_list: List of audio file paths for the current carrier.
+- carrier_freq: Carrier frequency for modulation.
+- target_sample_rate: Target sample rate for processing.
+- block_size: Size of the audio block to be processed.
+- cutoff_freq: Cutoff frequency for the low-pass filter.
+- modulation_depth: Depth of modulation.
+- zi: Filter state to maintain continuity across blocks.
+- sample_offset: Current sample offset for phase continuity in modulation.
+- current_file_index: Index of the current file in the file_list.
+- file_handles: Dictionary of file handles to keep files open.</p>
+<p>Returns:
+- modulated_output: Modulated block of audio.
+- zi: Updated filter state.
+- sample_offset: Updated sample offset.
+- current_file_index: Updated file index (incremented if necessary).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.modulate_worker.resample_audio">
+<span class="sig-name descname"><span class="pre">resample_audio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">audio_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">original_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_rate</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.modulate_worker.resample_audio" title="Link to this definition"></a></dt>
+<dd><p>Resample audio data to the target sample rate.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.modulate_worker.start_modulator">
+<span class="sig-name descname"><span class="pre">start_modulator</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.modulate_worker.start_modulator" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.modulate_worker.wav_header_generator">
+<span class="sig-name descname"><span class="pre">wav_header_generator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filesize</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">starttime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">next_output_file_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.modulate_worker.wav_header_generator" title="Link to this definition"></a></dt>
+<dd><p>generate wavheader for output_file_name:
+:param: output_file_name</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="synthesizer.modulate_worker.LO_freq">
+<span class="sig-name descname"><span class="pre">LO_freq</span></span><a class="headerlink" href="#synthesizer.modulate_worker.LO_freq" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="synthesizer.modulate_worker.block_size">
+<span class="sig-name descname"><span class="pre">block_size</span></span><a class="headerlink" href="#synthesizer.modulate_worker.block_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="synthesizer.modulate_worker.carrier_frequencies">
+<span class="sig-name descname"><span class="pre">carrier_frequencies</span></span><a class="headerlink" href="#synthesizer.modulate_worker.carrier_frequencies" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="synthesizer.modulate_worker.combined_signal_block">
+<span class="sig-name descname"><span class="pre">combined_signal_block</span></span><a class="headerlink" href="#synthesizer.modulate_worker.combined_signal_block" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="synthesizer.modulate_worker.cutoff_freq">
+<span class="sig-name descname"><span class="pre">cutoff_freq</span></span><a class="headerlink" href="#synthesizer.modulate_worker.cutoff_freq" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="synthesizer.modulate_worker.exp_num_samples">
+<span class="sig-name descname"><span class="pre">exp_num_samples</span></span><a class="headerlink" href="#synthesizer.modulate_worker.exp_num_samples" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="synthesizer.modulate_worker.gain">
+<span class="sig-name descname"><span class="pre">gain</span></span><a class="headerlink" href="#synthesizer.modulate_worker.gain" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="synthesizer.modulate_worker.logger">
+<span class="sig-name descname"><span class="pre">logger</span></span><a class="headerlink" href="#synthesizer.modulate_worker.logger" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="synthesizer.modulate_worker.modulation_depth">
+<span class="sig-name descname"><span class="pre">modulation_depth</span></span><a class="headerlink" href="#synthesizer.modulate_worker.modulation_depth" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="synthesizer.modulate_worker.output_base_name">
+<span class="sig-name descname"><span class="pre">output_base_name</span></span><a class="headerlink" href="#synthesizer.modulate_worker.output_base_name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="synthesizer.modulate_worker.playlists">
+<span class="sig-name descname"><span class="pre">playlists</span></span><a class="headerlink" href="#synthesizer.modulate_worker.playlists" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="synthesizer.modulate_worker.progress">
+<span class="sig-name descname"><span class="pre">progress</span></span><a class="headerlink" href="#synthesizer.modulate_worker.progress" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="synthesizer.modulate_worker.sample_rate">
+<span class="sig-name descname"><span class="pre">sample_rate</span></span><a class="headerlink" href="#synthesizer.modulate_worker.sample_rate" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_c">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">synthesizer.</span></span><span class="sig-name descname"><span class="pre">synthesizer_c</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">synthesizer_m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_c" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
+<p>_view method</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_c.dummy">
+<span class="sig-name descname"><span class="pre">dummy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_c.dummy" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_m">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">synthesizer.</span></span><span class="sig-name descname"><span class="pre">synthesizer_m</span></span><a class="headerlink" href="#synthesizer.synthesizer_m" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">synthesizer.</span></span><span class="sig-name descname"><span class="pre">synthesizer_v</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gui</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">synthesizer_c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">synthesizer_m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
+<p>_view methods for resampling module
+TODO: gui.wavheader –&gt; something less general ?</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.LO_update">
+<span class="sig-name descname"><span class="pre">LO_update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.LO_update" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.PupdateSignalHandler">
+<span class="sig-name descname"><span class="pre">PupdateSignalHandler</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.PupdateSignalHandler" title="Link to this definition"></a></dt>
+<dd><p>update progress bar and handle other state display elements</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.activate_control_elements">
+<span class="sig-name descname"><span class="pre">activate_control_elements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.activate_control_elements" title="Link to this definition"></a></dt>
+<dd><p>enable or disable all control elements of the tab via value
+value = True: enable
+value = False: disable
+:param: value
+:type: Boolean</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.add_children">
+<span class="sig-name descname"><span class="pre">add_children</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directory</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.add_children" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.audioBW_update">
+<span class="sig-name descname"><span class="pre">audioBW_update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.audioBW_update" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.blinksynth">
+<span class="sig-name descname"><span class="pre">blinksynth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.blinksynth" title="Link to this definition"></a></dt>
+<dd><p>let create button blink</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.cancel_modulate">
+<span class="sig-name descname"><span class="pre">cancel_modulate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.cancel_modulate" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.canvasbuild">
+<span class="sig-name descname"><span class="pre">canvasbuild</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.canvasbuild" title="Link to this definition"></a></dt>
+<dd><p>sets up a canvas to which graphs can be plotted
+Use: calls the method auxi.generate_canvas with parameters self.gui.gridlayoutX to specify where the canvas 
+should be placed, the coordinates and extensions in the grid and a reference to the QMainwidget Object
+generated by __main__ during system startup. This object is relayed via signal to all modules at system initialization 
+and is automatically available (see rxhandler method)
+the reference to the canvas object is written to self.cref
+:param : gui
+:type : QMainWindow
+:raises [ErrorType]: [ErrorDescription]
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.carrier_ix_changed">
+<span class="sig-name descname"><span class="pre">carrier_ix_changed</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.carrier_ix_changed" title="Link to this definition"></a></dt>
+<dd><p>_slot function of comboBox_cur_carrierfreq
+get corresponding carrier index and call playlist update</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.carrierdistance_update">
+<span class="sig-name descname"><span class="pre">carrierdistance_update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.carrierdistance_update" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.carrierselect_update">
+<span class="sig-name descname"><span class="pre">carrierselect_update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.carrierselect_update" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.cleanup">
+<span class="sig-name descname"><span class="pre">cleanup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.cleanup" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.create_band_thread">
+<span class="sig-name descname"><span class="pre">create_band_thread</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.create_band_thread" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.delete_at_index">
+<span class="sig-name descname"><span class="pre">delete_at_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pathlist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.delete_at_index" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.delete_selected_items">
+<span class="sig-name descname"><span class="pre">delete_selected_items</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.delete_selected_items" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.fc_low_update">
+<span class="sig-name descname"><span class="pre">fc_low_update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.fc_low_update" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.fillplaylist">
+<span class="sig-name descname"><span class="pre">fillplaylist</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.fillplaylist" title="Link to this definition"></a></dt>
+<dd><p>update playlist of carrier with index self.m[‘carrier_ix’]; clear old list and write new one
+:param: none
+:returns: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.fillsourcelist">
+<span class="sig-name descname"><span class="pre">fillsourcelist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rootdir</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.fillsourcelist" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.find_first_difference">
+<span class="sig-name descname"><span class="pre">find_first_difference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">list2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.find_first_difference" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.freq_carriers_update">
+<span class="sig-name descname"><span class="pre">freq_carriers_update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.freq_carriers_update" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.init_synthesizer_ui">
+<span class="sig-name descname"><span class="pre">init_synthesizer_ui</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.init_synthesizer_ui" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.insert_or_append">
+<span class="sig-name descname"><span class="pre">insert_or_append</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pathlist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">element</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.insert_or_append" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.isfloat">
+<span class="sig-name descname"><span class="pre">isfloat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.isfloat" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.isint">
+<span class="sig-name descname"><span class="pre">isint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.isint" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.load_file_dialog">
+<span class="sig-name descname"><span class="pre">load_file_dialog</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.load_file_dialog" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.load_project">
+<span class="sig-name descname"><span class="pre">load_project</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.load_project" title="Link to this definition"></a></dt>
+<dd><p>_load project file (<a href="#id1"><span class="problematic" id="id2">*</span></a>.proj) and read the settings of that project to dictionary pr
+fill playlists and re-initialize all settings according to loaded project.
+<a href="#id3"><span class="problematic" id="id4">*</span></a>.proj files are have yaml format</p>
+<dl class="field-list simple">
+<dt class="field-odd">Param<span class="colon">:</span></dt>
+<dd class="field-odd"><p>none</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>none</p>
+</dd>
+</dl>
+<p>: raises: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.logfilehandler">
+<span class="sig-name descname"><span class="pre">logfilehandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.logfilehandler" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.on_rows_moved">
+<span class="sig-name descname"><span class="pre">on_rows_moved</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destinationParent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destinationRow</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.on_rows_moved" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.playlist_purge">
+<span class="sig-name descname"><span class="pre">playlist_purge</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.playlist_purge" title="Link to this definition"></a></dt>
+<dd><p>_update path information in self.readFilePath for the corresponding readFileList at index  self.m[‘carrier_ix’]</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.playlist_update">
+<span class="sig-name descname"><span class="pre">playlist_update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.playlist_update" title="Link to this definition"></a></dt>
+<dd><p>_currently loaded playlist in self.gui.listWidget_playlist is bering transferred 
+to the central list of playlists self.readFileList[self.m[“carrier_ix”]]. Then playlist_purge()
+is called</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.playlist_update_delayed">
+<span class="sig-name descname"><span class="pre">playlist_update_delayed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dum</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.playlist_update_delayed" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.popup">
+<span class="sig-name descname"><span class="pre">popup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.popup" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.preset_SR_LO">
+<span class="sig-name descname"><span class="pre">preset_SR_LO</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.preset_SR_LO" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.reset_GUI">
+<span class="sig-name descname"><span class="pre">reset_GUI</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.reset_GUI" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.rxhandler">
+<span class="sig-name descname"><span class="pre">rxhandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.rxhandler" title="Link to this definition"></a></dt>
+<dd><p>handles remote calls from other modules via Signal SigRX(_key,_value)
+:param : _key
+:type : str
+:param : _value
+:type : object
+:raises [ErrorType]: [ErrorDescription]
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.save_file_dialog">
+<span class="sig-name descname"><span class="pre">save_file_dialog</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.save_file_dialog" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.save_project">
+<span class="sig-name descname"><span class="pre">save_project</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.save_project" title="Link to this definition"></a></dt>
+<dd><p>_save current settings and all playlists to a project file (<a href="#id5"><span class="problematic" id="id6">*</span></a>.proj) via intermediate dictionary pr
+<a href="#id7"><span class="problematic" id="id8">*</span></a>.proj files are have yaml format</p>
+<dl class="field-list simple">
+<dt class="field-odd">Param<span class="colon">:</span></dt>
+<dd class="field-odd"><p>none</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>none</p>
+</dd>
+</dl>
+<p>: raises: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.select_tree">
+<span class="sig-name descname"><span class="pre">select_tree</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.select_tree" title="Link to this definition"></a></dt>
+<dd><p>initiates buildup of file selection tree
+:param : none
+:raises [ErrorType]:none
+:returns: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.setgain">
+<span class="sig-name descname"><span class="pre">setgain</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.setgain" title="Link to this definition"></a></dt>
+<dd><p>set gain which is set by the gain slider and pass it to the modulator worker</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.showRFdata">
+<span class="sig-name descname"><span class="pre">showRFdata</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.showRFdata" title="Link to this definition"></a></dt>
+<dd><p>_take over datasegment from player loop worker and caluclate from there the signal volume and present it in the volume indicator
+read gain value and present it in the player Tab on the ‘progressbar’ Widget ‘progressBar_volume’
+Parameters: a = length form top to 0dB tick
+b = length between -80 and 0 dB ticks
+c = length between bottom and -80dB tick
+a+b+c = total length of the indicator and hence of the progress-bar volume 
+GUI Element
+:return: _False if error, True on <a href="#id9"><span class="problematic" id="id10">succes_</span></a>
+:rtype: _Boolean_</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.show_context_menu">
+<span class="sig-name descname"><span class="pre">show_context_menu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">position</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.show_context_menu" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.show_fillprogress">
+<span class="sig-name descname"><span class="pre">show_fillprogress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duration</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.show_fillprogress" title="Link to this definition"></a></dt>
+<dd><p>show completion percentage of the current carrier track</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.show_playlength">
+<span class="sig-name descname"><span class="pre">show_playlength</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.show_playlength" title="Link to this definition"></a></dt>
+<dd><p>_update progress bar for total playlength for carrier with index [self.m[‘carrier_ix’]</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.updateGUIelements">
+<span class="sig-name descname"><span class="pre">updateGUIelements</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.updateGUIelements" title="Link to this definition"></a></dt>
+<dd><p>updates GUI elements , usually triggered by a Signal SigTabsUpdateGUIs to which 
+this method is connected in the __main__ of the core module
+:param : none
+:type : none
+:raises [ErrorType]: [ErrorDescription]
+:return: flag False or True, False on unsuccessful execution
+:rtype: Boolean</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="spectralviewer.html" class="btn btn-neutral float-left" title="spectralviewer package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="wavheader_editor.html" class="btn btn-neutral float-right" title="wavheader_editor package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Hermann Scharfetter.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -153,7 +153,7 @@
      </widget>
     </item>
     <item row="6" column="7">
-     <widget class="QRadioButton" name="playrec_radioButton_RECAUTOSTART_2">
+     <widget class="QRadioButton" name="radiobutton_AGC">
       <property name="enabled">
        <bool>true</bool>
       </property>
@@ -4073,7 +4073,7 @@
    <zorder>lineEdit_carrierdistance</zorder>
    <zorder>label_presetband_3</zorder>
    <zorder>label_BP</zorder>
-   <zorder>playrec_radioButton_RECAUTOSTART_2</zorder>
+   <zorder>radiobutton_AGC</zorder>
    <zorder>playrec_label_REC_duration</zorder>
    <zorder>timeEdit_reclength</zorder>
    <zorder>label_MF_2</zorder>

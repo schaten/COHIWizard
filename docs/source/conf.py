@@ -84,6 +84,7 @@ sys.path.insert(0, os.path.abspath('..\\..\\sources'))
 sys.path.insert(0, os.path.abspath('..\\..\\sources\\annotator'))
 sys.path.insert(0, os.path.abspath('..\\..\\sources\\player'))
 sys.path.insert(0, os.path.abspath('..\\..\\sources\\yaml_editor'))
+sys.path.insert(0, os.path.abspath('..\\..\\sources\\synthesizer'))
 sys.path.insert(0, os.path.abspath('..\\..\\sources\\main'))
 
 def skip_methods(app, what, name, obj, skip, options):

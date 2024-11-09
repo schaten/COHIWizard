@@ -50,6 +50,7 @@
 <li class="toctree-l1"><a class="reference internal" href="software_architecture.html">Software architecture</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">sources</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="COHIWizard.html">COHIWizard</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Trash.html">Trash package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="abstract_module.html">abstract_module module</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">annotator package</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
@@ -71,9 +72,12 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="auxiliaries.html">auxiliaries module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_yaml_generator.html">config_yaml_generator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icons.html">icons module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="player.html">player package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="resampler.html">resampler package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="spectralviewer.html">spectralviewer package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="synthesizer.html">synthesizer package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="wavheader_editor.html">wavheader_editor package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="yaml_editor.html">yaml_editor package</a></li>
 </ul>
@@ -201,7 +205,21 @@ depends on: statlst_gen_worker, Progressbarupdate(), csan_completed(), write_yam
 <dl class="py method">
 <dt class="sig sig-object py" id="annotator.annotate.annotate_c.autoscan">
 <span class="sig-name descname"><span class="pre">autoscan</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.annotate_c.autoscan" title="Link to this definition"></a></dt>
-<dd><p>_summary_</p>
+<dd><p>slot function for Button ‘Scan’: configures thread for scanning the spectrum and annotating the peaks and SNR values
+starts thread with autoscan_worker with autoscan_worker.autoscan_fun
+On receiving the SigFinished Signal from worker thread –&gt; terminate thread and trigger next annotation task: interactive stations annotation
+via self.ann_stations()</p>
+<dl class="field-list simple">
+<dt class="field-odd">Params<span class="colon">:</span></dt>
+<dd class="field-odd"><p>none</p>
+</dd>
+<dt class="field-even">Exceptions<span class="colon">:</span></dt>
+<dd class="field-even"><p>none</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>none</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -478,30 +496,42 @@ this method is connected in the __main__ of the core module
 <dt class="sig sig-object py" id="annotator.annotate.autoscan_worker">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">annotator.annotate.</span></span><span class="sig-name descname"><span class="pre">autoscan_worker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">host_window</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QThread</span></code></p>
-<p>[Summary] TODO</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>[</strong><strong>ParamName</strong><strong>]</strong> (<em>[</em><em>ParamType</em><em>]</em><em>(</em><em>, </em><em>optional</em><em>)</em>) – [ParamDescription], defaults to [DefaultParamVal]</p>
-</dd>
-</dl>
-<p>…
-:raises [ErrorType]: [ErrorDescription]
-…
-:return: [ReturnDescription]
-:rtype: [ReturnType]</p>
+<p>worker for the thread which performs the automatic scanning through the spectrum for finding spectral peaks and their SNR</p>
+<p>:Signalling :</p>
+<ul class="simple">
+<li><p>SigScandeactivate: inactivate SCAN button</p></li>
+<li><p>SigUpdateUnions: calls annotate_c.annupdateunions to prepare info for method ann_stations:</p></li>
+<li><p>SigUpdateGUI: update GUI</p></li>
+<li><p>SigProgressBar: advance progressbar via progressvalue - setter/getter</p></li>
+<li><p>SigStatustable: publish additional status information</p></li>
+<li><p>SigPlotdata: plot spectral data for diagnostic purposes if activated in GUI</p></li>
+<li><p>SigAnnSpectrum (data): ann_spectrum(self,data): calls ann_spectrum to generate a single spectrum from complex datasignals, calculates peak info and conveys this info to [annotate_c.locs_union,annotate_c.freq_union] for further processing in stations list assignment</p></li>
+<li><p>SigError (object): so far unused</p></li>
+<li><p>SigAnnotation: convey info to annotate_c: annotate_c.annotation = autoscan_worker.get_annotation(), trigger continuation of worker: autoscan_worker.set_continue(True)</p></li>
+<li><p>SigFinished: return to thread control, –&gt; finish thread</p></li>
+</ul>
 <dl class="py method">
 <dt class="sig sig-object py" id="annotator.annotate.autoscan_worker.autoscan_fun">
 <span class="sig-name descname"><span class="pre">autoscan_fun</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.autoscan_worker.autoscan_fun" title="Link to this definition"></a></dt>
-<dd><dl class="simple">
-<dt>scan through the recording, plot spectra and calculate mean peak info</dt><dd><p>in tab ‘scanner’ as well as SNR
-Signalling: TODO</p>
-</dd>
-</dl>
-<p>:param : none
-:type : none
-:raises [ErrorType]: TODO [ErrorDescription]
-:return: none
-:rtype: none</p>
+<dd><p>scan through the recording over self.NUMSNAPS time points
+for each time point calculate mean peak info and SNR and optionally plot spectrum 
+send progressbar-Signal for updating progressbar
+identifies vectors locs_union of peak indices and freq_union of corresponding peak frequencies 
+signals those vectors to [annotate_c.locs_union,annotate_c.freq_union] for further processing in stations list assignment –&gt; TODO check consequences.</p>
+<p>Now 2 tasks are performed:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>assign found peaks to standard frequencies in a grid of allowed values (rounded to within a certain grid resolution)</p></li>
+</ol>
+<p>2. averaging of peak data corresponding to individual grid frequencies over NUMSnaps points. 
+Small jitter of the peak frequencies over time must be filtered before assigning them to a grid frequency
+i.e. peaks within a certain bandwidth around the grid frequencies are identified and treated as identical</p>
+</div></blockquote>
+<p>SNR values are the calculated from all values at ‘identical’ grid frequencies</p>
+<p>finally write corresponding filtered FREQ and SNR information to intermediate yaml file snrannotation.yaml</p>
+<p>:param : none</p>
+<p>:raises : none</p>
+<p>:returns : none</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -598,15 +628,11 @@ Signalling: TODO</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="annotator.annotate.statlst_gen_worker.stationsloop">
 <span class="sig-name descname"><span class="pre">stationsloop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#annotator.annotate.statlst_gen_worker.stationsloop" title="Link to this definition"></a></dt>
-<dd><p>[Summary]TODO</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>[</strong><strong>ParamName</strong><strong>]</strong> (<em>[</em><em>ParamType</em><em>]</em><em>(</em><em>, </em><em>optional</em><em>)</em>) – [ParamDescription], defaults to [DefaultParamVal]</p>
-</dd>
-</dl>
-<p>…
+<dd><p>[Summary]TODO
+reads the 
+:param [ParamName]: [ParamDescription], defaults to [DefaultParamVal]
+:type [ParamName]: [ParamType](, optional)
 :raises [ErrorType]: [ErrorDescription]
-…
 :return: [ReturnDescription]
 :rtype: [ReturnType]</p>
 </dd></dl>

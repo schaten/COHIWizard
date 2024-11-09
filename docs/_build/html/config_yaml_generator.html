@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>icons module &mdash; COHIWizard_v1.2 1.2.8 documentation</title>
+  <title>config_yaml_generator module &mdash; COHIWizard_v1.2 1.2.8 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
@@ -20,7 +20,9 @@
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="icons module" href="icons.html" />
+    <link rel="prev" title="auxiliaries module" href="auxiliaries.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -42,11 +44,26 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <ul>
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="intro.html">What is COHIWizard ?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="software_architecture.html">Software architecture</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modules.html">sources</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">sources</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="COHIWizard.html">COHIWizard</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Trash.html">Trash package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="abstract_module.html">abstract_module module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="annotator.html">annotator package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auxiliaries.html">auxiliaries module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">config_yaml_generator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icons.html">icons module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="player.html">player package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="resampler.html">resampler package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spectralviewer.html">spectralviewer package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="synthesizer.html">synthesizer package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wavheader_editor.html">wavheader_editor package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="yaml_editor.html">yaml_editor package</a></li>
+</ul>
+</li>
 </ul>
 
         </div>
@@ -63,9 +80,10 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">icons module</li>
+          <li class="breadcrumb-item"><a href="modules.html">sources</a></li>
+      <li class="breadcrumb-item active">config_yaml_generator module</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="_sources/icons.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/config_yaml_generator.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -73,52 +91,17 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-icons">
-<span id="icons-module"></span><h1>icons module<a class="headerlink" href="#module-icons" title="Link to this heading"></a></h1>
-<dl class="py class">
-<dt class="sig sig-object py" id="icons.Icons">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">icons.</span></span><span class="sig-name descname"><span class="pre">Icons</span></span><a class="headerlink" href="#icons.Icons" title="Link to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>This class provides various assets for the different modules.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="icons.Icons.load_icon">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_icon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#icons.Icons.load_icon" title="Link to this definition"></a></dt>
-<dd><p>Loads an icon and returns it as a QIcon.</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>folder (str): The folder in which the image is located.
-name (str): The name of the image to load.</p>
-</dd>
-<dt>Returns:</dt><dd><p>QIcon: The loaded image.</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="icons.Logos">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">icons.</span></span><span class="sig-name descname"><span class="pre">Logos</span></span><a class="headerlink" href="#icons.Logos" title="Link to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#icons.Icons" title="icons.Icons"><code class="xref py py-class docutils literal notranslate"><span class="pre">Icons</span></code></a></p>
-<p>This class provides the logos for the different modules.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="icons.Logos.Logo_full">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Logo_full</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logopath</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#icons.Logos.Logo_full" title="Link to this definition"></a></dt>
-<dd><p>Returns the Logo_fulllogo as QIcon.
-This is also exported in 400%. Only use this for the splash screen and maybe about page. It has a weird size.
-Returns:</p>
-<blockquote>
-<div><p>QIcon: The Logo_full</p>
-</div></blockquote>
-</dd></dl>
-
-</dd></dl>
-
+  <section id="config-yaml-generator-module">
+<h1>config_yaml_generator module<a class="headerlink" href="#config-yaml-generator-module" title="Link to this heading"></a></h1>
 </section>
 
 
            </div>
           </div>
-          <footer>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="auxiliaries.html" class="btn btn-neutral float-left" title="auxiliaries module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="icons.html" class="btn btn-neutral float-right" title="icons module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
   <hr/>
 

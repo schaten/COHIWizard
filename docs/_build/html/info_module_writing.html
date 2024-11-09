@@ -172,6 +172,12 @@ class Ui_my_module_widget(object):
 </div>
 </li>
 </ol>
+<p>General: when using QT file dialogues always use self.m[“QTMAINWINDOWparent”] as reference like:</p>
+<p>QFileDialog.getSaveFileName(self.m[“QTMAINWINDOWparent”],
+“Save File”,
+“<em>.proj”,  # Standardmäßig kein voreingestellter Dateiname
+“proj Files (</em>.proj);;All Files (*)”,  # Filter für Dateitypen
+options=options)</p>
 </section>
 </section>
 

@@ -50,9 +50,12 @@
 <li class="toctree-l1"><a class="reference internal" href="software_architecture.html">Software architecture</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">sources</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="COHIWizard.html">COHIWizard</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Trash.html">Trash package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="abstract_module.html">abstract_module module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="annotator.html">annotator package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="auxiliaries.html">auxiliaries module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_yaml_generator.html">config_yaml_generator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icons.html">icons module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="player.html">player package</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">resampler package</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
@@ -72,6 +75,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="spectralviewer.html">spectralviewer package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="synthesizer.html">synthesizer package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="wavheader_editor.html">wavheader_editor package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="yaml_editor.html">yaml_editor package</a></li>
 </ul>
@@ -385,28 +389,31 @@ fileopened = false and Relay to all other tabs</p>
 <dt class="field-odd">Param<span class="colon">:</span></dt>
 <dd class="field-odd"><p>none</p>
 </dd>
-<dt class="field-even">Type<span class="colon">:</span></dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>none</p>
 </dd>
 </dl>
-<p>…
-:raises: none
-…
-:return: none 
-:rtype: none</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="resampler.resample.resample_c.merge2G_cleanup">
 <span class="sig-name descname"><span class="pre">merge2G_cleanup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_file_list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_c.merge2G_cleanup" title="Link to this definition"></a></dt>
-<dd><p>cleanup temp files after merge2G thread has finished
-:param: none
-:type: none
-…
-:raises: none
-…
-:return: none 
-:rtype: none</p>
+<dd><p>reset GUI state after after merge2G thread has finished</p>
+<ol class="arabic simple">
+<li><p>cleanup temp files</p></li>
+<li><p>reset all model state variables relevant for resampling</p></li>
+<li><p>reset resampling Tab GUI elements</p></li>
+<li><p>send signal for resetting all other Tab GUIs</p></li>
+<li><p>send file closed info</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Param<span class="colon">:</span></dt>
+<dd class="field-odd"><p>none</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>none</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -641,6 +648,25 @@ slot method when pressing the ‘resample’ button.</p>
 <dd></dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.check_cut_time_consistency">
+<span class="sig-name descname"><span class="pre">check_cut_time_consistency</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.check_cut_time_consistency" title="Link to this definition"></a></dt>
+<dd><p>checks the first and the last file in the list to be resampled
+checks if the start/stoptime entries in the wave header are compatible with the filesize. 
+If not then this may cause a program crash during file cutting (advanced resampling method)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p>none</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if successful, False if inconsistency</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Boolean</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="resampler.resample.resample_v.check_listconsistency">
 <span class="sig-name descname"><span class="pre">check_listconsistency</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.check_listconsistency" title="Link to this definition"></a></dt>
 <dd><p>check if all files in the list to be resampled have the same sampling parameters
@@ -650,7 +676,10 @@ check if the time gap between subsequent files is below a certain threshold</p>
 <dd class="field-odd"><p>none</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>none</p>
+<dd class="field-even"><p>True if successful, False if inconsistency</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Boolean</p>
 </dd>
 </dl>
 </dd></dl>

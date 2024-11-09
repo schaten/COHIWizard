@@ -22,7 +22,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="yaml_editor package" href="yaml_editor.html" />
-    <link rel="prev" title="spectralviewer package" href="spectralviewer.html" /> 
+    <link rel="prev" title="synthesizer package" href="synthesizer.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -50,16 +50,21 @@
 <li class="toctree-l1"><a class="reference internal" href="software_architecture.html">Software architecture</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">sources</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="COHIWizard.html">COHIWizard</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Trash.html">Trash package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="abstract_module.html">abstract_module module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="annotator.html">annotator package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="auxiliaries.html">auxiliaries module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_yaml_generator.html">config_yaml_generator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icons.html">icons module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="player.html">player package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="resampler.html">resampler package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="spectralviewer.html">spectralviewer package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="synthesizer.html">synthesizer package</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">wavheader_editor package</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#wavheader-editor-set-fonts-module">wavheader_editor.set_fonts module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-wavheader_editor.wavheader_editor">wavheader_editor.wavheader_editor module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#wavheader_editor.wavheader_editor.MyDelegate"><code class="docutils literal notranslate"><span class="pre">MyDelegate</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#wavheader_editor.wavheader_editor.waveditor_c"><code class="docutils literal notranslate"><span class="pre">waveditor_c</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#wavheader_editor.wavheader_editor.waveditor_m"><code class="docutils literal notranslate"><span class="pre">waveditor_m</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#wavheader_editor.wavheader_editor.waveditor_v"><code class="docutils literal notranslate"><span class="pre">waveditor_v</span></code></a></li>
@@ -112,6 +117,27 @@
 </section>
 <section id="module-wavheader_editor.wavheader_editor">
 <span id="wavheader-editor-wavheader-editor-module"></span><h2>wavheader_editor.wavheader_editor module<a class="headerlink" href="#module-wavheader_editor.wavheader_editor" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.MyDelegate">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">wavheader_editor.wavheader_editor.</span></span><span class="sig-name descname"><span class="pre">MyDelegate</span></span><a class="headerlink" href="#wavheader_editor.wavheader_editor.MyDelegate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QStyledItemDelegate</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.MyDelegate.createEditor">
+<span class="sig-name descname"><span class="pre">createEditor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">QWidget</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="annotator.html#annotator.annotate.annotate_m.None" title="annotator.annotate.annotate_m.None"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">option</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">QStyleOptionViewItem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">QModelIndex</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">QWidget</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="annotator.html#annotator.annotate.annotate_m.None" title="annotator.annotate.annotate_m.None"><span class="pre">None</span></a></span></span><a class="headerlink" href="#wavheader_editor.wavheader_editor.MyDelegate.createEditor" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.MyDelegate.setEditorData">
+<span class="sig-name descname"><span class="pre">setEditorData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">editor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">QWidget</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="annotator.html#annotator.annotate.annotate_m.None" title="annotator.annotate.annotate_m.None"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">QModelIndex</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#wavheader_editor.wavheader_editor.MyDelegate.setEditorData" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.MyDelegate.setModelData">
+<span class="sig-name descname"><span class="pre">setModelData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">editor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">QWidget</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="annotator.html#annotator.annotate.annotate_m.None" title="annotator.annotate.annotate_m.None"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">QAbstractItemModel</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="annotator.html#annotator.annotate.annotate_m.None" title="annotator.annotate.annotate_m.None"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">QModelIndex</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#wavheader_editor.wavheader_editor.MyDelegate.setModelData" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.waveditor_c">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">wavheader_editor.wavheader_editor.</span></span><span class="sig-name descname"><span class="pre">waveditor_c</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waveditor_m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#wavheader_editor.wavheader_editor.waveditor_c" title="Link to this definition"></a></dt>
@@ -179,6 +205,11 @@ TODO: gui.wavheader –&gt; something less general ?</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.waveditor_v.create_delegate">
+<span class="sig-name descname"><span class="pre">create_delegate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#wavheader_editor.wavheader_editor.waveditor_v.create_delegate" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.waveditor_v.fill_wavtable">
 <span class="sig-name descname"><span class="pre">fill_wavtable</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#wavheader_editor.wavheader_editor.waveditor_v.fill_wavtable" title="Link to this definition"></a></dt>
 <dd><p>VIEW
@@ -229,6 +260,11 @@ fill tables on TAB wavedit with the respective values from the vaw header</p>
 :return: none
 :rtype: none</p>
 </dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.waveditor_v.scroll_to_end">
+<span class="sig-name descname"><span class="pre">scroll_to_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#wavheader_editor.wavheader_editor.waveditor_v.scroll_to_end" title="Link to this definition"></a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="wavheader_editor.wavheader_editor.waveditor_v.updateGUIelements">
@@ -284,7 +320,7 @@ this method is connected in the __main__ of the core module
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="spectralviewer.html" class="btn btn-neutral float-left" title="spectralviewer package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="synthesizer.html" class="btn btn-neutral float-left" title="synthesizer package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="yaml_editor.html" class="btn btn-neutral float-right" title="yaml_editor package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

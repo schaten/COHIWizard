@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trash package &mdash; COHIWizard_v1.2 1.2.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=4d6f9085"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="abstract_module module" href="abstract_module.html" />
+    <link rel="prev" title="COHIWizard" href="COHIWizard.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            COHIWizard_v1.2
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">What is COHIWizard ?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="software_architecture.html">Software architecture</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">sources</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="COHIWizard.html">COHIWizard</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Trash package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-Trash.COHIWizard_GUI_v10">Trash.COHIWizard_GUI_v10 module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Trash.COHIWizard_GUI_v10.Ui_MainWindow"><code class="docutils literal notranslate"><span class="pre">Ui_MainWindow</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-Trash.COHIWizard_rescue">Trash.COHIWizard_rescue module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Trash.COHIWizard_rescue.SplashScreen"><code class="docutils literal notranslate"><span class="pre">SplashScreen</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Trash.COHIWizard_rescue.core_c"><code class="docutils literal notranslate"><span class="pre">core_c</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Trash.COHIWizard_rescue.core_m"><code class="docutils literal notranslate"><span class="pre">core_m</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Trash.COHIWizard_rescue.core_v"><code class="docutils literal notranslate"><span class="pre">core_v</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Trash.COHIWizard_rescue.starter"><code class="docutils literal notranslate"><span class="pre">starter</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-Trash.ISO_testgui">Trash.ISO_testgui module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Trash.ISO_testgui.Ui_ISO_testgui"><code class="docutils literal notranslate"><span class="pre">Ui_ISO_testgui</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-Trash.ISO_testgui_template">Trash.ISO_testgui_template module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Trash.ISO_testgui_template.Ui_Form"><code class="docutils literal notranslate"><span class="pre">Ui_Form</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#trash-sdr-cohiwizard-v26-afterkipp-module">Trash.SDR_COHIWizard_v26_afterKIPP module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#trash-sdr-cohiwizard-v26-old-last-resamplerv4-module">Trash.SDR_COHIWizard_v26_old_last_resamplerv4 module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-Trash.SDR_wavheadertools_v2">Trash.SDR_wavheadertools_v2 module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Trash.SDR_wavheadertools_v2.WAVheader_tools"><code class="docutils literal notranslate"><span class="pre">WAVheader_tools</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#trash-sdr-wavheadertools-v2-kopie-module">Trash.SDR_wavheadertools_v2 - Kopie module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#trash-resampler-module-v4-module">Trash.resampler_module_v4 module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-Trash.system_module">Trash.system_module module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Trash.system_module.WIZ_auxiliaries"><code class="docutils literal notranslate"><span class="pre">WIZ_auxiliaries</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Trash.system_module.status"><code class="docutils literal notranslate"><span class="pre">status</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-Trash">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="abstract_module.html">abstract_module module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="annotator.html">annotator package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auxiliaries.html">auxiliaries module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_yaml_generator.html">config_yaml_generator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icons.html">icons module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="player.html">player package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="resampler.html">resampler package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spectralviewer.html">spectralviewer package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="synthesizer.html">synthesizer package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wavheader_editor.html">wavheader_editor package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="yaml_editor.html">yaml_editor package</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">COHIWizard_v1.2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">sources</a></li>
+      <li class="breadcrumb-item active">Trash package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/Trash.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="trash-package">
+<h1>Trash package<a class="headerlink" href="#trash-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-Trash.COHIWizard_GUI_v10">
+<span id="trash-cohiwizard-gui-v10-module"></span><h2>Trash.COHIWizard_GUI_v10 module<a class="headerlink" href="#module-Trash.COHIWizard_GUI_v10" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="Trash.COHIWizard_GUI_v10.Ui_MainWindow">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Trash.COHIWizard_GUI_v10.</span></span><span class="sig-name descname"><span class="pre">Ui_MainWindow</span></span><a class="headerlink" href="#Trash.COHIWizard_GUI_v10.Ui_MainWindow" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="Trash.COHIWizard_GUI_v10.Ui_MainWindow.retranslateUi">
+<span class="sig-name descname"><span class="pre">retranslateUi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">MainWindow</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Trash.COHIWizard_GUI_v10.Ui_MainWindow.retranslateUi" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Trash.COHIWizard_GUI_v10.Ui_MainWindow.setupUi">
+<span class="sig-name descname"><span class="pre">setupUi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">MainWindow</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Trash.COHIWizard_GUI_v10.Ui_MainWindow.setupUi" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-Trash.COHIWizard_rescue">
+<span id="trash-cohiwizard-rescue-module"></span><h2>Trash.COHIWizard_rescue module<a class="headerlink" href="#module-Trash.COHIWizard_rescue" title="Link to this heading"></a></h2>
+<p>Created on Sa Dec 08 2023</p>
+<p><a class="reference external" href="mailto:#&#37;&#52;&#48;author">#<span>&#64;</span>author</a>: scharfetter_admin</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="Trash.COHIWizard_rescue.SplashScreen">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Trash.COHIWizard_rescue.</span></span><span class="sig-name descname"><span class="pre">SplashScreen</span></span><a class="headerlink" href="#Trash.COHIWizard_rescue.SplashScreen" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QWidget</span></code></p>
+<p>This class provides a simple splash screen for the application.
+It shows the logo of the application for 2 seconds and then closes itself.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Trash.COHIWizard_rescue.core_c">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Trash.COHIWizard_rescue.</span></span><span class="sig-name descname"><span class="pre">core_c</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">core_m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Trash.COHIWizard_rescue.core_c" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
+<p>_view method</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="Trash.COHIWizard_rescue.core_c.recording_path_checker">
+<span class="sig-name descname"><span class="pre">recording_path_checker</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Trash.COHIWizard_rescue.core_c.recording_path_checker" title="Link to this definition"></a></dt>
+<dd><p>checks, if recording path exists in config_wizard.yaml and if the path exists in the system
+if not: ask for target pathname and store in config.wizard.yaml
+param: none
+type: none
+:raises [none]: [none]
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Trash.COHIWizard_rescue.core_c.recording_path_setter">
+<span class="sig-name descname"><span class="pre">recording_path_setter</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Trash.COHIWizard_rescue.core_c.recording_path_setter" title="Link to this definition"></a></dt>
+<dd><p>checks, if recording path exists in config_wizard.yaml and if the path exists
+if not: ask for target pathname and store in config.wizard.yaml
+param: none
+type: none
+:raises [none]: [none]
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Trash.COHIWizard_rescue.core_c.contvars">
+<span class="sig-name descname"><span class="pre">contvars</span></span><a class="headerlink" href="#Trash.COHIWizard_rescue.core_c.contvars" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Trash.COHIWizard_rescue.core_m">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Trash.COHIWizard_rescue.</span></span><span class="sig-name descname"><span class="pre">core_m</span></span><a class="headerlink" href="#Trash.COHIWizard_rescue.core_m" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Trash.COHIWizard_rescue.core_v">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Trash.COHIWizard_rescue.</span></span><span class="sig-name descname"><span class="pre">core_v</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gui</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">core_c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">core_m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Trash.COHIWizard_rescue.core_v" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="Trash.COHIWizard_rescue.core_v.FileOpen">
+<span class="sig-name descname"><span class="pre">FileOpen</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Trash.COHIWizard_rescue.core_v.FileOpen" title="Link to this definition"></a></dt>
+<dd><p>CONTROLLER ?
+Purpose: 
+If self.####### == True:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Open data file for read</p></li>
+<li><p>call routine for extraction of recording parameters from filename</p></li>
+<li><p>present recording parameters in info fields</p></li>
+</ol>
+</div></blockquote>
+<p>Returns: True, if successful, False otherwise</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Trash.COHIWizard_rescue.core_v.GUI_reset_status">
+<span class="sig-name descname"><span class="pre">GUI_reset_status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Trash.COHIWizard_rescue.core_v.GUI_reset_status" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Trash.COHIWizard_rescue.core_v.cb_open_file">
+<span class="sig-name descname"><span class="pre">cb_open_file</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Trash.COHIWizard_rescue.core_v.cb_open_file" title="Link to this definition"></a></dt>
+<dd><p>VIEW
+check conditions for proper opening of a new data file; if all conditions met:
+call FileOpen() for getting the file handling parameters
+conditions: playthread is not currently active</p>
+<p>returns: True if successful, False if condition not met.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Trash.COHIWizard_rescue.core_v.connect_init">
+<span class="sig-name descname"><span class="pre">connect_init</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Trash.COHIWizard_rescue.core_v.connect_init" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Trash.COHIWizard_rescue.core_v.dat_extractinfo4wavheader">
+<span class="sig-name descname"><span class="pre">dat_extractinfo4wavheader</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Trash.COHIWizard_rescue.core_v.dat_extractinfo4wavheader" title="Link to this definition"></a></dt>
+<dd><p>CONTROLLER !!!!!!!!!!!!!!!!
+extract control parameters from dat and raw files if existent (COHIRADIA nameconvention)
+and generates standard wavheader
+check for consistency with COHIRADIA file name convention
+if no wav information present: generate dummy entries for most wavheaderitems and ask for SR and LO</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>[</strong><strong>ParamName</strong><strong>]</strong> (<em>none</em>) – none</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>Filename error 1</strong> – center frequency offset not integer</p></li>
+<li><p><strong>Filename error 2</strong> – filename convention not met, cannot extractplayback/resording parameters</p></li>
+<li><p><strong>Filename error 3</strong> – center frequency not in range (0 - 62500000)</p></li>
+<li><p><strong>Filename error 4</strong> – sampling rate not in set 20000, 50000, 100000, 250000, 500000, 1250000, 2500000</p></li>
+<li><p><strong>Filename error 5</strong> – center frequency offset out of range +/- 100 ppm</p></li>
+<li><p><strong>warning 1</strong> – LO frequency not identifiable in wav-filename, default value 1250 kS/s is used</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Returns: True, if successful, False otherwise (if error exception raised)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Boolean</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Trash.COHIWizard_rescue.core_v.editHostAddress">
+<span class="sig-name descname"><span class="pre">editHostAddress</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Trash.COHIWizard_rescue.core_v.editHostAddress" title="Link to this definition"></a></dt>
+<dd><p>Purpose: Callback for edidHostAddress Lineedit item
+activate Host IP address field and enable saving mode
+Returns: nothing</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Trash.COHIWizard_rescue.core_v.generate_GUIupdaterlist">
+<span class="sig-name descname"><span class="pre">generate_GUIupdaterlist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Trash.COHIWizard_rescue.core_v.generate_GUIupdaterlist" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Trash.COHIWizard_rescue.core_v.popup">
+<span class="sig-name descname"><span class="pre">popup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Trash.COHIWizard_rescue.core_v.popup" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Trash.COHIWizard_rescue.core_v.reset_GUI">
+<span class="sig-name descname"><span class="pre">reset_GUI</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Trash.COHIWizard_rescue.core_v.reset_GUI" title="Link to this definition"></a></dt>
+<dd><p>reset GUI elements to their defaults, re-initialize important variables
+code is executed after new file open
+:param none
+:type: none
+:raises [ErrorType]: [ErrorDescription]TODO
+:return: True after completion, False if status-yaml not accessible
+:rtype: boolean</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Trash.COHIWizard_rescue.core_v.rxhandler">
+<span class="sig-name descname"><span class="pre">rxhandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Trash.COHIWizard_rescue.core_v.rxhandler" title="Link to this definition"></a></dt>
+<dd><p>handles remote calls from other modules via Signal SigRX(_key,_value)
+:param : _key
+:type : str
+:param : _value
+:type : object
+:raises [ErrorType]: [ErrorDescription]
+:return: flag False or True, False on unsuccessful execution
+:rtype: Boolean</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Trash.COHIWizard_rescue.core_v.send_overwrite_header">
+<span class="sig-name descname"><span class="pre">send_overwrite_header</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Trash.COHIWizard_rescue.core_v.send_overwrite_header" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Trash.COHIWizard_rescue.core_v.sendupdateGUIs">
+<span class="sig-name descname"><span class="pre">sendupdateGUIs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Trash.COHIWizard_rescue.core_v.sendupdateGUIs" title="Link to this definition"></a></dt>
+<dd><p>goes through the list of all registered Tabs and calls their GUI-Updatemethod
+:param : none
+:type : none
+:raises [ErrorType]: none
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Trash.COHIWizard_rescue.core_v.setactivity_tabs">
+<span class="sig-name descname"><span class="pre">setactivity_tabs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">caller</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">statuschange</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exceptionlist</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Trash.COHIWizard_rescue.core_v.setactivity_tabs" title="Link to this definition"></a></dt>
+<dd><p>activates or inactivaes all tabs except the caller
+caller can be any tab name
+statuschange: ‘activate’: activate all tabs except the caller</p>
+<blockquote>
+<div><p>‘inactivate’ inactivate all tabs except the caller</p>
+</div></blockquote>
+<p>:param caller
+:type str
+:param statuschange
+:type str
+:param exceptionlist
+:type list        
+…
+:raises [ErrorType]: none
+…
+:return: success label: True, False
+:rtype: boolean</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Trash.COHIWizard_rescue.core_v.setstandardpaths">
+<span class="sig-name descname"><span class="pre">setstandardpaths</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Trash.COHIWizard_rescue.core_v.setstandardpaths" title="Link to this definition"></a></dt>
+<dd><p>CONTROLLER</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Trash.COHIWizard_rescue.core_v.togglelogfilehandler">
+<span class="sig-name descname"><span class="pre">togglelogfilehandler</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Trash.COHIWizard_rescue.core_v.togglelogfilehandler" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Trash.COHIWizard_rescue.core_v.updateConfigElements">
+<span class="sig-name descname"><span class="pre">updateConfigElements</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Trash.COHIWizard_rescue.core_v.updateConfigElements" title="Link to this definition"></a></dt>
+<dd><p>updates some Configuration elements
+this method is connected in the __main__ of the core module
+:param : none
+:type : none
+:raises [ErrorType]: [ErrorDescription]
+:return: flag False or True, False on unsuccessful execution
+:rtype: Boolean</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Trash.COHIWizard_rescue.core_v.updateGUIelements">
+<span class="sig-name descname"><span class="pre">updateGUIelements</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Trash.COHIWizard_rescue.core_v.updateGUIelements" title="Link to this definition"></a></dt>
+<dd><p>dummy method, not really used in the core module but pre-configured for sake of compatibility with the general module structure
+:param : none
+:type : none
+:raises [ErrorType]: [ErrorDescription]
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Trash.COHIWizard_rescue.core_v.updatetimer">
+<span class="sig-name descname"><span class="pre">updatetimer</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Trash.COHIWizard_rescue.core_v.updatetimer" title="Link to this definition"></a></dt>
+<dd><p>updates timer functions
+shows date and time
+changes between UTC and local time
+manages recording timer
+:param: none
+:type: none
+…
+:raises: none
+…
+:return: none
+:rtype: none</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Trash.COHIWizard_rescue.core_v.viewvars">
+<span class="sig-name descname"><span class="pre">viewvars</span></span><a class="headerlink" href="#Trash.COHIWizard_rescue.core_v.viewvars" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Trash.COHIWizard_rescue.starter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Trash.COHIWizard_rescue.</span></span><span class="sig-name descname"><span class="pre">starter</span></span><a class="headerlink" href="#Trash.COHIWizard_rescue.starter" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QMainWindow</span></code></p>
+</dd></dl>
+
+</section>
+<section id="module-Trash.ISO_testgui">
+<span id="trash-iso-testgui-module"></span><h2>Trash.ISO_testgui module<a class="headerlink" href="#module-Trash.ISO_testgui" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="Trash.ISO_testgui.Ui_ISO_testgui">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Trash.ISO_testgui.</span></span><span class="sig-name descname"><span class="pre">Ui_ISO_testgui</span></span><a class="headerlink" href="#Trash.ISO_testgui.Ui_ISO_testgui" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="Trash.ISO_testgui.Ui_ISO_testgui.retranslateUi">
+<span class="sig-name descname"><span class="pre">retranslateUi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ISO_testgui</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Trash.ISO_testgui.Ui_ISO_testgui.retranslateUi" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Trash.ISO_testgui.Ui_ISO_testgui.setupUi">
+<span class="sig-name descname"><span class="pre">setupUi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ISO_testgui</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Trash.ISO_testgui.Ui_ISO_testgui.setupUi" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-Trash.ISO_testgui_template">
+<span id="trash-iso-testgui-template-module"></span><h2>Trash.ISO_testgui_template module<a class="headerlink" href="#module-Trash.ISO_testgui_template" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="Trash.ISO_testgui_template.Ui_Form">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Trash.ISO_testgui_template.</span></span><span class="sig-name descname"><span class="pre">Ui_Form</span></span><a class="headerlink" href="#Trash.ISO_testgui_template.Ui_Form" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="Trash.ISO_testgui_template.Ui_Form.retranslateUi">
+<span class="sig-name descname"><span class="pre">retranslateUi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Form</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Trash.ISO_testgui_template.Ui_Form.retranslateUi" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Trash.ISO_testgui_template.Ui_Form.setupUi">
+<span class="sig-name descname"><span class="pre">setupUi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Form</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Trash.ISO_testgui_template.Ui_Form.setupUi" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="trash-sdr-cohiwizard-v26-afterkipp-module">
+<h2>Trash.SDR_COHIWizard_v26_afterKIPP module<a class="headerlink" href="#trash-sdr-cohiwizard-v26-afterkipp-module" title="Link to this heading"></a></h2>
+</section>
+<section id="trash-sdr-cohiwizard-v26-old-last-resamplerv4-module">
+<h2>Trash.SDR_COHIWizard_v26_old_last_resamplerv4 module<a class="headerlink" href="#trash-sdr-cohiwizard-v26-old-last-resamplerv4-module" title="Link to this heading"></a></h2>
+</section>
+<section id="module-Trash.SDR_wavheadertools_v2">
+<span id="trash-sdr-wavheadertools-v2-module"></span><h2>Trash.SDR_wavheadertools_v2 module<a class="headerlink" href="#module-Trash.SDR_wavheadertools_v2" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="Trash.SDR_wavheadertools_v2.WAVheader_tools">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Trash.SDR_wavheadertools_v2.</span></span><span class="sig-name descname"><span class="pre">WAVheader_tools</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Trash.SDR_wavheadertools_v2.WAVheader_tools" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="Trash.SDR_wavheadertools_v2.WAVheader_tools.basic_wavheader">
+<span class="sig-name descname"><span class="pre">basic_wavheader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">icorr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">irate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ifreq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fsize</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_mod</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Trash.SDR_wavheadertools_v2.WAVheader_tools.basic_wavheader" title="Link to this definition"></a></dt>
+<dd><p>generate standard wavheader 
+Important: no check for the right datatypes in wavheader; if incorrect –&gt; program crashes
+:param : icorr: icorr value for dat file
+:type : int
+:param : irate: irate value for dat file
+:type : int
+:param : ifreq: ifreq value for dat file
+:type : int
+:param : bps: bits per sample
+:type : int
+:param : fsize: file size in bytes
+:type : int
+:param : file_mod: file modification date/time as datetime object
+:type : datetime.datetime
+:raises : none
+:return: wavheader
+:rtype: dictionary</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Trash.SDR_wavheadertools_v2.WAVheader_tools.extract_startdatetimestring">
+<span class="sig-name descname"><span class="pre">extract_startdatetimestring</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wavheader</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Trash.SDR_wavheadertools_v2.WAVheader_tools.extract_startdatetimestring" title="Link to this definition"></a></dt>
+<dd><p>_synthetize a string which contains the 
+start date and time and returns it in the SDRUno filename format
+Format: _YYYYMMDD_hhmmssZ</p>
+<p>:param : wavheader
+:type : dictionary
+:raises [ErrorType]: [ErrorDescription]
+:return: datetimestring
+:rtype: str</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Trash.SDR_wavheadertools_v2.WAVheader_tools.write_sdruno_header">
+<span class="sig-name descname"><span class="pre">write_sdruno_header</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wavfilename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavheader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ovwrt_flag</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Trash.SDR_wavheadertools_v2.WAVheader_tools.write_sdruno_header" title="Link to this definition"></a></dt>
+<dd><p>write wavheader to the beginning of the current file ‘wavfilename’
+if ovwrt_flag == True:</p>
+<blockquote>
+<div><p>overwrite the first 216 bytes of an existing file with wavheader</p>
+</div></blockquote>
+<dl class="simple">
+<dt>else:</dt><dd><p>write a new file with the wavheader only; size is always 216 bytes</p>
+</dd>
+</dl>
+<p>Important: no check for the right datatypes in wavheader; if incorrect –&gt; program crashes</p>
+<p>:param : wavtargetfilename
+:type : str
+:param : wavheader
+:type : dictionary
+:param : ovwrt_flag
+:type : boolean
+:raises : none
+:return: 
+:rtype:</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="trash-sdr-wavheadertools-v2-kopie-module">
+<h2>Trash.SDR_wavheadertools_v2 - Kopie module<a class="headerlink" href="#trash-sdr-wavheadertools-v2-kopie-module" title="Link to this heading"></a></h2>
+</section>
+<section id="trash-resampler-module-v4-module">
+<h2>Trash.resampler_module_v4 module<a class="headerlink" href="#trash-resampler-module-v4-module" title="Link to this heading"></a></h2>
+</section>
+<section id="module-Trash.system_module">
+<span id="trash-system-module-module"></span><h2>Trash.system_module module<a class="headerlink" href="#module-Trash.system_module" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="Trash.system_module.WIZ_auxiliaries">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Trash.system_module.</span></span><span class="sig-name descname"><span class="pre">WIZ_auxiliaries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Trash.system_module.WIZ_auxiliaries" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>contains many auxiliariy methods fo the COHIWizard
+:return: _description_
+:rtype: _type_</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="Trash.system_module.WIZ_auxiliaries.standard_errorbox">
+<span class="sig-name descname"><span class="pre">standard_errorbox</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Trash.system_module.WIZ_auxiliaries.standard_errorbox" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Trash.system_module.WIZ_auxiliaries.standard_infobox">
+<span class="sig-name descname"><span class="pre">standard_infobox</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Trash.system_module.WIZ_auxiliaries.standard_infobox" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Trash.system_module.status">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Trash.system_module.</span></span><span class="sig-name descname"><span class="pre">status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Trash.system_module.status" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QObject</span></code></p>
+<p>data container class for TODO: future implementations
+this class has no methods except get and set, only data objects are represented here
+data:</p>
+<blockquote>
+<div><p>status: system variables which once changed should trigger a GUI update via a Signal self.SigUpdateStatus
+flags: flag variables which serve for rapid communication without releasing a trigger (Signal)</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>_description_</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>_type_</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Trash.system_module.status.flags">
+<span class="sig-name descname"><span class="pre">flags</span></span><a class="headerlink" href="#Trash.system_module.status.flags" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Trash.system_module.status.progress">
+<span class="sig-name descname"><span class="pre">progress</span></span><a class="headerlink" href="#Trash.system_module.status.progress" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Trash.system_module.status.status">
+<span class="sig-name descname"><span class="pre">status</span></span><a class="headerlink" href="#Trash.system_module.status.status" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-Trash">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-Trash" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="COHIWizard.html" class="btn btn-neutral float-left" title="COHIWizard" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="abstract_module.html" class="btn btn-neutral float-right" title="abstract_module module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Hermann Scharfetter.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

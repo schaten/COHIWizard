@@ -100,3 +100,11 @@ For plotting into this canvas reference all 'ax' and 'canvas' operations to self
           tab_dict["tabname"].append("my_module")
 
 
+General: when using QT file dialogues always use self.m["QTMAINWINDOWparent"] as reference like:
+
+QFileDialog.getSaveFileName(self.m["QTMAINWINDOWparent"], 
+                                                   "Save File", 
+                                                   "*.proj",  # Standardmäßig kein voreingestellter Dateiname
+                                                   "proj Files (*.proj);;All Files (*)",  # Filter für Dateitypen
+                                                   options=options)
+

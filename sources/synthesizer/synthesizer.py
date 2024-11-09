@@ -31,7 +31,7 @@ class modulate_worker(QObject):
     """ worker class for generating modulated signals in a separate thread
     :param : no regular parameters; as this is a thread worker communication occurs via
         __slots__: Dictionary with parameters
-    :return: none
+    :return : none
     """
     __slots__ = ["carrier_frequencies", "playlists","sample_rate","block_size","cutoff_freq","modulation_depth","output_base_name","exp_num_samples","progress","logger","combined_signal_block","LO_freq","gain"]
     SigFinished = pyqtSignal()
@@ -46,6 +46,7 @@ class modulate_worker(QObject):
         self.stopix = False #TODO: check if necessary
         self.mutex = QMutex() #TODO: check if necessary
         self.CHUNKSIZE = int(1024**2) #TODO: check if necessary
+        self.AUDIO_MAXAMP = 0.9 #max amplitude of the audio signal
  
     def set_carrier_frequencies(self,_value):
         self.__slots__[0] = _value
@@ -105,6 +106,9 @@ class modulate_worker(QObject):
         self.stopix = True
 
     def start_modulator(self):
+        """fetches several parameters from the main thread and starts process_multiple_carriers_blockwise
+        emits SigFinished after comletion of the task for triggering termination of the worker thread
+        """
         self.logger = self.get_logger()
         self.stopix = False
         carrier_frequencies = self.get_carrier_frequencies()
@@ -146,15 +150,62 @@ class modulate_worker(QObject):
         #print(f"modulator carrier-freq: {carrier_freq}")
         #print(f"modulator samplerate: {sample_rate}, ts: {t[1] - t[0]}")
         # Modulation: Signal amplitude-modulates the carrier with the given depth
+        #print(f"mean audio: {np.mean(filtered_signal)} mean carrier: {np.mean(carrier)} t[1:10]: {t[1:10]} carrier_freq: {carrier_freq}")
         modulated_signal = (1 + modulation_depth * filtered_signal) * carrier
+        #print(f"mean modulated signal: {np.mean(modulated_signal)} mean real part: {np.mean(np.real(modulated_signal))} mean imag part: {np.mean(np.imag(modulated_signal))}")
         return modulated_signal
 
     def display_signal_level(self,signal):
         """
         calculate the RMS and peak values of a signal
         """
+    def get_wav_maxlevel(self,wav_file, threshold_percentile=95, spike_duration_ms=1):
+        """determine expected max signal level of an audio file. Do not consider short spikes with a duration of less than a ms
 
-    def read_and_process_audio_blockwise(self, file_list, carrier_freq, target_sample_rate, block_size, cutoff_freq, modulation_depth, zi, sample_offset, current_file_index, file_handles):
+        :param wav_file: path of the audio file
+        :type wav_file: str
+        :param threshold_percentile: allowable max signal in % of FSR, defaults to 95
+        :type threshold_percentile: int, optional
+        :param spike_duration_ms: max duration of a spike (will be ignored then), defaults to 1
+        :type spike_duration_ms: int, optional
+        :return: expected max amp
+        :rtype: float
+        """
+        # Beispielaufruf:
+        # wav_file = "dein_audiofile.wav"
+        # print("Erwartete maximale Amplitude:", expected_max_amplitude(wav_file))
+        print(f"file: {wav_file} level checking")
+        data, sample_rate = sf.read(wav_file)
+        
+        # Konvertiere auf Mono, falls das Audiosignal Stereo ist TODO: check: mean may be lower than individual channel values !
+        if len(data.shape) > 1:
+            data = data.mean(axis=1)
+        # Berechne die absolute Amplituden
+        amplitudes = np.abs(data)   
+        # Berechne die Dauer eines Samples in Millisekunden
+        sample_duration_ms = 1000 / sample_rate
+        # Berechne die Anzahl der Samples, die als "kurze Spitze" betrachtet werden
+        max_spike_samples = int(spike_duration_ms / sample_duration_ms)
+        # Berechne den Schwellenwert für die Amplitude auf Basis des `threshold_percentile`-Perzentils
+        threshold_value = np.percentile(amplitudes, threshold_percentile)
+        # Erstelle eine Kopie der Amplituden und setze kurze Spitzen auf Null
+        filtered_amplitudes = amplitudes.copy() 
+        # Durchlaufe die Amplituden und setze kurze Spitzen unterhalb der max_spike_samples auf 0
+        for i in range(1, len(amplitudes) - 1):
+            # Wenn eine Amplitude den Schwellenwert überschreitet
+            if amplitudes[i] >= threshold_value:
+                # Prüfe, ob es eine kurze Spitze ist (alle Amplituden in diesem Bereich überschreiten den Schwellenwert)
+                start = max(i - max_spike_samples // 2, 0)
+                end = min(i + max_spike_samples // 2, len(amplitudes))
+                if np.all(amplitudes[start:end] >= threshold_value):
+                    # Setze die Spitzen im Bereich auf 0
+                    filtered_amplitudes[start:end] = 0
+        # Bestimme die erwartete maximale Amplitude nach Filterung der Spitzen
+        expected_max_amp = filtered_amplitudes.max() if filtered_amplitudes.size > 0 else amplitudes.max()
+        expected_RMS_amp = filtered_amplitudes.std() if filtered_amplitudes.size > 0 else amplitudes.std()
+        return expected_max_amp, expected_RMS_amp
+    
+    def read_and_process_audio_blockwise(self, file_list, carrier_freq, target_sample_rate, block_size, cutoff_freq, modulation_depth, zi, sample_offset, current_file_index, file_handles, audio_gain):
         """
         Read and process audio blockwise from the current file in the file_list, keeping the file handle open.
         Process only one block and move to the next file when the current one is finished.
@@ -177,14 +228,21 @@ class modulate_worker(QObject):
         - sample_offset: Updated sample offset.
         - current_file_index: Updated file index (incremented if necessary).
         """
+        #print(f"read_and_process_audio_blockwise; current_file_index: {current_file_index}, carrier_freq {carrier_freq}")
         sos = butter(4, cutoff_freq, btype='low', fs=target_sample_rate, output='sos')
         #print(f"carrier-freq: {carrier_freq}")
-
+        threshold_percentile=95
+        spike_duration_ms=1
         while current_file_index < len(file_list):
             file_path = file_list[current_file_index]
 
-            # Überprüfen, ob das File bereits offen ist, falls nicht, öffne es und speichere den Handle
+            # check if file open, if not: check level and power statistics, afterwards open the file and save the handles
             if current_file_index not in file_handles:
+                #print(f"index: {current_file_index} file_handles: {file_handles}")
+                max_level, RMS_amp = self.get_wav_maxlevel(file_path, threshold_percentile, spike_duration_ms)
+                audio_gain = self.AUDIO_MAXAMP/max_level
+                self.logger.debug(f"Audiofile {file_path} max_level: {max_level}, RMS_amp: {RMS_amp}, audio_gain auto: {audio_gain}")
+
                 file_handles[current_file_index] = sf.SoundFile(file_path, 'r')
 
             f = file_handles[current_file_index]
@@ -195,13 +253,14 @@ class modulate_worker(QObject):
             audio_block = f.read(block_size)
             if len(audio_block) == 0:
                 # Datei ist fertig, zum nächsten File wechseln und Datei schließen
+                print(f"close file {file_path} with index {current_file_index}; open next in list")
                 f.close()
                 del file_handles[current_file_index]  # Handle entfernen
                 current_file_index += 1
                 continue  # Weiter zur nächsten Datei
 
             # Mono-Konvertierung falls notwendig
-            audio_block = self.convert_to_mono(audio_block, num_channels)
+            audio_block = audio_gain * self.convert_to_mono(audio_block, num_channels)
 
             # Resampling falls notwendig
             if original_sample_rate != target_sample_rate:
@@ -211,20 +270,22 @@ class modulate_worker(QObject):
             filtered_block, zi = self.process_block(audio_block, sos, zi)
 
             # Modulation auf den Träger anwenden
+
             modulated_block = self.modulate_signal(filtered_block, carrier_freq, target_sample_rate, sample_offset, modulation_depth)
 
             # Aktualisierung von sample_offset für den nächsten Block
             sample_offset += len(modulated_block)
 
-            return modulated_block, zi, sample_offset, current_file_index
+            return modulated_block, zi, sample_offset, current_file_index, audio_gain
 
-        return None, zi, sample_offset, current_file_index
+        return None, zi, sample_offset, current_file_index, audio_gain
 
     def process_multiple_carriers_blockwise(self, carrier_frequencies, playlists, sample_rate, block_size, cutoff_freq, modulation_depth, output_base_name, exp_num_samples):
         """
         Process audio from multiple playlists blockwise, each corresponding to a different carrier frequency.
         Write the combined output to multiple WAV files if the 2 GB limit is exceeded.
         """
+        self.logger.debug(f"process_multiple_carriers_blockwise; carrier_frequencies:{carrier_frequencies}")
         # TODO CHECK Set the 2GB limit and calculate the maximum samples per file (for 16-bit PCM WAV files)
         self.stopix = False
         max_file_size = 2 * 1024**3  # 2 GB in bytes
@@ -259,21 +320,22 @@ class modulate_worker(QObject):
         next_starttime = datetime.now()
         next_starttime = next_starttime.astimezone(pytz.utc)
         self.logger.debug(f"synthesizer worker sample rate before modulating: {sample_rate}")
-
+        audio_gain = np.zeros(len(playlists))
         while not done:
             combined_signal_block = None  # Buffer for combined signal block
             done = True  # Assume done unless we find more data
             
             # Process each carrier for the current block
             for i, (carrier_freq, zi) in enumerate(zip(carrier_frequencies, zis)):
-                modulated_block, new_zi, sample_offsets[i], current_file_indices[i] = self.read_and_process_audio_blockwise(
-                    playlists[i], carrier_freq*1000, sample_rate, block_size, cutoff_freq, modulation_depth, zi, sample_offsets[i], current_file_indices[i], file_handles[i])
+                #print(f"audiogain {audio_gain[i]}")
+                modulated_block, new_zi, sample_offsets[i], current_file_indices[i], audio_gain[i] = self.read_and_process_audio_blockwise(playlists[i], carrier_freq*1000, sample_rate, block_size, cutoff_freq, modulation_depth, zi, sample_offsets[i], current_file_indices[i], file_handles[i], audio_gain[i])
                 
                 # Wenn modulated_block None ist, dann ist das Playlist-Ende erreicht
                 if modulated_block is None:
                     continue
 
                 # Dynamically adjust combined signal block size based on modulated block size
+                #TODO check if carrier zero gap arises here
                 if combined_signal_block is None or len(combined_signal_block) < len(modulated_block):
                     combined_signal_block = np.zeros(len(modulated_block), dtype = np.complex128)
                 gain = self.get_gain()
@@ -312,6 +374,7 @@ class modulate_worker(QObject):
         
             #convert complex 128 into 2 x float 64
             lend=2*len(combined_signal_block)
+            #TODO check if carrier zero gap arises here
             block_to_write = np.zeros(lend)
             block_to_write[1::2] = np.imag(combined_signal_block)
             block_to_write[0::2] = np.real(combined_signal_block)
@@ -678,6 +741,16 @@ class synthesizer_v(QObject):
         palette = self.gui.synthesizer_pushbutton_create.palette()
         self.cancel_background_color = palette.color(self.gui.synthesizer_pushbutton_create.backgroundRole())
         self.syntesisrunning = False
+
+        # determine optimal gain and set gain slider accordingly
+        numcar = self.gui.spinBox_numcarriers.value()
+        wanted_gain = 0.568 /2/ np.sqrt(numcar)  # 0.568 is the product of a safety margin 0.8 and the RMS of 1 Vp, i.e. 0.71
+        if self.gui.radiobutton_AGC.isChecked():
+            slider = (20*np.log10(wanted_gain) + self.GAINOFFSET)*10/9
+            self.gui.verticalSlider_Gain.setProperty("value", float(slider))
+            #gain = 10**((self.gui.verticalSlider_Gain.value()/100*90 - self.GAINOFFSET)/20)
+
+
         #TODO TODO TODO: exit if no project defined
         #print("recording path received")
         #print(self.m["recording_path"])
@@ -832,7 +905,7 @@ class synthesizer_v(QObject):
         self.gui.lineEdit_audiocutoff_freq.setEnabled(value)
         self.gui.timeEdit_reclength.setEnabled(value)
         #self.gui.synthesizer_radioBut_Timedomain.setEnabled(value)
-        self.gui.playrec_radioButton_RECAUTOSTART_2.setEnabled(value)
+        self.gui.radiobutton_AGC.setEnabled(value)
 
 
     def PupdateSignalHandler(self):
@@ -844,22 +917,33 @@ class synthesizer_v(QObject):
         combined_signal_block = self.modulate_worker.get_combined_signal_block()
         self.gui.progressBar_synth.setValue(min(100,int(np.floor(progress))))
         ts = 1/self.m["sample_rate"]
+        # Übersteuerungsgrenzen festlegen (Y-Werte)
+        upper_limit = 0.5
+        lower_limit = -0.5
+        self.plot_widget.clear()
         if self.gui.synthesizer_radioBut_Timedomain.isChecked():
             datay = np.real(combined_signal_block[0:min(2**16,len(combined_signal_block))])
+            datay = datay - np.mean(datay)
             tax = np.linspace(0,1,len(datay))
             datax = tax * ts
             self.plot_widget.setXRange(0, datax[-1])
             self.plot_widget.setYRange(-1,1)
-            self.curve.setData(datax, datay)
-
+            # clipping limits
+            region = pg.LinearRegionItem(values=(lower_limit, upper_limit), orientation='horizontal')
+            region.setBrush(pg.mkBrush(0, 255, 0, 30))  # pale green rectangle (RGBA: (0, 255, 0, 30) for transparency)
+            self.plot_widget.addItem(region)
+            upper_line = pg.InfiniteLine(pos=upper_limit, angle=0, pen=pg.mkPen('r', width=2))
+            lower_line = pg.InfiniteLine(pos=lower_limit, angle=0, pen=pg.mkPen('r', width=2))
+            self.plot_widget.addItem(upper_line)
+            self.plot_widget.addItem(lower_line)
+            self.plot_widget.plot(datax, datay, pen=pg.mkPen('k'))
+            print(f"mean value: {np.mean(datay)}")
 
         else:
-            
             self.logger.debug(f"percentage completed: {str(progress)}")
             spr = np.abs(np.fft.fft(combined_signal_block[0:min(2**16,len(combined_signal_block))]))
             N = len(spr)
             spr = np.fft.fftshift(spr)/N
-            #fax = np.linspace(-1,1,len(spr))
             #TODO TODO TODO: scale f-axis properly
             #flo = self.m["wavheader"]['centerfreq'] - self.m["wavheader"]['nSamplesPerSec']/2
             flo = self.m["LO"] - self.m["sample_rate"]/2
@@ -868,11 +952,10 @@ class synthesizer_v(QObject):
             freq0  = np.linspace(0,self.m["sample_rate"],N)
             freq = freq0 + flo
             datax = (freq/1000)
-            #datax = fax
             self.plot_widget.setXRange(flo/1000, freq[-1]/1000)
             self.plot_widget.setYRange(-120, 0)
             datay = 20*np.log10(spr)
-            self.curve.setData(datax, datay)
+            self.plot_widget.plot(datax, datay, pen=pg.mkPen('k'))
             
         self.showRFdata()
 
@@ -1177,6 +1260,7 @@ class synthesizer_v(QObject):
             if not len(self.readFilePath[self.m["carrier_ix"]][ix] + x) < 1:
                 wav_info = self.get_wav_info(file_path)
                 duration += wav_info['duration_seconds']
+                
             else:
                 print("NNNNNNNNNN")
             ix += 1

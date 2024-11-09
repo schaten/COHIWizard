@@ -166,7 +166,7 @@ fields for stop and starttimes of the recording; frequently the milliseconds ent
 <dl class="py method">
 <dt class="sig sig-object py" id="auxiliaries.WAVheader_tools.write_sdruno_header">
 <span class="sig-name descname"><span class="pre">write_sdruno_header</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wavfilename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavheader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ovwrt_flag</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#auxiliaries.WAVheader_tools.write_sdruno_header" title="Link to this definition"></a></dt>
-<dd><p>write wavheader to the beginning of the current file ‘wavfilename’
+<dd><p>write auxi wavheader to the beginning of the current file ‘wavfilename’
 if ovwrt_flag == True:</p>
 <blockquote>
 <div><p>overwrite the first 216 bytes of an existing file with wavheader</p>
@@ -175,7 +175,9 @@ if ovwrt_flag == True:</p>
 <dt>else:</dt><dd><p>write a new file with the wavheader only; size is always 216 bytes</p>
 </dd>
 </dl>
-<p>Important: no check for the right datatypes in wavheader; if incorrect –&gt; program crashes</p>
+<p>Important: no check for the right datatypes in wavheader; if incorrect –&gt; program crashes
+only auxi Format can be written. rcvr is not supported
+The Formattag is preserved</p>
 <p>:param : wavtargetfilename
 :type : str
 :param : wavheader
@@ -183,8 +185,7 @@ if ovwrt_flag == True:</p>
 :param : ovwrt_flag
 :type : boolean
 :raises : none
-:return: 
-:rtype:</p>
+:return: none</p>
 </dd></dl>
 
 </dd></dl>

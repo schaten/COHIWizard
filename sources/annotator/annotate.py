@@ -94,7 +94,7 @@ class statlst_gen_worker(QtCore.QThread):
     #@njit
     def stationsloop(self):
         """[Summary]TODO
-
+        reads the 
         :param [ParamName]: [ParamDescription], defaults to [DefaultParamVal]
         :type [ParamName]: [ParamType](, optional)
         :raises [ErrorType]: [ErrorDescription]
@@ -245,15 +245,29 @@ class statlst_gen_worker(QtCore.QThread):
         self.SigFinished.emit()
 
 class autoscan_worker(QtCore.QThread):
-    """[Summary] TODO
+    """worker for the thread which performs the automatic scanning through the spectrum for finding spectral peaks and their SNR
 
-    :param [ParamName]: [ParamDescription], defaults to [DefaultParamVal]
-    :type [ParamName]: [ParamType](, optional)
-    ...
-    :raises [ErrorType]: [ErrorDescription]
-    ...
-    :return: [ReturnDescription]
-    :rtype: [ReturnType]
+    :Signalling : 
+
+    * SigScandeactivate: inactivate SCAN button
+
+    * SigUpdateUnions: calls annotate_c.annupdateunions to prepare info for method ann_stations:
+
+    * SigUpdateGUI: update GUI
+
+    * SigProgressBar: advance progressbar via progressvalue - setter/getter
+
+    * SigStatustable: publish additional status information
+
+    * SigPlotdata: plot spectral data for diagnostic purposes if activated in GUI
+
+    * SigAnnSpectrum (data): ann_spectrum(self,data): calls ann_spectrum to generate a single spectrum from complex datasignals, calculates peak info and conveys this info to [annotate_c.locs_union,annotate_c.freq_union] for further processing in stations list assignment
+
+    * SigError (object): so far unused
+
+    * SigAnnotation: convey info to annotate_c: annotate_c.annotation = autoscan_worker.get_annotation(), trigger continuation of worker: autoscan_worker.set_continue(True)
+
+    * SigFinished: return to thread control, --> finish thread
     """
     __slots__ = ["GUI_parameters", "continue","pdata","progressvalue","horzscal",
              "filepath","readoffset","wavheader","datablocksize","baselineoffset",
@@ -356,14 +370,29 @@ class autoscan_worker(QtCore.QThread):
     #@njit
     def autoscan_fun(self):
         """
-        scan through the recording, plot spectra and calculate mean peak info
-            in tab 'scanner' as well as SNR
-            Signalling: TODO
+        scan through the recording over self.NUMSNAPS time points
+        for each time point calculate mean peak info and SNR and optionally plot spectrum 
+        send progressbar-Signal for updating progressbar
+        identifies vectors locs_union of peak indices and freq_union of corresponding peak frequencies 
+        signals those vectors to [annotate_c.locs_union,annotate_c.freq_union] for further processing in stations list assignment --> TODO check consequences.
+        
+        Now 2 tasks are performed: 
+
+            1. assign found peaks to standard frequencies in a grid of allowed values (rounded to within a certain grid resolution)
+
+            2. averaging of peak data corresponding to individual grid frequencies over NUMSnaps points. 
+            Small jitter of the peak frequencies over time must be filtered before assigning them to a grid frequency
+            i.e. peaks within a certain bandwidth around the grid frequencies are identified and treated as identical
+
+        SNR values are the calculated from all values at 'identical' grid frequencies
+
+        finally write corresponding filtered FREQ and SNR information to intermediate yaml file snrannotation.yaml
+
         :param : none
-        :type : none
-        :raises [ErrorType]: TODO [ErrorDescription]
-        :return: none
-        :rtype: none
+
+        :raises : none
+
+        :returns : none
         """
         round_digits = self.get_round_digits()
         #BW_peaklock = self.get_BW_peaklock()
@@ -371,8 +400,8 @@ class autoscan_worker(QtCore.QThread):
         locs_union = []
         freq_union = []
         self.SigUpdateGUI.emit()
+        # inactiavate SCAN button and prepare GUI for next steps
         self.SigScandeactivate.emit()
-        # TODO: CHECK: connect self.scan_deactivate()
         self.NUMSNAPS = self.get_GUI_parameters()[0]
         self.prominence = self.get_GUI_parameters()[1]
         ann_master = [dict() for x in range(self.NUMSNAPS)]
@@ -407,7 +436,9 @@ class autoscan_worker(QtCore.QThread):
             #print("sleep before continue 1")
             while self.get_continue() == False:
                 time.sleep(0.001)
-            self.SigAnnSpectrum.emit(data)  #????????????????TODO check
+            # start spectrumn analysis and get spectral as well as peak data:        
+            # pdata = {"datax": datax, "datay": datay, "datay_filt": datay_filt,"peaklocs": peaklocs, "peakprops": peakprops, "databasel": databasel}
+            self.SigAnnSpectrum.emit(data)  #TODO check why Signal needs to be sent twice
             pdata = self.get_pdata()
             self.set_continue(False)
             #optional plotting if activated
@@ -422,19 +453,17 @@ class autoscan_worker(QtCore.QThread):
             basel = pdata["databasel"] + self.get_baselineoffset()
             ann_master[ix]["SNR"] = pdata["datay"][peaklocs] - basel[peaklocs]
             ann_master[ix]["PEAKVALS"] = pdata["datay"][peaklocs]
-            #print(f'asf: peaklocs: {peaklocs}')
-            #print(f'asf: basel   : {basel[peaklocs]}')
-            #print(f'asf: SNR     : {pdata["datay"][peaklocs] - basel[peaklocs]}')
-            #collect all peaks which have occurred at least once in an array
+            #create union of all peaklocs found so far (collect all peaks occurring at least once in the series of NSnaps timepoints)
             locs_union = np.union1d(locs_union, ann_master[ix]["PKS"])
 
             #collect all frequencies with round_digits resolution (round_digits = # of digits after the kHz-comma)
             freq_union = np.union1d(freq_union, np.round(ann_master[ix]["FREQ"][ann_master[ix]["PKS"]],round_digits))
-        # purge self.locs.union and remove elements the frequencies of which are
-        # within X kHz span 
-        #print(f"length freq_union: {len(freq_union)}, length locs_union: {len(locs_union)}")
+        # purge self.locs.union and remove elements the frequencies of which are within X kHz span 
+        # print(f"length freq_union: {len(freq_union)}, length locs_union: {len(locs_union)}")
         self.set_unions([locs_union,freq_union])
         self.SigUpdateUnions.emit() #TODO: what is this for ?
+        #This signal calls annotate_c.annupdateunions to prepare info for method ann_stations: [annotate_c.locs_union,annotate_c.freq_union] = annotate_c.autoscaninst.get_unions()
+        #
         meansnr = np.zeros(len(locs_union))
         meanpeakval = np.zeros(len(locs_union))
         minsnr = 1000*np.ones(len(locs_union))
@@ -443,10 +472,11 @@ class autoscan_worker(QtCore.QThread):
         datasnaps = {}
         datasnaps["PEAKVALS"] = []
         datasnaps["SNR"] = []
+
         for ix in range(self.NUMSNAPS):
-            # find indices of current LOCS in the unified LOC vector locs_union
+            # find indices of current LOCS in the unified LOC vector locs_union and assign index to a reann array where each identified peak is assigned to the correct locs union location
             sharedvals, ix_un, ix_ann = np.intersect1d(locs_union, ann_master[ix]["PKS"], return_indices=True)
-            # write current SNR to the corresponding places of the self.reannotated matrix
+            # write current SNR to the corresponding places of the self.reannot matrix
             reannot["SNR"] = np.zeros(len(locs_union))
             reannot["SNR"][ix_un] = ann_master[ix]["SNR"][ix_ann]
             reannot["PEAKVALS"] = np.zeros(len(locs_union))
@@ -461,6 +491,8 @@ class autoscan_worker(QtCore.QThread):
             minsnr = np.minimum(minsnr, reannot["SNR"])
             maxsnr = np.maximum(maxsnr, reannot["SNR"])
             #print("annotate worker findpeak")
+        
+        #round all found peak frequencies to within a certain resolution and create a vector of unique rounded frequencies (each value occurs only once !)   
         uniquefreqs = pd.unique(np.round(freq_union/1000,round_digits))
         # contract all 
         #BW_peaklock = self.get_BW_peaklock()  ##TODO: make this collection BW flexible; might be larger than the peak identification resolution
@@ -580,15 +612,25 @@ class annotate_c(QObject):
 
     def autoscan(self):
         """
-        _summary_
+        slot function for Button 'Scan': configures thread for scanning the spectrum and annotating the peaks and SNR values
+        starts thread with autoscan_worker with autoscan_worker.autoscan_fun
+        On receiving the SigFinished Signal from worker thread --> terminate thread and trigger next annotation task: interactive stations annotation
+        via self.ann_stations()
+
+        :params:  none
+
+        :exceptions: none
+        
+        :returns: none
         """
-        #print("autoscan reached")
+        #create directory for yaml file
         self.logger.debug("autoscan reached")
         if os.path.exists(self.m["cohiradia_yamlheader_filename"]) == False:         #exist yaml file: create from yaml-editor
             self.m["cohiradia_yamlheader_dirname"] = self.m["my_dirname"] + '/' + self.m["annotationdir_prefix"] + self.m["my_filename"]
             if os.path.exists(self.m["cohiradia_yamlheader_dirname"]) == False:
                 os.mkdir(self.m["cohiradia_yamlheader_dirname"])
 
+        #intantiate scanning thread
         self.autoscanthread = QThread()
         self.autoscaninst = autoscan_worker(self)
         self.autoscaninst.moveToThread(self.autoscanthread)
@@ -1401,11 +1443,6 @@ class annotate_v(QObject):
         """
         _summary_
         """
-        # self.gui.progressBar_2.setProperty("value", int(self.annotate_c.autoscaninst.get_progressvalue())) ##TODO: remove after tests
-        # #send continue flag to autoscan task
-        # if self.autoscanthreadActive == True:
-        #     self.annotate_c.autoscaninst.set_1(True)
-        #print("Progressbarupdate 2 222222222222222")
         self.gui.progressBar_2.setProperty("value", int(self.annotate_c.statlst_geninst.get_progressvalue()))
         #send continue flag to autoscan task
         if self.annotate_c.statlst_genthreadActive == True:
@@ -1678,7 +1715,6 @@ class annotate_v(QObject):
         yaml.dump(status, stream)
         stream.close()
         #print(f"forward progressbar enterline_annotation, value: {(freq_ix + 1)/len(self.stations)*100}")
-        #self.gui.progressBar_2.setProperty("value", (freq_ix + 1)/len(self.stations)*100)
         self.gui.Annotate_listWidget.clear()
         self.interactive_station_select()
         self.gui.annotate_pushButtonBack.setEnabled(True)
@@ -1707,7 +1743,6 @@ class annotate_v(QObject):
         stream.close()
         self.interactive_station_select()
         #print(f"forward progressbar discard annot line , value: {(freq_ix + 1)/len(self.stations)*100}")
-        #self.gui.progressBar_2.setProperty("value", (freq_ix + 1)/len(self.stations)*100)
         return False
 
  
