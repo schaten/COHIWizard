@@ -5,6 +5,7 @@ from PyQt5.QtCore import *
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets, QtGui
 import numpy as np
+import locale
 import os
 import logging
 from datetime import datetime
@@ -36,6 +37,7 @@ class modulate_worker(QObject):
     __slots__ = ["carrier_frequencies", "playlists","sample_rate","block_size","cutoff_freq","modulation_depth","output_base_name","exp_num_samples","progress","logger","combined_signal_block","LO_freq","gain"]
     SigFinished = pyqtSignal()
     SigPupdate = pyqtSignal()
+    SigMessage = pyqtSignal(str)
     #SigFinishedLOshifter = pyqtSignal()
     #SigFinishedmerge2G = pyqtSignal()
     #SigSoxerror = pyqtSignal(str)
@@ -159,6 +161,7 @@ class modulate_worker(QObject):
         """
         calculate the RMS and peak values of a signal
         """
+
     def get_wav_maxlevel(self,wav_file, threshold_percentile=95, spike_duration_ms=1):
         """determine expected max signal level of an audio file. Do not consider short spikes with a duration of less than a ms
 
@@ -171,10 +174,9 @@ class modulate_worker(QObject):
         :return: expected max amp
         :rtype: float
         """
-        # Beispielaufruf:
-        # wav_file = "dein_audiofile.wav"
-        # print("Erwartete maximale Amplitude:", expected_max_amplitude(wav_file))
-        print(f"file: {wav_file} level checking")
+        print(f"file: {Path(wav_file).stem} level checking")
+        self.SigMessage.emit("auto level: " + Path(wav_file).stem)
+        #self.gui.label_audioset_name.setText(f"file: {Path(wav_file).stem} level checking")
         data, sample_rate = sf.read(wav_file)
         
         # Konvertiere auf Mono, falls das Audiosignal Stereo ist TODO: check: mean may be lower than individual channel values !
@@ -203,6 +205,8 @@ class modulate_worker(QObject):
         # Bestimme die erwartete maximale Amplitude nach Filterung der Spitzen
         expected_max_amp = filtered_amplitudes.max() if filtered_amplitudes.size > 0 else amplitudes.max()
         expected_RMS_amp = filtered_amplitudes.std() if filtered_amplitudes.size > 0 else amplitudes.std()
+        print("ready")
+        self.SigMessage.emit("----")
         return expected_max_amp, expected_RMS_amp
     
     def read_and_process_audio_blockwise(self, file_list, carrier_freq, target_sample_rate, block_size, cutoff_freq, modulation_depth, zi, sample_offset, current_file_index, file_handles, audio_gain):
@@ -253,6 +257,7 @@ class modulate_worker(QObject):
             audio_block = f.read(block_size)
             if len(audio_block) == 0:
                 # Datei ist fertig, zum nächsten File wechseln und Datei schließen
+                
                 print(f"close file {file_path} with index {current_file_index}; open next in list")
                 f.close()
                 del file_handles[current_file_index]  # Handle entfernen
@@ -466,6 +471,7 @@ class synthesizer_m(QObject):
         self.mdl["cancelflag"] = True
         self.mdl["sample_rate"] = 0
         self.mdl["LO"] = 0
+        self.mdl["SR_currindex"] = 0
         # Create a custom logger
         logging.getLogger().setLevel(logging.DEBUG)
         # Erstelle einen Logger mit dem Modul- oder Skriptnamen
@@ -540,29 +546,30 @@ class synthesizer_v(QObject):
         self.gui = gui
         self.synthesizer_c = synthesizer_c
         #self.norepeat = False
-        self.c_step = int(self.STD_CARRIERDISTANCE)
-        self.cf_LO = int(self.STD_fclow)
+        self.m["carrier_distance"] = float(self.STD_CARRIERDISTANCE)
+        self.m["fc_low"] = int(self.STD_fclow)
         self.m["audioBW"] = float(self.STD_AUDIOBW)
         self.m["TEST"] = False
         self.m["wavheader"] = {}
         self.m["wavheader"]['centerfreq'] = 0
         self.m["icorr"] = 0
         self.m["cancelflag"] = False
+        self.m["LO"] = 1125 
+        
+        self.rule_viol = False
         self.blinkstate = False         
         self.logger = synthesizer_m.logger
         self.synthesizer_c.SigRelay.connect(self.rxhandler)
         self.synthesizer_c.SigRelay.connect(self.SigRelay.emit)
-        self.gui.lineEdit_LO.setText("1125")
+
         self.DATABLOCKSIZE = 1024*32
         self.gui = gui #gui_state["gui_reference"]#system_state["gui_reference"]
         self.logger = synthesizer_m.logger
         self.syntesisrunning = False
-        self.cf_LO = False
         self.load_index = False
-        self.init_synthesizer_ui()
-
         self.m["numcarriers"] = self.gui.spinBox_numcarriers.value()
         self.m["carrier_ix"] = 0
+        self.init_synthesizer_ui()
         self.readFileList = []
         self.oldFileList = []
         self.readFilePath = []
@@ -588,7 +595,9 @@ class synthesizer_v(QObject):
             self.default_directory = ""
 
     def init_synthesizer_ui(self):
-        self.gui.comboBox_targetSR.setCurrentIndex(5)
+        self.m["SR_currindex"] = 5
+        self.gui.comboBox_targetSR.setCurrentIndex(self.m["SR_currindex"])
+        self.gui.lineEdit_LO.setText("1125")
         preset_time = QTime(00, 30, 00) 
         self.gui.timeEdit_reclength.setTime(preset_time)
         #self.gui.listWidget_sourcelist.setHeaderLabel("Directory tree")
@@ -600,13 +609,19 @@ class synthesizer_v(QObject):
         self.gui.listWidget_sourcelist.addItem(item)
         self.gui.lineEdit_audiocutoff_freq.setText(self.STD_AUDIOBW)
         self.gui.lineEdit_carrierdistance.setText(self.STD_CARRIERDISTANCE)
-        self.gui.spinBox_numcarriers.valueChanged.connect(self.freq_carriers_update)
+        #self.gui.spinBox_numcarriers.editingFinished.connect(self.freq_carriers_update)
+        #react to arrows press
+        self.gui.spinBox_numcarriers.valueChanged.connect(self.on_value_changed)
+        # react only to key input
+        self.gui.spinBox_numcarriers.editingFinished.connect(self.on_editing_finished)
+
         self.gui.lineEdit_carrierdistance.editingFinished.connect(self.carrierdistance_update)
         self.gui.lineEdit_audiocutoff_freq.editingFinished.connect(self.audioBW_update)
         self.gui.lineEdit_fc_low.editingFinished.connect(self.fc_low_update)
         self.gui.lineEdit_LO.editingFinished.connect(self.LO_update)
         self.gui.comboBox_targetSR_2.setCurrentIndex(1)
         self.gui.comboBox_targetSR_2.currentIndexChanged.connect(self.preset_SR_LO)
+        self.gui.comboBox_targetSR.currentIndexChanged.connect(self.RecBW_update)
         self.gui.listWidget_playlist.model().rowsInserted.connect(self.playlist_update_delayed)
         self.gui.listWidget_playlist.model().rowsRemoved.connect(self.playlist_update_delayed) 
         self.gui.listWidget_playlist.setSelectionMode(QListWidget.ExtendedSelection)
@@ -623,7 +638,9 @@ class synthesizer_v(QObject):
         self.gui.verticalSlider_Gain.setProperty("value", 76) #percent
 
         self.gui.verticalSlider_Gain.valueChanged.connect(self.setgain)
+        self.previous_value = self.gui.spinBox_numcarriers.value()
         self.canvasbuild()
+        self.RecBW_update()
         #self.gui.lineEdit_carrierdistance.textEdited.connect(self.carriedistance_update)
 
     def setgain(self):
@@ -730,12 +747,12 @@ class synthesizer_v(QObject):
         self.plot_widget.getAxis('left').setStyle(tickFont=pg.QtGui.QFont('Arial', 6))
         self.plot_widget.getAxis('bottom').setStyle(tickFont=pg.QtGui.QFont('Arial', 6))
         self.plot_widget.setBackground('w')
-        self.xdata = np.linspace(0, 10, 100)
-        self.ydata = np.sin(self.xdata)
-        ymin = -120
-        ymax = 0
-        self.plot_widget.setYRange(ymin, ymax)
-        self.curve = self.plot_widget.plot(self.xdata, self.ydata, pen=pg.mkPen('k'))
+        #self.xdata = np.linspace(0, 10, 100)
+        #self.ydata = np.sin(self.xdata)
+        # ymin = -120
+        # ymax = 0
+        # self.plot_widget.setYRange(ymin, ymax)
+        #self.curve = self.plot_widget.plot(self.xdata, self.ydata, pen=pg.mkPen('k'))
 
     def create_band_thread(self):
         palette = self.gui.synthesizer_pushbutton_create.palette()
@@ -745,9 +762,10 @@ class synthesizer_v(QObject):
         # determine optimal gain and set gain slider accordingly
         numcar = self.gui.spinBox_numcarriers.value()
         wanted_gain = 0.568 /2/ np.sqrt(numcar)  # 0.568 is the product of a safety margin 0.8 and the RMS of 1 Vp, i.e. 0.71
-        if self.gui.radiobutton_AGC.isChecked():
-            slider = (20*np.log10(wanted_gain) + self.GAINOFFSET)*10/9
-            self.gui.verticalSlider_Gain.setProperty("value", float(slider))
+        slider = (20*np.log10(wanted_gain) + self.GAINOFFSET)*10/9
+        self.gui.verticalSlider_Gain.setProperty("value", float(slider))
+        #if self.gui.radiobutton_AGC.isChecked():
+
             #gain = 10**((self.gui.verticalSlider_Gain.value()/100*90 - self.GAINOFFSET)/20)
 
 
@@ -766,15 +784,19 @@ class synthesizer_v(QObject):
         self.activate_control_elements(False)
         self.logger.debug("modulate: configure modulate_worker thread et al")
         self.m["cancelflag"] = False
-        sample_rate = int(self.gui.comboBox_targetSR.currentText())*1000 # samplingrate of RF-Signal
-        self.m["sample_rate"] = sample_rate
-        cutoff_freq = float(self.gui.lineEdit_audiocutoff_freq.text())*1000   # Lowpass cutoff frequency   
+        #self.m["sample_rate"] = int(self.gui.comboBox_targetSR.currentText()) # samplingrate of RF-Signal
+        #cutoff_freq = self.m["audioBW"]*1000   # Lowpass cutoff frequency   
         modulation_depth = float(self.gui.lineEdit_modfactor.text())  # Modulation depth 
         playlists = [[f"{path.rstrip('/')}/{file}" for file, path in zip(files, paths)] for files, paths in zip(self.readFileList, self.readFilePath)]
-        LO_frequency = int(int(self.gui.lineEdit_LO.text())*1000)
-        self.m["LO"] = LO_frequency
-        carrier_frequencies = self.m["carrierarray"] - int(np.ceil(LO_frequency/1000))
-
+        #LO_frequency = int(int(self.gui.lineEdit_LO.text())*1000)
+        LO_frequency = int(np.round(self.m["LO"]*1000))
+        # LO_frequency = int(int(self.gui.lineEdit_fc_low())*1000)
+        # self.m["LO"] = LO_frequency
+        fclow_frequency = int(int(self.gui.lineEdit_fc_low.text())*1000)
+        self.m["fclow"] = fclow_frequency
+        # carrier_frequencies = self.m["carrierarray"] - int(np.ceil(LO_frequency/1000))
+        #TODO TODO TODO: maybe correct for no carrier at frequency 0, make that correct ! subtract BW/2
+        carrier_frequencies = self.m["carrierarray"] - self.m["LO"]
         existcheck = True
         while existcheck:
             options = QFileDialog.Options()
@@ -802,16 +824,16 @@ class synthesizer_v(QObject):
 
         block_size = 2**16   # Maximum block length
         total_reclength = self.get_reclength()
-        exp_num_samples = total_reclength * sample_rate
-        
+        exp_num_samples = total_reclength * self.m["sample_rate"]*1000
+        self.toggle = False
         self.modulate_thread = QThread(parent = self)
         self.modulate_worker = modulate_worker()
         self.modulate_worker.moveToThread(self.modulate_thread)
         self.modulate_worker.set_carrier_frequencies(carrier_frequencies)
         self.modulate_worker.set_playlists(playlists)
-        self.modulate_worker.set_sample_rate(sample_rate)
+        self.modulate_worker.set_sample_rate(int(self.m["sample_rate"]*1000))
         self.modulate_worker.set_block_size(block_size)
-        self.modulate_worker.set_cutoff_freq(cutoff_freq)
+        self.modulate_worker.set_cutoff_freq(self.m["audioBW"]*1000)
         self.modulate_worker.set_modulation_depth(modulation_depth)
         self.modulate_worker.set_output_base_name(output_base_name)
         self.modulate_worker.set_exp_num_samples(exp_num_samples)
@@ -820,6 +842,9 @@ class synthesizer_v(QObject):
         self.setgain()
         self.modulate_thread.started.connect(self.modulate_worker.start_modulator)
         self.modulate_worker.SigPupdate.connect(self.PupdateSignalHandler)
+        self.modulate_worker.SigMessage.connect(self.display_worker_message)
+
+        
         self.modulate_worker.SigFinished.connect(self.modulate_thread.quit)
         self.modulate_worker.SigFinished.connect(lambda: print("#####>>>>>>>>>>>>>>>>>modulateworker SigFinished_arrived"))
         self.modulate_worker.SigFinished.connect(self.cleanup)
@@ -841,6 +866,17 @@ class synthesizer_v(QObject):
         #self.SigProgress.emit()       
         return(True)
     
+    def display_worker_message(self,s):
+        self.gui.label_audioset_name.setText(s)
+        if s.find("----") == 0:
+            self.gui.label_audioset_name.setText('modulating')
+            self.gui.label_audioset_name.setStyleSheet("background-color: #FFFFFF; color: black;")
+        if self.toggle: 
+            self.gui.label_audioset_name.setStyleSheet("background-color: #ADD8E6; color: black;")  # Blassblau (#ADD8E6)
+        else:
+           self.gui.label_audioset_name.setStyleSheet("background-color: #FFDAB9; color: black;")  # Blassorange (#FFDAB9)
+        self.toggle = not self.toggle
+
     def cleanup(self):
         self.syntesisrunning = False
         self.activate_control_elements(True)
@@ -848,6 +884,7 @@ class synthesizer_v(QObject):
         auxi.standard_infobox("synthesis has been completed, files can be found in the recording path defined on the Player tab")
         self.gui.progressBar_synth.setValue(0)
         self.gui.synthesizer_pushbutton_create.setStyleSheet("background-color: lightgray; color: black;")
+        self.display_worker_message('Job finished, ready for new job')
 
 
 
@@ -904,7 +941,7 @@ class synthesizer_v(QObject):
         self.gui.spinBox_numcarriers.setEnabled(value)
         self.gui.lineEdit_audiocutoff_freq.setEnabled(value)
         self.gui.timeEdit_reclength.setEnabled(value)
-        #self.gui.synthesizer_radioBut_Timedomain.setEnabled(value)
+        #self.gui.synthesizer_radioBut_Spectrum.setEnabled(value)
         self.gui.radiobutton_AGC.setEnabled(value)
 
 
@@ -916,12 +953,26 @@ class synthesizer_v(QObject):
         #print(f"progress: {progress}")
         combined_signal_block = self.modulate_worker.get_combined_signal_block()
         self.gui.progressBar_synth.setValue(min(100,int(np.floor(progress))))
-        ts = 1/self.m["sample_rate"]
-        # Übersteuerungsgrenzen festlegen (Y-Werte)
-        upper_limit = 0.5
-        lower_limit = -0.5
+        ts = 1/self.m["sample_rate"]/1000
+        # clipping limits festlegen (Y-Werte)
+        upper_limit = 0.7
+        lower_limit = -0.7
         self.plot_widget.clear()
-        if self.gui.synthesizer_radioBut_Timedomain.isChecked():
+        if self.gui.synthesizer_radioBut_Spectrum.isChecked():
+            self.logger.debug(f"percentage completed: {str(progress)}")
+            spr = np.abs(np.fft.fft(combined_signal_block[0:min(2**16,len(combined_signal_block))]))
+            N = len(spr)
+            spr = np.fft.fftshift(spr)/N
+            flo = self.m["LO"] - self.m["sample_rate"]/2 #+ #self.m["fclow"] - self.m["sample_rate"]*1000/2
+            freq0  = np.linspace(0,self.m["sample_rate"],N)
+            freq = freq0 + flo
+            datax = (freq)
+            self.plot_widget.setXRange(flo, freq[-1])
+            self.plot_widget.setYRange(-120, 0)
+            datay = 20*np.log10(spr)
+            self.plot_widget.plot(datax, datay, pen=pg.mkPen('k'))
+
+        else:
             datay = np.real(combined_signal_block[0:min(2**16,len(combined_signal_block))])
             datay = datay - np.mean(datay)
             tax = np.linspace(0,1,len(datay))
@@ -937,26 +988,8 @@ class synthesizer_v(QObject):
             self.plot_widget.addItem(upper_line)
             self.plot_widget.addItem(lower_line)
             self.plot_widget.plot(datax, datay, pen=pg.mkPen('k'))
-            print(f"mean value: {np.mean(datay)}")
+            #print(f"mean value: {np.mean(datay)}")
 
-        else:
-            self.logger.debug(f"percentage completed: {str(progress)}")
-            spr = np.abs(np.fft.fft(combined_signal_block[0:min(2**16,len(combined_signal_block))]))
-            N = len(spr)
-            spr = np.fft.fftshift(spr)/N
-            #TODO TODO TODO: scale f-axis properly
-            #flo = self.m["wavheader"]['centerfreq'] - self.m["wavheader"]['nSamplesPerSec']/2
-            flo = self.m["LO"] - self.m["sample_rate"]/2
-            #print(f"LO frequency: {flo}")
-            #freq0 = np.linspace(0,self.m["wavheader"]['nSamplesPerSec'],N)
-            freq0  = np.linspace(0,self.m["sample_rate"],N)
-            freq = freq0 + flo
-            datax = (freq/1000)
-            self.plot_widget.setXRange(flo/1000, freq[-1]/1000)
-            self.plot_widget.setYRange(-120, 0)
-            datay = 20*np.log10(spr)
-            self.plot_widget.plot(datax, datay, pen=pg.mkPen('k'))
-            
         self.showRFdata()
 
     def save_project(self):
@@ -973,15 +1006,19 @@ class synthesizer_v(QObject):
         pr["projectdata"]["readFilePath"] = self.readFilePath
         pr["projectdata"]["readFileList"] = self.readFileList
         pr["projectdata"]["numcarriers"] = self.m["numcarriers"]
-        pr["projectdata"]["carrier_step"] = self.c_step
-        pr["projectdata"]["carrier_f_LO"] = self.cf_LO
+        pr["projectdata"]["carrier_distance"] = self.m["carrier_distance"]
+        pr["projectdata"]["carrier_f_low"] = self.m["fc_low"]
+        pr["projectdata"]["LO"] = self.m["LO"]
         pr["projectdata"]["audio_BW"] = self.m["audioBW"]
+        #pr["projectdata"]["sample_rate"] = self.m["sample_rate"]
         pr["projectdata"]["current_listdir"] = self.current_listdir
         pr["projectdata"]["targetSR_index"] = self.gui.comboBox_targetSR.currentIndex()
+        pr["projectdata"]["presetband_index"] = self.gui.comboBox_targetSR_2.currentIndex()
         #pr["projectdata"]["preset_time"] = 
         #TODO TODO TODO: add all settings to be saved:
         #self.comboBox_targetSR_2.setCurrentIndex(###)
         pr["projectdata"]["modfactor"] = self.gui.lineEdit_modfactor.text()
+        #pr["projectdata"]["carrier_low"] = self.gui.lineEdit_fc_low.text()
         #Target filename
         qtimeedit = self.gui.timeEdit_reclength
         time_from_qtimeedit = qtimeedit.time()
@@ -1009,31 +1046,46 @@ class synthesizer_v(QObject):
             stream = open(filename, "r")
             pr["projectdata"] = yaml.safe_load(stream)
             stream.close()
-
+            #self.m["sample_rate"] = pr["projectdata"]["sample_rate"]
             self.readFileList = pr["projectdata"]["readFileList"]
             self.readFilePath = pr["projectdata"]["readFilePath"]
+            self.m["LO"] = pr["projectdata"]["LO"]
             #self.oldFileList = pr["projectdata"]["readFileList"]
             self.oldFileList = copy.deepcopy(pr["projectdata"]["readFileList"])
+            self.gui.lineEdit_fc_low.setText(str(pr["projectdata"]["carrier_f_low"]))
+            self.gui.lineEdit_LO.setText(str(pr["projectdata"]["LO"]))
+            self.m["audioBW"]= pr["projectdata"]["audio_BW"]
             self.gui.lineEdit_audiocutoff_freq.setText(str(pr["projectdata"]["audio_BW"]))
-            self.gui.lineEdit_carrierdistance.setText(str(pr["projectdata"]["carrier_step"]))
+            self.gui.lineEdit_carrierdistance.setText(str(pr["projectdata"]["carrier_distance"]))
+            self.m["carrier_distance"] = pr["projectdata"]["carrier_distance"]
             self.m["numcarriers"] = pr["projectdata"]["numcarriers"]
-            self.gui.spinBox_numcarriers.valueChanged.disconnect(self.freq_carriers_update)
+            #self.gui.spinBox_numcarriers.valueChanged.disconnect(self.freq_carriers_update)
+            self.gui.spinBox_numcarriers.valueChanged.disconnect(self.on_value_changed)
+            self.gui.spinBox_numcarriers.editingFinished.disconnect(self.on_editing_finished)
             self.gui.spinBox_numcarriers.setProperty("value", self.m["numcarriers"])
-            self.gui.spinBox_numcarriers.valueChanged.connect(self.freq_carriers_update)
+            #self.gui.spinBox_numcarriers.valueChanged.connect(self.freq_carriers_update)
+            self.gui.spinBox_numcarriers.valueChanged.connect(self.on_value_changed)
+            self.gui.spinBox_numcarriers.editingFinished.connect(self.on_editing_finished)            
             self.m["carrier_ix"] = 0
             self.gui.comboBox_cur_carrierfreq.setCurrentIndex(self.m["carrier_ix"])
             #######preset_time = QTime(00, 30, 00) 
             aux_preset_time = pr["projectdata"]["preset_time"]
             preset_time = QTime(aux_preset_time[0],aux_preset_time[1],aux_preset_time[2]) 
             self.gui.timeEdit_reclength.setTime(preset_time)
-            self.cf_LO = pr["projectdata"]["carrier_f_LO"]
+            self.m["fc_low"] = pr["projectdata"]["carrier_f_low"]
             self.gui.comboBox_targetSR.setCurrentIndex(pr["projectdata"]["targetSR_index"])
+            self.gui.comboBox_targetSR_2.setCurrentIndex(pr["projectdata"]["presetband_index"])
             self.gui.lineEdit_modfactor.setText(str(pr["projectdata"]["modfactor"])) 
-
             self.load_index = True
-            self.fillplaylist()
+            try:
+                self.fillplaylist()
+            except:
+                auxi.standard_errorbox("playlist is inconsistent with other settings, project file invalid, check project file")
+                return 
             self.current_listdir = pr["projectdata"]["current_listdir"]
             self.fillsourcelist(self.current_listdir)
+            self.RecBW_update()
+            self.LO_update()
             self.carrierdistance_update()
             self.audioBW_update()
             self.fc_low_update()
@@ -1284,13 +1336,25 @@ class synthesizer_v(QObject):
 
     def carrierselect_update(self):
         #generate combobox entry list
-        carrier_array = np.arange(self.cf_LO, self.cf_HI+1, self.c_step)
+        carrier_array = np.arange(self.m["fc_low"], self.cf_HI+1, self.m["carrier_distance"])
         carrierselector = carrier_array.tolist()
         self.gui.comboBox_cur_carrierfreq.clear()
         for cf in carrierselector:
             self.gui.comboBox_cur_carrierfreq.addItem(str(cf))
         self.m["carrierarray"] = carrier_array
 
+    def on_value_changed(self, value):
+        # Reagiere sofort, wenn der Wert geändert wird und die Spinbox nicht den Fokus hat
+        print(f"###########Focus unlear")
+        if self.gui.spinBox_numcarriers.value() != self.previous_value:
+            print(f"Wert durch Pfeiltasten geändert: {value}")
+            # Aktualisiere den vorherigen Wert
+            self.previous_value = value
+            self.freq_carriers_update()
+
+    def on_editing_finished(self):
+        self.freq_carriers_update()
+        print("on editing finished")
 
     def freq_carriers_update(self):
 #         Vergrößern: append differenz zu vorher mal self.readFileList mit []
@@ -1300,7 +1364,20 @@ class synthesizer_v(QObject):
 # 			Delete letzte self.readFileList Elemente
 
         self.numcarriers_old = self.m["numcarriers"]
-        numcar = self.gui.spinBox_numcarriers.value() 
+        numcar = self.gui.spinBox_numcarriers.value()
+        valid, errortext = self.validate_params()
+        if not valid:
+            self.gui.spinBox_numcarriers.valueChanged.disconnect(self.on_value_changed)
+            self.gui.spinBox_numcarriers.editingFinished.disconnect(self.on_editing_finished)
+            #self.gui.spinBox_numcarriers.editingFinished.disconnect(self.freq_carriers_update)
+            auxi.standard_errorbox(errortext)
+            self.gui.spinBox_numcarriers.setProperty("value", self.numcarriers_old)
+            time.sleep(0.1)
+            #self.m["numcarriers"] = self.numcarriers_old
+            #self.gui.spinBox_numcarriers.editingFinished.connect(self.freq_carriers_update)
+            self.gui.spinBox_numcarriers.valueChanged.connect(self.on_value_changed)
+            self.gui.spinBox_numcarriers.editingFinished.connect(self.on_editing_finished)
+            return False
 
         if numcar > self.numcarriers_old:
             #extend list
@@ -1332,10 +1409,14 @@ class synthesizer_v(QObject):
                         del self.oldFileList[self.numcarriers_old - 1 - i]
                         del self.readFilePath[self.numcarriers_old - 1 - i]
                 else:
-                    self.gui.spinBox_numcarriers.valueChanged.disconnect(self.freq_carriers_update)
+                    #self.gui.spinBox_numcarriers.editingFinished.disconnect(self.freq_carriers_update)
+                    self.gui.spinBox_numcarriers.valueChanged.disconnect(self.on_value_changed)
+                    self.gui.spinBox_numcarriers.editingFinished.disconnect(self.on_editing_finished)
                     self.gui.spinBox_numcarriers.setProperty("value", self.numcarriers_old)
                     time.sleep(0.1)
-                    self.gui.spinBox_numcarriers.valueChanged.connect(self.freq_carriers_update)
+                    #self.gui.spinBox_numcarriers.editingFinished.connect(self.freq_carriers_update)
+                    self.gui.spinBox_numcarriers.valueChanged.connect(self.on_value_changed)
+                    self.gui.spinBox_numcarriers.editingFinished.connect(self.on_editing_finished)
                     return False
             else:
                 for i in range(delta):
@@ -1344,9 +1425,10 @@ class synthesizer_v(QObject):
                     del self.readFilePath[self.numcarriers_old - 1 - i]
 
         self.m["numcarriers"] = numcar  
-        self.cf_LO = int(self.gui.lineEdit_fc_low.text())
-        self.c_step = int(self.gui.lineEdit_carrierdistance.text())
-        self.cf_HI = self.cf_LO + (self.m["numcarriers"] - 1) * self.c_step
+        fc_low = float(self.gui.lineEdit_fc_low.text())
+        # self.c_step = float(self.gui.lineEdit_carrierdistance.text())
+        # self.cf_HI = fc_low + (self.m["numcarriers"] - 1) * self.c_step
+        self.cf_HI = fc_low + (self.m["numcarriers"] - 1) * self.m["carrier_distance"]
         self.carrierselect_update()
 
     def popup(self,i):
@@ -1369,71 +1451,149 @@ class synthesizer_v(QObject):
         except ValueError:
             auxi.standard_errorbox("invalid characters, must be numeric integer value !")
             return False
-    
+
+    def isnumeric(self,s):
+        # Versuche, das deutsche Locale zu verwenden (Komma als Dezimaltrennzeichen)
+        locale.setlocale(locale.LC_NUMERIC, 'de_DE.UTF-8')  # Für deutsches Format
+        try:
+            a = locale.atof(s)  # Parst eine Zahl mit deutschem Format
+            return True, ""
+        except ValueError:
+            pass  # Wenn es nicht im deutschen Format ist, versuche es im englischen Format
+
+        # Zurück zum englischen Locale für das Standardformat (Punkt als Dezimaltrennzeichen)
+        locale.setlocale(locale.LC_NUMERIC, 'en_US.UTF-8')
+        try:
+            a = locale.atof(s)  # Parst eine Zahl mit englischem Format
+            return True, ""
+        except ValueError:
+            errortext = "value is not numeric"
+            return False, errortext
+
+    def validate_params(self):
+        """_validates certain parameter conditions which must be fulfilled for meaningful settings,
+        e.g. carrier distance > 2* Audio-BW_
+
+        :return: valid: True if all conditions met, else False
+        :rtype: boolean
+        :return: errortext: string specifying the type of violation
+        :rtype: str
+        """
+        audioBW = float(self.gui.lineEdit_audiocutoff_freq.text())
+        carrier_distance = float(self.gui.lineEdit_carrierdistance.text())
+        sample_rate = int(self.gui.comboBox_targetSR.currentText())
+        f_LO = float(self.gui.lineEdit_LO.text())
+        fc_low = float(self.gui.lineEdit_fc_low.text())
+        numcarriers = self.gui.spinBox_numcarriers.value()
+        if (carrier_distance < 2*audioBW):# and not self.load_index: ????
+            self.rule_viol = True
+            errortext = "carrier spacing is less than 2*audio bandwidth, this is not allowed, please either increase carrier spacing or reduce audio bandwidth"
+            #self.gui.lineEdit_carrierdistance.setText(str(self.m["carrier_distance"]))
+            #self.gui.lineEdit_audiocutoff_freq.setText(str(self.m["audioBW"]))
+            print("return false from validate")
+            return False, errortext
+        #Fclow + numcarriers * DeltaC <  LO + BW/2 - AudioBW
+        highlimit = f_LO + sample_rate/2 - audioBW
+        lowlimit = f_LO - sample_rate/2 + audioBW
+        violate_low = fc_low < lowlimit
+        violate_high = fc_low + self.m["carrier_distance"] * numcarriers > highlimit
+        if violate_low or violate_high :# and not self.load_index: ????
+            self.rule_viol = True
+            #Fclow > f_LO – samplerate/2 + AudioBW 
+            if violate_low:
+                errortext = "lowest carrier frequency is below the lowest edge of the band ()" + str(lowlimit) +"), please correct one or more of the following parameters: LO frequency, Rec-Bandwidth, lowest carrier frequency or audio cutoff frequency"
+            if violate_high:
+                errortext = "highest carrier frequency (" + str(fc_low + self.m["carrier_distance"] * self.m["numcarriers"]) + ") is above the highest edge of the band " + str(highlimit) +", please correct one or more of the following parameters: LO frequency, Rec-Bandwidth, lowest carrier frequency, number of carriers or audio cutoff frequency"
+            if violate_low and violate_high:
+                errortext = "lowest and highest carrier frequency are out of the band. Low limit: " + str(lowlimit) + ", please correct one or more of the following parameters: LO frequency, Rec-Bandwidth, lowest carrier frequency, number of carriers or audio cutoff frequency"
+
+            print("return false from validate")
+            return False, errortext
+        return True, ""
+
+    def RecBW_update(self):
+        """slot function for the recording Bandwidth (=SR) combobox; sets the model parameter self.m['sample_rate']"""
+        RecBW = int(self.gui.comboBox_targetSR.currentText())
+        valid, errortext = self.validate_params()
+        if not valid:
+            auxi.standard_errorbox(errortext)
+            self.gui.comboBox_targetSR.setCurrentIndex(self.m["SR_currindex"])
+            return False
+        self.m["sample_rate"] = int(self.gui.comboBox_targetSR.currentText())
+        self.m["SR_currindex"] = self.gui.comboBox_targetSR.currentIndex()
+        #self.freq_carriers_update()
 
     def audioBW_update(self):
+        """slot function for the audio Bandwidth line_edit; sets the model parameter m['audioBW']"""
         audioBW = self.gui.lineEdit_audiocutoff_freq.text()
-        if not self.isfloat(audioBW):
-            auxi.standard_errorbox("invalid characters, must be numeric float value !")
+        if not self.isnumeric(audioBW):
+            auxi.standard_errorbox("invalid characters, must be numeric value !")
+            self.gui.lineEdit_audiocutoff_freq.setText(str(self.m["audioBW"]))
             return False
-        else:
-            self.m["audioBW"] = float(self.gui.lineEdit_audiocutoff_freq.text())
-        if (self.m["audioBW"] < 2.5) or (self.m["audioBW"] > 16):
+        # else: TODO: remove after tests
+        #     self.m["audioBW"] = float(self.gui.lineEdit_audiocutoff_freq.text())
+        if (float(audioBW) < 2.5) or (float(audioBW) > 16):
             auxi.standard_errorbox("audio bandwidth outside the range 2.5 - 16 kHz. Value must be in this interval, please cahnge")
+            self.gui.lineEdit_audiocutoff_freq.setText(str(self.m["audioBW"]))
             return False
-        if (self.m["carrier_distance"] < 2*self.m["audioBW"]):
-            auxi.standard_errorbox("carrier spacing is less than 2*audio bandwidth, this is not allowed, please either increase carrier spacing or reduce audio bandwidth")
-            self.gui.lineEdit_audiocutoff_freq.setText(self.STD_AUDIOBW)
+        valid, errortext = self.validate_params()
+        if not valid:
+            auxi.standard_errorbox(errortext)
+            self.gui.lineEdit_audiocutoff_freq.setText(str(self.m["audioBW"]))
             return False
         self.m["audioBW"] = float(self.gui.lineEdit_audiocutoff_freq.text())
         self.freq_carriers_update()
         #print(f"carrier spacing: {self.m['audioBW']}")
 
     def LO_update(self):
-        cf_LO = int(self.gui.lineEdit_LO.text())
-        if not self.isint(cf_LO):
-            auxi.standard_errorbox("invalid characters, must be numeric integer value !")
+        cf_LO = self.gui.lineEdit_LO.text()
+        if not self.isnumeric(cf_LO):
+            auxi.standard_errorbox("invalid characters, must be numeric value !")
+            self.gui.lineEdit_LO.setText(str(self.m["LO"]))
             return False
-        else:
-            self.cf_LO = int(self.gui.lineEdit_LO.text())
+        valid, errortext = self.validate_params()
+        if not valid:
+            auxi.standard_errorbox(errortext)
+            self.gui.lineEdit_LO.setText(str(self.m["LO"]))
+            return False
+        self.m["LO"] = float(self.gui.lineEdit_LO.text())
+        self.freq_carriers_update()
 
     def fc_low_update(self):
-        #TODO TODO TODO: implement hibound, lowbound as lineEdit_LO - comboBox_targetSR/2
-        fclowbound = 0
-        fchibound = 1000
-        self.gui.lineEdit_LO.setText(str(self.cf_LO))
+        #self.gui.lineEdit_fc_low.setText(str(self.cf_LO)) TODO: remove self.cf_LO
         fc_low = self.gui.lineEdit_fc_low.text()
-        if not self.isint(fc_low):
-            auxi.standard_errorbox("invalid characters, must be numeric integer value !")
+        if not self.isnumeric(fc_low):
+            auxi.standard_errorbox("invalid characters, must be numeric value !")
+            self.gui.lineEdit_fc_low.setText(str(self.m["fc_low"]))
             return False
-        else:
-            self.m["fc_low"] = float(self.gui.lineEdit_fc_low.text())
-        if (self.m["fc_low"] < fclowbound) or (self.m["audioBW"] > fchibound):
-            auxi.standard_errorbox(f"audio bandwidth outside the valid range. Value must be in this interval {str(fclowbound)} - {str(fclowbound)}, please cahnge")
+        valid, errortext = self.validate_params()
+        if not valid:
+            auxi.standard_errorbox(errortext)
+            self.gui.lineEdit_fc_low.setText(str(self.m["fc_low"]))
             return False
-        if (self.m["carrier_distance"] < 2*self.m["audioBW"]):
-            auxi.standard_errorbox("carrier spacing is less than 2*audio bandwidth, this is not allowed, please either increase carrier spacing or reduce audio bandwidth")
-            self.gui.lineEdit_fc_low.setText(self.STD_fclow)
-            return False
-        self.freq_carriers_update()
         self.m["fc_low"] = float(self.gui.lineEdit_fc_low.text())
         self.freq_carriers_update()
         #print(f"carrier spacing: {self.m['fc_low']}")
 
     def carrierdistance_update(self):
-        #TODO: check if integer !
+        """slot function for the carrier distance line_edit; sets the model parameter m["carrier_distance"]"""
         carrier_delta = self.gui.lineEdit_carrierdistance.text()
-        if not self.isint(carrier_delta):
+        if not self.isnumeric(carrier_delta):
             auxi.standard_errorbox("invalid characters, must be numeric float value !")
             self.logger.error("plot_res_spectrum: wrong format of carrier distance")
+            self.gui.lineEdit_carrierdistance.setText(str(self.m["carrier_distance"]))
             return False
-        else:
-            self.m["carrier_distance"] = float(self.gui.lineEdit_carrierdistance.text())
-        
-        if self.m["carrier_distance"] < 2*self.m["audioBW"] and not self.load_index:
-            auxi.standard_errorbox("carrier spacing is less than 2*audio bandwidth, please either increase carrier spacing or reduce audio bandwidth")
-            self.gui.lineEdit_carrierdistance.setText(self.STD_CARRIERDISTANCE)
+        # if float(carrier_delta) < 0.1: #TODO: redundant, carrier_delta must be > 2*audioBW, audioBW must be > 2.5
+        #     auxi.standard_errorbox("invalid carrier spacing, must be numeric float value > 0.1!")
+        #     self.logger.error("plot_res_spectrum: wrong value of carrier distance")
+        #     self.gui.lineEdit_carrierdistance.setText(str(self.m["carrier_distance"]))
+        #     return False
+        valid, errortext = self.validate_params()
+        if not valid:
+            auxi.standard_errorbox(errortext)
+            self.gui.lineEdit_carrierdistance.setText(str(self.m["carrier_distance"]))
             return False
+                
         self.m["carrier_distance"] = float(self.gui.lineEdit_carrierdistance.text())
         self.freq_carriers_update()
         self.load_index = False
