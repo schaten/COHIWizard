@@ -47,7 +47,7 @@ class modulate_worker(QObject):
         super().__init__(*args, **kwargs)
         self.stopix = False #TODO: check if necessary
         self.mutex = QMutex() #TODO: check if necessary
-        self.CHUNKSIZE = int(1024**2) #TODO: check if necessary
+        self.CHUNKSIZE = int(1024**2) #TODO: check if necessary, not used anywhere
         self.AUDIO_MAXAMP = 0.9 #max amplitude of the audio signal
  
     def set_carrier_frequencies(self,_value):
@@ -146,13 +146,9 @@ class modulate_worker(QObject):
     
     def modulate_signal(self,filtered_signal, carrier_freq, sample_rate, sample_offset, modulation_depth):
         """Modulate the filtered signal onto a carrier frequency with adjustable modulation depth."""
-        # Zeitvektor basierend auf dem sample_offset
+        # time vector based on sample_offset
         t = np.arange(sample_offset, sample_offset + len(filtered_signal)) / sample_rate
         carrier = np.exp(2 * np.pi * 1j *carrier_freq * t)
-        #print(f"modulator carrier-freq: {carrier_freq}")
-        #print(f"modulator samplerate: {sample_rate}, ts: {t[1] - t[0]}")
-        # Modulation: Signal amplitude-modulates the carrier with the given depth
-        #print(f"mean audio: {np.mean(filtered_signal)} mean carrier: {np.mean(carrier)} t[1:10]: {t[1:10]} carrier_freq: {carrier_freq}")
         modulated_signal = (1 + modulation_depth * filtered_signal) * carrier
         #print(f"mean modulated signal: {np.mean(modulated_signal)} mean real part: {np.mean(np.real(modulated_signal))} mean imag part: {np.mean(np.imag(modulated_signal))}")
         return modulated_signal
@@ -246,7 +242,6 @@ class modulate_worker(QObject):
                 max_level, RMS_amp = self.get_wav_maxlevel(file_path, threshold_percentile, spike_duration_ms)
                 audio_gain = self.AUDIO_MAXAMP/max_level
                 self.logger.debug(f"Audiofile {file_path} max_level: {max_level}, RMS_amp: {RMS_amp}, audio_gain auto: {audio_gain}")
-
                 file_handles[current_file_index] = sf.SoundFile(file_path, 'r')
 
             f = file_handles[current_file_index]
@@ -255,18 +250,28 @@ class modulate_worker(QObject):
 
             # Blockweises Lesen
             audio_block = f.read(block_size)
+            #hier passiert es auch: wenn audio block kürzer als blocksize --> modulated block ist kürzer
+            #--> zero pad audio block
+
             if len(audio_block) == 0:
-                # Datei ist fertig, zum nächsten File wechseln und Datei schließen
+                # Audio file is finished, close file and open next one
+                #TODO TODO TODO: check if here the zero gap emerges in the carrier while chaning the audio files
                 
                 print(f"close file {file_path} with index {current_file_index}; open next in list")
                 f.close()
                 del file_handles[current_file_index]  # Handle entfernen
                 current_file_index += 1
-                continue  # Weiter zur nächsten Datei
+                continue  # do not modulate, continue with the next audio file
 
             # Mono-Konvertierung falls notwendig
             audio_block = audio_gain * self.convert_to_mono(audio_block, num_channels)
-
+            #zero pad audio block to blocksize
+            if len(audio_block) < block_size:
+                delta = block_size - len(audio_block)
+                aux = np.zeros(block_size)
+                print(f"zeropad audio block, pad length = {delta}, len audioblock: {len(audio_block)}" )
+                aux[0 : len(audio_block)] = audio_block
+                audio_block = aux
             # Resampling falls notwendig
             if original_sample_rate != target_sample_rate:
                 audio_block = self.resample_audio(audio_block, original_sample_rate, target_sample_rate)
@@ -277,12 +282,19 @@ class modulate_worker(QObject):
             # Modulation auf den Träger anwenden
 
             modulated_block = self.modulate_signal(filtered_block, carrier_freq, target_sample_rate, sample_offset, modulation_depth)
-
+            if np.std(modulated_block) < 1e-2:
+                print(f"modulated block is zero, std = {np.std(modulated_block)} @ t = {sample_offset}")
             # Aktualisierung von sample_offset für den nächsten Block
             sample_offset += len(modulated_block)
 
             return modulated_block, zi, sample_offset, current_file_index, audio_gain
-
+        
+        # if no valid audio or audio file is at EOF, return a block without modulation, only carrier
+        
+        # zeroaudioblock = np.zeros(block_size)
+        # modulated_block = self.modulate_signal(zeroaudioblock, carrier_freq, target_sample_rate, sample_offset, modulation_depth)
+        # sample_offset += len(modulated_block)
+        print(f"while loop in read blockwise reached, return None @ t = {sample_offset}")
         return None, zi, sample_offset, current_file_index, audio_gain
 
     def process_multiple_carriers_blockwise(self, carrier_frequencies, playlists, sample_rate, block_size, cutoff_freq, modulation_depth, output_base_name, exp_num_samples):
@@ -291,24 +303,20 @@ class modulate_worker(QObject):
         Write the combined output to multiple WAV files if the 2 GB limit is exceeded.
         """
         self.logger.debug(f"process_multiple_carriers_blockwise; carrier_frequencies:{carrier_frequencies}")
-        # TODO CHECK Set the 2GB limit and calculate the maximum samples per file (for 16-bit PCM WAV files)
         self.stopix = False
         max_file_size = 2 * 1024**3  # 2 GB in bytes
-        #TODO TODO TODO: only test
-        #max_file_size = 128 * 1024**2  # bytes
         self.logger.debug(f"process_multiple_carriers_blockwise: expected overall filesize: {4*exp_num_samples}")
         max_samples_per_file = max_file_size // 4  # complex 16-bit PCM = 4 bytes per sample
         perc_progress_old = 0
         # Initialize filter states for each carrier
-        #zis = [np.zeros((4, 2)) for _ in carrier_frequencies]  # Filter state buffer for each carrier (4th order filter)
         zis = [np.zeros((2, 2)) for _ in carrier_frequencies]  # Filter state buffer for each carrier (4th order filter)
 
         # Initialisiere sample_offset und current_file_index für jeden Carrier
         sample_offsets = [0] * len(carrier_frequencies)
         current_file_indices = [0] * len(carrier_frequencies)  # Track current file index for each carrier
         self.logger.debug(f"synthesizer worker carrier frequencies: {carrier_frequencies}")
-        # **Initialisiere file_handles als Liste von Dictionaries für jeden Carrier**
-        file_handles = [{} for _ in carrier_frequencies]  # Für jeden Carrier ein eigenes Dictionary von Datei-Handles
+        # Initialize file_handles as a list of dictionaries for each carrier
+        file_handles = [{} for _ in carrier_frequencies] 
 
         total_samples_written = 0
         overall_samples_written = 0
@@ -337,15 +345,23 @@ class modulate_worker(QObject):
                 
                 # Wenn modulated_block None ist, dann ist das Playlist-Ende erreicht
                 if modulated_block is None:
+                    print(f"############  mod block = None @ t = {sample_offsets[i]}")
                     continue
 
-                # Dynamically adjust combined signal block size based on modulated block size
-                #TODO check if carrier zero gap arises here
+                    # Dynamically adjust combined signal block size based on modulated block size
+
                 if combined_signal_block is None or len(combined_signal_block) < len(modulated_block):
+                    # if len(combined_signal_block) < len(modulated_block):
+                    #     print(f"zero init combined block @ t = {sample_offsets[i]}")
                     combined_signal_block = np.zeros(len(modulated_block), dtype = np.complex128)
                 gain = self.get_gain()
-                combined_signal_block[:len(modulated_block)] += gain * modulated_block ####TODO TODO TODO: Gain control einbauen, 0.1 ist nur ein erster Versuch
-                
+                if np.abs(len(combined_signal_block) - len(modulated_block)) > 0:
+                    print(f"modulated block std gain*mb = {np.std(gain*modulated_block)} , gain = {gain} @ t = {sample_offsets[i]}, carrier = {i}")
+                    print(f"diff len combined block -len mod block: {len(combined_signal_block) - len(modulated_block)}")
+                #TODO TODO TODO: hier passiert es ! wenn modulated block kürzer als block_size !
+                combined_signal_block[:len(modulated_block)] += gain * modulated_block
+                if np.std(gain*modulated_block) < 1e-1:
+                    print(f"modulated block is zero, std gain*mb = {np.std(gain*modulated_block)} , gain = {gain} @ t = {sample_offsets[i]}")   
                 # If we processed any blocks, we're not done
                 done = False
 
@@ -354,10 +370,11 @@ class modulate_worker(QObject):
             
             # If all files are done, break the loop
             if done:
+                print(f"############  break because done @ t = {sample_offsets[i]}")
                 break
             
             if self.stopix is True:
-                self.logger.debug("***modulator worker cancelled")
+                self.logger.debug(f"***modulator worker cancelled @ t = {sample_offsets[i]}")
                 break
 
             # Write the combined block to the current output file
@@ -372,7 +389,7 @@ class modulate_worker(QObject):
                 file_index += 1
                 output_file_name = f"{output_base_name}_{file_index}.wav"
                 next_starttime = self.wav_header_generator(output_file_name_wavheader,filesize,sample_rate,next_starttime,output_file_name)
-                #print("wavheader written")
+                print("wavheader written")
                 out_file = sf.SoundFile(output_file_name, 'w', samplerate=sample_rate, channels=1, subtype='PCM_16')
                 total_samples_written = 0  # Reset the sample counter for the new file
 
@@ -383,9 +400,6 @@ class modulate_worker(QObject):
             block_to_write = np.zeros(lend)
             block_to_write[1::2] = np.imag(combined_signal_block)
             block_to_write[0::2] = np.real(combined_signal_block)
-            #block_to_write = np.float32(block_to_write)
-            # block_to_write[0:2:lend-1] = np.real(combined_signal_block)
-            # block_to_write[1:2:lend] = np.imag(combined_signal_block)
             try:
                 out_file.write(block_to_write)
             except:
@@ -395,9 +409,6 @@ class modulate_worker(QObject):
             perc_progress = 100*overall_samples_written / exp_num_samples
             if perc_progress - perc_progress_old > 1:
                 perc_progress_old = perc_progress
-                #self.logger.debug(f"percentage completed: {str(perc_progress)}")
-                #print(f"percentage completed: {str(perc_progress)}")
-                #print(f"merge2Gworker renamefile trial {str(jx)}")
                 self.set_progress(perc_progress)
                 self.set_combined_signal_block(combined_signal_block)
                 self.SigPupdate.emit()
@@ -413,7 +424,7 @@ class modulate_worker(QObject):
         self.wav_header_generator(output_file_name_wavheader,filesize,sample_rate,next_starttime,"")
         self.logger.debug(f"write last wavheader into {output_file_name_wavheader}")
         
-        ####TODO TODO TODO: write true SDRUno-Header into the first 216 bytes of the closed file
+        #TODO : Check if already completely o.k. ! write true SDRUno-Header into the first 216 bytes of the closed file
         for file_handle_dict in file_handles:
             for handle in file_handle_dict.values():
                 handle.close()
@@ -667,7 +678,6 @@ class synthesizer_v(QObject):
         :return: _False if error, True on succes_
         :rtype: _Boolean_
         """
-        #scal_NEW = True
         # geometry scaling; absolute numbers are not relevant, only relative lengths
         #a = #10/139.5 #7/86  
         c = 11/89 #16.5/139.5 #8/86
@@ -708,6 +718,8 @@ class synthesizer_v(QObject):
                     "}")
 
     def cancel_modulate(self):
+        """Cancel synthesis job by terminating the modulate_worker thread
+        """
         #TODO check how to handle and delete after change to model
         #schedule_objdict = self.m["schedule_objdict"]
         #TODO: look why that was used self.SigDisconnectExternalMethods.emit("cancel_resampling")
@@ -728,46 +740,34 @@ class synthesizer_v(QObject):
 
     def canvasbuild(self):
         """
-        sets up a canvas to which graphs can be plotted
-        Use: calls the method auxi.generate_canvas with parameters self.gui.gridlayoutX to specify where the canvas 
-        should be placed, the coordinates and extensions in the grid and a reference to the QMainwidget Object
-        generated by __main__ during system startup. This object is relayed via signal to all modules at system initialization 
-        and is automatically available (see rxhandler method)
-        the reference to the canvas object is written to self.cref
-        :param : gui
-        :type : QMainWindow
-        :raises [ErrorType]: [ErrorDescription]
-        :return: none
-        :rtype: none
+        sets up a pyQTgraph canvas to which curves can be plotted
         """
-        # self.cref = auxi.generate_canvas(self,self.gui.gridLayout_10,[13,11,1,2],[-1,-1,-1,-1],gui)
-        # self.cref["ax"].tick_params(axis='both', which='major', labelsize=6)
         self.plot_widget = pg.PlotWidget()
         self.gui.gridLayout_synthesizer.addWidget(self.plot_widget,0,7,3,2)
         self.plot_widget.getAxis('left').setStyle(tickFont=pg.QtGui.QFont('Arial', 6))
         self.plot_widget.getAxis('bottom').setStyle(tickFont=pg.QtGui.QFont('Arial', 6))
         self.plot_widget.setBackground('w')
-        #self.xdata = np.linspace(0, 10, 100)
-        #self.ydata = np.sin(self.xdata)
-        # ymin = -120
-        # ymax = 0
-        # self.plot_widget.setYRange(ymin, ymax)
-        #self.curve = self.plot_widget.plot(self.xdata, self.ydata, pen=pg.mkPen('k'))
 
-    def create_band_thread(self):
-        palette = self.gui.synthesizer_pushbutton_create.palette()
-        self.cancel_background_color = palette.color(self.gui.synthesizer_pushbutton_create.backgroundRole())
-        self.syntesisrunning = False
-
-        # determine optimal gain and set gain slider accordingly
+    def preset_gain(self):
+        """determine optimal gain and set gain slider accordingly
+        """
         numcar = self.gui.spinBox_numcarriers.value()
         wanted_gain = 0.568 /2/ np.sqrt(numcar)  # 0.568 is the product of a safety margin 0.8 and the RMS of 1 Vp, i.e. 0.71
         slider = (20*np.log10(wanted_gain) + self.GAINOFFSET)*10/9
         self.gui.verticalSlider_Gain.setProperty("value", float(slider))
+
+
+    def create_band_thread(self):
+        """pre-set gain, check some conditions. Then configure and start worker thread 'modulate_worker' for synthesis
+
+        """
+        palette = self.gui.synthesizer_pushbutton_create.palette()
+        self.cancel_background_color = palette.color(self.gui.synthesizer_pushbutton_create.backgroundRole())
+        self.syntesisrunning = False
+        self.preset_gain()
         #if self.gui.radiobutton_AGC.isChecked():
-
+        #TODO TODO TODO: implement AGC method and AUTO clipping repair or clipping warning
             #gain = 10**((self.gui.verticalSlider_Gain.value()/100*90 - self.GAINOFFSET)/20)
-
 
         #TODO TODO TODO: exit if no project defined
         #print("recording path received")
@@ -784,29 +784,22 @@ class synthesizer_v(QObject):
         self.activate_control_elements(False)
         self.logger.debug("modulate: configure modulate_worker thread et al")
         self.m["cancelflag"] = False
-        #self.m["sample_rate"] = int(self.gui.comboBox_targetSR.currentText()) # samplingrate of RF-Signal
-        #cutoff_freq = self.m["audioBW"]*1000   # Lowpass cutoff frequency   
         modulation_depth = float(self.gui.lineEdit_modfactor.text())  # Modulation depth 
         playlists = [[f"{path.rstrip('/')}/{file}" for file, path in zip(files, paths)] for files, paths in zip(self.readFileList, self.readFilePath)]
-        #LO_frequency = int(int(self.gui.lineEdit_LO.text())*1000)
         LO_frequency = int(np.round(self.m["LO"]*1000))
-        # LO_frequency = int(int(self.gui.lineEdit_fc_low())*1000)
-        # self.m["LO"] = LO_frequency
-        fclow_frequency = int(int(self.gui.lineEdit_fc_low.text())*1000)
+        fclow_frequency = int(np.round(float(self.gui.lineEdit_fc_low.text()))*1000)
         self.m["fclow"] = fclow_frequency
-        # carrier_frequencies = self.m["carrierarray"] - int(np.ceil(LO_frequency/1000))
         #TODO TODO TODO: maybe correct for no carrier at frequency 0, make that correct ! subtract BW/2
         carrier_frequencies = self.m["carrierarray"] - self.m["LO"]
         existcheck = True
         while existcheck:
             options = QFileDialog.Options()
-            options |= QFileDialog.DontUseNativeDialog  # Verwende das Qt-eigene Dialogfenster
+            options |= QFileDialog.DontUseNativeDialog
             output_base_name, _ = QFileDialog.getSaveFileName(self.m["QTMAINWINDOWparent"], 
                                                     "Save File", 
                                                     self.m["recording_path"],  # Standard rec path, Standardmäßig kein voreingestellter Dateiname
-                                                    "wav Files (*.wav)",  # Filter für Dateitypen
+                                                    "wav Files (*.wav)",  # Filter for data type wav
                                                     options=options)
-
             if output_base_name:
                 if (os.path.exists(output_base_name) or os.path.exists(output_base_name + "_0.wav")):
                     msg = QMessageBox()
@@ -843,8 +836,6 @@ class synthesizer_v(QObject):
         self.modulate_thread.started.connect(self.modulate_worker.start_modulator)
         self.modulate_worker.SigPupdate.connect(self.PupdateSignalHandler)
         self.modulate_worker.SigMessage.connect(self.display_worker_message)
-
-        
         self.modulate_worker.SigFinished.connect(self.modulate_thread.quit)
         self.modulate_worker.SigFinished.connect(lambda: print("#####>>>>>>>>>>>>>>>>>modulateworker SigFinished_arrived"))
         self.modulate_worker.SigFinished.connect(self.cleanup)
@@ -862,11 +853,10 @@ class synthesizer_v(QObject):
             self.logger.debug("modulate: modulate_ thread started")
             self.syntesisrunning = True
         time.sleep(0.01) # wait state for worker to start up
-        #print("modulate_ action method sleep over")
-        #self.SigProgress.emit()       
         return(True)
     
     def display_worker_message(self,s):
+        """display messages from the worker in the message window of the GUI"""
         self.gui.label_audioset_name.setText(s)
         if s.find("----") == 0:
             self.gui.label_audioset_name.setText('modulating')
@@ -886,9 +876,9 @@ class synthesizer_v(QObject):
         self.gui.synthesizer_pushbutton_create.setStyleSheet("background-color: lightgray; color: black;")
         self.display_worker_message('Job finished, ready for new job')
 
-
-
     def preset_SR_LO(self):
+        """auto-define LO frequency and Rec bandwidth (= sampling rate) for pre-defined broadcasting bands on LW, MW and SW
+        """
         text = self.gui.comboBox_targetSR_2.currentText()
         if text.find("LW") == 0:
             self.gui.lineEdit_LO.setText("220")

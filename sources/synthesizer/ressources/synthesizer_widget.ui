@@ -2941,7 +2941,10 @@
     <item row="13" column="8">
      <widget class="QSpinBox" name="spinBox_numcarriers">
       <property name="minimum">
-       <number>2</number>
+       <number>1</number>
+      </property>
+      <property name="maximum">
+       <number>120</number>
       </property>
       <property name="value">
        <number>2</number>
