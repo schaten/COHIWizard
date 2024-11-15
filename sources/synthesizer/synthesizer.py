@@ -38,10 +38,6 @@ class modulate_worker(QObject):
     SigFinished = pyqtSignal()
     SigPupdate = pyqtSignal()
     SigMessage = pyqtSignal(str)
-    #SigFinishedLOshifter = pyqtSignal()
-    #SigFinishedmerge2G = pyqtSignal()
-    #SigSoxerror = pyqtSignal(str)
-    #SigMergeerror = pyqtSignal(str)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -250,20 +246,17 @@ class modulate_worker(QObject):
 
             # Blockweises Lesen
             audio_block = f.read(block_size)
-            #hier passiert es auch: wenn audio block kürzer als blocksize --> modulated block ist kürzer
-            #--> zero pad audio block
 
             if len(audio_block) == 0:
                 # Audio file is finished, close file and open next one
-                #TODO TODO TODO: check if here the zero gap emerges in the carrier while chaning the audio files
-                
+               
                 print(f"close file {file_path} with index {current_file_index}; open next in list")
                 f.close()
-                del file_handles[current_file_index]  # Handle entfernen
+                del file_handles[current_file_index]  # remove Handle
                 current_file_index += 1
                 continue  # do not modulate, continue with the next audio file
 
-            # Mono-Konvertierung falls notwendig
+            # Mono-conversion
             audio_block = audio_gain * self.convert_to_mono(audio_block, num_channels)
             #zero pad audio block to blocksize
             if len(audio_block) < block_size:
@@ -276,25 +269,16 @@ class modulate_worker(QObject):
             if original_sample_rate != target_sample_rate:
                 audio_block = self.resample_audio(audio_block, original_sample_rate, target_sample_rate)
 
-            # Low-Pass-Filter anwenden
+            # Low-Pass-Filter audio signal
             filtered_block, zi = self.process_block(audio_block, sos, zi)
 
-            # Modulation auf den Träger anwenden
-
+            # modulate to carrier
             modulated_block = self.modulate_signal(filtered_block, carrier_freq, target_sample_rate, sample_offset, modulation_depth)
-            if np.std(modulated_block) < 1e-2:
-                print(f"modulated block is zero, std = {np.std(modulated_block)} @ t = {sample_offset}")
-            # Aktualisierung von sample_offset für den nächsten Block
+            # update sample_offset for next block
             sample_offset += len(modulated_block)
 
             return modulated_block, zi, sample_offset, current_file_index, audio_gain
         
-        # if no valid audio or audio file is at EOF, return a block without modulation, only carrier
-        
-        # zeroaudioblock = np.zeros(block_size)
-        # modulated_block = self.modulate_signal(zeroaudioblock, carrier_freq, target_sample_rate, sample_offset, modulation_depth)
-        # sample_offset += len(modulated_block)
-        print(f"while loop in read blockwise reached, return None @ t = {sample_offset}")
         return None, zi, sample_offset, current_file_index, audio_gain
 
     def process_multiple_carriers_blockwise(self, carrier_frequencies, playlists, sample_rate, block_size, cutoff_freq, modulation_depth, output_base_name, exp_num_samples):
@@ -302,6 +286,7 @@ class modulate_worker(QObject):
         Process audio from multiple playlists blockwise, each corresponding to a different carrier frequency.
         Write the combined output to multiple WAV files if the 2 GB limit is exceeded.
         """
+        self.set_progress(0)
         self.logger.debug(f"process_multiple_carriers_blockwise; carrier_frequencies:{carrier_frequencies}")
         self.stopix = False
         max_file_size = 2 * 1024**3  # 2 GB in bytes
@@ -345,20 +330,15 @@ class modulate_worker(QObject):
                 
                 # Wenn modulated_block None ist, dann ist das Playlist-Ende erreicht
                 if modulated_block is None:
-                    print(f"############  mod block = None @ t = {sample_offsets[i]}")
                     continue
 
-                    # Dynamically adjust combined signal block size based on modulated block size
-
+                # Dynamically adjust combined signal block size based on modulated block size
                 if combined_signal_block is None or len(combined_signal_block) < len(modulated_block):
-                    # if len(combined_signal_block) < len(modulated_block):
-                    #     print(f"zero init combined block @ t = {sample_offsets[i]}")
                     combined_signal_block = np.zeros(len(modulated_block), dtype = np.complex128)
                 gain = self.get_gain()
                 if np.abs(len(combined_signal_block) - len(modulated_block)) > 0:
                     print(f"modulated block std gain*mb = {np.std(gain*modulated_block)} , gain = {gain} @ t = {sample_offsets[i]}, carrier = {i}")
                     print(f"diff len combined block -len mod block: {len(combined_signal_block) - len(modulated_block)}")
-                #TODO TODO TODO: hier passiert es ! wenn modulated block kürzer als block_size !
                 combined_signal_block[:len(modulated_block)] += gain * modulated_block
                 if np.std(gain*modulated_block) < 1e-1:
                     print(f"modulated block is zero, std gain*mb = {np.std(gain*modulated_block)} , gain = {gain} @ t = {sample_offsets[i]}")   
@@ -370,11 +350,9 @@ class modulate_worker(QObject):
             
             # If all files are done, break the loop
             if done:
-                print(f"############  break because done @ t = {sample_offsets[i]}")
                 break
             
             if self.stopix is True:
-                self.logger.debug(f"***modulator worker cancelled @ t = {sample_offsets[i]}")
                 break
 
             # Write the combined block to the current output file
@@ -407,7 +385,7 @@ class modulate_worker(QObject):
             total_samples_written += samples_to_write
             overall_samples_written += samples_to_write
             perc_progress = 100*overall_samples_written / exp_num_samples
-            if perc_progress - perc_progress_old > 1:
+            if perc_progress - perc_progress_old > 0.1:
                 perc_progress_old = perc_progress
                 self.set_progress(perc_progress)
                 self.set_combined_signal_block(combined_signal_block)
@@ -584,6 +562,7 @@ class synthesizer_v(QObject):
         self.readFileList = []
         self.oldFileList = []
         self.readFilePath = []
+        self.autosave = False
         for self.m["carrier_ix"] in range(0,2):
             self.readFileList.append([])
             self.readFileList[self.m["carrier_ix"]] = []
@@ -620,6 +599,7 @@ class synthesizer_v(QObject):
         self.gui.listWidget_sourcelist.addItem(item)
         self.gui.lineEdit_audiocutoff_freq.setText(self.STD_AUDIOBW)
         self.gui.lineEdit_carrierdistance.setText(self.STD_CARRIERDISTANCE)
+        self.gui.spinBox_numcarriers.setProperty("value", 2)
         #self.gui.spinBox_numcarriers.editingFinished.connect(self.freq_carriers_update)
         #react to arrows press
         self.gui.spinBox_numcarriers.valueChanged.connect(self.on_value_changed)
@@ -642,6 +622,7 @@ class synthesizer_v(QObject):
         self.gui.comboBox_cur_carrierfreq.currentIndexChanged.connect(self.carrier_ix_changed)
         self.gui.pushButton_saveproject.clicked.connect(self.save_project)
         self.gui.pushButton_loadproject.clicked.connect(self.load_project)
+        self.gui.pushButton_clearproject.clicked.connect(self.clear_project)
         self.gui.synthesizer_pushbutton_create.clicked.connect(self.create_band_thread)
         #self.gui.synthesizer_pushbutton_create.clicked.connect(self.create_band)
         self.gui.timeEdit_reclength.timeChanged.connect(self.carrier_ix_changed)
@@ -653,6 +634,22 @@ class synthesizer_v(QObject):
         self.canvasbuild()
         self.RecBW_update()
         #self.gui.lineEdit_carrierdistance.textEdited.connect(self.carriedistance_update)
+
+    def clear_project(self):
+        self.init_synthesizer_ui()
+        self.gui.listWidget_sourcelist.clear()
+        self.readFileList = []
+        self.oldFileList = []
+        self.readFilePath = []
+        self.autosave = False
+        for self.m["carrier_ix"] in range(0,2):
+            self.readFileList.append([])
+            self.readFileList[self.m["carrier_ix"]] = []
+            self.oldFileList.append([])
+            self.oldFileList[self.m["carrier_ix"]] = []
+            self.readFilePath.append([])
+            self.readFilePath[self.m["carrier_ix"]] = []
+        self.m["carrier_ix"] = 0
 
     def setgain(self):
         """set gain which is set by the gain slider and pass it to the modulator worker
@@ -764,6 +761,20 @@ class synthesizer_v(QObject):
         palette = self.gui.synthesizer_pushbutton_create.palette()
         self.cancel_background_color = palette.color(self.gui.synthesizer_pushbutton_create.backgroundRole())
         self.syntesisrunning = False
+
+        # save settings to temp project
+         #re-load the same project (patch bug with direct create)
+
+        self.autosave = True
+        self.save_project()
+        print("save temporary project file")
+        time.sleep(0.5)
+        self.load_project()
+        self.autosave = False
+
+       
+
+
         self.preset_gain()
         #if self.gui.radiobutton_AGC.isChecked():
         #TODO TODO TODO: implement AGC method and AUTO clipping repair or clipping warning
@@ -1013,8 +1024,10 @@ class synthesizer_v(QObject):
         qtimeedit = self.gui.timeEdit_reclength
         time_from_qtimeedit = qtimeedit.time()
         pr["projectdata"]["preset_time"] = [time_from_qtimeedit.hour(), time_from_qtimeedit.minute(), time_from_qtimeedit.second()]
-         
-        filename = self.save_file_dialog()
+        if not self.autosave:
+            filename = self.save_file_dialog()
+        else:
+            filename = "temp.proj"
         stream = open(filename, "w") ###replace project.yaml with filename
         yaml.dump(pr["projectdata"], stream)
         stream.close()
@@ -1031,7 +1044,10 @@ class synthesizer_v(QObject):
         """
         pr = {}
         pr["projectdata"] = {}
-        filename = self.load_file_dialog()
+        if not self.autosave:
+            filename = self.load_file_dialog()
+        else:
+            filename = "temp.proj"
         try:
             stream = open(filename, "r")
             pr["projectdata"] = yaml.safe_load(stream)
@@ -1246,7 +1262,11 @@ class synthesizer_v(QObject):
          :param: none
          :returns: none 
          """
-        self.gui.listWidget_playlist.model().rowsInserted.disconnect(self.playlist_update_delayed)
+        try:
+            self.gui.listWidget_playlist.model().rowsInserted.disconnect(self.playlist_update_delayed)
+        except:
+            pass
+
         self.gui.listWidget_playlist.clear()
         ix = 0
         try:
@@ -1300,9 +1320,13 @@ class synthesizer_v(QObject):
                 #print(f"show readFilePath index out of range at index: {self.m['carrier_ix']} [{ix}]")
                 return duration
             if not len(self.readFilePath[self.m["carrier_ix"]][ix] + x) < 1:
-                wav_info = self.get_wav_info(file_path)
-                duration += wav_info['duration_seconds']
-                
+                #wav_info = self.get_wav_info(file_path)
+                #duration += wav_info['duration_seconds']
+                #if duration Blödsinn, das kann passieren !
+                a = sf.SoundFile(file_path, 'r') #TODO: Umstellen auf mp3: 
+                duration += a.frames/a.samplerate
+                a.close()
+
             else:
                 print("NNNNNNNNNN")
             ix += 1
@@ -1486,16 +1510,16 @@ class synthesizer_v(QObject):
         highlimit = f_LO + sample_rate/2 - audioBW
         lowlimit = f_LO - sample_rate/2 + audioBW
         violate_low = fc_low < lowlimit
-        violate_high = fc_low + self.m["carrier_distance"] * numcarriers > highlimit
+        violate_high = fc_low + carrier_distance * numcarriers > highlimit
         if violate_low or violate_high :# and not self.load_index: ????
             self.rule_viol = True
             #Fclow > f_LO – samplerate/2 + AudioBW 
             if violate_low:
-                errortext = "lowest carrier frequency is below the lowest edge of the band ()" + str(lowlimit) +"), please correct one or more of the following parameters: LO frequency, Rec-Bandwidth, lowest carrier frequency or audio cutoff frequency"
+                errortext = "lowest carrier frequency is below the lowest edge of the band ()" + str(lowlimit) +"), please correct one or more of the following parameters: LO frequency, Rec-Bandwidth, lowest carrier frequency, carrier distance or audio cutoff frequency"
             if violate_high:
-                errortext = "highest carrier frequency (" + str(fc_low + self.m["carrier_distance"] * self.m["numcarriers"]) + ") is above the highest edge of the band " + str(highlimit) +", please correct one or more of the following parameters: LO frequency, Rec-Bandwidth, lowest carrier frequency, number of carriers or audio cutoff frequency"
+                errortext = "highest carrier frequency (" + str(fc_low + carrier_distance * numcarriers) + ") is above the highest edge of the band " + str(highlimit) +", please correct one or more of the following parameters: LO frequency, Rec-Bandwidth, lowest carrier frequency, carrier distance, number of carriers or audio cutoff frequency"
             if violate_low and violate_high:
-                errortext = "lowest and highest carrier frequency are out of the band. Low limit: " + str(lowlimit) + ", please correct one or more of the following parameters: LO frequency, Rec-Bandwidth, lowest carrier frequency, number of carriers or audio cutoff frequency"
+                errortext = "lowest and highest carrier frequency are out of the band. Low limit: " + str(lowlimit) + ", please correct one or more of the following parameters: LO frequency, Rec-Bandwidth, lowest carrier frequency, carrier distance, number of carriers or audio cutoff frequency"
 
             print("return false from validate")
             return False, errortext
@@ -1566,12 +1590,15 @@ class synthesizer_v(QObject):
         #print(f"carrier spacing: {self.m['fc_low']}")
 
     def carrierdistance_update(self):
+        self.gui.lineEdit_carrierdistance.editingFinished.disconnect(self.carrierdistance_update)
         """slot function for the carrier distance line_edit; sets the model parameter m["carrier_distance"]"""
+        old_carrierdistance = self.m["carrier_distance"]
         carrier_delta = self.gui.lineEdit_carrierdistance.text()
         if not self.isnumeric(carrier_delta):
             auxi.standard_errorbox("invalid characters, must be numeric float value !")
             self.logger.error("plot_res_spectrum: wrong format of carrier distance")
             self.gui.lineEdit_carrierdistance.setText(str(self.m["carrier_distance"]))
+            self.gui.lineEdit_carrierdistance.editingFinished.connect(self.carrierdistance_update)
             return False
         # if float(carrier_delta) < 0.1: #TODO: redundant, carrier_delta must be > 2*audioBW, audioBW must be > 2.5
         #     auxi.standard_errorbox("invalid carrier spacing, must be numeric float value > 0.1!")
@@ -1581,14 +1608,17 @@ class synthesizer_v(QObject):
         valid, errortext = self.validate_params()
         if not valid:
             auxi.standard_errorbox(errortext)
-            self.gui.lineEdit_carrierdistance.setText(str(self.m["carrier_distance"]))
+            self.gui.lineEdit_carrierdistance.setText(str(old_carrierdistance))
+            self.gui.lineEdit_carrierdistance.editingFinished.connect(self.carrierdistance_update)
             return False
                 
         self.m["carrier_distance"] = float(self.gui.lineEdit_carrierdistance.text())
         self.freq_carriers_update()
         self.load_index = False
+        self.gui.lineEdit_carrierdistance.editingFinished.connect(self.carrierdistance_update)
         #print(f"carrier spacing: {self.m['carrier_distance']}")
-
+        return True
+    
     def select_tree(self):
         """
         initiates buildup of file selection tree
@@ -1624,7 +1654,9 @@ class synthesizer_v(QObject):
         self.gui.listWidget_sourcelist.addItem(item)
         ix = 0
         for x in os.listdir(rootdir):
-            if x.endswith(".wav"):
+            #if x.endswith(".wav"):
+            #TODO: Umstellen auf mp3: 
+            if x.endswith(".wav") or x.endswith(".mp3"):
                 if True: #x != (self.m["my_filename"] + self.m["ext"]): #TODO: obsolete old form when automatically loading opened file to playlist
                     _item = self.gui.listWidget_sourcelist.item(ix)
                     _item.setText(x)
@@ -1645,7 +1677,7 @@ class synthesizer_v(QObject):
         to the central list of playlists self.readFileList[self.m["carrier_ix"]]. Then playlist_purge()
         is called
         """
- 
+        self.gui.listWidget_playlist.model().rowsInserted.disconnect(self.playlist_update_delayed)
         try:
             self.oldFileList[self.m["carrier_ix"]] = copy.deepcopy(self.readFileList[self.m["carrier_ix"]])
             #TODO TODO TODO: Bei Indexerhöhung muss ein dummy self.oldFileList[self.m["carrier_ix"]] mit dem erhöhten Index angelegt werden, sonst stürzt später due diff-Methode in purge ab
@@ -1656,7 +1688,7 @@ class synthesizer_v(QObject):
         self.playlist_purge()
         duration = self.show_playlength()
         self.show_fillprogress(duration)
-
+        self.gui.listWidget_playlist.model().rowsInserted.connect(self.playlist_update_delayed)
         #print("playlist_update")
         # try:
         #     for file in readFileList:
@@ -1736,6 +1768,8 @@ class synthesizer_v(QObject):
             if  _value[0].find("timertick") == 0:
                     if self.syntesisrunning:
                         self.blinkstate = self.blinksynth(self.blinkstate)
+                        #self.PupdateSignalHandler()
+
 
     def logfilehandler(self,_value):
         if _value is False:

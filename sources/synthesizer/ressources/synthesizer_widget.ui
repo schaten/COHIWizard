@@ -19,7 +19,7 @@
      <x>10</x>
      <y>10</y>
      <width>1241</width>
-     <height>659</height>
+     <height>666</height>
     </rect>
    </property>
    <property name="font">
@@ -31,6 +31,94 @@
     <property name="sizeConstraint">
      <enum>QLayout::SetNoConstraint</enum>
     </property>
+    <item row="11" column="7">
+     <widget class="QLabel" name="label_presetband_2">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="palette">
+       <palette>
+        <active>
+         <colorrole role="Base">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>255</red>
+            <green>255</green>
+            <blue>255</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Window">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>229</red>
+            <green>255</green>
+            <blue>220</blue>
+           </color>
+          </brush>
+         </colorrole>
+        </active>
+        <inactive>
+         <colorrole role="Base">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>255</red>
+            <green>255</green>
+            <blue>255</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Window">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>229</red>
+            <green>255</green>
+            <blue>220</blue>
+           </color>
+          </brush>
+         </colorrole>
+        </inactive>
+        <disabled>
+         <colorrole role="Base">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>229</red>
+            <green>255</green>
+            <blue>220</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Window">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>229</red>
+            <green>255</green>
+            <blue>220</blue>
+           </color>
+          </brush>
+         </colorrole>
+        </disabled>
+       </palette>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
+      <property name="toolTip">
+       <string>select bandwidth for a pre-set broadcasting band</string>
+      </property>
+      <property name="autoFillBackground">
+       <bool>true</bool>
+      </property>
+      <property name="text">
+       <string>Lowest carrierfrequency (kHz)</string>
+      </property>
+     </widget>
+    </item>
     <item row="0" column="2">
      <widget class="QPushButton" name="pushButton_saveproject">
       <property name="sizePolicy">
@@ -44,16 +132,107 @@
       </property>
      </widget>
     </item>
-    <item row="0" column="1">
-     <widget class="QComboBox" name="comboBox_cur_carrierfreq">
+    <item row="8" column="7">
+     <widget class="QLabel" name="label_BW">
       <property name="enabled">
        <bool>true</bool>
       </property>
       <property name="sizePolicy">
-       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
+      </property>
+      <property name="palette">
+       <palette>
+        <active>
+         <colorrole role="Button">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>229</red>
+            <green>255</green>
+            <blue>212</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Base">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>255</red>
+            <green>255</green>
+            <blue>255</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Window">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>229</red>
+            <green>255</green>
+            <blue>220</blue>
+           </color>
+          </brush>
+         </colorrole>
+        </active>
+        <inactive>
+         <colorrole role="Button">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>229</red>
+            <green>255</green>
+            <blue>212</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Base">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>255</red>
+            <green>255</green>
+            <blue>255</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Window">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>229</red>
+            <green>255</green>
+            <blue>220</blue>
+           </color>
+          </brush>
+         </colorrole>
+        </inactive>
+        <disabled>
+         <colorrole role="Button">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>229</red>
+            <green>255</green>
+            <blue>212</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Base">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>229</red>
+            <green>255</green>
+            <blue>220</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Window">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>229</red>
+            <green>255</green>
+            <blue>220</blue>
+           </color>
+          </brush>
+         </colorrole>
+        </disabled>
+       </palette>
       </property>
       <property name="font">
        <font>
@@ -61,24 +240,39 @@
        </font>
       </property>
       <property name="toolTip">
-       <string>select bandwidth</string>
+       <string>Select Recording bandwidth from dropdown list</string>
       </property>
-      <property name="currentIndex">
-       <number>0</number>
+      <property name="autoFillBackground">
+       <bool>true</bool>
       </property>
-      <item>
-       <property name="text">
-        <string>783</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>792</string>
-       </property>
-      </item>
+      <property name="text">
+       <string>Rec Bandwidth (kHz): </string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+      </property>
      </widget>
     </item>
-    <item row="0" column="3" rowspan="13">
+    <item row="0" column="0">
+     <widget class="QLabel" name="label">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Select playlist for carrier</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="3" rowspan="14">
      <widget class="QSlider" name="verticalSlider_Gain">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
@@ -413,126 +607,16 @@
       </property>
      </widget>
     </item>
-    <item row="0" column="0">
-     <widget class="QLabel" name="label">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="font">
-       <font>
-        <weight>75</weight>
-        <bold>true</bold>
-       </font>
-      </property>
-      <property name="text">
-       <string>Select playlist for carrier</string>
-      </property>
-     </widget>
-    </item>
-    <item row="7" column="7">
-     <widget class="QLabel" name="label_BW">
+    <item row="0" column="1">
+     <widget class="QComboBox" name="comboBox_cur_carrierfreq">
       <property name="enabled">
        <bool>true</bool>
       </property>
       <property name="sizePolicy">
-       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
-      </property>
-      <property name="palette">
-       <palette>
-        <active>
-         <colorrole role="Button">
-          <brush brushstyle="SolidPattern">
-           <color alpha="255">
-            <red>229</red>
-            <green>255</green>
-            <blue>212</blue>
-           </color>
-          </brush>
-         </colorrole>
-         <colorrole role="Base">
-          <brush brushstyle="SolidPattern">
-           <color alpha="255">
-            <red>255</red>
-            <green>255</green>
-            <blue>255</blue>
-           </color>
-          </brush>
-         </colorrole>
-         <colorrole role="Window">
-          <brush brushstyle="SolidPattern">
-           <color alpha="255">
-            <red>229</red>
-            <green>255</green>
-            <blue>220</blue>
-           </color>
-          </brush>
-         </colorrole>
-        </active>
-        <inactive>
-         <colorrole role="Button">
-          <brush brushstyle="SolidPattern">
-           <color alpha="255">
-            <red>229</red>
-            <green>255</green>
-            <blue>212</blue>
-           </color>
-          </brush>
-         </colorrole>
-         <colorrole role="Base">
-          <brush brushstyle="SolidPattern">
-           <color alpha="255">
-            <red>255</red>
-            <green>255</green>
-            <blue>255</blue>
-           </color>
-          </brush>
-         </colorrole>
-         <colorrole role="Window">
-          <brush brushstyle="SolidPattern">
-           <color alpha="255">
-            <red>229</red>
-            <green>255</green>
-            <blue>220</blue>
-           </color>
-          </brush>
-         </colorrole>
-        </inactive>
-        <disabled>
-         <colorrole role="Button">
-          <brush brushstyle="SolidPattern">
-           <color alpha="255">
-            <red>229</red>
-            <green>255</green>
-            <blue>212</blue>
-           </color>
-          </brush>
-         </colorrole>
-         <colorrole role="Base">
-          <brush brushstyle="SolidPattern">
-           <color alpha="255">
-            <red>229</red>
-            <green>255</green>
-            <blue>220</blue>
-           </color>
-          </brush>
-         </colorrole>
-         <colorrole role="Window">
-          <brush brushstyle="SolidPattern">
-           <color alpha="255">
-            <red>229</red>
-            <green>255</green>
-            <blue>220</blue>
-           </color>
-          </brush>
-         </colorrole>
-        </disabled>
-       </palette>
       </property>
       <property name="font">
        <font>
@@ -540,40 +624,24 @@
        </font>
       </property>
       <property name="toolTip">
-       <string>Select Recording bandwidth from dropdown list</string>
+       <string>select bandwidth</string>
       </property>
-      <property name="autoFillBackground">
-       <bool>true</bool>
+      <property name="currentIndex">
+       <number>0</number>
       </property>
-      <property name="text">
-       <string>Rec Bandwidth (kHz): </string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-      </property>
+      <item>
+       <property name="text">
+        <string>783</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>792</string>
+       </property>
+      </item>
      </widget>
     </item>
-    <item row="4" column="7" colspan="2">
-     <widget class="Line" name="line_2">
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-        <weight>50</weight>
-        <bold>false</bold>
-       </font>
-      </property>
-      <property name="lineWidth">
-       <number>5</number>
-      </property>
-      <property name="midLineWidth">
-       <number>5</number>
-      </property>
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-     </widget>
-    </item>
-    <item row="6" column="7">
+    <item row="7" column="7">
      <widget class="QRadioButton" name="radiobutton_AGC">
       <property name="enabled">
        <bool>true</bool>
@@ -742,7 +810,7 @@
       </property>
      </widget>
     </item>
-    <item row="8" column="7">
+    <item row="9" column="7">
      <widget class="QLabel" name="label_LO">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
@@ -833,7 +901,27 @@
       </property>
      </widget>
     </item>
-    <item row="9" column="7">
+    <item row="5" column="7" colspan="2">
+     <widget class="Line" name="line_2">
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+        <weight>50</weight>
+        <bold>false</bold>
+       </font>
+      </property>
+      <property name="lineWidth">
+       <number>5</number>
+      </property>
+      <property name="midLineWidth">
+       <number>5</number>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
+    </item>
+    <item row="10" column="7">
      <widget class="QLabel" name="label_presetband">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
@@ -921,8 +1009,133 @@
       </property>
      </widget>
     </item>
-    <item row="10" column="7">
-     <widget class="QLabel" name="label_presetband_2">
+    <item row="3" column="0" rowspan="18">
+     <widget class="QListWidget" name="listWidget_sourcelist">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
+      <property name="acceptDrops">
+       <bool>true</bool>
+      </property>
+      <property name="toolTip">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;playlist window. drag items from selection list&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+      <property name="dragEnabled">
+       <bool>true</bool>
+      </property>
+      <property name="dragDropMode">
+       <enum>QAbstractItemView::DragOnly</enum>
+      </property>
+      <property name="defaultDropAction">
+       <enum>Qt::CopyAction</enum>
+      </property>
+      <property name="selectionMode">
+       <enum>QAbstractItemView::SingleSelection</enum>
+      </property>
+     </widget>
+    </item>
+    <item row="10" column="8">
+     <widget class="QComboBox" name="comboBox_targetSR_2">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
+      <property name="toolTip">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;pick AM broadcasting band&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <item>
+       <property name="text">
+        <string>LW</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>MW</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>SW 49m</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>SW 41m</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>SW 31m</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>SW 25m</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>SW 22m</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>SW 19m</string>
+       </property>
+      </item>
+     </widget>
+    </item>
+    <item row="9" column="8">
+     <widget class="QLineEdit" name="lineEdit_LO">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+        <kerning>false</kerning>
+       </font>
+      </property>
+      <property name="toolTip">
+       <string>enter LO frequency here (kHz)</string>
+      </property>
+      <property name="autoFillBackground">
+       <bool>true</bool>
+      </property>
+      <property name="text">
+       <string>1225</string>
+      </property>
+      <property name="frame">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item row="14" column="7">
+     <widget class="QLabel" name="label_MF_2">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
         <horstretch>0</horstretch>
@@ -999,54 +1212,21 @@
        </font>
       </property>
       <property name="toolTip">
-       <string>select bandwidth for a pre-set broadcasting band</string>
+       <string>set center frequency in kHz (LO)</string>
       </property>
       <property name="autoFillBackground">
        <bool>true</bool>
       </property>
       <property name="text">
-       <string>Lowest carrierfrequency (kHz)</string>
+       <string>Number of carriers:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
       </property>
      </widget>
     </item>
-    <item row="2" column="0" rowspan="18">
-     <widget class="QListWidget" name="listWidget_sourcelist">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-       </font>
-      </property>
-      <property name="acceptDrops">
-       <bool>true</bool>
-      </property>
-      <property name="toolTip">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;playlist window. drag items from selection list&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-      </property>
-      <property name="dragEnabled">
-       <bool>true</bool>
-      </property>
-      <property name="dragDropMode">
-       <enum>QAbstractItemView::DragOnly</enum>
-      </property>
-      <property name="defaultDropAction">
-       <enum>Qt::CopyAction</enum>
-      </property>
-      <property name="selectionMode">
-       <enum>QAbstractItemView::SingleSelection</enum>
-      </property>
-     </widget>
-    </item>
-    <item row="9" column="8">
-     <widget class="QComboBox" name="comboBox_targetSR_2">
-      <property name="enabled">
-       <bool>true</bool>
-      </property>
+    <item row="13" column="8">
+     <widget class="QLineEdit" name="lineEdit_modfactor">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
         <horstretch>0</horstretch>
@@ -1056,68 +1236,6 @@
       <property name="font">
        <font>
         <pointsize>10</pointsize>
-       </font>
-      </property>
-      <property name="toolTip">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;pick AM broadcasting band&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-      </property>
-      <property name="currentIndex">
-       <number>0</number>
-      </property>
-      <item>
-       <property name="text">
-        <string>LW</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>MW</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>SW 49m</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>SW 41m</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>SW 31m</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>SW 25m</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>SW 22m</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>SW 19m</string>
-       </property>
-      </item>
-     </widget>
-    </item>
-    <item row="8" column="8">
-     <widget class="QLineEdit" name="lineEdit_LO">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-        <kerning>false</kerning>
        </font>
       </property>
       <property name="toolTip">
@@ -1127,14 +1245,165 @@
        <bool>true</bool>
       </property>
       <property name="text">
-       <string>1225</string>
-      </property>
-      <property name="frame">
-       <bool>true</bool>
+       <string>0.8</string>
       </property>
      </widget>
     </item>
-    <item row="3" column="8">
+    <item row="14" column="3">
+     <widget class="QLabel" name="label_10">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="palette">
+       <palette>
+        <active>
+         <colorrole role="Button">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>255</red>
+            <green>254</green>
+            <blue>210</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Light">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>255</red>
+            <green>254</green>
+            <blue>210</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Base">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>255</red>
+            <green>254</green>
+            <blue>210</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Window">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>170</red>
+            <green>255</green>
+            <blue>127</blue>
+           </color>
+          </brush>
+         </colorrole>
+        </active>
+        <inactive>
+         <colorrole role="Button">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>255</red>
+            <green>254</green>
+            <blue>210</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Light">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>255</red>
+            <green>254</green>
+            <blue>210</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Base">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>255</red>
+            <green>254</green>
+            <blue>210</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Window">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>170</red>
+            <green>255</green>
+            <blue>127</blue>
+           </color>
+          </brush>
+         </colorrole>
+        </inactive>
+        <disabled>
+         <colorrole role="Button">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>255</red>
+            <green>254</green>
+            <blue>210</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Light">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>255</red>
+            <green>254</green>
+            <blue>210</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Base">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>170</red>
+            <green>255</green>
+            <blue>127</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Window">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>170</red>
+            <green>255</green>
+            <blue>127</blue>
+           </color>
+          </brush>
+         </colorrole>
+        </disabled>
+       </palette>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
+      <property name="toolTip">
+       <string>move slider for optimal signal level; volume indicator should be in the green area</string>
+      </property>
+      <property name="autoFillBackground">
+       <bool>true</bool>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
+      </property>
+      <property name="text">
+       <string>Gain</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="8">
      <widget class="QPushButton" name="synthesizer_pushbutton_cancel">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -1421,30 +1690,6 @@
      </widget>
     </item>
     <item row="12" column="8">
-     <widget class="QLineEdit" name="lineEdit_modfactor">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-       </font>
-      </property>
-      <property name="toolTip">
-       <string>enter LO frequency here (kHz)</string>
-      </property>
-      <property name="autoFillBackground">
-       <bool>true</bool>
-      </property>
-      <property name="text">
-       <string>0.8</string>
-      </property>
-     </widget>
-    </item>
-    <item row="11" column="8">
      <widget class="QLineEdit" name="lineEdit_carrierdistance">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -1468,162 +1713,8 @@
       </property>
      </widget>
     </item>
-    <item row="13" column="3">
-     <widget class="QLabel" name="label_10">
-      <property name="enabled">
-       <bool>true</bool>
-      </property>
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>16777215</width>
-        <height>16777215</height>
-       </size>
-      </property>
-      <property name="palette">
-       <palette>
-        <active>
-         <colorrole role="Button">
-          <brush brushstyle="SolidPattern">
-           <color alpha="255">
-            <red>255</red>
-            <green>254</green>
-            <blue>210</blue>
-           </color>
-          </brush>
-         </colorrole>
-         <colorrole role="Light">
-          <brush brushstyle="SolidPattern">
-           <color alpha="255">
-            <red>255</red>
-            <green>254</green>
-            <blue>210</blue>
-           </color>
-          </brush>
-         </colorrole>
-         <colorrole role="Base">
-          <brush brushstyle="SolidPattern">
-           <color alpha="255">
-            <red>255</red>
-            <green>254</green>
-            <blue>210</blue>
-           </color>
-          </brush>
-         </colorrole>
-         <colorrole role="Window">
-          <brush brushstyle="SolidPattern">
-           <color alpha="255">
-            <red>170</red>
-            <green>255</green>
-            <blue>127</blue>
-           </color>
-          </brush>
-         </colorrole>
-        </active>
-        <inactive>
-         <colorrole role="Button">
-          <brush brushstyle="SolidPattern">
-           <color alpha="255">
-            <red>255</red>
-            <green>254</green>
-            <blue>210</blue>
-           </color>
-          </brush>
-         </colorrole>
-         <colorrole role="Light">
-          <brush brushstyle="SolidPattern">
-           <color alpha="255">
-            <red>255</red>
-            <green>254</green>
-            <blue>210</blue>
-           </color>
-          </brush>
-         </colorrole>
-         <colorrole role="Base">
-          <brush brushstyle="SolidPattern">
-           <color alpha="255">
-            <red>255</red>
-            <green>254</green>
-            <blue>210</blue>
-           </color>
-          </brush>
-         </colorrole>
-         <colorrole role="Window">
-          <brush brushstyle="SolidPattern">
-           <color alpha="255">
-            <red>170</red>
-            <green>255</green>
-            <blue>127</blue>
-           </color>
-          </brush>
-         </colorrole>
-        </inactive>
-        <disabled>
-         <colorrole role="Button">
-          <brush brushstyle="SolidPattern">
-           <color alpha="255">
-            <red>255</red>
-            <green>254</green>
-            <blue>210</blue>
-           </color>
-          </brush>
-         </colorrole>
-         <colorrole role="Light">
-          <brush brushstyle="SolidPattern">
-           <color alpha="255">
-            <red>255</red>
-            <green>254</green>
-            <blue>210</blue>
-           </color>
-          </brush>
-         </colorrole>
-         <colorrole role="Base">
-          <brush brushstyle="SolidPattern">
-           <color alpha="255">
-            <red>170</red>
-            <green>255</green>
-            <blue>127</blue>
-           </color>
-          </brush>
-         </colorrole>
-         <colorrole role="Window">
-          <brush brushstyle="SolidPattern">
-           <color alpha="255">
-            <red>170</red>
-            <green>255</green>
-            <blue>127</blue>
-           </color>
-          </brush>
-         </colorrole>
-        </disabled>
-       </palette>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-       </font>
-      </property>
-      <property name="toolTip">
-       <string>move slider for optimal signal level; volume indicator should be in the green area</string>
-      </property>
-      <property name="autoFillBackground">
-       <bool>true</bool>
-      </property>
-      <property name="frameShape">
-       <enum>QFrame::StyledPanel</enum>
-      </property>
-      <property name="text">
-       <string>Gain</string>
-      </property>
-     </widget>
-    </item>
     <item row="13" column="7">
-     <widget class="QLabel" name="label_MF_2">
+     <widget class="QLabel" name="label_MF">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
         <horstretch>0</horstretch>
@@ -1706,111 +1797,14 @@
        <bool>true</bool>
       </property>
       <property name="text">
-       <string>Number of carriers:</string>
+       <string>Modulation factor:</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
       </property>
      </widget>
     </item>
-    <item row="13" column="5">
-     <widget class="QLabel" name="label_28">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>80</width>
-        <height>16777215</height>
-       </size>
-      </property>
-      <property name="palette">
-       <palette>
-        <active>
-         <colorrole role="Base">
-          <brush brushstyle="SolidPattern">
-           <color alpha="255">
-            <red>170</red>
-            <green>255</green>
-            <blue>127</blue>
-           </color>
-          </brush>
-         </colorrole>
-         <colorrole role="Window">
-          <brush brushstyle="SolidPattern">
-           <color alpha="255">
-            <red>170</red>
-            <green>255</green>
-            <blue>127</blue>
-           </color>
-          </brush>
-         </colorrole>
-        </active>
-        <inactive>
-         <colorrole role="Base">
-          <brush brushstyle="SolidPattern">
-           <color alpha="255">
-            <red>170</red>
-            <green>255</green>
-            <blue>127</blue>
-           </color>
-          </brush>
-         </colorrole>
-         <colorrole role="Window">
-          <brush brushstyle="SolidPattern">
-           <color alpha="255">
-            <red>170</red>
-            <green>255</green>
-            <blue>127</blue>
-           </color>
-          </brush>
-         </colorrole>
-        </inactive>
-        <disabled>
-         <colorrole role="Base">
-          <brush brushstyle="SolidPattern">
-           <color alpha="255">
-            <red>170</red>
-            <green>255</green>
-            <blue>127</blue>
-           </color>
-          </brush>
-         </colorrole>
-         <colorrole role="Window">
-          <brush brushstyle="SolidPattern">
-           <color alpha="255">
-            <red>170</red>
-            <green>255</green>
-            <blue>127</blue>
-           </color>
-          </brush>
-         </colorrole>
-        </disabled>
-       </palette>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-       </font>
-      </property>
-      <property name="autoFillBackground">
-       <bool>true</bool>
-      </property>
-      <property name="frameShape">
-       <enum>QFrame::StyledPanel</enum>
-      </property>
-      <property name="text">
-       <string>Volume</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-     </widget>
-    </item>
-    <item row="10" column="8">
+    <item row="11" column="8">
      <widget class="QLineEdit" name="lineEdit_fc_low">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -1834,7 +1828,7 @@
       </property>
      </widget>
     </item>
-    <item row="3" column="7">
+    <item row="4" column="7">
      <widget class="QPushButton" name="synthesizer_pushbutton_create">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -2120,13 +2114,19 @@
       </property>
      </widget>
     </item>
-    <item row="12" column="7">
-     <widget class="QLabel" name="label_MF">
+    <item row="14" column="5">
+     <widget class="QLabel" name="label_28">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>80</width>
+        <height>16777215</height>
+       </size>
       </property>
       <property name="palette">
        <palette>
@@ -2134,18 +2134,18 @@
          <colorrole role="Base">
           <brush brushstyle="SolidPattern">
            <color alpha="255">
-            <red>255</red>
+            <red>170</red>
             <green>255</green>
-            <blue>255</blue>
+            <blue>127</blue>
            </color>
           </brush>
          </colorrole>
          <colorrole role="Window">
           <brush brushstyle="SolidPattern">
            <color alpha="255">
-            <red>229</red>
+            <red>170</red>
             <green>255</green>
-            <blue>220</blue>
+            <blue>127</blue>
            </color>
           </brush>
          </colorrole>
@@ -2154,18 +2154,18 @@
          <colorrole role="Base">
           <brush brushstyle="SolidPattern">
            <color alpha="255">
-            <red>255</red>
+            <red>170</red>
             <green>255</green>
-            <blue>255</blue>
+            <blue>127</blue>
            </color>
           </brush>
          </colorrole>
          <colorrole role="Window">
           <brush brushstyle="SolidPattern">
            <color alpha="255">
-            <red>229</red>
+            <red>170</red>
             <green>255</green>
-            <blue>220</blue>
+            <blue>127</blue>
            </color>
           </brush>
          </colorrole>
@@ -2174,18 +2174,18 @@
          <colorrole role="Base">
           <brush brushstyle="SolidPattern">
            <color alpha="255">
-            <red>229</red>
+            <red>170</red>
             <green>255</green>
-            <blue>220</blue>
+            <blue>127</blue>
            </color>
           </brush>
          </colorrole>
          <colorrole role="Window">
           <brush brushstyle="SolidPattern">
            <color alpha="255">
-            <red>229</red>
+            <red>170</red>
             <green>255</green>
-            <blue>220</blue>
+            <blue>127</blue>
            </color>
           </brush>
          </colorrole>
@@ -2197,21 +2197,118 @@
         <pointsize>10</pointsize>
        </font>
       </property>
-      <property name="toolTip">
-       <string>set center frequency in kHz (LO)</string>
-      </property>
       <property name="autoFillBackground">
        <bool>true</bool>
       </property>
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
+      </property>
       <property name="text">
-       <string>Modulation factor:</string>
+       <string>Volume</string>
       </property>
       <property name="alignment">
-       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       <set>Qt::AlignCenter</set>
       </property>
      </widget>
     </item>
-    <item row="11" column="7">
+    <item row="1" column="1">
+     <widget class="QLabel" name="label_Playlist">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+        <weight>50</weight>
+        <bold>false</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Playlist:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="21" column="7" colspan="2">
+     <widget class="QProgressBar" name="progressBar_synth">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
+      <property name="value">
+       <number>1</number>
+      </property>
+     </widget>
+    </item>
+    <item row="8" column="8">
+     <widget class="QComboBox" name="comboBox_targetSR">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
+      <property name="toolTip">
+       <string>select bandwidth</string>
+      </property>
+      <property name="currentIndex">
+       <number>5</number>
+      </property>
+      <item>
+       <property name="text">
+        <string>20</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>50</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>100</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>250</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>500</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>1250</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>2500</string>
+       </property>
+      </item>
+     </widget>
+    </item>
+    <item row="12" column="7">
      <widget class="QLabel" name="label_presetband_3">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
@@ -2299,104 +2396,7 @@
       </property>
      </widget>
     </item>
-    <item row="7" column="8">
-     <widget class="QComboBox" name="comboBox_targetSR">
-      <property name="enabled">
-       <bool>true</bool>
-      </property>
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-       </font>
-      </property>
-      <property name="toolTip">
-       <string>select bandwidth</string>
-      </property>
-      <property name="currentIndex">
-       <number>5</number>
-      </property>
-      <item>
-       <property name="text">
-        <string>20</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>50</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>100</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>250</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>500</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>1250</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>2500</string>
-       </property>
-      </item>
-     </widget>
-    </item>
-    <item row="1" column="1">
-     <widget class="QLabel" name="label_Playlist">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-        <weight>50</weight>
-        <bold>false</bold>
-       </font>
-      </property>
-      <property name="text">
-       <string>Playlist:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="20" column="7" colspan="2">
-     <widget class="QProgressBar" name="progressBar_synth">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-       </font>
-      </property>
-      <property name="value">
-       <number>1</number>
-      </property>
-     </widget>
-    </item>
-    <item row="5" column="7" colspan="2">
+    <item row="6" column="7" colspan="2">
      <widget class="QLabel" name="label_BP">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -2539,7 +2539,7 @@
       </property>
      </widget>
     </item>
-    <item row="2" column="1" rowspan="18" colspan="2">
+    <item row="3" column="1" rowspan="18" colspan="2">
      <widget class="QListWidget" name="listWidget_playlist">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
@@ -2572,7 +2572,7 @@
       </property>
      </widget>
     </item>
-    <item row="18" column="7">
+    <item row="19" column="7">
      <widget class="QLabel" name="playrec_label_REC_duration">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
@@ -2741,35 +2741,7 @@
       </property>
      </widget>
     </item>
-    <item row="18" column="8">
-     <widget class="QTimeEdit" name="timeEdit_reclength">
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-       </font>
-      </property>
-      <property name="toolTip">
-       <string>enter duration here in HH:MM:SS</string>
-      </property>
-      <property name="displayFormat">
-       <string>HH:mm:ss</string>
-      </property>
-     </widget>
-    </item>
-    <item row="20" column="0">
-     <widget class="QLabel" name="label_4">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="text">
-       <string>playtime % length</string>
-      </property>
-     </widget>
-    </item>
-    <item row="15" column="5">
+    <item row="16" column="5">
      <widget class="QRadioButton" name="synthesizer_radioBut_Spectrum">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -2938,7 +2910,48 @@
       </property>
      </widget>
     </item>
-    <item row="13" column="8">
+    <item row="21" column="0">
+     <widget class="QLabel" name="label_4">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>playtime % length</string>
+      </property>
+     </widget>
+    </item>
+    <item row="19" column="8">
+     <widget class="QTimeEdit" name="timeEdit_reclength">
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
+      <property name="toolTip">
+       <string>enter duration here in HH:MM:SS</string>
+      </property>
+      <property name="displayFormat">
+       <string>HH:mm:ss</string>
+      </property>
+     </widget>
+    </item>
+    <item row="21" column="5">
+     <widget class="QLabel" name="label_5">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>synthesis progress</string>
+      </property>
+     </widget>
+    </item>
+    <item row="14" column="8">
      <widget class="QSpinBox" name="spinBox_numcarriers">
       <property name="minimum">
        <number>1</number>
@@ -2954,8 +2967,26 @@
       </property>
      </widget>
     </item>
-    <item row="15" column="7" colspan="2">
-     <widget class="Line" name="line_5">
+    <item row="21" column="1" colspan="2">
+     <widget class="QProgressBar" name="progressBar_fillPlaylist">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
+      <property name="value">
+       <number>1</number>
+      </property>
+     </widget>
+    </item>
+    <item row="15" column="8">
+     <widget class="QLineEdit" name="lineEdit_audiocutoff_freq">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
         <horstretch>0</horstretch>
@@ -2967,18 +2998,18 @@
         <pointsize>10</pointsize>
        </font>
       </property>
-      <property name="lineWidth">
-       <number>5</number>
+      <property name="toolTip">
+       <string>enter LO frequency here (kHz)</string>
       </property>
-      <property name="midLineWidth">
-       <number>5</number>
+      <property name="autoFillBackground">
+       <bool>true</bool>
       </property>
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
+      <property name="text">
+       <string>4.5</string>
       </property>
      </widget>
     </item>
-    <item row="17" column="7" colspan="2">
+    <item row="18" column="7" colspan="2">
      <widget class="QLabel" name="label_TIMER">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -3182,8 +3213,8 @@
       </property>
      </widget>
     </item>
-    <item row="14" column="8">
-     <widget class="QLineEdit" name="lineEdit_audiocutoff_freq">
+    <item row="16" column="7" colspan="2">
+     <widget class="Line" name="line_5">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
         <horstretch>0</horstretch>
@@ -3195,49 +3226,18 @@
         <pointsize>10</pointsize>
        </font>
       </property>
-      <property name="toolTip">
-       <string>enter LO frequency here (kHz)</string>
+      <property name="lineWidth">
+       <number>5</number>
       </property>
-      <property name="autoFillBackground">
-       <bool>true</bool>
+      <property name="midLineWidth">
+       <number>5</number>
       </property>
-      <property name="text">
-       <string>4.5</string>
-      </property>
-     </widget>
-    </item>
-    <item row="20" column="5">
-     <widget class="QLabel" name="label_5">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="text">
-       <string>synthesis progress</string>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
       </property>
      </widget>
     </item>
-    <item row="20" column="1" colspan="2">
-     <widget class="QProgressBar" name="progressBar_fillPlaylist">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-       </font>
-      </property>
-      <property name="value">
-       <number>1</number>
-      </property>
-     </widget>
-    </item>
-    <item row="19" column="7" colspan="2">
+    <item row="20" column="7" colspan="2">
      <widget class="Line" name="line_4">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -3261,7 +3261,7 @@
       </property>
      </widget>
     </item>
-    <item row="0" column="4" rowspan="13">
+    <item row="0" column="4" rowspan="14">
      <widget class="QProgressBar" name="progressBar_volume">
       <property name="enabled">
        <bool>true</bool>
@@ -3634,7 +3634,7 @@
       </property>
      </widget>
     </item>
-    <item row="14" column="7">
+    <item row="15" column="7">
      <widget class="QLabel" name="label_MF_3">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
@@ -3725,7 +3725,14 @@
       </property>
      </widget>
     </item>
-    <item row="0" column="5" rowspan="13">
+    <item row="22" column="2" colspan="4">
+     <widget class="QLabel" name="label_3">
+      <property name="text">
+       <string>Status message from synthesizer core:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="5" rowspan="14">
      <widget class="QTableWidget" name="tableWidget">
       <property name="enabled">
        <bool>true</bool>
@@ -4054,17 +4061,23 @@
       </item>
      </widget>
     </item>
-    <item row="21" column="7" colspan="2">
+    <item row="22" column="7" colspan="2">
      <widget class="QLabel" name="label_audioset_name">
       <property name="text">
        <string>-</string>
       </property>
      </widget>
     </item>
-    <item row="21" column="2" colspan="4">
-     <widget class="QLabel" name="label_3">
+    <item row="2" column="2">
+     <widget class="QPushButton" name="pushButton_clearproject">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="text">
-       <string>Status message from synthesizer core:</string>
+       <string>new project</string>
       </property>
      </widget>
     </item>
@@ -4115,6 +4128,7 @@
    <zorder>label_5</zorder>
    <zorder>label_audioset_name</zorder>
    <zorder>label_3</zorder>
+   <zorder>pushButton_clearproject</zorder>
   </widget>
  </widget>
  <resources/>
