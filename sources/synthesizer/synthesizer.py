@@ -461,6 +461,7 @@ class synthesizer_m(QObject):
         self.mdl["sample_rate"] = 0
         self.mdl["LO"] = 0
         self.mdl["SR_currindex"] = 0
+        self.mdl["modfactor"] = 0.8
         # Create a custom logger
         logging.getLogger().setLevel(logging.DEBUG)
         # Erstelle einen Logger mit dem Modul- oder Skriptnamen
@@ -610,6 +611,7 @@ class synthesizer_v(QObject):
         self.gui.lineEdit_audiocutoff_freq.editingFinished.connect(self.audioBW_update)
         self.gui.lineEdit_fc_low.editingFinished.connect(self.fc_low_update)
         self.gui.lineEdit_LO.editingFinished.connect(self.LO_update)
+        self.gui.lineEdit_modfactor.editingFinished.connect(self.modfactor_update)
         self.gui.comboBox_targetSR_2.setCurrentIndex(1)
         self.gui.comboBox_targetSR_2.currentIndexChanged.connect(self.preset_SR_LO)
         self.gui.comboBox_targetSR.currentIndexChanged.connect(self.RecBW_update)
@@ -1487,7 +1489,6 @@ class synthesizer_v(QObject):
     def validate_params(self):
         """_validates certain parameter conditions which must be fulfilled for meaningful settings,
         e.g. carrier distance > 2* Audio-BW_
-
         :return: valid: True if all conditions met, else False
         :rtype: boolean
         :return: errortext: string specifying the type of violation
@@ -1499,6 +1500,7 @@ class synthesizer_v(QObject):
         f_LO = float(self.gui.lineEdit_LO.text())
         fc_low = float(self.gui.lineEdit_fc_low.text())
         numcarriers = self.gui.spinBox_numcarriers.value()
+        modfactor = float(self.gui.lineEdit_modfactor.text())
         if (carrier_distance < 2*audioBW):# and not self.load_index: ????
             self.rule_viol = True
             errortext = "carrier spacing is less than 2*audio bandwidth, this is not allowed, please either increase carrier spacing or reduce audio bandwidth"
@@ -1523,11 +1525,14 @@ class synthesizer_v(QObject):
 
             print("return false from validate")
             return False, errortext
+        if modfactor < 0.01 or modfactor > 1:
+            errortext = "Modulation factor out of range, value must be >= 0.01 and <= 1"
+            return False, errortext
         return True, ""
 
     def RecBW_update(self):
-        """slot function for the recording Bandwidth (=SR) combobox; sets the model parameter self.m['sample_rate']"""
-        RecBW = int(self.gui.comboBox_targetSR.currentText())
+        """slot function for the recording Bandwidth (=SR) combobox; sets the model parameter self.m['sample_rate'] and triggers validation"""
+        RecBW = int(self.gui.comboBox_targetSR.currentText()) #TODO: redundant ?
         valid, errortext = self.validate_params()
         if not valid:
             auxi.standard_errorbox(errortext)
@@ -1538,7 +1543,7 @@ class synthesizer_v(QObject):
         #self.freq_carriers_update()
 
     def audioBW_update(self):
-        """slot function for the audio Bandwidth line_edit; sets the model parameter m['audioBW']"""
+        """slot function for the audio Bandwidth line_edit; sets the model parameter m['audioBW'] and triggers validation"""
         audioBW = self.gui.lineEdit_audiocutoff_freq.text()
         if not self.isnumeric(audioBW):
             auxi.standard_errorbox("invalid characters, must be numeric value !")
@@ -1560,6 +1565,7 @@ class synthesizer_v(QObject):
         #print(f"carrier spacing: {self.m['audioBW']}")
 
     def LO_update(self):
+        """slot function for the LO frequency line_edit; sets the model parameter m['LO'] and triggers validation"""
         cf_LO = self.gui.lineEdit_LO.text()
         if not self.isnumeric(cf_LO):
             auxi.standard_errorbox("invalid characters, must be numeric value !")
@@ -1573,7 +1579,27 @@ class synthesizer_v(QObject):
         self.m["LO"] = float(self.gui.lineEdit_LO.text())
         self.freq_carriers_update()
 
+    def modfactor_update(self):
+        """slot function for the modulation factor line_edit; sets the model parameter m['modfactor'] and triggers validation"""
+        self.gui.lineEdit_modfactor.editingFinished.disconnect(self.modfactor_update)
+        modfactor = self.gui.lineEdit_modfactor.text()
+        if not self.isnumeric(modfactor):
+            auxi.standard_errorbox("invalid characters in modulation factor, must be numeric value !")
+            self.gui.lineEdit_modfactor.setText(str(self.m["modfactor"]))
+            self.gui.lineEdit_modfactor.editingFinished.connect(self.modfactor_update)
+            return False
+        valid, errortext = self.validate_params()
+        if not valid:
+            auxi.standard_errorbox(errortext)
+            self.gui.lineEdit_modfactor.setText(str(self.m["modfactor"]))
+            self.gui.lineEdit_modfactor.editingFinished.connect(self.modfactor_update)
+            return False
+        self.m["modfactor"] = float(self.gui.lineEdit_modfactor.text())
+        #self.freq_carriers_update()
+        self.gui.lineEdit_modfactor.editingFinished.connect(self.modfactor_update)
+
     def fc_low_update(self):
+        """slot function for the low carrier frequency line_edit; sets the model parameter m['fc_low'] and triggers validation"""
         #self.gui.lineEdit_fc_low.setText(str(self.cf_LO)) TODO: remove self.cf_LO
         fc_low = self.gui.lineEdit_fc_low.text()
         if not self.isnumeric(fc_low):
@@ -1590,8 +1616,8 @@ class synthesizer_v(QObject):
         #print(f"carrier spacing: {self.m['fc_low']}")
 
     def carrierdistance_update(self):
+        """slot function for the carrier distance line_edit; sets the model parameter m["carrier_distance"] and triggers validation"""
         self.gui.lineEdit_carrierdistance.editingFinished.disconnect(self.carrierdistance_update)
-        """slot function for the carrier distance line_edit; sets the model parameter m["carrier_distance"]"""
         old_carrierdistance = self.m["carrier_distance"]
         carrier_delta = self.gui.lineEdit_carrierdistance.text()
         if not self.isnumeric(carrier_delta):

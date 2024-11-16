@@ -831,8 +831,8 @@ class core_v(QObject):
         if self.m["ext"] == ".dat" or self.m["ext"] == ".raw":
             filetype = "dat"
             self.SigRelay.emit("cexex_waveditor",["activate_insertheader",True])
-            #TODO: TRIAL 15_04_2024: remove
-            self.setactivity_tabs("xcore","inactivate",["Player","WAV Header","YAML editor","Annotate","View spectra"])
+            #TRIAL 15_04_2024: remove: confirmed: line needs to be removed, causes bugs when adding new modules
+            #self.setactivity_tabs("xcore","inactivate",["Player","WAV Header","YAML editor","Annotate","View spectra"])
 
         else:
             if self.m["ext"] == ".wav":
@@ -1270,7 +1270,7 @@ if __name__ == '__main__':
         synthesizer_c = synthesizer.synthesizer_c(synthesizer_m)
         synthesizer_v = synthesizer.synthesizer_v(tabUI_synthesizer,synthesizer_c,synthesizer_m)
         tab_dict["list"].append("synthesizer")
-        tab_dict["tabname"].append("synthesizer")
+        tab_dict["tabname"].append("Synthesizer")
         synthesizer_v.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
         synthesizer_c.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
 
