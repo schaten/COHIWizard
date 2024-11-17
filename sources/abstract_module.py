@@ -48,6 +48,7 @@ class abstract_module_c(QObject):
     #__slots__ = ["contvars"]
 
     SigAny = pyqtSignal()
+    SigActivateOtherTabs = pyqtSignal(str,str,object)
     SigRelay = pyqtSignal(str,object)
 
     def __init__(self, abstract_module_m): #TODO: remove gui
@@ -73,7 +74,8 @@ class abstract_module_v(QObject):
     SigAny = pyqtSignal()
     SigCancel = pyqtSignal()
     SigUpdateGUI = pyqtSignal(object)
-    SigSyncGUIUpdatelist = pyqtSignal(object)
+    #SigSyncGUIUpdatelist = pyqtSignal(object)
+    SigActivateOtherTabs = pyqtSignal(str,str,object)
     SigRelay = pyqtSignal(str,object)
 
     def __init__(self, gui, abstract_module_c, abstract_module_m):

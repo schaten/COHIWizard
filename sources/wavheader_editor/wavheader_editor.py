@@ -14,7 +14,7 @@ import shutil
 from auxiliaries import auxiliaries as auxi
 from auxiliaries import WAVheader_tools
 
-class waveditor_m(QObject):
+class wavheader_editor_m(QObject):
     __slots__ = ["None"]
     SigModelXXX = pyqtSignal()
 
@@ -50,23 +50,24 @@ class waveditor_m(QObject):
 
         self.logger.debug('Init logger in abstract method reached')
 
-class waveditor_c(QObject):
+class wavheader_editor_c(QObject):
     """_view method
     """
     __slots__ = ["contvars"]
 
     SigAny = pyqtSignal()
     SigRelay = pyqtSignal(str,object)
+    SigActivateOtherTabs = pyqtSignal(str,str,object)
 
-    def __init__(self, waveditor_m): #TODO: remove gui
+    def __init__(self, wavheader_editor_m): #TODO: remove gui
         super().__init__()
 
     # def __init__(self, *args, **kwargs): #TEST 09-01-2024
     #     super().__init__(*args, **kwargs)
         viewvars = {}
         #self.set_viewvars(viewvars)
-        self.m = waveditor_m.mdl
-        self.logger = waveditor_m.logger
+        self.m = wavheader_editor_m.mdl
+        self.logger = wavheader_editor_m.logger
 
     # def extract_startstoptimes_auxi(self, wavheader): #TODO TODO TODO: check if still necessary: move to controller module edit wavheader
     #     """_synthetize next filename in the playlist in case the latter cannot be extracted
@@ -132,7 +133,7 @@ class MyDelegate(QStyledItemDelegate):
     def setModelData(self, editor, model, index):
         model.setData(index, editor.text(), Qt.EditRole)
 
-class waveditor_v(QObject):
+class wavheader_editor_v(QObject):
     """_view methods for resampling module
     TODO: gui.wavheader --> something less general ?
     """
@@ -142,21 +143,22 @@ class waveditor_v(QObject):
     SigCancel = pyqtSignal()
     #SigUpdateGUI = pyqtSignal(object) #TODO: remove after tests
     SigSyncGUIUpdatelist = pyqtSignal(object)
+    SigActivateOtherTabs = pyqtSignal(str,str,object)
     SigRelay = pyqtSignal(str,object)
 
-    def __init__(self, gui, waveditor_c, waveditor_m):
+    def __init__(self, gui, wavheader_editor_c, wavheader_editor_m):
         super().__init__()
 
         #viewvars = {}
         #self.set_viewvars(viewvars)
-        self.m = waveditor_m.mdl
+        self.m = wavheader_editor_m.mdl
         self.DATABLOCKSIZE = 1024*32
         self.gui = gui #gui_state["gui_reference"]#system_state["gui_reference"]
-        self.logger = waveditor_m.logger
-        self.init_waveditor_ui()
+        self.logger = wavheader_editor_m.logger
+        self.init_wavheader_editor_ui()
 
 
-    def init_waveditor_ui(self):
+    def init_wavheader_editor_ui(self):
         #self.gui.actionOverwrite_header.triggered.connect(self.overwrite_header)
         self.gui.pushButton_InsertHeader.setEnabled(False)
         self.gui.pushButton_InsertHeader.clicked.connect(self.overwrite_header)

@@ -596,6 +596,7 @@ class annotate_c(QObject):
     __slots__ = ["contvars"]
 
     SigAny = pyqtSignal()
+    SigActivateOtherTabs = pyqtSignal(str,str,object)
     SigRelay = pyqtSignal(str,object)
 
     def __init__(self, annotate_m): #TODO: remove gui
@@ -1017,6 +1018,7 @@ class annotate_v(QObject):
     SigCancel = pyqtSignal()
     SigUpdateGUI = pyqtSignal(object)
     SigSyncGUIUpdatelist = pyqtSignal(object)
+    SigActivateOtherTabs = pyqtSignal(str,str,object)
     SigRelay = pyqtSignal(str,object)
 
     def __init__(self, gui, annotate_c, annotate_m):

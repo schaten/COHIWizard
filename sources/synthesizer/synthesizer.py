@@ -722,8 +722,10 @@ class synthesizer_v(QObject):
         #TODO check how to handle and delete after change to model
         #schedule_objdict = self.m["schedule_objdict"]
         #TODO: look why that was used self.SigDisconnectExternalMethods.emit("cancel_resampling")
+        self.gui.synthesizer_pushbutton_cancel.clicked.disconnect(self.cancel_modulate)
         if self.m["cancelflag"]:
             self.logger.debug("cancel_modulation: **** suppressed because cancelflag ___cancel_resamp reached")
+            self.gui.synthesizer_pushbutton_cancel.clicked.connect(self.cancel_modulate)
             return
         self.m["cancelflag"] = True
         time.sleep(0.001)
@@ -735,6 +737,7 @@ class synthesizer_v(QObject):
             self.logger.debug("cancel synthesizer modulation: modulate worker could not be terminated")
             pass
         #TODO TODO TODO: delete out files produced so far ? or leave them ?
+        self.gui.synthesizer_pushbutton_cancel.clicked.connect(self.cancel_modulate)
         #self.cleanup()
 
     def canvasbuild(self):
@@ -760,6 +763,7 @@ class synthesizer_v(QObject):
         """pre-set gain, check some conditions. Then configure and start worker thread 'modulate_worker' for synthesis
 
         """
+        self.gui.synthesizer_pushbutton_create.clicked.disconnect(self.create_band_thread)
         palette = self.gui.synthesizer_pushbutton_create.palette()
         self.cancel_background_color = palette.color(self.gui.synthesizer_pushbutton_create.backgroundRole())
         self.syntesisrunning = False
@@ -773,7 +777,7 @@ class synthesizer_v(QObject):
         time.sleep(0.5)
         self.load_project()
         self.autosave = False
-
+        self.gui.synthesizer_pushbutton_create.clicked.connect(self.create_band_thread)
        
 
 
@@ -1652,6 +1656,7 @@ class synthesizer_v(QObject):
         :raises [ErrorType]:none
         :returns: none
         """  
+        self.gui.pushButton_select_source.clicked.disconnect(self.select_tree)
         root_directory = QFileDialog.getExistingDirectory(self.m["QTMAINWINDOWparent"], "Please chose source file directory", self.default_directory)
         if root_directory:
             self.fillsourcelist(root_directory)
@@ -1659,6 +1664,7 @@ class synthesizer_v(QObject):
             stream = open("config_wizard.yaml", "w")
             yaml.dump(self.m["metadata"], stream)
             stream.close()
+        self.gui.pushButton_select_source.clicked.connect(self.select_tree)
 
 
     def add_children(self, parent, directory):

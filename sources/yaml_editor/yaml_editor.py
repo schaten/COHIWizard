@@ -15,8 +15,10 @@ import time
 #from auxiliaries import WAVheader_tools
 from auxiliaries import auxiliaries as auxi
 
-class  yamleditor_m(QObject):
+class  yaml_editor_m(QObject):
     __slots__ = ["None"]
+
+    SigActivateOtherTabs = pyqtSignal(str,str,object)
     SigModelXXX = pyqtSignal()
 
     #TODO: replace all gui by respective state references if appropriate
@@ -50,25 +52,26 @@ class  yamleditor_m(QObject):
         self.logger.addHandler(debug_handler)
         self.logger.debug('Init logger in abstract method reached')
 
-class  yamleditor_c(QObject):
+class  yaml_editor_c(QObject):
     """_view method
     """
     __slots__ = ["contvars"]
 
     SigAny = pyqtSignal()
+    SigActivateOtherTabs = pyqtSignal(str,str,object)
     SigRelay = pyqtSignal(str,object)
 
-    def __init__(self, yamleditor_m): #TODO: remove gui
+    def __init__(self, yaml_editor_m): #TODO: remove gui
         super().__init__()
         self.cohiradia_yamlheader_filename = 'dummy' #TODO:future system state
         self.cohiradia_yamltailer_filename = 'dummy' #TODO:future system state
         self.cohiradia_yamlfinal_filename = 'dummy' #TODO:future system state
         viewvars = {}
         #self.set_viewvars(viewvars)
-        self.m =  yamleditor_m.mdl
-        self.logger = yamleditor_m.logger
+        self.m =  yaml_editor_m.mdl
+        self.logger = yaml_editor_m.logger
 
-class  yamleditor_v(QObject):
+class  yaml_editor_v(QObject):
     """_view methods for resampling module
     TODO: gui.wavheader --> something less general ?
     """
@@ -77,16 +80,17 @@ class  yamleditor_v(QObject):
     #SigAny = pyqtSignal() #TODO: remove after tests
     #SigUpdateGUI = pyqtSignal(object) #TODO: remove after tests
     SigSyncGUIUpdatelist = pyqtSignal(object)
+    SigActivateOtherTabs = pyqtSignal(str,str,object)
     SigRelay = pyqtSignal(str,object)
     
-    def __init__(self, gui,  yamleditor_c,  yamleditor_m):
+    def __init__(self, gui,  yaml_editor_c,  yaml_editor_m):
         super().__init__()
 
-        self.m =  yamleditor_m.mdl
+        self.m =  yaml_editor_m.mdl
         self.DATABLOCKSIZE = 1024*32
         self.gui = gui #gui_state["gui_reference"]#system_state["gui_reference"]
-        self.yamleditor_c = yamleditor_c
-        self.logger = yamleditor_m.logger
+        self.yaml_editor_c = yaml_editor_c
+        self.logger = yaml_editor_m.logger
         self.gui.pushButton_Writeyamlheader.setEnabled(False) # activate after completion of the annotation procedure
         self.gui.pushButton_Writeyamlheader.clicked.connect(self.yaml_header_buttonfcn)
 
