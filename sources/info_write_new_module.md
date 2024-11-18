@@ -11,56 +11,6 @@ For illustration the basic directory tree is shown plus the added module. 'modul
 
 <img align="left" width="280" height="398" vspace="10" hspace="30" src="dirtree_COHIWizard.png"/>
 
-`sources/
-|   abstract_module.py
-|   auxiliaries.py
-|   COHIWizard.py
-|   COHIWizard_ico4.ico
-|   config_modules.yaml
-|
-+---module1
-|   |   module1.py
-|   |   module1_widget.py
-|   |   __init__.py
-|   |   
-|   +---ressources
-|   |   |   module1_widget.ui
-|   |   |   other stuff ....
-|   |   |   
-|   |   \---icons
-|   |           icon11.png
-|   |           icon12.png
-|   |           ...
-|
-+---module2
-|   |   module2.py
-|   |   module2_widget.py
-|   |   __init__.py
-|   |   
-|   +---ressources
-|   |   |   player_widget.ui
-|   |   |   
-|   |   \---icons
-|   |           icon21.png
-|   |           icon22.png
-|   |           ...
-|
-:
-:
-+---my_module			<<<<---- add your module here !
-|   |   my_module.py
-|   |   my_module_widget.py
-|   |   __init__.py
-|   |   
-|   +---ressources
-|   |   |   my_module_widget.ui
-|   |   |   
-|   |   \---icons
-|   |           iconx1.png
-|   |           iconx2.png
-|   |           ...
-`
-
 
 ## Creating the PyQT widget `my_module_widget.py`
 
@@ -129,7 +79,7 @@ For plotting into this canvas reference all 'ax' and 'canvas' operations to self
 
 ## connect your new module with the core module by editing the file 'config_modules.yaml'. Add your module-name so that the file looks like this:
 
-modules:
+`modules:
   player: playrec
   spectralviewer: view_spectra
   resampler: resample
@@ -147,7 +97,7 @@ module_names:
   yaml_editor: Yaml Editor
   annotator: Annotator
   synthesizer: Synthesizer
-  my_module: NameofmyModule   <<<<<<--- add this
+  my_module: NameofmyModule   <<<<<<--- add this`
 
 'NameofmyModule' will appear as the text in the new GUI-Tab and in the list of tabs in the startup configuration menu.
 If you wish to inactivate some modules, just comment them out with '#'. DO NOT COMMENT OUT OR REMOVE the first entry 'player'. This will let your system crash, because it refers to the core module.
@@ -155,7 +105,7 @@ If you wish to inactivate some modules, just comment them out with '#'. DO NOT C
 
 5.	If you use ‘QFileDialog.getExistingDirectory ‘ for dialogues handled by your module you have to write:
 
-QFileDialog.getExistingDirectory(self.m["QTMAINWINDOWparent"], "Please chose source file directory")
+`QFileDialog.getExistingDirectory(self.m["QTMAINWINDOWparent"], "Please chose source file directory")`
 
 
 
