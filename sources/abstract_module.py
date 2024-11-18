@@ -4,25 +4,26 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5 import QtGui
 import logging
-from auxiliaries import auxiliaries as auxi
+from auxiliaries import auxiliaries as auxi     #access some auxiliary methods
+from auxiliaries import WAVheader_tools         #access methods for reading, writing and changing SDR-wav-headers
 import logging
+import other stuff #TODO
 
 class abstract_module_m(QObject):
     #__slots__ = ["None"]
-    SigModelXXX = pyqtSignal()
+
+    ########## TODO module specific individual signals: #################
+    SigModel_mysig = pyqtSignal() #sample signal
 
     def __init__(self):
         super().__init__()
-        # Constants
-        self.CONST_SAMPLE = 0 # sample constant
+
+        ######################  Mandatory part, do not remove: ###############
         self.mdl = {}
-        self.mdl["sample"] = 0
-        self.mdl["_log"] = False
         # Create a custom logger
         logging.getLogger().setLevel(logging.DEBUG)
-        # Erstelle einen Logger mit dem Modul- oder Skriptnamen
+        # Create aLogger with the name of the module
         self.logger = logging.getLogger(__name__)
-        # Create handlers
         # Create handlers
         warning_handler = logging.StreamHandler()
         debug_handler = logging.FileHandler("system_log.log")
@@ -38,8 +39,18 @@ class abstract_module_m(QObject):
         # Add handlers to the logger
         self.logger.addHandler(warning_handler)
         self.logger.addHandler(debug_handler)
-
         self.logger.debug('Init logger in abstract method reached')
+        #####################################################################
+
+        ###################### TODO Individual part: ########################
+        # TODO initialize your own individual constants #####################
+        self.CONST_SAMPLE = 0 # sample constant
+
+        ########### TODO initialize your own individual variables: ######
+        self.mdl["my_var1"] = 0 #sample variable
+        self.mdl["my_var2"] = False #sample variable
+        # .......
+        #################################################################
 
 
 class abstract_module_c(QObject):
@@ -47,19 +58,30 @@ class abstract_module_c(QObject):
     """
     #__slots__ = ["contvars"]
 
-    SigAny = pyqtSignal()
+    ########## mandatory Signals, do not remove ####################
     SigActivateOtherTabs = pyqtSignal(str,str,object)
     SigRelay = pyqtSignal(str,object)
+    ################################################################
+
+    ########## TODO module specific individual signals: #############
+    SigController_mysigc1 = pyqtSignal() #any other signal ...
+    SigController_mysigc2 = pyqtSignal() #any other signal ...
+    ################################################################
+
 
     def __init__(self, abstract_module_m): #TODO: remove gui
         super().__init__()
 
-    # def __init__(self, *args, **kwargs): #TEST 09-01-2024
-    #     super().__init__(*args, **kwargs)
-        viewvars = {}
-        #self.set_viewvars(viewvars)
+        ############# mandatory variables, do not remove: ##########
         self.m = abstract_module_m.mdl
         self.logger = abstract_module_m.logger
+        ############################################################
+
+        ########### TODO initialize your own individual variables: ######
+        self.myvarc1 = 0     #sample variable
+        self.myvarc2 = True  #sample variable
+        # .......
+        #################################################################
 
     def dummy(self):
         print("hello from superclass")
@@ -71,29 +93,41 @@ class abstract_module_v(QObject):
     """
     #__slots__ = ["viewvars"]
 
-    SigAny = pyqtSignal()
-    SigCancel = pyqtSignal()
+    ########## mandatory Signals, do not remove ####################
     SigUpdateGUI = pyqtSignal(object)
-    #SigSyncGUIUpdatelist = pyqtSignal(object)
     SigActivateOtherTabs = pyqtSignal(str,str,object)
     SigRelay = pyqtSignal(str,object)
+    ################################################################
+
+    # module specific new signals:
+    ########## TODO module specific individual signals: #################
+    SigController_mysigv1 = pyqtSignal() #any other signal ...
+    SigController_mysigv2 = pyqtSignal() #any other signal ...
+    ####################################################################
+
 
     def __init__(self, gui, abstract_module_c, abstract_module_m):
         super().__init__()
 
-        #viewvars = {}
-        #self.set_viewvars(viewvars)
+        ######################  Mandatory part, do not remove: ###############
         self.m = abstract_module_m.mdl
         self.abstract_module_c = abstract_module_c
-        self.DATABLOCKSIZE = 1024*32
-        self.gui = gui #gui_state["gui_reference"]#system_state["gui_reference"]
+        self.gui = gui # is assigned by core ! mandatory
         self.logger = abstract_module_m.logger
         self.abstract_module_c.SigRelay.connect(self.rxhandler)
         self.abstract_module_c.SigRelay.connect(self.SigRelay.emit)
         self.init_abstractmodule_ui()
         self.abstract_module_c.SigRelay.connect(self.SigRelay.emit)
+        ######################################################################
+
+        ########### TODO initialize your own individual variables: ######
+        self.myvarv1 = 0     #sample variable
+        self.myvarv2 = True  #sample variable
+        # .......
+        #################################################################
 
     def init_abstractmodule_ui(self):
+        #TODO your code for initializing the GUI, establish connections, set UI elements ... goes here ###################
         #self.gui.GUIMETHOD(dosomething) or self.gui.GUIELEMENT.property = something
         #self.gui.GUIMETHOD.connect(self.related_method) #EXAMPLE
         pass
@@ -106,15 +140,17 @@ class abstract_module_v(QObject):
         :type : str
         :param : _value
         :type : object
-        :raises [ErrorType]: [ErrorDescription]
-        :return: none
-        :rtype: none
+        :raises [ErrorType] : [ErrorDescription]
+        :returns : none
+        :rtype : none
         """
+        #TODO: replace all instances of 'abstract_module' by name of your module 'my_module' ##########
+        ########### mandatory part accessed by core via signalling, do not remove: ##################
         if _key.find("cm_abstract_module") == 0 or _key.find("cm_all_") == 0:
             #set mdl-value
             self.m[_value[0]] = _value[1]
         if _key.find("cui_abstract_module") == 0:
-            _value[0](_value[1]) #STILL UNCLEAR
+            _value[0](_value[1]) #still unused, reserved for future applications
         if _key.find("cexex_abstract_module") == 0  or _key.find("cexex_all_") == 0:
             if  _value[0].find("updateGUIelements") == 0:
                 self.updateGUIelements()
@@ -124,8 +160,9 @@ class abstract_module_v(QObject):
                 self.logfilehandler(_value[1])
             if  _value[0].find("canvasbuild") == 0:
                 self.canvasbuild(_value[1])
+        ##############################################################################################
 
-            #handle method
+            ########TODO handle individual new method ##################
             # if  _value[0].find("plot_spectrum") == 0: #EXAMPLE
             #     self.plot_spectrum(0,_value[1])   #EXAMPLE
 
@@ -143,24 +180,28 @@ class abstract_module_v(QObject):
         :return: none
         :rtype: none
         """
-        #TODO: activate call correctly, this is just an example
+        #TODO your code goes here ###################
+        ###### TODO: activate call correctly, this is just an example ##########
         #self.cref = auxi.generate_canvas(self,self.gui.gridLayout_5,[6,0,6,4],[-1,-1,-1,-1],gui)
         pass
 
 
     def logfilehandler(self,_value):
+        # standard logfile handler, can be extended ad libidum
+        #TODO: replace all instances of 'abstract_module' by name of your module 'my_module' ##########
         if _value is False:
             self.logger.debug("abstract module: INACTIVATE LOGGING")
             self.logger.setLevel(logging.ERROR)
         else:
             self.logger.debug("abstract module: REACTIVATE LOGGING")
             self.logger.setLevel(logging.DEBUG)
-
+        #TODO your code goes here ###################
 
     def updateGUIelements(self):
         """
         updates GUI elements , usually triggered by a Signal SigTabsUpdateGUIs to which 
-        this method is connected in the __main__ of the core module
+        this method is connected in the __main__ of the core module. Updating can also handle 
+        values from other modules via the respective signals
         :param : none
         :type : none
         :raises [ErrorType]: [ErrorDescription]
@@ -168,7 +209,19 @@ class abstract_module_v(QObject):
         :rtype: Boolean
         """
         print("abstract_module: updateGUIelements")
-        #self.gui.DOSOMETHING
+        #TODO: self.gui.DOSOMETHING
+        #TODO your code goes here ###################
+        return #TODO: return something ?
 
     def reset_GUI(self):
+        """
+        resets GUI of this module. 
+        :param : none
+        :type : none
+        :raises [ErrorType]: [ErrorDescription]
+        :return: flag False or True, False on unsuccessful execution
+        :rtype: Boolean
+        """
         pass
+        #TODO your code goes here ###################
+        return #TODO: return something ?
