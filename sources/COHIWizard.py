@@ -1173,7 +1173,7 @@ if __name__ == '__main__':
                 tab_widget[ix].setObjectName("tab_" + mod_name)
                 tab_widget[ix].setWindowIconText(mod_name)
                 tabui[ix].setupUi(tab_widget[ix])
-                if mod_name == "Player":    #TODO: future versions should be more general and treat Player as a normal module 
+                if mod_name == "Player":    #TODO: future versions should be more general and treat Player as a normal module ######TRY IF SOLVES COMPIL PROBLEM
                     pass
                 else:
                     a = gui.gui.tabWidget.addTab(tab_widget[ix], "")
@@ -1436,9 +1436,6 @@ if __name__ == '__main__':
             print(f' {"xcore_v.SigRelay.connect(" + tab_dict["list"][ix1+1] + "_v.rxhandler)"}')
 
             for ix2 in range(len(tab_dict["list"])-1):
-                #######################TODO TODO TODO: replace eval 
-                #tab_v[list_mvct_modules.index("resample")].SigUpdateOtherGUIs.connect(xcore_v.updateGUIelements)
-                #eval(tabitem1 + "_v.SigRelay.connect(" + tabitem2 + "_v.rxhandler)")
                 tab_v[ix1].SigRelay.connect(tab_v[ix2].rxhandler)
                 #tab_c[ix].SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
                 xcore_v.logger.debug(f' {tab_dict["list"][ix1+1] + "_v.SigRelay.connect(" + tab_dict["list"][ix2+1] + "_v.rxhandler)"}')
