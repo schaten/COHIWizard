@@ -77,27 +77,14 @@ For plotting into this canvas reference all 'ax' and 'canvas' operations to self
 		[trow_index, tcol_index, tline_span, tcol_span]: coordinates and extension of the canvas toolbar, if wanted
 		if trow < 0 --> no toolbar is being assigned
 
-## connect your new module with the core module by editing the file 'config_modules.yaml'. Add your module-name so that the file looks like this:
+## connect your new module with the core module
 
-`modules:
-  player: playrec
-  spectralviewer: view_spectra
-  resampler: resample
-  wavheader_editor: wavheader_editor
-  yaml_editor: yaml_editor
-  annotator: annotate
-  synthesizer: synthesizer
-  my_module: my_module    <<<<<<--- add this
+For linking the module to the core you must edit the file 'config_modules.yaml'. 
+Add your module-name so that the file looks like this:
 
-module_names:
-  player: Player
-  spectralviewer: View Spectra
-  resampler: Resampler
-  wavheader_editor: Wavheader Editor
-  yaml_editor: Yaml Editor
-  annotator: Annotator
-  synthesizer: Synthesizer
-  my_module: NameofmyModule   <<<<<<--- add this`
+config_modules.png
+
+<img src="config_modules.png"/>
 
 'NameofmyModule' will appear as the text in the new GUI-Tab and in the list of tabs in the startup configuration menu.
 If you wish to inactivate some modules, just comment them out with '#'. DO NOT COMMENT OUT OR REMOVE the first entry 'player'. This will let your system crash, because it refers to the core module.
