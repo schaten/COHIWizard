@@ -9,8 +9,8 @@ The folder /my_module will be populate with files 'my_module.py' and 'my_module_
 
 For illustration the basic directory tree is shown plus the added module. 'module1', 'module2' represent already existing modules like 'player', 'resampler', ...:
 
-<img align="left" width="280" height="398" vspace="10" hspace="30" src="dirtree_COHIWizard.png"/>
 
+<img src="dirtree_COHIWizard.png"/>
 
 ## Creating the PyQT widget `my_module_widget.py`
 
