@@ -1078,24 +1078,25 @@ class SplashScreen(QWidget):
 
 
 def load_config_from_yaml(file_path):
-    """Lädt die Konfigurationsdatei im YAML-Format."""
+    """load module configuration from yaml file"""
     with open(file_path, 'r') as file:
         return yaml.safe_load(file)
 
-def dynamic_import_from_config(config,sub_module):
-    """Dynamischer Import von Modulen basierend auf der Konfiguration."""
+def dynamic_import_from_config(config,sub_module,logger):
+    """Dynamic import of modules based on module configuration"""
     imported_modules = {}
     for directory, module in config[sub_module].items():
         try:
-            # Erstelle den vollständigen Pfad <directory>.<module>
+            # create path <directory>.<module>
             full_module_path = f"{directory}.{module}"
-            # Importiere das Modul dynamisch
+            # Importmodule dynamically
             imported_module = importlib.import_module(full_module_path)
-            # Speichere das importierte Modul
             imported_modules[module] = imported_module
+            logger.debug(f"Successfully imported {module} from {full_module_path}.")
             print(f"Successfully imported {module} from {full_module_path}.")
         except ModuleNotFoundError as e:
             print(f"Error importing {module} from {directory}: {e}")
+            logger.debug(f"Error importing {module} from {directory}: {e}")
     return imported_modules
 
 if __name__ == '__main__':
@@ -1115,15 +1116,19 @@ if __name__ == '__main__':
     from auxiliaries import auxiliaries as auxi
     from auxiliaries import timer_worker as tw
     
-    ######TODO TODO TODO: the following import only on demand via config file
-    ######Idea: write these lines to modeule_config.py  and execute this file
+    #instantiate core module
+    xcore_m = core_m()
+    xcore_c = core_c(xcore_m)
+    xcore_v = core_v(gui,xcore_c,xcore_m) # self.gui wird in xcore_v gestartet 
+
+    ######TODO TODO TODO: the following import on demand via config file, release without NEW Boolean after excessive testing, 18-11-2024
     NEW = True # if set True: try new import features, else retain old code
     if NEW:
         config = load_config_from_yaml("config_modules.yaml")
         sub_module = "modules"
-        loaded_modules = dynamic_import_from_config(config,sub_module)
+        loaded_modules = dynamic_import_from_config(config,sub_module,xcore_v.logger)
         print(loaded_modules)
-    else:
+    else: #remove after testing _ 18-11-2024
         from player import playrec
         from resampler import resample
         from spectralviewer import view_spectra
@@ -1145,12 +1150,9 @@ if __name__ == '__main__':
         config["widget"] = aux_dict
         #get list of corresponding widget modules
         list_widget_modules = list(config['widget'].values())
-        loaded_widget_modules = dynamic_import_from_config(config,"widget")
+        loaded_widget_modules = dynamic_import_from_config(config,"widget",xcore_v.logger)
         print(loaded_widget_modules)
-        #access 
-        #loaded_widget_modules[list_widget_modules[0]]
-        #getattr(loaded_modules[list_mvct_modules[0]], list_mvct_modules[0] + "_v")
-    ###TODO TODO TODO: bis hierher alles richtig importiert
+
         tabui = []
         tab_widget = []
         for ix in range(len(list_mvct_directories)):
@@ -1181,7 +1183,7 @@ if __name__ == '__main__':
             except AttributeError as e:
                 print(f"Error creating tab for {mod_name}: {e}")
 
-    else:
+    else: #remove after testing _ 18-11-2024
         if 'spectralviewer' in sys.modules: 
             from spectralviewer import spectralviewer_widget
             tabUI_spectralviewer = spectralviewer_widget.Ui_spectralviewer_widget()
@@ -1251,17 +1253,11 @@ if __name__ == '__main__':
 
     #ZUgriff auf elements of tabUI_Player via tabUI_Player instance ! not gui.gui.
 
-    xcore_m = core_m()
-    xcore_c = core_c(xcore_m)
-    xcore_v = core_v(gui,xcore_c,xcore_m) # self.gui wird in xcore_v gestartet 
-
 #   app.aboutToQuit.connect(win.stop_worker)    #graceful thread termination on app exit
     tab_dict = {}
     tab_dict["list"] = ["xcore"]
     tab_dict["tabname"] = ["xcore"]
 
-    #TODO TODO TODO: (d) Instanzierung, referenzierung und connecting für neuen Tab; 
-    #if 'view_spectra' in sys.modules:
     if NEW:
         tab_m = []
         tab_c = []
@@ -1269,11 +1265,11 @@ if __name__ == '__main__':
         for ix in range(len(list_mvct_directories)):
             try:
                 mod_name = config["module_names"][list_mvct_directories[ix]]
-                #widget_class = getattr(loaded_widget_modules[list_widget_modules[0]], "Ui_" + list_widget_modules[0])
+                #widget_class = getattr(loaded_widget_modules[list_widget_modules[0]], "Ui_" + list_widget_modules[0]) # remove comment after testing 18-11-2024
                 tab_m.append(getattr(loaded_modules[list_mvct_modules[ix]], list_mvct_modules[ix] + "_m")())
-                #ersetzt view_spectra_m = view_spectra.view_spectra_m()
+                #ersetzt view_spectra_m = view_spectra.view_spectra_m() # remove comment after testing 18-11-2024
                 tab_c.append(getattr(loaded_modules[list_mvct_modules[ix]], list_mvct_modules[ix] + "_c")(tab_m[ix]))
-                #ersetzt view_spectra_c = view_spectra.view_spectra_c(view_spectra_m)
+                #ersetzt view_spectra_c = view_spectra.view_spectra_c(view_spectra_m) # remove comment after testing 18-11-2024
                 if mod_name == "Player":  ##TODO nach tests durch allgemeine Fassung: loaded_modules[list_mvct_modules[ix]] = xcore_v.gui
                     #oder noch allgemeiner #playrec_v = playrec.playrec_v(tabUI_Player,playrec_c,playrec_m) #ZUM TESTEN FREISCHALTEN
                     # generate Player from individual widget
@@ -1288,41 +1284,20 @@ if __name__ == '__main__':
                     tab_v.append(getattr(loaded_modules[list_mvct_modules[ix]], list_mvct_modules[ix] + "_v")(xcore_v.gui, tab_c[ix], tab_m[ix]))
                 else:
                     tab_v.append(getattr(loaded_modules[list_mvct_modules[ix]], list_mvct_modules[ix] + "_v")(tabui[ix], tab_c[ix], tab_m[ix]))
-                #ersetzt view_spectra_v = view_spectra.view_spectra_v(tabUI_spectralviewer,view_spectra_c,view_spectra_m)
+                #ersetzt view_spectra_v = view_spectra.view_spectra_v(tabUI_spectralviewer,view_spectra_c,view_spectra_m) # remove comment after testing 18-11-2024
                 tab_dict["list"].append(list_mvct_modules[ix])
                 tab_dict["tabname"].append(mod_name)
                 tab_v[ix].SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
                 tab_c[ix].SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
-                #ersetzt: 
+                #ersetzt:  # remove comment after testing 18-11-2024
                 #tab_dict["list"].append("view_spectra")
                 #tab_dict["tabname"].append("View spectra")
                 print(f"Successfully created model, control, view for {mod_name}.")
             except AttributeError as e:
                 print(f"Error creating model, control, view for {mod_name}: {e}")
 
-
-            # playrec_v.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
-            # playrec_c.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
-
-            # resample_v.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
-            # resample_c.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
-
-            # synthesizer_v.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
-            # synthesizer_c.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)    
-
-                # kann eingeklinkt werden, lediglich loaded_modules[list_mvct_modules[ix]] muss xcore_v.gui sein
-                # ausserdem kann dieser Teil erst nach Instanzierung von xcore_v erfolgen, das ist aber bereits der Fall
-                # playrec_m = playrec.playrec_m()
-                # playrec_c = playrec.playrec_c(playrec_m)
-                # playrec_v = playrec.playrec_v(xcore_v.gui,playrec_c,playrec_m) <<<< UNTERSCHIED xcore
-                # #playrec_v = playrec.playrec_v(tabUI_Player,playrec_c,playrec_m) #ZUM TESTEN FREISCHALTEN
-                # tab_dict["list"].append("playrec")
-                # tab_dict["tabname"].append("Player")
-
-                #erst weiter unten
-                # playrec_v.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
-                # playrec_c.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
-    else:
+            #********** removed parts see appendix
+    else: #remove after testing _ 18-11-2024
         if 'spectralviewer' in sys.modules:
             view_spectra_m = view_spectra.view_spectra_m()
             view_spectra_c = view_spectra.view_spectra_c(view_spectra_m)
@@ -1341,21 +1316,22 @@ if __name__ == '__main__':
             tab_dict["tabname"].append("Annotate")
 
         #TODO TODO TODO: (d) ?? connecting für neuen Tab; 
-        #if 'waveditor' in sys.modules:
+
         if 'wavheader_editor' in sys.modules:
             wavheader_editor_m = wavheader_editor.wavheader_editor_m()
             wavheader_editor_c = wavheader_editor.wavheader_editor_c(wavheader_editor_m)
-            #wavheader_editor_v = wavheader_editor.wavheader_editor_v(xcore_v.gui,wavheader_editor_c,wavheader_editor_m)
+            #wavheader_editor_v = wavheader_editor.wavheader_editor_v(xcore_v.gui,wavheader_editor_c,wavheader_editor_m) # remove comment after testing 18-11-2024
             wavheader_editor_v = wavheader_editor.wavheader_editor_v(tabUI_wavheader_editor,wavheader_editor_c,wavheader_editor_m) #ZUM TESTEN FREISCHALTEN
             tab_dict["list"].append("wavheader_editor")
             tab_dict["tabname"].append("WAV Header")
         #TODO TODO TODO: (d) ?? connecting für neuen Tab; 
 
-        # else:
+        # else: # remove comment after testing 18-11-2024
         #     page = xcore_v.gui.tabWidget.findChild(QWidget, "tab_wavheader_editor")
         #     c_index = xcore_v.gui.tabWidget.indexOf(page)
         #     xcore_v.gui.tabWidget.setTabVisible(c_index,False)
         #TODO TODO TODO: (d) ?? connecting für neuen Tab; 
+
         if 'yaml_editor' in sys.modules:
             yamleditor_m = yaml_editor.yaml_editor_m()
             yamleditor_c = yaml_editor.yaml_editor_c(yamleditor_m)
@@ -1365,7 +1341,7 @@ if __name__ == '__main__':
             #TODO TODO TODO: (d) ?? connecting für neuen Tab; 
 
         #TODO TODO TODO: clarify that xcore_v.gui is the same as gui.gui !
-        #if 'resampler_module_v5' in sys.modules:
+
         if 'resampler' in sys.modules: #(d) Instanzierung, referenzierung und connecting für neuen Tab; 
             resample_m = resample.resample_m() #TODO: wird gui in _m jemals gebraucht ? ich denke nein !
             resample_c = resample.resample_c(resample_m)
@@ -1384,8 +1360,7 @@ if __name__ == '__main__':
             synthesizer_v.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
             synthesizer_c.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
 
-    ###  ADD NEW MODULE TABDICTSYNTESIS HERE ### 
-    ### ALLES BISHER FUNKTIONIERT !
+    ###  ADD NEW MODULE TABDICTSYNTESIS HERE ### # remove comment after testing 18-11-2024
 
     # page = xcore_v.gui.tabWidget.findChild(QWidget, "tab_configuration")  ###TODO TODO TODO: remove after complete reconfiguration
     # c_index = xcore_v.gui.tabWidget.indexOf(page)
@@ -1487,3 +1462,27 @@ if __name__ == '__main__':
     xcore_v.SigRelay.emit("cexex_all_",["canvasbuild",gui])   # communicate reference to gui instance to all modules which instanciate a canvas with auxi.generate_canvas(self,gridref,gridc,gridt,gui)
     sys.exit(app.exec_())
 
+#APPENDIX:
+
+
+            # playrec_v.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
+            # playrec_c.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
+
+            # resample_v.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
+            # resample_c.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
+
+            # synthesizer_v.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
+            # synthesizer_c.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)    
+
+                # kann eingeklinkt werden, lediglich loaded_modules[list_mvct_modules[ix]] muss xcore_v.gui sein
+                # ausserdem kann dieser Teil erst nach Instanzierung von xcore_v erfolgen, das ist aber bereits der Fall
+                # playrec_m = playrec.playrec_m()
+                # playrec_c = playrec.playrec_c(playrec_m)
+                # playrec_v = playrec.playrec_v(xcore_v.gui,playrec_c,playrec_m) <<<< UNTERSCHIED xcore
+                # #playrec_v = playrec.playrec_v(tabUI_Player,playrec_c,playrec_m) #ZUM TESTEN FREISCHALTEN
+                # tab_dict["list"].append("playrec")
+                # tab_dict["tabname"].append("Player")
+
+                #erst weiter unten
+                # playrec_v.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
+                # playrec_c.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
