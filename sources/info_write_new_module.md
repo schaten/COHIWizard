@@ -84,7 +84,7 @@ Add your module-name so that the file looks like this:
 
 config_modules.png
 
-<img src="config_modules.png"/>
+<img width="350" height="500" vspace="10" hspace="30" src="config_modules.png"/>
 
 'NameofmyModule' will appear as the text in the new GUI-Tab and in the list of tabs in the startup configuration menu.
 If you wish to inactivate some modules, just comment them out with '#'. DO NOT COMMENT OUT OR REMOVE the first entry 'player'. This will let your system crash, because it refers to the core module.
