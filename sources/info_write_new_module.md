@@ -60,8 +60,6 @@ sources/
 |   |           ...
 ```
 
-<img src="dirtree_COHIWizard.png"/>
-
 ## Creating the PyQT widget `my_module_widget.py`
 
 **Method 1: writing from scratch**
@@ -132,9 +130,27 @@ For plotting into this canvas reference all 'ax' and 'canvas' operations to self
 For linking the module to the core you must edit the file 'config_modules.yaml'. 
 Add your module-name so that the file looks like this:
 
-config_modules.png
+```
+modules:
+  player: playrec
+  spectralviewer: view_spectra
+  resampler: resample
+  wavheader_editor: wavheader_editor
+  yaml_editor: yaml_editor
+  annotator: annotate
+  synthesizer: synthesizer
+  my_module: my_module    <<<<<<--- add this
 
-<img width="350" height="500" vspace="10" hspace="30" src="config_modules.png"/>
+module_names:
+  player: Player
+  spectralviewer: View Spectra
+  resampler: Resampler
+  wavheader_editor: Wavheader Editor
+  yaml_editor: Yaml Editor
+  annotator: Annotator
+  synthesizer: Synthesizer
+  my_module: NameofmyModule   <<<<<<--- add this
+```
 
 'NameofmyModule' will appear as the text in the new GUI-Tab and in the list of tabs in the startup configuration menu.
 If you wish to inactivate some modules, just comment them out with '#'. DO NOT COMMENT OUT OR REMOVE the first entry 'player'. This will let your system crash, because it refers to the core module.
@@ -143,8 +159,6 @@ If you wish to inactivate some modules, just comment them out with '#'. DO NOT C
 5.	If you use ‘QFileDialog.getExistingDirectory ‘ for dialogues handled by your module you have to write:
 
 `QFileDialog.getExistingDirectory(self.m["QTMAINWINDOWparent"], "Please chose source file directory")`
-
-
 
 
 
