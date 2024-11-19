@@ -9,6 +9,56 @@ The folder /my_module will be populate with files 'my_module.py' and 'my_module_
 
 For illustration the basic directory tree is shown plus the added module. 'module1', 'module2' represent already existing modules like 'player', 'resampler', ...:
 
+```
+sources/
+|   abstract_module.py
+|   auxiliaries.py
+|   COHIWizard.py
+|   COHIWizard_ico4.ico
+|   config_modules.yaml
+|
++---module1
+|   |   module1.py
+|   |   module1_widget.py
+|   |   __init__.py
+|   |   
+|   +---ressources
+|   |   |   module1_widget.ui
+|   |   |   other stuff ....
+|   |   |   
+|   |   \---icons
+|   |           icon11.png
+|   |           icon12.png
+|   |           ...
+|
++---module2
+|   |   module2.py
+|   |   module2_widget.py
+|   |   __init__.py
+|   |   
+|   +---ressources
+|   |   |   player_widget.ui
+|   |   |   
+|   |   \---icons
+|   |           icon21.png
+|   |           icon22.png
+|   |           ...
+|
+:
+:
++---my_module			<<<<---- add your module here !
+|   |   my_module.py
+|   |   my_module_widget.py
+|   |   __init__.py
+|   |   
+|   +---ressources
+|   |   |   my_module_widget.ui
+|   |   |   
+|   |   \---icons
+|   |           iconx1.png
+|   |           iconx2.png
+|   |           ...
+```
 
 <img src="dirtree_COHIWizard.png"/>
 
