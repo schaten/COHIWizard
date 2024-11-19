@@ -100,100 +100,102 @@ If you wish to inactivate some modules, just comment them out with '#'. DO NOT C
 
 ## Standard Directory tree:
 
-sources/
-|   abstract_module.py
-|   auxiliaries.py
-|   COHIWizard.py
-|   COHIWizard_ico4.ico
-|   config_modules.yaml
-|   config_wizard.yaml
-|
-+---annotator
-|   |   annotate.py
-|   |   annotator_widget.py
-|   |   __init__.py
-|   |   
-|   +---ressources
-|   |   |   annotator_widget.ui
-|   |   |   MWList_Pacific_Newzealand_et_environment.xlsx
-|   |   |   MWLIST_USA.xlsx
-|   |   |   MWLIST_Volltabelle.xlsx
-|   |   |   MWLIST_Volltabelle_newzealand_used_for_Holme.xlsx
-|   |   |   MWLIST_Volltabelle_old.xlsx
-|   |   |   
-|   |   \---icons
-|
-+---player
-|   |   player_widget.py
-|   |   playrec.py
-|   |   stemlab_control.py
-|   |   __init__.py
-|   |   
-|   +---ressources
-|   |   |   player_widget.ui
-|   |   |   
-|   |   \---icons
-|   |           Button_Playlist_Activate.png
-|   |           Button_Playlist_Select.png
-|   |           ff_v4.PNG
-|   |           Logofield_rec2.png
-|   |           loopactive_v4.png
-|   |           loop_v4.png
-|   |           pause_v4.PNG
-|   |           play_v4.PNG
-|   |           rec_v4.PNG
-|   |           rew_v4.PNG
-|   |           stop_v4.PNG
-|   |           Trackingicon.png
-|
-+---resampler
-|   |   resample.py
-|   |   resampler_widget.py
-|   |   set_fonts.py
-|   |   __init__.py
-|   |   
-|   +---ressources
-|   |   |   resampler_widget.ui
-|   |   |   
-|   |   \---icons
-|           
-+---spectralviewer
-|   |   spectralviewer_widget.py
-|   |   view_spectra.py
-|   |   __init__.py
-|   |   
-|   +---ressources
-|   |   |   spectralviewer_widget.ui
-|   |   |   
-|   |   \---icons
-|           
-+---synthesizer
-|   |   synthesizer.py
-|   |   synthesizer_widget.py
-|   |   __init__.py
-|   |   
-|   +---ressources
-|   |       synthesizer_widget.ui
-|           
-+---wavheader_editor
-|   |   wavheader_editor.py
-|   |   wavheader_editor_widget.py
-|   |   __init__.py
-|   |   
-|   +---ressources
-|   |   |   wavheader_editor_widget.ui
-|   |   |   
-|   |   \---icons
-|           
-+---yaml_editor
-|   |   yaml_editor.py
-|   |   yaml_editor_widget.py
-|   |   __init__.py
-|   |   
-|   +---ressources
-|   |   |   yaml_editor_widget.ui
-|   |   |   
-|   |   \---icons
-          
+```
+	sources/
+	|   abstract_module.py
+	|   auxiliaries.py
+	|   COHIWizard.py
+	|   COHIWizard_ico4.ico
+	|   config_modules.yaml
+	|   config_wizard.yaml
+	|
+	+---annotator
+	|   |   annotate.py
+	|   |   annotator_widget.py
+	|   |   __init__.py
+	|   |   
+	|   +---ressources
+	|   |   |   annotator_widget.ui
+	|   |   |   MWList_Pacific_Newzealand_et_environment.xlsx
+	|   |   |   MWLIST_USA.xlsx
+	|   |   |   MWLIST_Volltabelle.xlsx
+	|   |   |   MWLIST_Volltabelle_newzealand_used_for_Holme.xlsx
+	|   |   |   MWLIST_Volltabelle_old.xlsx
+	|   |   |   
+	|   |   \---icons
+	|
+	+---player
+	|   |   player_widget.py
+	|   |   playrec.py
+	|   |   stemlab_control.py
+	|   |   __init__.py
+	|   |   
+	|   +---ressources
+	|   |   |   player_widget.ui
+	|   |   |   
+	|   |   \---icons
+	|   |           Button_Playlist_Activate.png
+	|   |           Button_Playlist_Select.png
+	|   |           ff_v4.PNG
+	|   |           Logofield_rec2.png
+	|   |           loopactive_v4.png
+	|   |           loop_v4.png
+	|   |           pause_v4.PNG
+	|   |           play_v4.PNG
+	|   |           rec_v4.PNG
+	|   |           rew_v4.PNG
+	|   |           stop_v4.PNG
+	|   |           Trackingicon.png
+	|
+	+---resampler
+	|   |   resample.py
+	|   |   resampler_widget.py
+	|   |   set_fonts.py
+	|   |   __init__.py
+	|   |   
+	|   +---ressources
+	|   |   |   resampler_widget.ui
+	|   |   |   
+	|   |   \---icons
+	|           
+	+---spectralviewer
+	|   |   spectralviewer_widget.py
+	|   |   view_spectra.py
+	|   |   __init__.py
+	|   |   
+	|   +---ressources
+	|   |   |   spectralviewer_widget.ui
+	|   |   |   
+	|   |   \---icons
+	|           
+	+---synthesizer
+	|   |   synthesizer.py
+	|   |   synthesizer_widget.py
+	|   |   __init__.py
+	|   |   
+	|   +---ressources
+	|   |       synthesizer_widget.ui
+	|           
+	+---wavheader_editor
+	|   |   wavheader_editor.py
+	|   |   wavheader_editor_widget.py
+	|   |   __init__.py
+	|   |   
+	|   +---ressources
+	|   |   |   wavheader_editor_widget.ui
+	|   |   |   
+	|   |   \---icons
+	|           
+	+---yaml_editor
+	|   |   yaml_editor.py
+	|   |   yaml_editor_widget.py
+	|   |   __init__.py
+	|   |   
+	|   +---ressources
+	|   |   |   yaml_editor_widget.ui
+	|   |   |   
+	|   |   \---icons
+
+```
 
 
