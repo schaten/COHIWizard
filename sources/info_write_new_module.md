@@ -79,11 +79,11 @@ move to /my_module and create a file `my_module_widget.py` containing the follow
 
 2. Name the widget (ObjectName) 'my_module_widget', my_module standing for the name of your new module and set windowTitle to "My_Title"
 
-3. Add a grid layout and name it ‘gridlayout_'my_module'.
+3. Add a grid layout and name it ‘gridLayout_my_module'.
 
 3. Add all needed GUI elements and subwidgets to the gridlayout and name their ObjectNames appropriately
 
-4. set horisontal/vertical size policy to 'minimum' in most items, sometimes to 'maximum', only exceptionally to fixed  (--> resizeable)
+4. set horizontal/vertical size policy to 'minimum' in most items, sometimes to 'maximum', only exceptionally to fixed  (--> keep the GUI resizeable)
 
 5. Convert the ui-File to a py-script typing `pyuic# -x ~/sources/my_module/ressources/my_module_widget.ui -o ~/sources/my_module/my_module_widget.py`
 
@@ -99,11 +99,11 @@ For that purpose a template module 'abstract_module.py' is available in the ~/so
 `my_module.py` must contain the classes
 
 	`my_module_m` (model)
-	`my_module_c` (controller)
+	`my_module_c` (control)
 	`my_module_v` (view)
 
 So replace the names of respective template classes 'abstract_module_#' to 'my_module_#', # = m, c, v.
-Keep the 
+Keep the sections labelled with 'Mandatory part, do not remove'. Change those parts which alre labelled with 'TODO:'
 
 2. Write your code
 
@@ -125,6 +125,9 @@ For plotting into this canvas reference all 'ax' and 'canvas' operations to self
 		[row_index, col_index, line_span, col_span]: coordinates and extension of the plot canvas
 		[trow_index, tcol_index, tline_span, tcol_span]: coordinates and extension of the canvas toolbar, if wanted
 		if trow < 0 --> no toolbar is being assigned
+
+The specified coordinates must be compatible with the gridLayout in your widget.
+
 
 ## connect your new module with the core module
 
@@ -152,7 +155,7 @@ module_names:
 ```
 
 'NameofmyModule' will appear as the text in the new GUI-Tab and in the list of tabs in the startup configuration menu.
-If you wish to inactivate some modules, just comment them out with '#'. DO NOT USE THE RESERVED WORDS 'player', 'playrec','Player' for naming your modules or methods. This will let your system crash, because these names are already used internally by __main__.
+If you wish to inactivate some modules, just comment them out with '#'. **DO NOT USE THE RESERVED WORDS 'player', 'playrec','Player' FOR NAMING YOUR MODULES OR WIDGETS.** This will let your system crash, because these names are already used internally by `__main__`.
 
 
 5.	If you use ‘QFileDialog.getExistingDirectory ‘ for dialogues handled by your module you have to write:
