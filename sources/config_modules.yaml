@@ -1,5 +1,4 @@
 modules:
-  player: playrec
   spectralviewer: view_spectra
   resampler: resample
   wavheader_editor: wavheader_editor
@@ -7,7 +6,6 @@ modules:
   annotator: annotate
   synthesizer: synthesizer
 module_names:
-  player: Player
   spectralviewer: View Spectra
   resampler: Resampler
   wavheader_editor: Wavheader Editor

@@ -7,7 +7,7 @@
 
 The folder /my_module will be populate with files 'my_module.py' and 'my_module_widget.py' as shown in the next sections. /my_module/ressources may be populated with an ui-File 'my_module_widget.ui', which can be created with QTdesigner, as shown in a later section. In that case the 'my_module_widget.py' file is created with the pyuic - method.
 
-For illustration the basic directory tree is shown plus the added module. 'module1', 'module2' represent already existing modules like 'player', 'resampler', ...:
+For illustration the basic directory tree is shown plus the added module. 'module1', 'module2' represent already existing modules like 'player', 'resampler', ... The full tree with the actual names which is currently used is illustrated in [Current Standard Directory tree:](#current-standard-directory-tree:)
 
 ```
 sources/
@@ -64,9 +64,9 @@ sources/
 
 **Method 1: writing from scratch**
 
-move to /my_module and create a file `my_module_widget.py` containing the following structure:
+move to /my_module and create a file `my_module_widget.py` containing the following structure, # denoting the PyQT version (5,6,...):
 
-	from PyQt5 import QtCore, QtGui, QtWidgets
+	from PyQt# import QtCore, QtGui, QtWidgets
 	
 	class Ui_my_module_widget(object):
     	  def setupUi(self, my_module_widget):
@@ -132,7 +132,6 @@ Add your module-name so that the file looks like this:
 
 ```
 modules:
-  player: playrec
   spectralviewer: view_spectra
   resampler: resample
   wavheader_editor: wavheader_editor
@@ -142,7 +141,6 @@ modules:
   my_module: my_module    <<<<<<--- add this
 
 module_names:
-  player: Player
   spectralviewer: View Spectra
   resampler: Resampler
   wavheader_editor: Wavheader Editor
@@ -153,7 +151,7 @@ module_names:
 ```
 
 'NameofmyModule' will appear as the text in the new GUI-Tab and in the list of tabs in the startup configuration menu.
-If you wish to inactivate some modules, just comment them out with '#'. DO NOT COMMENT OUT OR REMOVE the first entry 'player'. This will let your system crash, because it refers to the core module.
+If you wish to inactivate some modules, just comment them out with '#'. DO NOT USE THE RESERVED WORDS 'player', 'playrec','Player' for naming your modules or methods. This will let your system crash, because these names are already used internally by __main__.
 
 
 5.	If you use ‘QFileDialog.getExistingDirectory ‘ for dialogues handled by your module you have to write:
@@ -162,7 +160,7 @@ If you wish to inactivate some modules, just comment them out with '#'. DO NOT C
 
 
 
-## Standard Directory tree:
+## Current Standard Directory tree:
 
 ```
 	sources/

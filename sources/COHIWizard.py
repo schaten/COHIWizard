@@ -1063,6 +1063,10 @@ if __name__ == '__main__':
     if NEW:####TODO: Remove after Testing 20-11-2024
         config = load_config_from_yaml("config_modules.yaml")
         sub_module = "modules"
+        mod_base = {'player':'playrec'}
+        config['modules'] = {**mod_base, **config['modules']}
+        widget_base = {'player': 'Player'}
+        config['module_names'] = {**widget_base, **config['module_names']}
         loaded_modules = dynamic_import_from_config(config,sub_module,xcore_v.logger)
         #print(f"__main__ first if NEW: {loaded_modules}")
     else: #remove after testing _ 18-11-2024
@@ -1076,7 +1080,8 @@ if __name__ == '__main__':
     gui.show()
 
     if NEW:####TODO: Remove after Testing 20-11-2024
-        #get list of module directories
+        #get dictionary of module directories and pre-set the first entry by the player signature 
+
         list_mvct_directories = list(config['modules'].keys())
         #get list of corresponding mvct modules
         list_mvct_modules = list(config['modules'].values())
