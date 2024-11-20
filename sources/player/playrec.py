@@ -1478,8 +1478,8 @@ class playrec_v(QObject):
             return False
         self.m["gain"] = 10**((self.gui.verticalSlider_Gain.value() - self.GAINOFFSET)/20)
         self.logger.debug("cb_setgain, gain: %f",self.m["gain"])
-        self.playrec_c.playrec_tworker.set_6(self.m["gain"])   #############TODO TODO TODO
-        print(f"cab_set gain gain: {self.m['gain']}")
+        self.playrec_c.playrec_tworker.set_6(self.m["gain"])   #############TODO ?? what ?
+        #print(f"cab_set gain gain: {self.m['gain']}")
 
     def popup(self,i):
         """    

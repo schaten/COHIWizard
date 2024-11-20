@@ -13,18 +13,7 @@
 #Bei Änderungen des Gridlayouts und Neuplatzierung der canvas:
 #self.generate_canvas(self,self.gui.gridLayout_5,[4,0,7,4],[-1,-1,-1,-1],self.Tabref["Resample"])
 #in init_Tabref()
-# in the GUI init method:
 
-        # #THIS IS JUST A VERSION OF COHIWizard_v25; Here I disable all unnecessary tabs and functions
-        # self.gui.tabWidget.removeTab(4)
-        # self.gui.tabWidget.removeTab(3)
-        # self.gui.tabWidget.removeTab(2)
-        # self.gui.tabWidget.removeTab(1)
-        # # Resampling only in direct mode without LO shifting
-        # self.gui.lineEdit_resample_targetLO.textEdited.disconnect()
-        # self.gui.lineEdit_resample_targetLO.setEnabled(False)
-        # self.gui.actionOverwrite_header.setVisible(False)
-# Start-Tab setzen:self.gui.tabWidget.setCurrentIndex(1) #TODO: avoid magic number, unidentified
 # Documentation with Sphinx started in ../docs
 
 
@@ -126,7 +115,6 @@ class core_m(QObject):
         logging.getLogger().setLevel(logging.DEBUG)
         # Erstelle einen Logger mit dem Modul- oder Skriptnamen
         self.logger = logging.getLogger(__name__)
-        # Create handlers
         # Create handlers
         warning_handler = logging.StreamHandler()
         debug_handler = logging.FileHandler("system_log.log")
@@ -254,8 +242,6 @@ class core_v(QObject):
     :param: none
     :type: QObject
     """
-
-    #SigUpdateGUI = pyqtSignal(object) ''TODO: remove after tests; 24-05-2024
     #SigGUIReset = pyqtSignal()
     SigUpdateOtherGUIs = pyqtSignal()
     """
@@ -278,24 +264,17 @@ class core_v(QObject):
         self.bps = ['16', '24', '32'] #TODO:future system state
         self.standardLO = 1100 #TODO:future system state
         self.annotationdir_prefix = 'ANN_' #TODO:future system state
-        #self.position = 0 #TODO:future system state URGENT !!!!!!!!!!!!!!   TODO: check removed 24-05-2024
-        #self.tab_dict = {}   TODO: check removed 24-05-2024
         self.m["recording_path"] = ""
 
-        #self.GUIupdaterlist =[]   TODO: check removed 24-05-2024
         # create method which inactivates all tabs except the one which is passed as keyword
         self.GUI_reset_status()
         self.gui = gui.gui
-
-        # self.tab_names = {}  # TODO: check if this is ever used ! removed 24-05-2024
-        # for index in range(self.gui.tabWidget.count()):
-        #     self.tab_names[index] = self.gui.tabWidget.tabText(index)
 
         self.gui.actionFile_open.triggered.connect(self.cb_open_file)
         self.gui.actionOverwrite_header.triggered.connect(self.send_overwrite_header)
 
         ###TODO: re-organize, there should be no access to gui elements of other modules
-        self.gui.tabWidget.setCurrentIndex(0) #TODO: avoid magic number, make config issue
+        self.gui.tabWidget.setCurrentIndex(0) #is being overridden later from config file core_v.__init__
         self.gui.playrec_comboBox_startuptab.setCurrentIndex(0)
         self.standardpath = os.getcwd()  #TODO: this is a core variable in core model
         self.m["metadata"] = {"last_path": self.standardpath}
@@ -319,11 +298,7 @@ class core_v(QObject):
             if "recording_path" in self.m["metadata"]:
                 self.m["recording_path"] = self.m["metadata"]["recording_path"]
             if "startup_tab" in self.m["metadata"]:
-                ###TODO: re-organize, there should be no access to gui elements of other modules
-                #self.gui.playrec_comboBox_startuptab.setCurrentIndex(int(self.m["metadata"]["startup_tab"]))
                 self.m["startup_tab"] = int(self.m["metadata"]["startup_tab"])
-                #self.gui.tabWidget.setCurrentIndex(int(self.m["metadata"]["startup_tab"]))
-                #self.gui.playrec_comboBox_startuptab.setCurrentIndex(int(self.m["metadata"]["startup_tab"]))
         except:
             print("cannot get config_wizard.yaml metadata, write a new initial config file")
             self.m["metadata"]["last_path"] = os.getcwd()
@@ -343,10 +318,9 @@ class core_v(QObject):
                             "HostAddress":self.m["HostAddress"], "LO_offset":self.m["LO_offset"]}
         self.m["f1"] = ""
         self.m["_log"] = False
-        #self.timeref = datetime.now()    #TODO TODO TODO: remove, no 2 autoscaninstances !
 
         # Create a custom logger
-        # Setze den Level des Root-Loggers auf DEBUG
+        # set level of Root-Logger to DEBUG
         logging.getLogger().setLevel(logging.DEBUG)
         # Erstelle einen Logger mit dem Modul- oder Skriptnamen
         self.logger = logging.getLogger(__name__)
@@ -397,6 +371,7 @@ class core_v(QObject):
         if self.timethread.isRunning():
             self.timethreaddActive = True #TODO:future system state
 
+    #TODO: make IP address editor easier to handle, test method
     # def eventFilter(self, source, event):
     #     if (event.type() == Qt.KeyPress and
     #         event.key() == Qt.Key_Tab and
@@ -469,7 +444,6 @@ class core_v(QObject):
         self.SigRelay.emit("cm_playrec",["rates",self.m["rates"]])
         self.SigRelay.emit("cm_playrec",["irate",self.m["irate"]])
         self.SigRelay.emit("cm_resample",["reslist_ix",self.m["reslist_ix"]]) #TODO check: maybe local in future !
-        #self.SigRelay.emit("cm_playrec",["Obj_stemlabcontrol",stemlabcontrol]) #TODO: check testing REMOVED 06-05-2024
         self.SigRelay.emit("cm_configuration",["tablist",tab_dict["list"]])
         #self.SigRelay.emit("cexex_core",["updateGUIelements",0])
         self.SigRelay.emit("cm_playrec",["sdr_configparams",self.m["sdr_configparams"]])
@@ -480,7 +454,7 @@ class core_v(QObject):
 
 
     def togglelogfilehandler(self):
-        if self.gui.playrec_radioButtonpushButton_write_logfile.isChecked():  #TODO TODO: should be task of the playrec module
+        if self.gui.playrec_radioButtonpushButton_write_logfile.isChecked():  #TODO TODO: should be task of the playrec module ??
             self.logger.setLevel(logging.NOTSET)
             self.SigRelay.emit("cexex_all_",["logfilehandler",False])
         else:
@@ -516,17 +490,6 @@ class core_v(QObject):
         except:
             self.core_c.recording_path_checker()
             #self.configuration_c.recording_path_setter()
-        # for count, ele in enumerate(self.m["tablist"]):
-        #     self.gui.checkboxlist.append(QtWidgets.QCheckBox(self.gui.gridLayoutWidget_6))
-        #     self.gui.checkboxlist[count].setObjectName("checkBox" + self.m["tablist"][count])
-        #     self.gui.gridLayout_config.addWidget(self.gui.checkboxlist[count], count+2, 0, 1, 1)
-        #     self.gui.checkboxlist[count].setText(self.m["tablist"][count])
-        #     self.gui.checkboxlist[count].setChecked(True)
-        #     #self.gui.checkboxlist[count].clicked.connect(self.manage_tabcheck(count))
-        #     tabname = "tab_" + self.m["tablist"][count]
-        #     page = self.gui.tabWidget.findChild(QWidget, tabname)
-        #     self.tabindexdict[tabname] = self.gui.tabWidget.indexOf(page)
-        #self.gui.DOSOMETHING
         
     def updatetimer(self):
         """
@@ -541,10 +504,6 @@ class core_v(QObject):
             self.UTC = True #TODO:future system state
         else:
             self.UTC = False
-        # if self.gui.checkBox_TESTMODE.isChecked():
-        #     self.TEST = True #TODO:future system state
-        # else:
-        #     self.TEST = False
 
         if self.UTC:
             dt_now = datetime.now(ndatetime.timezone.utc)
@@ -570,7 +529,7 @@ class core_v(QObject):
         #self.m = {}
         self.m["my_filename"] = ""
         self.m["ext"] = ""
-        self.m["annotation_prefix"] = 'ANN_' #TODO: not used anywhere
+        #self.m["annotation_prefix"] = 'ANN_' #TODO: not used anywhere; inactivated 19-11-2024, remove later !
         #self.m["resampling_gain"] = 0
         self.m["emergency_stop"] = False
         self.m["timescaler"] = 0
@@ -648,9 +607,6 @@ class core_v(QObject):
         """
         
         self.setactivity_tabs("all","activate",[])
-        #self.SigRelay.emit("cm_playrec",["sdr_configparams",self.m["sdr_configparams"]])         #TODO TODO TODO TEST TEST TEST: configparams not initiated here any more; change 02-04-2024
-        #TODO TODO TODO TEST TEST TEST: configparams not initiated here any more; change 02-04-2024
-        #self.gui.checkBox_merge_selectall.setChecked(False)  #TODO TODO TODO TEST TEST TEST: configparams not initiated here any more; change 02-04-2024
 
         if self.m["playthreadActive"] == True:
             auxi.standard_errorbox("Player is currently active, no access to data file is possible; Please stop Player before new file access")
@@ -666,7 +622,6 @@ class core_v(QObject):
             auxi.standard_errorbox("cannot get wizard configuration metadata, quit file open")
             return False
 
-        # TODO TODO TODO: Hostaddress is part of the config menu !
         self.SigRelay.emit("cm_playrec",["HostAddress",self.m["HostAddress"]])
         
         if self.m["fileopened"] is True:
@@ -831,8 +786,6 @@ class core_v(QObject):
         if self.m["ext"] == ".dat" or self.m["ext"] == ".raw":
             filetype = "dat"
             self.SigRelay.emit("cexex_waveditor",["activate_insertheader",True])
-            #TRIAL 15_04_2024: remove: confirmed: line needs to be removed, causes bugs when adding new modules
-            #self.setactivity_tabs("xcore","inactivate",["Player","WAV Header","YAML editor","Annotate","View spectra"])
 
         else:
             if self.m["ext"] == ".wav":
@@ -884,12 +837,12 @@ class core_v(QObject):
         et = time.time()
         #print(f"4th segment etime: {et-st} s: signalling 2")
 
-        ### set readoffset and relay to modules: TODO TODO TODO: check if should be translated to modules (dangerous, may affect many instances)
+        ### set readoffset and relay to modules: TODO: check if should be translated to modules (dangerous, may affect many instances)
         if self.wavheader['sdrtype_chckID'].find('rcvr') > -1:
             self.m["readoffset"] = 86
         else:
             self.m["readoffset"] = 216
-            #TODO TODO: remove self.readoffset from init list after tests
+
         self.SigRelay.emit("cm_all_",["readoffset",self.m["readoffset"]])
 
         #TODO TODO TODO check for transfer to modules
@@ -993,29 +946,13 @@ class core_v(QObject):
             self.m["ifreq"] = int(1000*(int(freq) + self.m["LO_offset"]))
         else:
             self.m["irate"] = int(rate)
-            self.m["ifreq"] = int(int(freq) + self.m["LO_offset"])  # TODO: LO_bias dazuzählrn self.m["LO_offset"]
-        #TODO: ACTIVATE wav header generator
+            self.m["ifreq"] = int(int(freq) + self.m["LO_offset"]) 
+
         ti_m = os.path.getmtime(self.m["f1"])
         file_mod = datetime.fromtimestamp(ti_m)
         file_stats = os.stat(self.m["f1"])
         self.wavheader = WAVheader_tools.basic_wavheader(self,self.m["icorr"],int(self.m["irate"]),int(self.m["ifreq"]),int(bps),file_stats.st_size,file_mod)
         return True
-
-    # TODO TODO TODO: check if needed: has been removed 22-05-2024
-    # def generate_GUIupdaterlist(self,item): # is that needed ?????
-    #     self.GUIupdaterlist.append(item)
-
-    # def sendupdateGUIs(self):
-    #     """goes through the list of all registered Tabs and calls their GUI-Updatemethod
-
-    #     :param: none
-    #     :type: none
-    #     :raises: none
-    #     :return: none
-    #     :rtype: none
-    #     """        
-    #     for item in self.GUIupdaterlist:
-    #         item()
 
     def rxhandler(self,_key,_value):
         """
@@ -1093,9 +1030,9 @@ def dynamic_import_from_config(config,sub_module,logger):
             imported_module = importlib.import_module(full_module_path)
             imported_modules[module] = imported_module
             logger.debug(f"Successfully imported {module} from {full_module_path}.")
-            print(f"Successfully imported {module} from {full_module_path}.")
+            #print(f"Successfully imported {module} from {full_module_path}.")
         except ModuleNotFoundError as e:
-            print(f"Error importing {module} from {directory}: {e}")
+            #print(f"Error importing {module} from {directory}: {e}")
             logger.debug(f"Error importing {module} from {directory}: {e}")
     return imported_modules
 
@@ -1106,7 +1043,7 @@ if __name__ == '__main__':
         QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
     if hasattr(QtCore.Qt, 'AA_UseHighDpiPixmaps'):
         QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
-
+    #print("v13")
     app = QApplication([])
     gui = starter()
     print(f"__main__: gui = {gui} gui.gui = {gui.gui}")
@@ -1122,12 +1059,12 @@ if __name__ == '__main__':
     xcore_v = core_v(gui,xcore_c,xcore_m) # self.gui wird in xcore_v gestartet 
 
     ######TODO TODO TODO: the following import on demand via config file, release without NEW Boolean after excessive testing, 18-11-2024
-    NEW = True # if set True: try new import features, else retain old code
-    if NEW:
+    NEW = True # if set True: try new import features, else retain old code ####TODO: Remove after Testing 20-11-2024
+    if NEW:####TODO: Remove after Testing 20-11-2024
         config = load_config_from_yaml("config_modules.yaml")
         sub_module = "modules"
         loaded_modules = dynamic_import_from_config(config,sub_module,xcore_v.logger)
-        print(loaded_modules)
+        #print(f"__main__ first if NEW: {loaded_modules}")
     else: #remove after testing _ 18-11-2024
         from player import playrec
         from resampler import resample
@@ -1138,7 +1075,7 @@ if __name__ == '__main__':
         from synthesizer import synthesizer
     gui.show()
 
-    if NEW:
+    if NEW:####TODO: Remove after Testing 20-11-2024
         #get list of module directories
         list_mvct_directories = list(config['modules'].keys())
         #get list of corresponding mvct modules
@@ -1148,40 +1085,52 @@ if __name__ == '__main__':
         for ix in range(len(list_mvct_directories)):
             aux_dict[list_mvct_directories[ix]] = list_mvct_directories[ix] + "_widget"
         config["widget"] = aux_dict
+        #print(f"__main__ 2nd if NEW: config, aux_dict: {config['widget']}")
         #get list of corresponding widget modules
         list_widget_modules = list(config['widget'].values())
         loaded_widget_modules = dynamic_import_from_config(config,"widget",xcore_v.logger)
-        print(loaded_widget_modules)
+        #print(loaded_widget_modules)
 
         tabui = []
         tab_widget = []
         for ix in range(len(list_mvct_directories)):
             try:
-                #widget_class = getattr(loaded_widget_modules[list_widget_modules[0]], "Ui_" + list_widget_modules[0])
-                print(f"apprach critical line 1159/60, index ix: {ix}, module: {list_widget_modules[ix]}")
-                print(f"loaded modules: {loaded_widget_modules}")
-                tabui.append(getattr(loaded_widget_modules[list_widget_modules[ix]], "Ui_" + list_widget_modules[ix])())
-                #tabui steht für tabUI_spectralviewer etc... ist zu ersetzen beim Instanzieren
-                #former: tabUI_Resampler = resampler_widget.Ui_resampler_widget()######TODO TODO TODO: change acc to indivitial widgets rather than one big GUI
-                #from resampler import resampler_widget 
-                #Fest steht: resampler_widget ist dasselbe Objekt wie loaded_widget_modules[list_widget_modules[0]]
-                # resampler_widget.Ui_resampler_widget() ist aber ein anderes Objekt als 
-                #     getattr(loaded_widget_modules[list_widget_modules[0]], "Ui_" + list_widget_modules[0])
-                tab_widget.append(QtWidgets.QWidget())
+                #widget_class = getattr(loaded_widget_modules[list_widget_modules[0]], "Ui_" + list_widget_modules[0]) #TODO: remove after testing, 20-11-2024
+                # print(f"apprach critical line 1159/60, index ix: {ix}, module: {list_widget_modules[ix]}")
+                # print("######################################################################################")
+                # print(f"loaded modules: {loaded_widget_modules}")
+                # print("######################################################################################")
                 mod_name = config["module_names"][list_mvct_directories[ix]]
-                tab_widget[ix].setWindowTitle(mod_name)
-                tab_widget[ix].setObjectName("tab_" + mod_name)
-                tab_widget[ix].setWindowIconText(mod_name)
-                tabui[ix].setupUi(tab_widget[ix])
-                if mod_name == "Player":    #TODO: future versions should be more general and treat Player as a normal module ######TRY IF SOLVES COMPIL PROBLEM
+
+                if mod_name == "Player":    #TODO: future versions should be more general and treat Player as a normal module
+                    #dummy operation, because Player UI already exists
+                    tab_widget.append([])
+                    tabui.append([])
                     pass
                 else:
+                
+                    #print(f"current instance of loaded module: {loaded_widget_modules[list_widget_modules[ix]]}")
+                    #<<<##<<<##<<<# importiert vom gelisteten Modul ix die Methode UI_Modulename_widget  #TODO: remove after testing, 20-11-2024
+                            #tabui steht für tabUI_spectralviewer etc... ist zu ersetzen beim Instanzieren
+                            #former: tabUI_Resampler = resampler_widget.Ui_resampler_widget()
+                            #from resampler import resampler_widget 
+                            #Fest steht: resampler_widget ist dasselbe Objekt wie loaded_widget_modules[list_widget_modules[0]]
+                            # resampler_widget.Ui_resampler_widget() ist aber ein anderes Objekt als 
+                            #     getattr(loaded_widget_modules[list_widget_modules[0]], "Ui_" + list_widget_modules[0])
+                    #generate new Widget, name it, label it , carry out its setupUi method, except for player,
+                    #  whose UI already exists in form of xcore.gui and whose Tab also already exists
+                    tabui.append(getattr(loaded_widget_modules[list_widget_modules[ix]], "Ui_" + list_widget_modules[ix])())
+                    tab_widget.append(QtWidgets.QWidget())
+                    tab_widget[ix].setWindowTitle(mod_name)
+                    tab_widget[ix].setObjectName("tab_" + mod_name)
+                    tab_widget[ix].setWindowIconText(mod_name)
+                    tabui[ix].setupUi(tab_widget[ix])
                     a = gui.gui.tabWidget.addTab(tab_widget[ix], "")
                     gui.gui.tabWidget.setTabText(a,mod_name)
-                #tabs[module_name] = tab_widget
-                print(f"Successfully created tab for {mod_name}.")
+                #print(f"Successfully created tab for {mod_name}.")
             except AttributeError as e:
-                print(f"Error creating tab for {mod_name}: {e}")
+                #print(f"Error creating tab for {mod_name}: {e}")
+                xcore_v.logger.error(f"__main__: Error creating tab for {mod_name}: {e}")
 
     else: #remove after testing _ 18-11-2024
         if 'spectralviewer' in sys.modules: 
@@ -1258,7 +1207,7 @@ if __name__ == '__main__':
     tab_dict["list"] = ["xcore"]
     tab_dict["tabname"] = ["xcore"]
 
-    if NEW:
+    if NEW:####TODO: Remove after Testing 20-11-2024
         tab_m = []
         tab_c = []
         tab_v = []
@@ -1292,9 +1241,10 @@ if __name__ == '__main__':
                 #ersetzt:  # remove comment after testing 18-11-2024
                 #tab_dict["list"].append("view_spectra")
                 #tab_dict["tabname"].append("View spectra")
-                print(f"Successfully created model, control, view for {mod_name}.")
+                #print(f"Successfully created model, control, view for {mod_name}.")
             except AttributeError as e:
-                print(f"Error creating model, control, view for {mod_name}: {e}")
+                #print(f"Error creating model, control, view for {mod_name}: {e}")
+                xcore_v.logger.error(f"__main__: Error creating model, control, view for {mod_name}: {e}")
 
             #********** removed parts see appendix
     else: #remove after testing _ 18-11-2024
@@ -1385,14 +1335,14 @@ if __name__ == '__main__':
     #view_spectra_v.SigSyncGUIUpdatelist.connect(win.generate_GUIupdaterlist)
     #resample_v.SigUpdateOtherGUIs.connect(xcore_v.sendupdateGUIs)    
     # #TODO TODO TODO TODO TODO TODO TODO difficult to find, poor programming style, look for other connection (via relaying ?)
-    if NEW:
+    if NEW:####TODO: Remove after Testing 20-11-2024
 
         tab_c[list_mvct_modules.index("resample")].SigUpdateGUIelements.connect(tab_v[list_mvct_modules.index("resample")].updateGUIelements)
         if 'view_spectra' in list_mvct_modules:
             xcore_v.SigUpdateOtherGUIs.connect(tab_v[list_mvct_modules.index("view_spectra")].updateGUIelements)
         tab_v[list_mvct_modules.index("resample")].SigUpdateOtherGUIs.connect(xcore_v.updateGUIelements)
 
-    else:
+    else:####TODO: Remove after Testing 20-11-2024
         resample_c.SigUpdateGUIelements.connect(resample_v.updateGUIelements)
 
         if 'spectralviewer' in sys.modules:
@@ -1424,7 +1374,7 @@ if __name__ == '__main__':
     xcore_v.gui.playrec_comboBox_startuptab.currentIndexChanged.connect(xcore_v.set_startuptab)
 
     # build connections for interpackage-Relaying system
-    if NEW:
+    if NEW: ####TODO: Remove after Testing 20-11-2024
         xcore_v.SigRelay.connect(xcore_v.rxhandler)
         # Problem: items xcore and playrec do not exist, player kann noch eingebaut werden. Für xcore brauchen wir eine Spezialbehandlung
         for ix1 in range(len(tab_dict["list"])-1):
@@ -1432,15 +1382,15 @@ if __name__ == '__main__':
             xcore_v.SigRelay.connect(tab_v[ix1].rxhandler)
             xcore_v.logger.debug(f' {"xcore_v.SigRelay.connect(" + tab_dict["list"][ix1+1] + "_v.rxhandler)"}')
             xcore_v.logger.debug(f' {tab_dict["list"][ix1+1] + ".SigRelay" + "(xcore_v.rxhandler)"}')
-            print(f' {tab_dict["list"][ix1+1] + ".SigRelay" + "(xcore_v.rxhandler)"}')
-            print(f' {"xcore_v.SigRelay.connect(" + tab_dict["list"][ix1+1] + "_v.rxhandler)"}')
+            #print(f' {tab_dict["list"][ix1+1] + ".SigRelay" + "(xcore_v.rxhandler)"}')
+            #print(f' {"xcore_v.SigRelay.connect(" + tab_dict["list"][ix1+1] + "_v.rxhandler)"}')
 
             for ix2 in range(len(tab_dict["list"])-1):
                 tab_v[ix1].SigRelay.connect(tab_v[ix2].rxhandler)
                 #tab_c[ix].SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
                 xcore_v.logger.debug(f' {tab_dict["list"][ix1+1] + "_v.SigRelay.connect(" + tab_dict["list"][ix2+1] + "_v.rxhandler)"}')
-                print(f' {tab_dict["list"][ix1+1] + "_v.SigRelay.connect(" + tab_dict["list"][ix2+1] + "_v.rxhandler)"}')
-    else:
+                #print(f' {tab_dict["list"][ix1+1] + "_v.SigRelay.connect(" + tab_dict["list"][ix2+1] + "_v.rxhandler)"}')
+    else:   ####TODO: Remove after Testing 20-11-2024
         for tabitem1 in tab_dict["list"]:
             for tabitem2 in tab_dict["list"]:
                 #######################TODO TODO TODO: replace eval 
@@ -1450,7 +1400,6 @@ if __name__ == '__main__':
     #make tab dict visible to core module
     xcore_v.tab_dict = tab_dict 
     xcore_v.m["tab_dict"] = tab_dict  ###TODO: check if double tabdict in xcore_v is necessary
-    ################### end remove ###########################
 
     #all tab initializations occur in connect_init() in core module
     xcore_v.connect_init()
@@ -1459,7 +1408,7 @@ if __name__ == '__main__':
     xcore_v.SigRelay.emit("cexex_all_",["canvasbuild",gui])   # communicate reference to gui instance to all modules which instanciate a canvas with auxi.generate_canvas(self,gridref,gridc,gridt,gui)
     sys.exit(app.exec_())
 
-#APPENDIX:
+#APPENDIX: ####TODO: Remove after Testing 20-11-2024
 
 
             # playrec_v.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
