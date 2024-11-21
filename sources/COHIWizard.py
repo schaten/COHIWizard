@@ -1,27 +1,23 @@
-#Version 1.2.12
-#
-#
+#Version 1.3.0
 # -*- coding: utf-8 -*-logfile
-# Um alle print messages auf logfile umzuleiten: Aktiviere am Ende des init-Teils: sys.stdout = self.logfile
-#statt: self.menubar = File(MainWindow)
-#self.menubar = QtWidgets.QMenuBar(MainWindow)
-#pyinstaller --icon=COHIWizard_ico4.ico –F COHIWizard.py
-#pyuic5 -x  COHIWizard_GUI_v10.ui -o COHIWizard_GUI_v10.py
-# For reducing to RFCorder: disable import of all addon packages except resample
-#check if sox is installed so as to throw an error message on resampling, if not
-#        self.soxlink = "https://sourceforge.net/projects/sox/files/sox/14.4.2/"
-#Bei Änderungen des Gridlayouts und Neuplatzierung der canvas:
-#self.generate_canvas(self,self.gui.gridLayout_5,[4,0,7,4],[-1,-1,-1,-1],self.Tabref["Resample"])
-#in init_Tabref()
-
-# Documentation with Sphinx started in ../docs
-
+# for redirecting all print messages to logfile : activate sys.stdout = self.logfile at the end of __init__
+#install Windows exe with: pyinstaller --icon=COHIWizard_ico4.ico –F COHIWizard.py
+# For reducing to RFCorder: disable all modules except resample in the config_modules.yaml file
+#
+#Important: When re-translating the Core-UI from QTdesigner to py-File, run the method 'core/autocorrect_ui_file.py'.
+    #otherwise there will be a line 'from file import File' which cannot be found by Python. As a consequence
+    #the line self.menubar = QtWidgets.QMenuBar(File) must be replaced by self.menubar = QtWidgets.QMenuBar(MainWindow)
+    #In addition the icons for the buttons cannot be found unless their paths are set correctly in teh widget file.
 
 
 """
-Created on Sa Dec 08 2023
-
+Created on 20-1-2024
 #@author: scharfetter_admin
+
+Core code with the purpose to 
+- instantiate all GUI widgets and modules
+- build basic connections between system signals and modules
+- setup the relaying mechanism for the exchange of variables between modules
 """
 import sys
 import os
@@ -33,15 +29,12 @@ from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QMainWindow, QWidget, QApplication, QHBoxLayout, QLabel
 from PyQt5.QtCore import QTimer, QObject, QThread, pyqtSignal
 import time
-
+import yaml
+import importlib
 from PyQt5.QtWidgets import *
 import logging
 
-#from .COHIWizard_GUI_v10 import Ui_MainWindow as MyWizard  ##TODO: after transfer to core folder set other path
 from icons import Logos
-#from core import COHIWizard_GUI_v10_reduced
-#from core import COHIWizard_GUI_v10_scroll
-from core import COHIWizard_GUI_v10_scrollhv
 
 class starter(QMainWindow):
     """instantiates the central GUI object and calls its setupUI method; type QMainwindow
@@ -62,39 +55,13 @@ class starter(QMainWindow):
         self.splash = SplashScreen()
         self.splash.setFocus()
         self.splash.show()
+        #from core import COHIWizard_GUI_v10_reduced #alternative main GUI without scrollbars
         #self.gui = COHIWizard_GUI_v10_reduced.Ui_MainWindow()
+        #from core import COHIWizard_GUI_v10_scroll #alternative main GUI with only vertical scrollbar
         #self.gui = COHIWizard_GUI_v10_scroll.Ui_MainWindow()
+        from core import COHIWizard_GUI_v10_scrollhv
         self.gui = COHIWizard_GUI_v10_scrollhv.Ui_MainWindow()
         self.gui.setupUi(self)
-
-# generate Player from individual widget
-# tab_player_widget = QtWidgets.QWidget()
-# tab_player_widget.setObjectName("tab_player_widget")
-# then call:
-# from player_widget import Ui_player_widget
-# tabUI_Player = Ui_player_widget() in __main__
-# tabUI_Player.setupUi(tab_player_widget)
-# gui.gui.tabWidget.addTab(tab_player_widget, "")
-#
-# then access all elements of Ui_ISO_testgui by tabUI_Player.elements
-
-# instantiate starter: 
-# gui = starter()
-# gui is then an object of type QMainWindow and has the GUI gui.gui = MyWizard = class UIMainWindow in COHIWitard_GUI_v10
-# This gui has the method gui.gui.setupUI(gui)
-# setupUI generates an object gui.gui.Tabwidget
-# an individual Tab is created by gui.gui.Tabwidget.addTab(tab_ISO_testgui), where tab_ISO_testgui is of type QtWidgets.QWidget()
-#
-# tab_ISO_testgui = QtWidgets.QWidget()
-# tab_ISO_testgui.setObjectName("tab_ISO_testgui")
-# then call:
-# from ISO_testgui import Ui_ISO_testgui
-
-# tabUI_Player = Ui_ISO_testgui() in __main__
-# tabUI_Player.setupUi(tab_ISO_testgui)
-# gui.gui.tabWidget.addTab(tab_ISO_testgui, "")
-#
-# then access all elements of Ui_ISO_testgui by tabUI_Player.elements
 
 
 class core_m(QObject):
@@ -1037,8 +1004,19 @@ def dynamic_import_from_config(config,sub_module,logger):
     return imported_modules
 
 if __name__ == '__main__':
-    print("starting main, initializing GUI, please wait ... ")
+    """_summary_
+    - instantiate app
+    - call starter for creating central GUI
+    - gui is then an object of type QMainWindow and has the GUI gui.gui = MyWizard = class UIMainWindow in COHIWitard_GUI_v10
+    - import auxiliary packages and modules
+    - instantiate core methods and player module/widget
+    - instantiate all GUI widgets and modules listed in config_modules.yaml
+    - build all possible connections between SigRelay-Signals and rxhandlers of all modules
+    - setup the relaying mechanism for the exchange of variables between modules
+    """
 
+
+    print("starting main, initializing GUI, please wait ... ")
     if hasattr(QtCore.Qt, 'AA_EnableHighDpiScaling'):
         QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
     if hasattr(QtCore.Qt, 'AA_UseHighDpiPixmaps'):
@@ -1046,9 +1024,7 @@ if __name__ == '__main__':
     #print("v13")
     app = QApplication([])
     gui = starter()
-    print(f"__main__: gui = {gui} gui.gui = {gui.gui}")
-    import yaml
-    import importlib
+    #print(f"__main__: gui = {gui} gui.gui = {gui.gui}")
     from auxiliaries import WAVheader_tools
     from auxiliaries import auxiliaries as auxi
     from auxiliaries import timer_worker as tw
@@ -1058,301 +1034,100 @@ if __name__ == '__main__':
     xcore_c = core_c(xcore_m)
     xcore_v = core_v(gui,xcore_c,xcore_m) # self.gui wird in xcore_v gestartet 
 
-    ######TODO TODO TODO: the following import on demand via config file, release without NEW Boolean after excessive testing, 18-11-2024
-    NEW = True # if set True: try new import features, else retain old code ####TODO: Remove after Testing 20-11-2024
-    if NEW:####TODO: Remove after Testing 20-11-2024
-        config = load_config_from_yaml("config_modules.yaml")
-        sub_module = "modules"
-        mod_base = {'player':'playrec'}
-        config['modules'] = {**mod_base, **config['modules']}
-        widget_base = {'player': 'Player'}
-        config['module_names'] = {**widget_base, **config['module_names']}
-        loaded_modules = dynamic_import_from_config(config,sub_module,xcore_v.logger)
-        #print(f"__main__ first if NEW: {loaded_modules}")
-    else: #remove after testing _ 18-11-2024
-        from player import playrec
-        from resampler import resample
-        from spectralviewer import view_spectra
-        from wavheader_editor import wavheader_editor
-        from yaml_editor import yaml_editor
-        from annotator import annotate
-        from synthesizer import synthesizer
+    config = load_config_from_yaml("config_modules.yaml")
+    sub_module = "modules"
+    mod_base = {'player':'playrec'}
+    config['modules'] = {**mod_base, **config['modules']}
+    widget_base = {'player': 'Player'}
+    config['module_names'] = {**widget_base, **config['module_names']}
+    loaded_modules = dynamic_import_from_config(config,sub_module,xcore_v.logger)
+    #print(f"__main__ first if NEW: {loaded_modules}")
     gui.show()
 
-    if NEW:####TODO: Remove after Testing 20-11-2024
-        #get dictionary of module directories and pre-set the first entry by the player signature 
+    list_mvct_directories = list(config['modules'].keys())
+    #get list of corresponding mvct modules
+    list_mvct_modules = list(config['modules'].values())
+    #add dict of widget modules to config
+    aux_dict = {}
+    for ix in range(len(list_mvct_directories)):
+        aux_dict[list_mvct_directories[ix]] = list_mvct_directories[ix] + "_widget"
+    config["widget"] = aux_dict
+    #print(f"__main__ 2nd if NEW: config, aux_dict: {config['widget']}")
+    
+    #get list of corresponding widget modules
+    list_widget_modules = list(config['widget'].values())
+    loaded_widget_modules = dynamic_import_from_config(config,"widget",xcore_v.logger)
+    #print(loaded_widget_modules)
 
-        list_mvct_directories = list(config['modules'].keys())
-        #get list of corresponding mvct modules
-        list_mvct_modules = list(config['modules'].values())
-        #add dict of widget modules to config
-        aux_dict = {}
-        for ix in range(len(list_mvct_directories)):
-            aux_dict[list_mvct_directories[ix]] = list_mvct_directories[ix] + "_widget"
-        config["widget"] = aux_dict
-        #print(f"__main__ 2nd if NEW: config, aux_dict: {config['widget']}")
-        #get list of corresponding widget modules
-        list_widget_modules = list(config['widget'].values())
-        loaded_widget_modules = dynamic_import_from_config(config,"widget",xcore_v.logger)
-        #print(loaded_widget_modules)
+    tabui = []
+    tab_widget = []
+    for ix in range(len(list_mvct_directories)):
+        try:
+            mod_name = config["module_names"][list_mvct_directories[ix]]
 
-        tabui = []
-        tab_widget = []
-        for ix in range(len(list_mvct_directories)):
-            try:
-                #widget_class = getattr(loaded_widget_modules[list_widget_modules[0]], "Ui_" + list_widget_modules[0]) #TODO: remove after testing, 20-11-2024
-                # print(f"apprach critical line 1159/60, index ix: {ix}, module: {list_widget_modules[ix]}")
-                # print("######################################################################################")
-                # print(f"loaded modules: {loaded_widget_modules}")
-                # print("######################################################################################")
-                mod_name = config["module_names"][list_mvct_directories[ix]]
+            if mod_name == "Player":    #TODO: future versions should be more general and treat Player as a normal module
+                #dummy operation, because Player UI already exists
+                tab_widget.append([])
+                tabui.append([])
+                pass
+            else:
+                #generate new Widget, name it, label it , carry out its setupUi method, except for player,
+                #  whose UI already exists in form of xcore.gui and whose Tab also already exists
+                tabui.append(getattr(loaded_widget_modules[list_widget_modules[ix]], "Ui_" + list_widget_modules[ix])())
+                tab_widget.append(QtWidgets.QWidget())
+                tab_widget[ix].setWindowTitle(mod_name)
+                tab_widget[ix].setObjectName("tab_" + mod_name)
+                tab_widget[ix].setWindowIconText(mod_name)
+                tabui[ix].setupUi(tab_widget[ix])
+                a = gui.gui.tabWidget.addTab(tab_widget[ix], "")
+                gui.gui.tabWidget.setTabText(a,mod_name)
+            #print(f"Successfully created tab for {mod_name}.")
+        except AttributeError as e:
+            #print(f"Error creating tab for {mod_name}: {e}")
+            xcore_v.logger.error(f"__main__: Error creating tab for {mod_name}: {e}")
 
-                if mod_name == "Player":    #TODO: future versions should be more general and treat Player as a normal module
-                    #dummy operation, because Player UI already exists
-                    tab_widget.append([])
-                    tabui.append([])
-                    pass
-                else:
-                
-                    #print(f"current instance of loaded module: {loaded_widget_modules[list_widget_modules[ix]]}")
-                    #<<<##<<<##<<<# importiert vom gelisteten Modul ix die Methode UI_Modulename_widget  #TODO: remove after testing, 20-11-2024
-                            #tabui steht für tabUI_spectralviewer etc... ist zu ersetzen beim Instanzieren
-                            #former: tabUI_Resampler = resampler_widget.Ui_resampler_widget()
-                            #from resampler import resampler_widget 
-                            #Fest steht: resampler_widget ist dasselbe Objekt wie loaded_widget_modules[list_widget_modules[0]]
-                            # resampler_widget.Ui_resampler_widget() ist aber ein anderes Objekt als 
-                            #     getattr(loaded_widget_modules[list_widget_modules[0]], "Ui_" + list_widget_modules[0])
-                    #generate new Widget, name it, label it , carry out its setupUi method, except for player,
-                    #  whose UI already exists in form of xcore.gui and whose Tab also already exists
-                    tabui.append(getattr(loaded_widget_modules[list_widget_modules[ix]], "Ui_" + list_widget_modules[ix])())
-                    tab_widget.append(QtWidgets.QWidget())
-                    tab_widget[ix].setWindowTitle(mod_name)
-                    tab_widget[ix].setObjectName("tab_" + mod_name)
-                    tab_widget[ix].setWindowIconText(mod_name)
-                    tabui[ix].setupUi(tab_widget[ix])
-                    a = gui.gui.tabWidget.addTab(tab_widget[ix], "")
-                    gui.gui.tabWidget.setTabText(a,mod_name)
-                #print(f"Successfully created tab for {mod_name}.")
-            except AttributeError as e:
-                #print(f"Error creating tab for {mod_name}: {e}")
-                xcore_v.logger.error(f"__main__: Error creating tab for {mod_name}: {e}")
-
-    else: #remove after testing _ 18-11-2024
-        if 'spectralviewer' in sys.modules: 
-            from spectralviewer import spectralviewer_widget
-            tabUI_spectralviewer = spectralviewer_widget.Ui_spectralviewer_widget()
-            # = getattr(loaded_widget_modules[list_widget_modules[0]], "Ui_" + list_widget_modules[0])
-            tab_spectralviewer_widget = QtWidgets.QWidget()
-            tab_spectralviewer_widget.setObjectName("tab_spectralviewer_widget")
-            tab_spectralviewer_widget.setWindowTitle("spectralviewer")
-            tab_spectralviewer_widget.setWindowIconText("spectralviewer")
-            tabUI_spectralviewer.setupUi(tab_spectralviewer_widget)
-            a = gui.gui.tabWidget.addTab(tab_spectralviewer_widget, "")
-            gui.gui.tabWidget.setTabText(a,"View spectra")
-
-        if 'annotator' in sys.modules: #(c) aktiviere neuen Tab; 
-            from annotator import annotator_widget
-            tabUI_annotator = annotator_widget.Ui_annotator_widget()######TODO TODO TODO: change acc to indivitial widgets rather than one big GUI
-            tab_annotator_widget = QtWidgets.QWidget()
-            tab_annotator_widget.setObjectName("tab_annotator_widget")
-            tab_annotator_widget.setWindowTitle("Annotator")
-            tab_annotator_widget.setWindowIconText("Annotator")
-            tabUI_annotator.setupUi(tab_annotator_widget)
-            a = gui.gui.tabWidget.addTab(tab_annotator_widget, "")
-            gui.gui.tabWidget.setTabText(a,"Annotate")
-
-        if 'wavheader_editor' in sys.modules: #(c) aktiviere neuen Tab; 
-            from wavheader_editor import wavheader_editor_widget
-            tabUI_wavheader_editor = wavheader_editor_widget.Ui_wavheader_editor_widget()######TODO TODO TODO: change acc to indivitial widgets rather than one big GUI
-            tab_wavheader_editor_widget = QtWidgets.QWidget()
-            tab_wavheader_editor_widget.setObjectName("tab_wavheader_editor_widget")
-            tab_wavheader_editor_widget.setWindowTitle("wavheader_editor")
-            tab_wavheader_editor_widget.setWindowIconText("wavheader_editor")
-            tabUI_wavheader_editor.setupUi(tab_wavheader_editor_widget)
-            a = gui.gui.tabWidget.addTab(tab_wavheader_editor_widget, "")
-            gui.gui.tabWidget.setTabText(a,"WAV Header")
-
-        if 'yaml_editor' in sys.modules: 
-            from yaml_editor import yaml_editor_widget
-            tabUI_yaml_editor = yaml_editor_widget.Ui_yaml_editor_widget()
-            tab_yaml_editor_widget = QtWidgets.QWidget()
-            tab_yaml_editor_widget.setObjectName("tab_yaml_editor_widget")
-            tab_yaml_editor_widget.setWindowTitle("yaml_editor")
-            tab_yaml_editor_widget.setWindowIconText("yaml_editor")
-            tabUI_yaml_editor.setupUi(tab_yaml_editor_widget)
-            a = gui.gui.tabWidget.addTab(tab_yaml_editor_widget, "")
-            gui.gui.tabWidget.setTabText(a,"YAML editor")
-
-        if 'resampler' in sys.modules: #(c) aktiviere neuen Tab; 
-            from resampler import resampler_widget
-            tabUI_Resampler = resampler_widget.Ui_resampler_widget()######TODO TODO TODO: change acc to indivitial widgets rather than one big GUI
-            tab_resampler_widget = QtWidgets.QWidget()
-            tab_resampler_widget.setObjectName("tab_resampler_widget")
-            tab_resampler_widget.setWindowTitle("Resampler")
-            tab_resampler_widget.setWindowIconText("Resampler")
-            tabUI_Resampler.setupUi(tab_resampler_widget)
-            a = gui.gui.tabWidget.addTab(tab_resampler_widget, "")
-            gui.gui.tabWidget.setTabText(a,"Resampler")
-
-        if 'synthesizer' in sys.modules: #(c) aktiviere neuen Tab; 
-            from synthesizer import synthesizer_widget
-            tabUI_synthesizer = synthesizer_widget.Ui_synthesizer_widget()######TODO TODO TODO: change acc to indivitial widgets rather than one big GUI
-            tab_synthesizer_widget = QtWidgets.QWidget()
-            tab_synthesizer_widget.setObjectName("tab_synthesizer_widget")
-            tab_synthesizer_widget.setWindowTitle("synthesizer")
-            tab_synthesizer_widget.setWindowIconText("synthesizer")
-            tabUI_synthesizer.setupUi(tab_synthesizer_widget)
-            a = gui.gui.tabWidget.addTab(tab_synthesizer_widget, "")
-            gui.gui.tabWidget.setTabText(a,"Synthesizer")
-
-    #ZUgriff auf elements of tabUI_Player via tabUI_Player instance ! not gui.gui.
-
-#   app.aboutToQuit.connect(win.stop_worker)    #graceful thread termination on app exit
+    #access elements of tabUI_Player via tabUI_Player instance ! not gui.gui.
+    #app.aboutToQuit.connect(win.stop_worker)    #graceful thread termination on app exit
     tab_dict = {}
     tab_dict["list"] = ["xcore"]
     tab_dict["tabname"] = ["xcore"]
 
-    if NEW:####TODO: Remove after Testing 20-11-2024
-        tab_m = []
-        tab_c = []
-        tab_v = []
-        for ix in range(len(list_mvct_directories)):
-            try:
-                mod_name = config["module_names"][list_mvct_directories[ix]]
-                #widget_class = getattr(loaded_widget_modules[list_widget_modules[0]], "Ui_" + list_widget_modules[0]) # remove comment after testing 18-11-2024
-                tab_m.append(getattr(loaded_modules[list_mvct_modules[ix]], list_mvct_modules[ix] + "_m")())
-                #ersetzt view_spectra_m = view_spectra.view_spectra_m() # remove comment after testing 18-11-2024
-                tab_c.append(getattr(loaded_modules[list_mvct_modules[ix]], list_mvct_modules[ix] + "_c")(tab_m[ix]))
-                #ersetzt view_spectra_c = view_spectra.view_spectra_c(view_spectra_m) # remove comment after testing 18-11-2024
-                if mod_name == "Player":  ##TODO nach tests durch allgemeine Fassung: loaded_modules[list_mvct_modules[ix]] = xcore_v.gui
-                    #oder noch allgemeiner #playrec_v = playrec.playrec_v(tabUI_Player,playrec_c,playrec_m) #ZUM TESTEN FREISCHALTEN
-                    # generate Player from individual widget
-                    # tab_player_widget = QtWidgets.QWidget()
-                    # tab_player_widget.setObjectName("tab_player_widget")
-                    # then call:
-                    # from player_widget import Ui_player_widget
-                    # tabUI_Player = Ui_player_widget() in __main__
-                    # tabUI_Player.setupUi(tab_player_widget)
-                    # gui.gui.tabWidget.addTab(tab_player_widget, "")
+    tab_m = []
+    tab_c = []
+    tab_v = []
+    for ix in range(len(list_mvct_directories)):
+        try:
+            mod_name = config["module_names"][list_mvct_directories[ix]]
+            tab_m.append(getattr(loaded_modules[list_mvct_modules[ix]], list_mvct_modules[ix] + "_m")())
+            tab_c.append(getattr(loaded_modules[list_mvct_modules[ix]], list_mvct_modules[ix] + "_c")(tab_m[ix]))
+            if mod_name == "Player":  ##TODO nach tests durch allgemeine Fassung: loaded_modules[list_mvct_modules[ix]] = xcore_v.gui
+                tab_v.append(getattr(loaded_modules[list_mvct_modules[ix]], list_mvct_modules[ix] + "_v")(xcore_v.gui, tab_c[ix], tab_m[ix]))
+            else:
+                tab_v.append(getattr(loaded_modules[list_mvct_modules[ix]], list_mvct_modules[ix] + "_v")(tabui[ix], tab_c[ix], tab_m[ix]))
+            tab_dict["list"].append(list_mvct_modules[ix])
+            tab_dict["tabname"].append(mod_name)
+            tab_v[ix].SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
+            tab_c[ix].SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
+            #print(f"Successfully created model, control, view for {mod_name}.")
+        except AttributeError as e:
+            #print(f"Error creating model, control, view for {mod_name}: {e}")
+            xcore_v.logger.error(f"__main__: Error creating model, control, view for {mod_name}: {e}")
 
-                    tab_v.append(getattr(loaded_modules[list_mvct_modules[ix]], list_mvct_modules[ix] + "_v")(xcore_v.gui, tab_c[ix], tab_m[ix]))
-                else:
-                    tab_v.append(getattr(loaded_modules[list_mvct_modules[ix]], list_mvct_modules[ix] + "_v")(tabui[ix], tab_c[ix], tab_m[ix]))
-                #ersetzt view_spectra_v = view_spectra.view_spectra_v(tabUI_spectralviewer,view_spectra_c,view_spectra_m) # remove comment after testing 18-11-2024
-                tab_dict["list"].append(list_mvct_modules[ix])
-                tab_dict["tabname"].append(mod_name)
-                tab_v[ix].SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
-                tab_c[ix].SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
-                #ersetzt:  # remove comment after testing 18-11-2024
-                #tab_dict["list"].append("view_spectra")
-                #tab_dict["tabname"].append("View spectra")
-                #print(f"Successfully created model, control, view for {mod_name}.")
-            except AttributeError as e:
-                #print(f"Error creating model, control, view for {mod_name}: {e}")
-                xcore_v.logger.error(f"__main__: Error creating model, control, view for {mod_name}: {e}")
-
-            #********** removed parts see appendix
-    else: #remove after testing _ 18-11-2024
-        if 'spectralviewer' in sys.modules:
-            view_spectra_m = view_spectra.view_spectra_m()
-            view_spectra_c = view_spectra.view_spectra_c(view_spectra_m)
-            #view_spectra_v = view_spectra.view_spectra_v(xcore_v.gui,view_spectra_c,view_spectra_m)
-            view_spectra_v = view_spectra.view_spectra_v(tabUI_spectralviewer,view_spectra_c,view_spectra_m)
-            tab_dict["list"].append("view_spectra")
-            tab_dict["tabname"].append("View spectra")
-
-        #TODO TODO TODO: (d) ?? connecting für neuen Tab; 
-        if 'annotator' in sys.modules:
-            annotate_m = annotate.annotate_m()
-            annotate_c = annotate.annotate_c(annotate_m)
-            #annotate_v = annotate.annotate_v(xcore_v.gui,annotate_c,annotate_m) TODO: replace old giu referece
-            annotate_v = annotate.annotate_v(tabUI_annotator,annotate_c,annotate_m)
-            tab_dict["list"].append("annotate")
-            tab_dict["tabname"].append("Annotate")
-
-        #TODO TODO TODO: (d) ?? connecting für neuen Tab; 
-
-        if 'wavheader_editor' in sys.modules:
-            wavheader_editor_m = wavheader_editor.wavheader_editor_m()
-            wavheader_editor_c = wavheader_editor.wavheader_editor_c(wavheader_editor_m)
-            #wavheader_editor_v = wavheader_editor.wavheader_editor_v(xcore_v.gui,wavheader_editor_c,wavheader_editor_m) # remove comment after testing 18-11-2024
-            wavheader_editor_v = wavheader_editor.wavheader_editor_v(tabUI_wavheader_editor,wavheader_editor_c,wavheader_editor_m) #ZUM TESTEN FREISCHALTEN
-            tab_dict["list"].append("wavheader_editor")
-            tab_dict["tabname"].append("WAV Header")
-        #TODO TODO TODO: (d) ?? connecting für neuen Tab; 
-
-        # else: # remove comment after testing 18-11-2024
-        #     page = xcore_v.gui.tabWidget.findChild(QWidget, "tab_wavheader_editor")
-        #     c_index = xcore_v.gui.tabWidget.indexOf(page)
-        #     xcore_v.gui.tabWidget.setTabVisible(c_index,False)
-        #TODO TODO TODO: (d) ?? connecting für neuen Tab; 
-
-        if 'yaml_editor' in sys.modules:
-            yamleditor_m = yaml_editor.yaml_editor_m()
-            yamleditor_c = yaml_editor.yaml_editor_c(yamleditor_m)
-            yamleditor_v = yaml_editor.yaml_editor_v(tabUI_yaml_editor,yamleditor_c,yamleditor_m)
-            tab_dict["list"].append("yamleditor")
-            tab_dict["tabname"].append("YAML editor")
-            #TODO TODO TODO: (d) ?? connecting für neuen Tab; 
-
-        #TODO TODO TODO: clarify that xcore_v.gui is the same as gui.gui !
-
-        if 'resampler' in sys.modules: #(d) Instanzierung, referenzierung und connecting für neuen Tab; 
-            resample_m = resample.resample_m() #TODO: wird gui in _m jemals gebraucht ? ich denke nein !
-            resample_c = resample.resample_c(resample_m)
-            resample_v = resample.resample_v(tabUI_Resampler,resample_c,resample_m)
-            tab_dict["list"].append("resample")
-            tab_dict["tabname"].append("Resampler")
-            resample_v.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
-            resample_c.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
-
-        if 'synthesizer' in sys.modules: #(d) Instanzierung, referenzierung und connecting für neuen Tab; 
-            synthesizer_m = synthesizer.synthesizer_m() #TODO: wird gui in _m jemals gebraucht ? ich denke nein !
-            synthesizer_c = synthesizer.synthesizer_c(synthesizer_m)
-            synthesizer_v = synthesizer.synthesizer_v(tabUI_synthesizer,synthesizer_c,synthesizer_m)
-            tab_dict["list"].append("synthesizer")
-            tab_dict["tabname"].append("Synthesizer")
-            synthesizer_v.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
-            synthesizer_c.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
-
-    ###  ADD NEW MODULE TABDICTSYNTESIS HERE ### # remove comment after testing 18-11-2024
-
-    # page = xcore_v.gui.tabWidget.findChild(QWidget, "tab_configuration")  ###TODO TODO TODO: remove after complete reconfiguration
-    # c_index = xcore_v.gui.tabWidget.indexOf(page)
-    # xcore_v.gui.tabWidget.setTabVisible(c_index,False)
-
-    #if 'playrec' in sys.modules: #and win.OLD is False:
-    #############   Player ist Pflichtmodul, also belassen   ##############
-        if 'player' in sys.modules: #(d) Instanzierung, referenzierung und connecting für neuen Tab;  
-            playrec_m = playrec.playrec_m()
-            playrec_c = playrec.playrec_c(playrec_m)
-            playrec_v = playrec.playrec_v(xcore_v.gui,playrec_c,playrec_m)
-            #playrec_v = playrec.playrec_v(tabUI_Player,playrec_c,playrec_m) #ZUM TESTEN FREISCHALTEN
-            tab_dict["list"].append("playrec")
-            playrec_v.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
-            playrec_c.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
-            tab_dict["tabname"].append("Player")
-        # else:   #TODO: activate after all playrec tests
-        #     page = win.gui.tabWidget.findChild(QWidget, "tab_playrec")
-        #     c_index = win.gui.tabWidget.indexOf(page)
-        #     win.gui.tabWidget.setTabVisible(c_index,False)
-
-    #view_spectra_v.SigSyncGUIUpdatelist.connect(win.generate_GUIupdaterlist)
-    #resample_v.SigUpdateOtherGUIs.connect(xcore_v.sendupdateGUIs)    
     # #TODO TODO TODO TODO TODO TODO TODO difficult to find, poor programming style, look for other connection (via relaying ?)
-    if NEW:####TODO: Remove after Testing 20-11-2024
-
-        tab_c[list_mvct_modules.index("resample")].SigUpdateGUIelements.connect(tab_v[list_mvct_modules.index("resample")].updateGUIelements)
-        if 'view_spectra' in list_mvct_modules:
-            xcore_v.SigUpdateOtherGUIs.connect(tab_v[list_mvct_modules.index("view_spectra")].updateGUIelements)
-        tab_v[list_mvct_modules.index("resample")].SigUpdateOtherGUIs.connect(xcore_v.updateGUIelements)
-
-    else:####TODO: Remove after Testing 20-11-2024
-        resample_c.SigUpdateGUIelements.connect(resample_v.updateGUIelements)
-
-        if 'spectralviewer' in sys.modules:
-            xcore_v.SigUpdateOtherGUIs.connect(view_spectra_v.updateGUIelements)
-        resample_v.SigUpdateOtherGUIs.connect(xcore_v.updateGUIelements)
+    #tab_c[list_mvct_modules.index("resample")].SigUpdateGUIelements.connect(tab_v[list_mvct_modules.index("resample")].updateGUIelements)
+    # replaced by         self.resample_c.SigUpdateGUIelements.connect(self.updateGUIelements) in resample_v
+# TODO Test after 21-11-2024
+    if 'view_spectra' in list_mvct_modules:
+        xcore_v.SigUpdateOtherGUIs.connect(tab_v[list_mvct_modules.index("view_spectra")].updateGUIelements)
+        #xcore_v.SigUpdateOtherGUIs.emit()
+        #TODO TODO TODO: SigupdateotherGUIs is not yetconnected to anything
+        #replace by: xcore_v.SigUpdateOtherGUIs.connect(view_spectra_v.updateGUIelements)
+        #difficult to replace, because view_spectra does not know xcore
+        #xcore must be relayed to view spectra module, try:
+        xcore_v.SigRelay.emit("cm_all_",["reference_xcore_v",xcore_v])
+        #then signal updater request via GUI update routine
+        #and in spectral viewer, views_pectra_v: self.m["reference_xcore_v"].SigUpdateOtherGUIs.connect(self.updateGUIelements)
+    tab_v[list_mvct_modules.index("resample")].SigUpdateOtherGUIs.connect(xcore_v.updateGUIelements)
 
     #TODO: check what to do if tab_names do not exist any more because tabWidget is empty or rudimentary ?
     tab_names = {}
@@ -1379,28 +1154,19 @@ if __name__ == '__main__':
     xcore_v.gui.playrec_comboBox_startuptab.currentIndexChanged.connect(xcore_v.set_startuptab)
 
     # build connections for interpackage-Relaying system
-    if NEW: ####TODO: Remove after Testing 20-11-2024
-        xcore_v.SigRelay.connect(xcore_v.rxhandler)
-        # Problem: items xcore and playrec do not exist, player kann noch eingebaut werden. Für xcore brauchen wir eine Spezialbehandlung
-        for ix1 in range(len(tab_dict["list"])-1):
-            tab_v[ix1].SigRelay.connect(xcore_v.rxhandler)
-            xcore_v.SigRelay.connect(tab_v[ix1].rxhandler)
-            xcore_v.logger.debug(f' {"xcore_v.SigRelay.connect(" + tab_dict["list"][ix1+1] + "_v.rxhandler)"}')
-            xcore_v.logger.debug(f' {tab_dict["list"][ix1+1] + ".SigRelay" + "(xcore_v.rxhandler)"}')
-            #print(f' {tab_dict["list"][ix1+1] + ".SigRelay" + "(xcore_v.rxhandler)"}')
-            #print(f' {"xcore_v.SigRelay.connect(" + tab_dict["list"][ix1+1] + "_v.rxhandler)"}')
+    xcore_v.SigRelay.connect(xcore_v.rxhandler)
+    for ix1 in range(len(tab_dict["list"])-1):
+        tab_v[ix1].SigRelay.connect(xcore_v.rxhandler)
+        xcore_v.SigRelay.connect(tab_v[ix1].rxhandler)
+        xcore_v.logger.debug(f' {"xcore_v.SigRelay.connect(" + tab_dict["list"][ix1+1] + "_v.rxhandler)"}')
+        xcore_v.logger.debug(f' {tab_dict["list"][ix1+1] + ".SigRelay" + "(xcore_v.rxhandler)"}')
+        #print(f' {tab_dict["list"][ix1+1] + ".SigRelay" + "(xcore_v.rxhandler)"}')
+        #print(f' {"xcore_v.SigRelay.connect(" + tab_dict["list"][ix1+1] + "_v.rxhandler)"}')
 
-            for ix2 in range(len(tab_dict["list"])-1):
-                tab_v[ix1].SigRelay.connect(tab_v[ix2].rxhandler)
-                #tab_c[ix].SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
-                xcore_v.logger.debug(f' {tab_dict["list"][ix1+1] + "_v.SigRelay.connect(" + tab_dict["list"][ix2+1] + "_v.rxhandler)"}')
-                #print(f' {tab_dict["list"][ix1+1] + "_v.SigRelay.connect(" + tab_dict["list"][ix2+1] + "_v.rxhandler)"}')
-    else:   ####TODO: Remove after Testing 20-11-2024
-        for tabitem1 in tab_dict["list"]:
-            for tabitem2 in tab_dict["list"]:
-                #######################TODO TODO TODO: replace eval 
-                eval(tabitem1 + "_v.SigRelay.connect(" + tabitem2 + "_v.rxhandler)")
-                xcore_v.logger.debug(f' {tabitem1 + "_v.SigRelay.connect(" + tabitem2 + "_v.rxhandler)"}')
+        for ix2 in range(len(tab_dict["list"])-1):
+            tab_v[ix1].SigRelay.connect(tab_v[ix2].rxhandler)
+            #tab_c[ix].SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
+            xcore_v.logger.debug(f' {tab_dict["list"][ix1+1] + "_v.SigRelay.connect(" + tab_dict["list"][ix2+1] + "_v.rxhandler)"}')
 
     #make tab dict visible to core module
     xcore_v.tab_dict = tab_dict 
@@ -1413,27 +1179,3 @@ if __name__ == '__main__':
     xcore_v.SigRelay.emit("cexex_all_",["canvasbuild",gui])   # communicate reference to gui instance to all modules which instanciate a canvas with auxi.generate_canvas(self,gridref,gridc,gridt,gui)
     sys.exit(app.exec_())
 
-#APPENDIX: ####TODO: Remove after Testing 20-11-2024
-
-
-            # playrec_v.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
-            # playrec_c.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
-
-            # resample_v.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
-            # resample_c.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
-
-            # synthesizer_v.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
-            # synthesizer_c.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)    
-
-                # kann eingeklinkt werden, lediglich loaded_modules[list_mvct_modules[ix]] muss xcore_v.gui sein
-                # ausserdem kann dieser Teil erst nach Instanzierung von xcore_v erfolgen, das ist aber bereits der Fall
-                # playrec_m = playrec.playrec_m()
-                # playrec_c = playrec.playrec_c(playrec_m)
-                # playrec_v = playrec.playrec_v(xcore_v.gui,playrec_c,playrec_m) <<<< UNTERSCHIED xcore
-                # #playrec_v = playrec.playrec_v(tabUI_Player,playrec_c,playrec_m) #ZUM TESTEN FREISCHALTEN
-                # tab_dict["list"].append("playrec")
-                # tab_dict["tabname"].append("Player")
-
-                #erst weiter unten
-                # playrec_v.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
-                # playrec_c.SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)

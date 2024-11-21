@@ -92,7 +92,7 @@ class view_spectra_v(QObject):
     SigAny = pyqtSignal()
     SigCancel = pyqtSignal()
     SigSyncGUIUpdatelist = pyqtSignal(object)
-    SigUpdateOtherGUIs = pyqtSignal()
+    SigUpdateOtherGUIs = pyqtSignal() #TODO: used for anything ?
     SigRX = pyqtSignal(str,object)
     SigRelay = pyqtSignal(str,object)
     SigActivateOtherTabs = pyqtSignal(str,str,object)

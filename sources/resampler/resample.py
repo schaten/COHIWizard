@@ -1823,7 +1823,7 @@ class resample_v(QObject):
     #SigUpdateGUI = pyqtSignal(object)
     #SigSyncTabs = pyqtSignal(object)
     SigActivateOtherTabs = pyqtSignal(str,str,object)
-    SigUpdateOtherGUIs = pyqtSignal()
+    SigUpdateOtherGUIs = pyqtSignal() #TODO: used for anything ?
     SigRelay = pyqtSignal(str,object)
 
     def __init__(self, gui, resample_c, resample_m):
@@ -1886,6 +1886,8 @@ class resample_v(QObject):
         self.soxlink = "https://sourceforge.net/projects/sox/files/sox/14.4.2/"
         self.soxlink_altern = "https://sourceforge.net/projects/sox"
         self.soxnotexist = False
+
+
 
         try:
             subproc3 = subprocess.run('sox -h', stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True, check=True)
@@ -2080,6 +2082,7 @@ class resample_v(QObject):
         :return: flag False or True, False on unsuccessful execution
         :rtype: Boolean
         """
+        # TODO TODO TODO: include connection with xcore module here
         st = time.time()
         self.logger.debug("resampler: updateGUIelements progress: %f", self.m['progress'] )
         self.gui.label_Filename_resample.setText(self.m["my_filename"] + self.m["ext"])

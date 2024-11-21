@@ -778,9 +778,6 @@ class synthesizer_v(QObject):
         self.load_project()
         self.autosave = False
         self.gui.synthesizer_pushbutton_create.clicked.connect(self.create_band_thread)
-       
-
-
         self.preset_gain()
         #if self.gui.radiobutton_AGC.isChecked():
         #TODO TODO TODO: implement AGC method and AUTO clipping repair or clipping warning
@@ -801,7 +798,7 @@ class synthesizer_v(QObject):
         self.activate_control_elements(False)
         self.logger.debug("modulate: configure modulate_worker thread et al")
         self.m["cancelflag"] = False
-        modulation_depth = float(self.gui.lineEdit_modfactor.text())  # Modulation depth 
+        modulation_depth = float(self.gui.lineEdit_modfactor.text())  # Modulation depth
         playlists = [[f"{path.rstrip('/')}/{file}" for file, path in zip(files, paths)] for files, paths in zip(self.readFileList, self.readFilePath)]
         LO_frequency = int(np.round(self.m["LO"]*1000))
         fclow_frequency = int(np.round(float(self.gui.lineEdit_fc_low.text()))*1000)
@@ -1357,6 +1354,8 @@ class synthesizer_v(QObject):
     def carrierselect_update(self):
         #generate combobox entry list
         carrier_array = np.arange(self.m["fc_low"], self.cf_HI+1, self.m["carrier_distance"])
+        #carrier_array = TODO: entrypoint for individual carrierfrequencies, read array from editor
+
         carrierselector = carrier_array.tolist()
         self.gui.comboBox_cur_carrierfreq.clear()
         for cf in carrierselector:
@@ -1687,7 +1686,9 @@ class synthesizer_v(QObject):
         ix = 0
         for x in os.listdir(rootdir):
             #if x.endswith(".wav"):
-            #TODO: Umstellen auf mp3: 
+            #TODO TODO TODO: Umstellen auf generelle Source-Links über urllib unter Verwendung von M3U-Playlists
+            #Siehe m3U_und Streams_lesen_python.txt für Info von ChatGPT
+
             if x.endswith(".wav") or x.endswith(".mp3"):
                 if True: #x != (self.m["my_filename"] + self.m["ext"]): #TODO: obsolete old form when automatically loading opened file to playlist
                     _item = self.gui.listWidget_sourcelist.item(ix)
@@ -1838,6 +1839,69 @@ class synthesizer_v(QObject):
 
     def reset_GUI(self):
         pass
+
+#TODO: Kontextgesteuerte Tabelle für Custom Carrierfrequenzen:
+# import sys
+# from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QTableWidget, QTableWidgetItem, QMenu, QWidget
+
+# class MainWindow(QMainWindow):
+#     def __init__(self):
+#         super().__init__()
+#         self.setWindowTitle("QTableWidget mit Kontextmenü")
+#         self.setGeometry(100, 100, 600, 400)
+
+#         # Haupt-Widget
+#         central_widget = QWidget()
+#         self.setCentralWidget(central_widget)
+#         layout = QVBoxLayout()
+#         central_widget.setLayout(layout)
+
+#         # Tabelle erstellen
+#         self.table = QTableWidget()
+#         self.table.setColumnCount(3)
+#         self.table.setHorizontalHeaderLabels(["Spalte 1", "Spalte 2", "Spalte 3"])
+#         self.table.setContextMenuPolicy(3)  # Aktiviert benutzerdefiniertes Kontextmenü
+#         self.table.customContextMenuRequested.connect(self.show_context_menu)
+#         layout.addWidget(self.table)
+
+#     def show_context_menu(self, position):
+#         # Kontextmenü erstellen
+#         context_menu = QMenu(self)
+
+#         # Menüoptionen hinzufügen
+#         add_row_action = context_menu.addAction("Add Row")
+#         remove_row_action = context_menu.addAction("Remove Row")
+
+#         # Benutzeraktion abfragen
+#         action = context_menu.exec_(self.table.viewport().mapToGlobal(position))
+
+#         # Aktion ausführen
+#         if action == add_row_action:
+#             self.add_row()
+#         elif action == remove_row_action:
+#             self.remove_selected_row()
+
+#     def add_row(self):
+#         # Neue Zeile am Ende hinzufügen
+#         row_count = self.table.rowCount()
+#         self.table.insertRow(row_count)
+
+#         # Optional: Platzhaltertext einfügen
+#         for col in range(self.table.columnCount()):
+#             self.table.setItem(row_count, col, QTableWidgetItem(f"Zeile {row_count + 1}, Spalte {col + 1}"))
+
+#     def remove_selected_row(self):
+#         # Aktuell ausgewählte Zeile entfernen
+#         selected_row = self.table.currentRow()
+#         if selected_row >= 0:
+#             self.table.removeRow(selected_row)
+
+# if __name__ == "__main__":
+#     app = QApplication(sys.argv)
+#     window = MainWindow()
+#     window.show()
+#     sys.exit(app.exec())
+
 
 #TODO: 
 # - Preset band Funktionen einbauen

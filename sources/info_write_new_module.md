@@ -6,7 +6,7 @@
 (1) create a new subfolder /my_module and /my_module/ressources as subdirectories of ~/sources. Optionally create a new subfolder /my_module/icons as subdirectories of ~/sources if pngs, svg's are to be used. 
 
 
-The folder /my_module will be populate with files 'my_module.py' and 'my_module_widget.py' as shown in the next sections. /my_module/ressources may be populated with an ui-File 'my_module_widget.ui', which can be created with QTdesigner, as shown in a later section. In that case the 'my_module_widget.py' file is created with the pyuic - method.
+The folder /my_module will be populate with files 'my_module.py' and 'my_module_widget.py' as shown in the next sections. /my_module/ressources may be populated with an ui-File 'my_module_widget.ui', which can be created with QTdesigner, as shown in a later section. In that case the 'my_module_widget.py' file is created with the pyuic - method. The /my_module directory should also contain a file `__init__.py`, which can be an empty file but is required by some procedures like the sphinx-autodocumentation.
 
 For illustration the basic directory tree is shown plus the added module. 'module1', 'module2' represent already existing modules like 'player', 'resampler', ... The full tree with the actual names which is currently used is illustrated in [Current Standard Directory tree](#current-standard-directory-tree).
 
@@ -162,6 +162,9 @@ If you wish to inactivate some modules, just comment them out with '#'. **DO NOT
 
 `QFileDialog.getExistingDirectory(self.m["QTMAINWINDOWparent"], "Please chose source file directory")`
 
+## Documentation
+
+It is highly recommended to place appropriate inline-documentation inside of the important code sections. Please use the Sphinx-standard for the docstrings so that later an autodocumentation by Sphinx is possible.
 
 
 ## Current Standard Directory tree

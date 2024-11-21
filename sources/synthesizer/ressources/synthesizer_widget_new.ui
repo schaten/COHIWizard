@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1260</width>
-    <height>709</height>
+    <width>1268</width>
+    <height>847</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,7 +19,7 @@
      <x>10</x>
      <y>10</y>
      <width>1241</width>
-     <height>691</height>
+     <height>821</height>
     </rect>
    </property>
    <property name="font">
@@ -807,6 +807,39 @@
       </property>
       <property name="autoExclusive">
        <bool>false</bool>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="0" rowspan="20">
+     <widget class="QListWidget" name="listWidget_sourcelist">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
+      <property name="acceptDrops">
+       <bool>true</bool>
+      </property>
+      <property name="toolTip">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;playlist window. drag items from selection list&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+      <property name="dragEnabled">
+       <bool>true</bool>
+      </property>
+      <property name="dragDropMode">
+       <enum>QAbstractItemView::DragOnly</enum>
+      </property>
+      <property name="defaultDropAction">
+       <enum>Qt::CopyAction</enum>
+      </property>
+      <property name="selectionMode">
+       <enum>QAbstractItemView::SingleSelection</enum>
       </property>
      </widget>
     </item>
@@ -1815,7 +1848,7 @@
       </property>
      </widget>
     </item>
-    <item row="21" column="7" colspan="2">
+    <item row="23" column="7" colspan="2">
      <widget class="QProgressBar" name="progressBar_synth">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
@@ -2499,7 +2532,7 @@
       </property>
      </widget>
     </item>
-    <item row="16" column="5">
+    <item row="18" column="5">
      <widget class="QRadioButton" name="synthesizer_radioBut_Spectrum">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -2668,7 +2701,7 @@
       </property>
      </widget>
     </item>
-    <item row="19" column="7">
+    <item row="21" column="7">
      <widget class="QLabel" name="playrec_label_REC_duration">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
@@ -2844,7 +2877,40 @@
       </property>
      </widget>
     </item>
-    <item row="21" column="1" colspan="2">
+    <item row="3" column="1" rowspan="20" colspan="2">
+     <widget class="QListWidget" name="listWidget_playlist">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
+      <property name="acceptDrops">
+       <bool>true</bool>
+      </property>
+      <property name="toolTip">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;playlist window. drag items from selection list&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+      <property name="dragEnabled">
+       <bool>true</bool>
+      </property>
+      <property name="dragDropMode">
+       <enum>QAbstractItemView::DragDrop</enum>
+      </property>
+      <property name="defaultDropAction">
+       <enum>Qt::MoveAction</enum>
+      </property>
+      <property name="selectionMode">
+       <enum>QAbstractItemView::SingleSelection</enum>
+      </property>
+     </widget>
+    </item>
+    <item row="23" column="1" colspan="2">
      <widget class="QProgressBar" name="progressBar_fillPlaylist">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
@@ -2862,7 +2928,7 @@
       </property>
      </widget>
     </item>
-    <item row="21" column="0">
+    <item row="23" column="0">
      <widget class="QLabel" name="label_4">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -2875,7 +2941,7 @@
       </property>
      </widget>
     </item>
-    <item row="19" column="8">
+    <item row="21" column="8">
      <widget class="QTimeEdit" name="timeEdit_reclength">
       <property name="font">
        <font>
@@ -2890,7 +2956,7 @@
       </property>
      </widget>
     </item>
-    <item row="21" column="5">
+    <item row="23" column="5">
      <widget class="QLabel" name="label_5">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -2919,7 +2985,7 @@
       </property>
      </widget>
     </item>
-    <item row="15" column="8">
+    <item row="17" column="8">
      <widget class="QLineEdit" name="lineEdit_audiocutoff_freq">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -2943,7 +3009,7 @@
       </property>
      </widget>
     </item>
-    <item row="16" column="7" colspan="2">
+    <item row="18" column="7" colspan="2">
      <widget class="Line" name="line_5">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -3340,7 +3406,7 @@
       </property>
      </widget>
     </item>
-    <item row="18" column="7" colspan="2">
+    <item row="20" column="7" colspan="2">
      <widget class="QLabel" name="label_TIMER">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -3544,7 +3610,7 @@
       </property>
      </widget>
     </item>
-    <item row="20" column="7" colspan="2">
+    <item row="22" column="7" colspan="2">
      <widget class="Line" name="line_4">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -3568,14 +3634,14 @@
       </property>
      </widget>
     </item>
-    <item row="22" column="2" colspan="4">
+    <item row="25" column="2" colspan="4">
      <widget class="QLabel" name="label_3">
       <property name="text">
        <string>Status message from synthesizer core:</string>
       </property>
      </widget>
     </item>
-    <item row="15" column="7">
+    <item row="17" column="7">
      <widget class="QLabel" name="label_MF_3">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
@@ -3663,92 +3729,6 @@
       </property>
       <property name="alignment">
        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="2">
-     <widget class="QPushButton" name="pushButton_clearproject">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="text">
-       <string>new project</string>
-      </property>
-     </widget>
-    </item>
-    <item row="22" column="7" colspan="2">
-     <widget class="QLabel" name="label_audioset_name">
-      <property name="text">
-       <string>-</string>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="0" rowspan="18">
-     <widget class="QListWidget" name="listWidget_sourcelist">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-       </font>
-      </property>
-      <property name="acceptDrops">
-       <bool>true</bool>
-      </property>
-      <property name="toolTip">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;playlist window. drag items from selection list&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-      </property>
-      <property name="dragEnabled">
-       <bool>true</bool>
-      </property>
-      <property name="dragDropMode">
-       <enum>QAbstractItemView::DragOnly</enum>
-      </property>
-      <property name="defaultDropAction">
-       <enum>Qt::CopyAction</enum>
-      </property>
-      <property name="selectionMode">
-       <enum>QAbstractItemView::SingleSelection</enum>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="1" rowspan="18" colspan="2">
-     <widget class="QListWidget" name="listWidget_playlist">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-       </font>
-      </property>
-      <property name="acceptDrops">
-       <bool>true</bool>
-      </property>
-      <property name="toolTip">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;playlist window. drag items from selection list&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-      </property>
-      <property name="dragEnabled">
-       <bool>true</bool>
-      </property>
-      <property name="dragDropMode">
-       <enum>QAbstractItemView::DragDrop</enum>
-      </property>
-      <property name="defaultDropAction">
-       <enum>Qt::MoveAction</enum>
-      </property>
-      <property name="selectionMode">
-       <enum>QAbstractItemView::SingleSelection</enum>
       </property>
      </widget>
     </item>
@@ -4081,6 +4061,311 @@
       </item>
      </widget>
     </item>
+    <item row="2" column="2">
+     <widget class="QPushButton" name="pushButton_clearproject">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>new project</string>
+      </property>
+     </widget>
+    </item>
+    <item row="25" column="7" colspan="2">
+     <widget class="QLabel" name="label_audioset_name">
+      <property name="text">
+       <string>-</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="0">
+     <widget class="QPushButton" name="pushButton">
+      <property name="text">
+       <string>Import Project from ####</string>
+      </property>
+     </widget>
+    </item>
+    <item row="15" column="7">
+     <widget class="QPushButton" name="pushButton_2">
+      <property name="palette">
+       <palette>
+        <active>
+         <colorrole role="Button">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>229</red>
+            <green>255</green>
+            <blue>212</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Midlight">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>229</red>
+            <green>255</green>
+            <blue>212</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Base">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>255</red>
+            <green>255</green>
+            <blue>255</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Window">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>229</red>
+            <green>255</green>
+            <blue>212</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Highlight">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>0</red>
+            <green>120</green>
+            <blue>215</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="AlternateBase">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>246</red>
+            <green>246</green>
+            <blue>246</blue>
+           </color>
+          </brush>
+         </colorrole>
+        </active>
+        <inactive>
+         <colorrole role="Button">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>229</red>
+            <green>255</green>
+            <blue>212</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Midlight">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>229</red>
+            <green>255</green>
+            <blue>212</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Base">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>255</red>
+            <green>255</green>
+            <blue>255</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Window">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>229</red>
+            <green>255</green>
+            <blue>212</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Highlight">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>170</red>
+            <green>255</green>
+            <blue>127</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="AlternateBase">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>170</red>
+            <green>255</green>
+            <blue>127</blue>
+           </color>
+          </brush>
+         </colorrole>
+        </inactive>
+        <disabled>
+         <colorrole role="Button">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>229</red>
+            <green>255</green>
+            <blue>212</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Midlight">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>229</red>
+            <green>255</green>
+            <blue>212</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Base">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>229</red>
+            <green>255</green>
+            <blue>212</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Window">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>229</red>
+            <green>255</green>
+            <blue>212</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Highlight">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>0</red>
+            <green>120</green>
+            <blue>215</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="AlternateBase">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>246</red>
+            <green>246</green>
+            <blue>246</blue>
+           </color>
+          </brush>
+         </colorrole>
+        </disabled>
+       </palette>
+      </property>
+      <property name="text">
+       <string>Edit custom Carrierfrequencies</string>
+      </property>
+     </widget>
+    </item>
+    <item row="16" column="7" colspan="2">
+     <widget class="QTableWidget" name="tableWidget_2">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>80</height>
+       </size>
+      </property>
+      <attribute name="horizontalHeaderDefaultSectionSize">
+       <number>60</number>
+      </attribute>
+      <attribute name="horizontalHeaderMinimumSectionSize">
+       <number>20</number>
+      </attribute>
+      <row>
+       <property name="text">
+        <string>carrier</string>
+       </property>
+      </row>
+      <column>
+       <property name="text">
+        <string>f1</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>f2</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>f3</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>f4</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>f5</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>f6</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>f7</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>f8</string>
+       </property>
+      </column>
+      <item row="0" column="0">
+       <property name="text">
+        <string/>
+       </property>
+       <property name="flags">
+        <set>ItemIsSelectable|ItemIsEditable|ItemIsDragEnabled|ItemIsUserCheckable|ItemIsEnabled</set>
+       </property>
+      </item>
+      <item row="0" column="1">
+       <property name="text">
+        <string/>
+       </property>
+       <property name="flags">
+        <set>ItemIsSelectable|ItemIsEditable|ItemIsDragEnabled|ItemIsUserCheckable|ItemIsEnabled</set>
+       </property>
+      </item>
+      <item row="0" column="2">
+       <property name="text">
+        <string/>
+       </property>
+       <property name="flags">
+        <set>ItemIsSelectable|ItemIsEditable|ItemIsDragEnabled|ItemIsUserCheckable|ItemIsEnabled</set>
+       </property>
+      </item>
+      <item row="0" column="3">
+       <property name="text">
+        <string/>
+       </property>
+       <property name="flags">
+        <set>ItemIsSelectable|ItemIsEditable|ItemIsDragEnabled|ItemIsUserCheckable|ItemIsEnabled</set>
+       </property>
+      </item>
+     </widget>
+    </item>
    </layout>
    <zorder>line_4</zorder>
    <zorder>comboBox_targetSR_2</zorder>
@@ -4129,6 +4414,9 @@
    <zorder>label_audioset_name</zorder>
    <zorder>label_3</zorder>
    <zorder>pushButton_clearproject</zorder>
+   <zorder>pushButton</zorder>
+   <zorder>pushButton_2</zorder>
+   <zorder>tableWidget_2</zorder>
   </widget>
  </widget>
  <resources/>
