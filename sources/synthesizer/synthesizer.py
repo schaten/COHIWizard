@@ -630,6 +630,9 @@ class synthesizer_v(QObject):
         self.gui.timeEdit_reclength.timeChanged.connect(self.carrier_ix_changed)
         self.gui.synthesizer_pushbutton_cancel.clicked.connect(self.cancel_modulate)
         self.gui.verticalSlider_Gain.setProperty("value", 76) #percent
+        self.gui.pushButton_CustomCarriers.clicked.connect(self.open_table_dialog)
+
+
 
         self.gui.verticalSlider_Gain.valueChanged.connect(self.setgain)
         self.previous_value = self.gui.spinBox_numcarriers.value()
@@ -1355,6 +1358,7 @@ class synthesizer_v(QObject):
         #generate combobox entry list
         carrier_array = np.arange(self.m["fc_low"], self.cf_HI+1, self.m["carrier_distance"])
         #carrier_array = TODO: entrypoint for individual carrierfrequencies, read array from editor
+        # flex_carrier_table
 
         carrierselector = carrier_array.tolist()
         self.gui.comboBox_cur_carrierfreq.clear()
@@ -1448,6 +1452,8 @@ class synthesizer_v(QObject):
         # self.c_step = float(self.gui.lineEdit_carrierdistance.text())
         # self.cf_HI = fc_low + (self.m["numcarriers"] - 1) * self.c_step
         self.cf_HI = fc_low + (self.m["numcarriers"] - 1) * self.m["carrier_distance"]
+        #TODO TODO TODO : entrypoint for individual carrierfrequencies
+        #TODO i case of flex_carrier_table: self.cf_HI = flex_carrier_table [-1] 
         self.carrierselect_update()
 
     def popup(self,i):
@@ -1840,6 +1846,99 @@ class synthesizer_v(QObject):
     def reset_GUI(self):
         pass
 
+
+    def open_table_dialog(self):
+        """
+        opens a Dialogue widget as a TableWidget,which allows to enter individual carrier frequencies. On pressin enter, the row data are returned
+        :params : none
+        :returns: row
+        :rtype : list
+        """
+        dialog = TableDialog(None)
+
+        if dialog.exec_() == QDialog.Accepted:  # Wenn der Benutzer auf 'Enter' klickt
+            table_data = dialog.get_table_data()
+            print("Eingegebene Daten:")
+            for row in table_data:
+                print(row)
+
+
+######################### POPUP widget:
+# import sys
+# from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QTableWidget, QTableWidgetItem, QPushButton, QDialog, QDialogButtonBox, QVBoxLayout, QWidget
+
+class TableDialog(QDialog):
+    """Class for generating a popup TableWidget for entering the custom values"""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Table Dialog")
+        self.setGeometry(200, 200, 400, 300)
+
+        # Layout für den Dialog
+        layout = QVBoxLayout(self)
+
+        # TableWidget erstellen
+        self.table = QTableWidget()
+        self.table.setRowCount(10)
+        self.table.setColumnCount(1)
+        self.table.setHorizontalHeaderLabels(["Spalte 1", "Spalte 2", "Spalte 3"])
+        layout.addWidget(self.table)
+
+        # ButtonBox mit 'Enter' und 'Cancel'
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons.accepted.connect(self.accept)  # Dialog schließen und OK zurückgeben
+        buttons.rejected.connect(self.reject)  # Dialog schließen und Abbrechen zurückgeben
+        layout.addWidget(buttons)
+
+    def get_table_data(self):
+        """
+        Gibt die Daten des TableWidgets als Liste von Listen zurück.
+        """
+        data = []
+        for row in range(self.table.rowCount()):
+            row_data = []
+            for col in range(self.table.columnCount()):
+                item = self.table.item(row, col)
+                row_data.append(item.text() if item else "")  # Leerstring, wenn keine Daten vorhanden
+            data.append(row_data)
+        return data
+
+# class MainWindow(QMainWindow):
+#     def __init__(self):
+#         super().__init__()
+#         self.setWindowTitle("Main Window")
+#         self.setGeometry(100, 100, 600, 400)
+
+#         # Layout und Button
+#         central_widget = QWidget()
+#         self.setCentralWidget(central_widget)
+#         layout = QVBoxLayout()
+#         central_widget.setLayout(layout)
+
+#         # Button zum Öffnen des Dialogs
+#         self.open_dialog_button = QPushButton("Open Table Dialog")
+#         self.open_dialog_button.clicked.connect(self.open_table_dialog)
+#         layout.addWidget(self.open_dialog_button)
+
+#     def open_table_dialog(self):
+#         """
+#         Öffnet das Dialog-Widget mit der Tabelle und holt die eingegebenen Daten.
+#         """
+#         dialog = TableDialog(self)
+#         if dialog.exec_() == QDialog.Accepted:  # Wenn der Benutzer auf 'Enter' klickt
+#             table_data = dialog.get_table_data()
+#             print("Eingegebene Daten:")
+#             for row in table_data:
+#                 print(row)
+
+# if __name__ == "__main__":
+#     app = QApplication(sys.argv)
+#     window = MainWindow()
+#     window.show()
+#     sys.exit(app.exec())
+
+
+
 #TODO: Kontextgesteuerte Tabelle für Custom Carrierfrequenzen:
 # import sys
 # from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QTableWidget, QTableWidgetItem, QMenu, QWidget
@@ -2004,3 +2103,5 @@ class synthesizer_v(QObject):
 # block_size = 4096  # Größe der zu lesenden Blöcke
 
 # notch_filter_file(input_file, output_file, fn, BN, fs, block_size)
+
+

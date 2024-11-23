@@ -923,7 +923,16 @@ class core_v(QObject):
 
     def rxhandler(self,_key,_value):
         """
-        handles remote calls from other modules via Signal SigRX(_key,_value)
+        handles the exchange of variables between modules and remote calls of specific standard methods 
+        from other modules via Signal SigRX(_key,_value). Also communication between module_c and module_v 
+        needs to be relayed via this hadler, because module_c cannot access methods of module_v directly. 
+        On reception of this signal _key is interpreted and if it contains a specific prefix an action is carried out:
+    
+        (1): Prefix = 'cm_all_': copy _value [1] to the model variable m['_value[0]']. Example: Another module sends 
+        SigRelay('cm_all_',['myvar',self.m['myvar']]), then the current module takes over this variable into the own 
+        model, i.e. the variable self.m['myvar] exists from that moment or is overwritten. Caution: Use with care. model 
+        variables with the same name as in other modules may be overwritten, If this is to be avoided , the the 
+        respective names should not be used(listed in aa dictionary of reserved names).
 
         :param: _key
         :type: str
@@ -933,6 +942,8 @@ class core_v(QObject):
         :return: flag False or True, False on unsuccessful execution
         :rtype: Boolean
         """
+        
+    
         if _key.find("cm_core") == 0 or _key.find("cm_all_") == 0 or _key.find("cm_xcore") == 0:  #TODO: langfr remove core or xcore
             #set mdl-value
             self.m[_value[0]] = _value[1] 
