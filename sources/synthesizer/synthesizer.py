@@ -1881,7 +1881,9 @@ class TableDialog(QDialog):
         self.table = QTableWidget()
         self.table.setRowCount(10)
         self.table.setColumnCount(1)
-        self.table.setHorizontalHeaderLabels(["Spalte 1", "Spalte 2", "Spalte 3"])
+        self.table.setHorizontalHeaderLabels(["Spalte 1"])
+        self.table.setContextMenuPolicy(3)  # Aktiviert benutzerdefiniertes Kontextmenu
+        self.table.customContextMenuRequested.connect(self.show_context_menu)
         layout.addWidget(self.table)
 
         # ButtonBox mit 'Enter' und 'Cancel'
@@ -1902,6 +1904,66 @@ class TableDialog(QDialog):
                 row_data.append(item.text() if item else "")  # Leerstring, wenn keine Daten vorhanden
             data.append(row_data)
         return data
+
+
+#TODO: Kontextgesteuerte Tabelle für Custom Carrierfrequenzen:
+# import sys
+# from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QTableWidget, QTableWidgetItem, QMenu, QWidget
+
+# class MainWindow(QMainWindow):
+#     def __init__(self):
+#         super().__init__()
+#         self.setWindowTitle("QTableWidget mit Kontextmenü")
+#         self.setGeometry(100, 100, 600, 400)
+
+#         # Haupt-Widget
+#         central_widget = QWidget()
+#         self.setCentralWidget(central_widget)
+#         layout = QVBoxLayout()
+#         central_widget.setLayout(layout)
+
+#         # Tabelle erstellen
+#         self.table = QTableWidget()
+#         self.table.setColumnCount(3)
+#         self.table.setHorizontalHeaderLabels(["Spalte 1", "Spalte 2", "Spalte 3"])
+#         self.table.setContextMenuPolicy(3)  # Aktiviert benutzerdefiniertes Kontextmenü
+#         self.table.customContextMenuRequested.connect(self.show_context_menu)
+#         layout.addWidget(self.table)
+
+    def show_context_menu(self, position):
+        # Kontextmenü erstellen
+        context_menu = QMenu(self)
+
+        # Menüoptionen hinzufügen
+        add_row_action = context_menu.addAction("Add Row")
+        remove_row_action = context_menu.addAction("Remove Row")
+
+        # Benutzeraktion abfragen
+        action = context_menu.exec_(self.table.viewport().mapToGlobal(position))
+
+        # Aktion ausführen
+        if action == add_row_action:
+            self.add_row()
+        elif action == remove_row_action:
+            self.remove_selected_row()
+
+    def add_row(self):
+        # Neue Zeile am Ende hinzufügen
+        row_count = self.table.rowCount()
+        self.table.insertRow(row_count)
+
+        # Optional: Platzhaltertext einfügen
+        for col in range(self.table.columnCount()):
+            #self.table.setItem(row_count, col, QTableWidgetItem(f"Zeile {row_count + 1}, Spalte {col + 1}"))
+            self.table.setItem(row_count, col, QTableWidgetItem(""))
+
+    def remove_selected_row(self):
+        # Aktuell ausgewählte Zeile entfernen
+        selected_row = self.table.currentRow()
+        if selected_row >= 0:
+            self.table.removeRow(selected_row)
+
+
 
 # class MainWindow(QMainWindow):
 #     def __init__(self):
@@ -1938,62 +2000,6 @@ class TableDialog(QDialog):
 #     sys.exit(app.exec())
 
 
-
-#TODO: Kontextgesteuerte Tabelle für Custom Carrierfrequenzen:
-# import sys
-# from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QTableWidget, QTableWidgetItem, QMenu, QWidget
-
-# class MainWindow(QMainWindow):
-#     def __init__(self):
-#         super().__init__()
-#         self.setWindowTitle("QTableWidget mit Kontextmenü")
-#         self.setGeometry(100, 100, 600, 400)
-
-#         # Haupt-Widget
-#         central_widget = QWidget()
-#         self.setCentralWidget(central_widget)
-#         layout = QVBoxLayout()
-#         central_widget.setLayout(layout)
-
-#         # Tabelle erstellen
-#         self.table = QTableWidget()
-#         self.table.setColumnCount(3)
-#         self.table.setHorizontalHeaderLabels(["Spalte 1", "Spalte 2", "Spalte 3"])
-#         self.table.setContextMenuPolicy(3)  # Aktiviert benutzerdefiniertes Kontextmenü
-#         self.table.customContextMenuRequested.connect(self.show_context_menu)
-#         layout.addWidget(self.table)
-
-#     def show_context_menu(self, position):
-#         # Kontextmenü erstellen
-#         context_menu = QMenu(self)
-
-#         # Menüoptionen hinzufügen
-#         add_row_action = context_menu.addAction("Add Row")
-#         remove_row_action = context_menu.addAction("Remove Row")
-
-#         # Benutzeraktion abfragen
-#         action = context_menu.exec_(self.table.viewport().mapToGlobal(position))
-
-#         # Aktion ausführen
-#         if action == add_row_action:
-#             self.add_row()
-#         elif action == remove_row_action:
-#             self.remove_selected_row()
-
-#     def add_row(self):
-#         # Neue Zeile am Ende hinzufügen
-#         row_count = self.table.rowCount()
-#         self.table.insertRow(row_count)
-
-#         # Optional: Platzhaltertext einfügen
-#         for col in range(self.table.columnCount()):
-#             self.table.setItem(row_count, col, QTableWidgetItem(f"Zeile {row_count + 1}, Spalte {col + 1}"))
-
-#     def remove_selected_row(self):
-#         # Aktuell ausgewählte Zeile entfernen
-#         selected_row = self.table.currentRow()
-#         if selected_row >= 0:
-#             self.table.removeRow(selected_row)
 
 # if __name__ == "__main__":
 #     app = QApplication(sys.argv)
