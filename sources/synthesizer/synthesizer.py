@@ -648,11 +648,24 @@ class synthesizer_v(QObject):
             self.gui.lineEdit_carrierdistance.setEnabled(False)
             self.gui.lineEdit_fc_low.setEnabled(False)
         else:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Question)
+            msg.setText("Warning")
+            msg.setInformativeText(f"you are about to delete the custom carrier playlists; Status will be reset to default values and lists will be removed. Do you want to proceed ?")
+            msg.setWindowTitle("Delete carriers")
+            msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+            msg.buttonClicked.connect(self.popup)
+            msg.exec_()
+
+            if self.yesno == "&Yes":
+                pass
+            else:
+                return
             self.gui.pushButton_CustomCarriers.setEnabled(False)
             self.gui.lineEdit_carrierdistance.setEnabled(True)
             self.gui.lineEdit_fc_low.setEnabled(True)
             self.custom_carriers = [] # TODO: check if appropriate: if  custom carriers is unchecked, the table of custom defined carrier freqs is deleted
-
+            self.gui.spinBox_numcarriers.setProperty("value", 2)
 
     def clear_project(self):
         self.init_synthesizer_ui()
