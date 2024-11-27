@@ -4,11 +4,11 @@ modules:
   wavheader_editor: wavheader_editor
   yaml_editor: yaml_editor
   annotator: annotate
-  synthesizer: synthesizer
+  #synthesizer: synthesizer
 module_names:
   spectralviewer: View Spectra
   resampler: Resampler
   wavheader_editor: Wavheader Editor
   yaml_editor: Yaml Editor
   annotator: Annotator
-  synthesizer: Synthesizer
+  #synthesizer: Synthesizer

@@ -192,14 +192,14 @@ class core_c(QObject):
         options |= QtWidgets.QFileDialog.ShowDirsOnly
         self.m["recording_path"] = QtWidgets.QFileDialog.getExistingDirectory(self.m["QTMAINWINDOWparent"], "Select Recording Directory", options=options)
         self.logger.debug("playrec recording path: %s", self.m["recording_path"])
-        self.m["metadata"]["recording_path"] = self.m["recording_path"]
+        self.m["metadata"]["recording_path"] = self.m["recording_path"] #TODO: check ? obsolete ?
         stream = open("config_wizard.yaml", "w")
         yaml.dump(self.m["metadata"], stream)
         stream.close()
         self.m["recording_path"] = self.m["metadata"]["recording_path"] #TODO: check ? obsolete ?
         self.logger.debug("playrec recording button recording path: %s", self.m["recording_path"])
         #print("core_c send recordingpath to all")
-        self.SigRelay.emit("cm_all_",["recording_path",self.m["recording_path"]])      
+        self.SigRelay.emit("cm_all_",["recording_path",self.m["recording_path"]])   #does not work !!!!   
         self.SigRelay.emit("cexex_xcore",["updateConfigElements",0])
 
 class core_v(QObject):

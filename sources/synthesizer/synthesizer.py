@@ -585,6 +585,8 @@ class synthesizer_v(QObject):
         except:
             self.default_directory = ""
 
+        self.custom_carriers = []
+
     def init_synthesizer_ui(self):
         self.m["SR_currindex"] = 5
         self.gui.comboBox_targetSR.setCurrentIndex(self.m["SR_currindex"])
@@ -606,7 +608,7 @@ class synthesizer_v(QObject):
         self.gui.spinBox_numcarriers.valueChanged.connect(self.on_value_changed)
         # react only to key input
         self.gui.spinBox_numcarriers.editingFinished.connect(self.on_editing_finished)
-
+        self.gui.pushButton_CustomCarriers.setEnabled(False)
         self.gui.lineEdit_carrierdistance.editingFinished.connect(self.carrierdistance_update)
         self.gui.lineEdit_audiocutoff_freq.editingFinished.connect(self.audioBW_update)
         self.gui.lineEdit_fc_low.editingFinished.connect(self.fc_low_update)
@@ -631,14 +633,26 @@ class synthesizer_v(QObject):
         self.gui.synthesizer_pushbutton_cancel.clicked.connect(self.cancel_modulate)
         self.gui.verticalSlider_Gain.setProperty("value", 76) #percent
         self.gui.pushButton_CustomCarriers.clicked.connect(self.open_table_dialog)
-
-
-
+        self.gui.radiobutton_CustomCarriers.toggled.connect(self.customcarrier_handler)      
+        
         self.gui.verticalSlider_Gain.valueChanged.connect(self.setgain)
         self.previous_value = self.gui.spinBox_numcarriers.value()
         self.canvasbuild()
         self.RecBW_update()
         #self.gui.lineEdit_carrierdistance.textEdited.connect(self.carriedistance_update)
+
+    def customcarrier_handler(self):
+        
+        if self.gui.radiobutton_CustomCarriers.isChecked():
+            self.gui.pushButton_CustomCarriers.setEnabled(True)
+            self.gui.lineEdit_carrierdistance.setEnabled(False)
+            self.gui.lineEdit_fc_low.setEnabled(False)
+        else:
+            self.gui.pushButton_CustomCarriers.setEnabled(False)
+            self.gui.lineEdit_carrierdistance.setEnabled(True)
+            self.gui.lineEdit_fc_low.setEnabled(True)
+            self.custom_carriers = [] # TODO: check if appropriate: if  custom carriers is unchecked, the table of custom defined carrier freqs is deleted
+
 
     def clear_project(self):
         self.init_synthesizer_ui()
@@ -1356,11 +1370,14 @@ class synthesizer_v(QObject):
 
     def carrierselect_update(self):
         #generate combobox entry list
-        carrier_array = np.arange(self.m["fc_low"], self.cf_HI+1, self.m["carrier_distance"])
+        if len(self.custom_carriers) > 0:
+            carrier_array = self.custom_carriers
+            carrierselector = carrier_array
+        else:
+            carrier_array = np.arange(self.m["fc_low"], self.cf_HI+1, self.m["carrier_distance"])
         #carrier_array = TODO: entrypoint for individual carrierfrequencies, read array from editor
         # flex_carrier_table
-
-        carrierselector = carrier_array.tolist()
+            carrierselector = carrier_array.tolist()
         self.gui.comboBox_cur_carrierfreq.clear()
         for cf in carrierselector:
             self.gui.comboBox_cur_carrierfreq.addItem(str(cf))
@@ -1376,28 +1393,69 @@ class synthesizer_v(QObject):
             self.freq_carriers_update()
 
     def on_editing_finished(self):
+        """slot function of spinbox self.gui.spinBox_numcarriers
+        initiates updating of the number of carriers
+        """
         self.freq_carriers_update()
         print("on editing finished")
 
-    def freq_carriers_update(self):
+    def freq_carriers_update(self,*argv):
+        """
+        append or remove i elements to/from carrier list, i being the difference between the old number and
+        the new number selected with Spinbox
+        (1) gets number of carriers from Spinbox
+        (2) validates the number
+        (3) initializes or removes i new elements in self.readFileList
+        (4) transfers new number to model variable self.m["numcarriers"]  
+        (5) sets lowest and highest carrier frequencies 
+        (6) calls self.carrierselect_update()
+
+        :parameters : *argv, variable number of args; arg
+        :return: False on failure
+        :rtype: Boolean
+        """
 #         Vergrößern: append differenz zu vorher mal self.readFileList mit []
 # 	Verkleinern: ermittle differenz zu vorher letzte self.readFileList Elemente
 # Wenn letzte self.readFileList[-1] nicht empty  Warnug, dass alle bis auf die verbleibenden Lisetneiträge gelöscht werde, Proceed ? Cancel ?
 # Wenn bestätigt:
 # 			Delete letzte self.readFileList Elemente
 
+        #TODO: treat self.custom_carriers from custom carrier freq table, once this one has been edited.
+        # check if not empty; if populated, re-read values into current table
+        # (1) check if empty  >>>>DONE
+        # (2) check if deviates from old list >>>>DONE
+        # (3) if delta: >>>>DONE
+        #   (a) set numcar to len(self.custom_carriers)  >>>>DONE
+        #   (b) set low and high end frequencies to self.custom_carriers[0] and [-1], resp.  >>>>DONE
+        #   (c) modify call to self.carrierselect_update() for considering self.custom_carriers   >>>>DONE
+        # do not forget: self.custom_carriers must be set to the current table >>>>DONE 
+        # any time the table is changed via the standard GUI elements 
+        # consider replacing access to self.custom_carriers by a new argument to this function (argv, argc) >>>>DONE
+
+        # (4) on uncheck custom car radiobutton:
+        #   clear carrierlist, reset comboBox_cur_carrierfreq and spinBox_numcarriers to default values from init
+        # (5) on table update from custom carrier table: update spinBox_numcarriers value
+
         self.numcarriers_old = self.m["numcarriers"]
-        numcar = self.gui.spinBox_numcarriers.value()
+        custom_carriers = []
+        if len(argv) > 1:
+            for x in argv[1]:
+                if self.isnumeric(x[0])[0]:
+                    custom_carriers.append(float(x[0]))
+                    self.custom_carriers = custom_carriers
+                elif len(x[0]) > 0:
+                    auxi.standard_errorbox("custom carrier table contains non-numeric values, please correct !")
+                    return False
+            numcar = len(custom_carriers)    
+        else:
+            numcar = self.gui.spinBox_numcarriers.value()
         valid, errortext = self.validate_params()
         if not valid:
             self.gui.spinBox_numcarriers.valueChanged.disconnect(self.on_value_changed)
             self.gui.spinBox_numcarriers.editingFinished.disconnect(self.on_editing_finished)
-            #self.gui.spinBox_numcarriers.editingFinished.disconnect(self.freq_carriers_update)
             auxi.standard_errorbox(errortext)
             self.gui.spinBox_numcarriers.setProperty("value", self.numcarriers_old)
             time.sleep(0.1)
-            #self.m["numcarriers"] = self.numcarriers_old
-            #self.gui.spinBox_numcarriers.editingFinished.connect(self.freq_carriers_update)
             self.gui.spinBox_numcarriers.valueChanged.connect(self.on_value_changed)
             self.gui.spinBox_numcarriers.editingFinished.connect(self.on_editing_finished)
             return False
@@ -1447,15 +1505,20 @@ class synthesizer_v(QObject):
                     del self.oldFileList[self.numcarriers_old - 1 - i]
                     del self.readFilePath[self.numcarriers_old - 1 - i]
 
-        self.m["numcarriers"] = numcar  
-        fc_low = float(self.gui.lineEdit_fc_low.text())
-        # self.c_step = float(self.gui.lineEdit_carrierdistance.text())
-        # self.cf_HI = fc_low + (self.m["numcarriers"] - 1) * self.c_step
-        self.cf_HI = fc_low + (self.m["numcarriers"] - 1) * self.m["carrier_distance"]
+        self.m["numcarriers"] = numcar
+
+        #TODO: make dependent on whether customcarriers or not !
+        if len(self.custom_carriers) > 0:
+            fc_low = float(self.custom_carriers[0])
+            self.cf_HI = float(self.custom_carriers[-1])
+        else:
+            fc_low = float(self.gui.lineEdit_fc_low.text())
+            self.cf_HI = fc_low + (self.m["numcarriers"] - 1) * self.m["carrier_distance"]
         #TODO TODO TODO : entrypoint for individual carrierfrequencies
         #TODO i case of flex_carrier_table: self.cf_HI = flex_carrier_table [-1] 
         self.carrierselect_update()
-
+        return True
+    
     def popup(self,i):
         """
         """
@@ -1849,23 +1912,31 @@ class synthesizer_v(QObject):
 
     def open_table_dialog(self):
         """
-        opens a Dialogue widget as a TableWidget,which allows to enter individual carrier frequencies. On pressin enter, the row data are returned
+        opens a Dialogue widget as a floating TableWidget,which allows to enter individual carrier frequencies. On pressin enter, the row data are returned
         :params : none
         :returns: row
         :rtype : list
         """
         dialog = TableDialog(None)
+        self.populate_table(dialog.table, self.custom_carriers)
 
         if dialog.exec_() == QDialog.Accepted:  # Wenn der Benutzer auf 'Enter' klickt
-            table_data = dialog.get_table_data()
+            #dialog.set_table_data()
+            #self.custom_carriers  
+            custom_carriers = dialog.get_table_data()
             print("Eingegebene Daten:")
-            for row in table_data:
+            for row in custom_carriers:
                 print(row)
+        self.freq_carriers_update(self,custom_carriers)
 
+    def populate_table(self, table, values):
+        rows = len(values)
+        #table.setRowCount(rows)
 
-######################### POPUP widget:
-# import sys
-# from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QTableWidget, QTableWidgetItem, QPushButton, QDialog, QDialogButtonBox, QVBoxLayout, QWidget
+        # Tabelle mit Float-Werten füllen
+        for i, value in enumerate(values):
+            item = QTableWidgetItem(f"{value:.2f}")  # Float-Wert formatieren
+            table.setItem(i, 0, item)  # (Zeile, Spalte)
 
 class TableDialog(QDialog):
     """Class for generating a popup TableWidget for entering the custom values"""
@@ -1874,27 +1945,29 @@ class TableDialog(QDialog):
         self.setWindowTitle("Table Dialog")
         self.setGeometry(200, 200, 400, 300)
 
-        # Layout für den Dialog
+        # Layout for Dialogue
         layout = QVBoxLayout(self)
 
-        # TableWidget erstellen
+        # create floating TableWidget
         self.table = QTableWidget()
         self.table.setRowCount(10)
         self.table.setColumnCount(1)
-        self.table.setHorizontalHeaderLabels(["Spalte 1"])
-        self.table.setContextMenuPolicy(3)  # Aktiviert benutzerdefiniertes Kontextmenu
+        self.table.setHorizontalHeaderLabels(["frequency (Hz)"])
+        self.table.setContextMenuPolicy(3)  # activate user defined context menu
         self.table.customContextMenuRequested.connect(self.show_context_menu)
         layout.addWidget(self.table)
 
-        # ButtonBox mit 'Enter' und 'Cancel'
+        # add ButtonBox with 'Enter' und 'Cancel'
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        buttons.accepted.connect(self.accept)  # Dialog schließen und OK zurückgeben
-        buttons.rejected.connect(self.reject)  # Dialog schließen und Abbrechen zurückgeben
+        buttons.accepted.connect(self.accept)  # close dialogue and return OK
+        buttons.rejected.connect(self.reject)  # close dialogue and return Cancel
         layout.addWidget(buttons)
 
     def get_table_data(self):
         """
-        Gibt die Daten des TableWidgets als Liste von Listen zurück.
+        returns data of the custom carrier frequency table
+        :returns : data from custom carrier frequency table
+        :rtype : list
         """
         data = []
         for row in range(self.table.rowCount()):
@@ -1906,106 +1979,45 @@ class TableDialog(QDialog):
         return data
 
 
-#TODO: Kontextgesteuerte Tabelle für Custom Carrierfrequenzen:
-# import sys
-# from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QTableWidget, QTableWidgetItem, QMenu, QWidget
-
-# class MainWindow(QMainWindow):
-#     def __init__(self):
-#         super().__init__()
-#         self.setWindowTitle("QTableWidget mit Kontextmenü")
-#         self.setGeometry(100, 100, 600, 400)
-
-#         # Haupt-Widget
-#         central_widget = QWidget()
-#         self.setCentralWidget(central_widget)
-#         layout = QVBoxLayout()
-#         central_widget.setLayout(layout)
-
-#         # Tabelle erstellen
-#         self.table = QTableWidget()
-#         self.table.setColumnCount(3)
-#         self.table.setHorizontalHeaderLabels(["Spalte 1", "Spalte 2", "Spalte 3"])
-#         self.table.setContextMenuPolicy(3)  # Aktiviert benutzerdefiniertes Kontextmenü
-#         self.table.customContextMenuRequested.connect(self.show_context_menu)
-#         layout.addWidget(self.table)
-
     def show_context_menu(self, position):
-        # Kontextmenü erstellen
+        """show right mouse click context menu for custom carrier frequency table
+
+        :param position: _description_
+        :type position: _type_
+        """
+        # bulid context menu
         context_menu = QMenu(self)
 
-        # Menüoptionen hinzufügen
+        # add menu options
         add_row_action = context_menu.addAction("Add Row")
         remove_row_action = context_menu.addAction("Remove Row")
 
-        # Benutzeraktion abfragen
+        # ask for user request
         action = context_menu.exec_(self.table.viewport().mapToGlobal(position))
 
-        # Aktion ausführen
+        # carry out context action
         if action == add_row_action:
             self.add_row()
         elif action == remove_row_action:
             self.remove_selected_row()
 
     def add_row(self):
-        # Neue Zeile am Ende hinzufügen
+        # add new row to custom carrier table by context menu
         row_count = self.table.rowCount()
         self.table.insertRow(row_count)
 
-        # Optional: Platzhaltertext einfügen
+        # optional: enter text in table element
         for col in range(self.table.columnCount()):
             #self.table.setItem(row_count, col, QTableWidgetItem(f"Zeile {row_count + 1}, Spalte {col + 1}"))
             self.table.setItem(row_count, col, QTableWidgetItem(""))
 
     def remove_selected_row(self):
-        # Aktuell ausgewählte Zeile entfernen
+        # remove currently selected row from custom carrier table by context menu
         selected_row = self.table.currentRow()
         if selected_row >= 0:
             self.table.removeRow(selected_row)
 
 
-
-# class MainWindow(QMainWindow):
-#     def __init__(self):
-#         super().__init__()
-#         self.setWindowTitle("Main Window")
-#         self.setGeometry(100, 100, 600, 400)
-
-#         # Layout und Button
-#         central_widget = QWidget()
-#         self.setCentralWidget(central_widget)
-#         layout = QVBoxLayout()
-#         central_widget.setLayout(layout)
-
-#         # Button zum Öffnen des Dialogs
-#         self.open_dialog_button = QPushButton("Open Table Dialog")
-#         self.open_dialog_button.clicked.connect(self.open_table_dialog)
-#         layout.addWidget(self.open_dialog_button)
-
-#     def open_table_dialog(self):
-#         """
-#         Öffnet das Dialog-Widget mit der Tabelle und holt die eingegebenen Daten.
-#         """
-#         dialog = TableDialog(self)
-#         if dialog.exec_() == QDialog.Accepted:  # Wenn der Benutzer auf 'Enter' klickt
-#             table_data = dialog.get_table_data()
-#             print("Eingegebene Daten:")
-#             for row in table_data:
-#                 print(row)
-
-# if __name__ == "__main__":
-#     app = QApplication(sys.argv)
-#     window = MainWindow()
-#     window.show()
-#     sys.exit(app.exec())
-
-
-
-# if __name__ == "__main__":
-#     app = QApplication(sys.argv)
-#     window = MainWindow()
-#     window.show()
-#     sys.exit(app.exec())
 
 
 #TODO: 
