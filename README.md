@@ -12,10 +12,15 @@ Appropriate recordings can be played back on historic Radio receivers with exter
 2) unpack the zip file to a local directory of your PC, say `cohihome`
 3) start the exe File SDR_COHIWizard_v26.exe
 
-## Method B (most recent version) for execution under Python (not yet tested in LUNIX environments !): 
+## Method B (most recent version) for execution under Python (also running under LUNIX but not yet excessively tested. The main functions have been successfully executed under DEBIAN 10): 
 
+<<<<<<< HEAD
 1) install Python v3.9.7 on your PC; the COHIWIzard may fail with other versions, though they may work (not yet tested)
 2) clone the repository from GITHUB to your PC to a folder say cohihome
+=======
+1) install Python on your PC
+2) clone the repository from GITHUB to your PC to a folder, say cohihome
+>>>>>>> 393a2bd7848c718107a214e4678fbc33f5faf77f
 3) change to this folder
 4) create a virtual environment with `python –m venv venv`
 5) activate the venv by `venv/Scripts/activate`
@@ -25,3 +30,4 @@ Appropriate recordings can be played back on historic Radio receivers with exter
 
 SDR_COHIWizard.py starts up a GUI with a recorder/player and various utilities for e.g. visualization of the spectra, resampling, annotation (beta version) and editing of wav-headers.
 
+When using a local git you can also access the branch 1.3 which is currently experimental and contains the version currently under development.
