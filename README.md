@@ -14,7 +14,7 @@ Appropriate recordings can be played back on historic Radio receivers with exter
 
 ## Method B (most recent version) for execution under Python (not yet tested in LUNIX environments !): 
 
-1) install Python on your PC
+1) install Python v3.9.7 on your PC; the COHIWIzard may fail with other versions, though they may work (not yet tested)
 2) clone the repository from GITHUB to your PC to a folder say cohihome
 3) change to this folder
 4) create a virtual environment with `python –m venv venv`
