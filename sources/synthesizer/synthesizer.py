@@ -523,6 +523,7 @@ class synthesizer_v(QObject):
         self.SORTCRITERION = 'name' #Sorting criterion for filelist: 'date': sort caa to date in ascending order, 'name': alphabetical 
         self.FILTER_OVERLAP = 800  #overlap samples due to filter delay
         self.READ_BIAS = -100     # pre-read audio samples to enable filter delay compensation
+        #self.CANVAS == False    # allow for building monitor canvas. Flag is set True once built, then no new build should occur on call for canvas initialization
 
         self.AUTOSCALE_RF = 0     # Set to 1 to select autoscale mode causing exact RF levelling to max, otherwise set to 0 for fixed RF levelling  
         self.FIXSCALE_FAKTOR_RF = 0.8 # guard factor for fixed RF levelling: assumed max. RF level: #carriers * (1+C_m) * C_FIXSCALE_FAKTOR_RF. RF overload may occur if C_FIXSCALE_FAKTOR_RF < 1 
@@ -560,6 +561,7 @@ class synthesizer_v(QObject):
         self.m["numcarriers"] = self.gui.spinBox_numcarriers.value()
         self.m["carrier_ix"] = 0
         self.init_synthesizer_ui()
+        self.canvasbuild()
         self.readFileList = []
         self.oldFileList = []
         self.readFilePath = []
@@ -593,6 +595,8 @@ class synthesizer_v(QObject):
         self.gui.lineEdit_LO.setText("1125")
         preset_time = QTime(00, 30, 00) 
         self.gui.timeEdit_reclength.setTime(preset_time)
+        self.gui.lineEdit_fc_low.setText("783")
+
         #self.gui.listWidget_sourcelist.setHeaderLabel("Directory tree")
         #self.gui.listWidget_sourcelist.itemClicked.connect(self.on_tree_item_clicked)
         #self.gui.listWidget_sourcelist.itemDoubleClicked.connect(self.on_tree_item_double_clicked)
@@ -602,10 +606,11 @@ class synthesizer_v(QObject):
         self.gui.listWidget_sourcelist.addItem(item)
         self.gui.lineEdit_audiocutoff_freq.setText(self.STD_AUDIOBW)
         self.gui.lineEdit_carrierdistance.setText(self.STD_CARRIERDISTANCE)
-        self.gui.spinBox_numcarriers.setProperty("value", 2)
+
         #self.gui.spinBox_numcarriers.editingFinished.connect(self.freq_carriers_update)
         #react to arrows press
         self.gui.spinBox_numcarriers.valueChanged.connect(self.on_value_changed)
+        self.gui.spinBox_numcarriers.setProperty("value", 2)
         # react only to key input
         self.gui.spinBox_numcarriers.editingFinished.connect(self.on_editing_finished)
         self.gui.pushButton_CustomCarriers.setEnabled(False)
@@ -637,7 +642,6 @@ class synthesizer_v(QObject):
         
         self.gui.verticalSlider_Gain.valueChanged.connect(self.setgain)
         self.previous_value = self.gui.spinBox_numcarriers.value()
-        self.canvasbuild()
         self.RecBW_update()
         #self.gui.lineEdit_carrierdistance.textEdited.connect(self.carriedistance_update)
 
@@ -645,8 +649,10 @@ class synthesizer_v(QObject):
         
         if self.gui.radiobutton_CustomCarriers.isChecked():
             self.gui.pushButton_CustomCarriers.setEnabled(True)
-            self.gui.lineEdit_carrierdistance.setEnabled(False)
+            #self.gui.lineEdit_carrierdistance.setEnabled(False)
             self.gui.lineEdit_fc_low.setEnabled(False)
+            self.gui.spinBox_numcarriers.setEnabled(False)
+            
         else:
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Question)
@@ -658,14 +664,16 @@ class synthesizer_v(QObject):
             msg.exec_()
 
             if self.yesno == "&Yes":
-                pass
+                self.gui.pushButton_CustomCarriers.setEnabled(False)
+                #self.gui.lineEdit_carrierdistance.setEnabled(True)
+                self.gui.lineEdit_fc_low.setEnabled(True)
+                self.gui.spinBox_numcarriers.setEnabled(True)
+                self.custom_carriers = [] # TODO: check if appropriate: if  custom carriers is unchecked, the table of custom defined carrier freqs is deleted
+                self.clear_project()
+                self.freq_carriers_update()
             else:
                 return
-            self.gui.pushButton_CustomCarriers.setEnabled(False)
-            self.gui.lineEdit_carrierdistance.setEnabled(True)
-            self.gui.lineEdit_fc_low.setEnabled(True)
-            self.custom_carriers = [] # TODO: check if appropriate: if  custom carriers is unchecked, the table of custom defined carrier freqs is deleted
-            self.gui.spinBox_numcarriers.setProperty("value", 2)
+
 
     def clear_project(self):
         self.init_synthesizer_ui()
@@ -774,11 +782,13 @@ class synthesizer_v(QObject):
         """
         sets up a pyQTgraph canvas to which curves can be plotted
         """
+        #if self.CANVAS == False:
         self.plot_widget = pg.PlotWidget()
         self.gui.gridLayout_synthesizer.addWidget(self.plot_widget,0,7,3,2)
         self.plot_widget.getAxis('left').setStyle(tickFont=pg.QtGui.QFont('Arial', 6))
         self.plot_widget.getAxis('bottom').setStyle(tickFont=pg.QtGui.QFont('Arial', 6))
         self.plot_widget.setBackground('w')
+            #self.CANVAS = True
 
     def preset_gain(self):
         """determine optimal gain and set gain slider accordingly
@@ -1446,8 +1456,11 @@ class synthesizer_v(QObject):
         # consider replacing access to self.custom_carriers by a new argument to this function (argv, argc) >>>>DONE
 
         # (4) on uncheck custom car radiobutton:
-        #   clear carrierlist, reset comboBox_cur_carrierfreq and spinBox_numcarriers to default values from init
-        # (5) on table update from custom carrier table: update spinBox_numcarriers value
+        #   clear carrierlist >>>>DONE, reset GUI from init >>>>DONE, clear playlists >>>>>DONE
+        # (5) on table update from custom carrier table: update spinBox_numcarriers value >>>>DONE
+        # (6) modify validator: check carrierdistance/BW, if all carriers have min distance, lower bound, upper bound based on SR and LO
+        # (7) insert pause(2s) between all subsequent audio items ("silence")
+        # (8) importer for i3u Files --> fill custom list and activate custom mode
 
         self.numcarriers_old = self.m["numcarriers"]
         custom_carriers = []
@@ -1459,7 +1472,10 @@ class synthesizer_v(QObject):
                 elif len(x[0]) > 0:
                     auxi.standard_errorbox("custom carrier table contains non-numeric values, please correct !")
                     return False
-            numcar = len(custom_carriers)    
+            numcar = len(custom_carriers)
+            self.gui.spinBox_numcarriers.valueChanged.disconnect(self.on_value_changed)
+            self.gui.spinBox_numcarriers.setProperty("value", numcar)
+            self.gui.spinBox_numcarriers.valueChanged.connect(self.on_value_changed)
         else:
             numcar = self.gui.spinBox_numcarriers.value()
         valid, errortext = self.validate_params()
@@ -1499,9 +1515,18 @@ class synthesizer_v(QObject):
 
                 if self.yesno == "&Yes":
                     for i in range(delta):
-                        del self.readFileList[self.numcarriers_old - 1 - i]
-                        del self.oldFileList[self.numcarriers_old - 1 - i]
-                        del self.readFilePath[self.numcarriers_old - 1 - i]
+                        try:
+                            del self.readFileList[self.numcarriers_old - 1 - i]
+                        except:
+                            pass
+                        try:
+                            del self.oldFileList[self.numcarriers_old - 1 - i]
+                        except:
+                            pass
+                        try:
+                            del self.readFilePath[self.numcarriers_old - 1 - i]
+                        except:
+                            pass
                 else:
                     #self.gui.spinBox_numcarriers.editingFinished.disconnect(self.freq_carriers_update)
                     self.gui.spinBox_numcarriers.valueChanged.disconnect(self.on_value_changed)
@@ -1524,6 +1549,8 @@ class synthesizer_v(QObject):
         if len(self.custom_carriers) > 0:
             fc_low = float(self.custom_carriers[0])
             self.cf_HI = float(self.custom_carriers[-1])
+            self.gui.lineEdit_fc_low.setText(str(fc_low))
+            #TODO: what should I set the distance to ? self.gui.lineEdit_carrierdistance.setText(str(9))
         else:
             fc_low = float(self.gui.lineEdit_fc_low.text())
             self.cf_HI = fc_low + (self.m["numcarriers"] - 1) * self.m["carrier_distance"]

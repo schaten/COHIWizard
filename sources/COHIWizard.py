@@ -1007,11 +1007,11 @@ def dynamic_import_from_config(config,sub_module,logger):
             # Importmodule dynamically
             imported_module = importlib.import_module(full_module_path)
             imported_modules[module] = imported_module
-            logger.debug(f"Successfully imported {module} from {full_module_path}.")
+            logger.debug(f"dynamic import: Successfully imported {module} from {full_module_path}.")
             #print(f"Successfully imported {module} from {full_module_path}.")
         except ModuleNotFoundError as e:
-            #print(f"Error importing {module} from {directory}: {e}")
-            logger.debug(f"Error importing {module} from {directory}: {e}")
+            #print(f"dynamic import Error importing {module} from {directory}: {e}")
+            logger.debug(f"dynamic import: Error importing {module} from {directory}: {e}")
     return imported_modules
 
 if __name__ == '__main__':
@@ -1049,6 +1049,7 @@ if __name__ == '__main__':
     sub_module = "modules"
     mod_base = {'player':'playrec'}
     config['modules'] = {**mod_base, **config['modules']}
+    #print(f"config file content: {config}")
     widget_base = {'player': 'Player'}
     config['module_names'] = {**widget_base, **config['module_names']}
     loaded_modules = dynamic_import_from_config(config,sub_module,xcore_v.logger)

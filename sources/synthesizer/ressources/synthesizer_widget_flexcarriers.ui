@@ -4257,6 +4257,13 @@
       </property>
      </widget>
     </item>
+    <item row="2" column="0">
+     <widget class="QPushButton" name="pushButton_importProject">
+      <property name="text">
+       <string>Import Project from ####</string>
+      </property>
+     </widget>
+    </item>
    </layout>
    <zorder>line_4</zorder>
    <zorder>comboBox_targetSR_2</zorder>
@@ -4307,6 +4314,7 @@
    <zorder>pushButton_clearproject</zorder>
    <zorder>pushButton_CustomCarriers</zorder>
    <zorder>radiobutton_CustomCarriers</zorder>
+   <zorder>pushButton_importProject</zorder>
   </widget>
  </widget>
  <resources/>
