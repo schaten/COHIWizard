@@ -533,6 +533,8 @@ class synthesizer_v(QObject):
         self.STD_CARRIERDISTANCE = "9"
         self.STD_fclow = "783"
         self.STD_LO = "1125"
+        self.DEF_NUMCARRIERS = 2
+        self.cf_HI = int(self.STD_fclow) + int(self.STD_CARRIERDISTANCE) * self.DEF_NUMCARRIERS
         self.GAINOFFSET = 80
         self.gui = gui
         self.synthesizer_c = synthesizer_c
@@ -588,6 +590,7 @@ class synthesizer_v(QObject):
             self.default_directory = ""
 
         self.custom_carriers = []
+        
 
     def init_synthesizer_ui(self):
         self.m["SR_currindex"] = 5
@@ -610,7 +613,7 @@ class synthesizer_v(QObject):
         #self.gui.spinBox_numcarriers.editingFinished.connect(self.freq_carriers_update)
         #react to arrows press
         self.gui.spinBox_numcarriers.valueChanged.connect(self.on_value_changed)
-        self.gui.spinBox_numcarriers.setProperty("value", 2)
+        self.gui.spinBox_numcarriers.setProperty("value", self.DEF_NUMCARRIERS)
         # react only to key input
         self.gui.spinBox_numcarriers.editingFinished.connect(self.on_editing_finished)
         self.gui.pushButton_CustomCarriers.setEnabled(False)
@@ -1458,7 +1461,7 @@ class synthesizer_v(QObject):
         # (4) on uncheck custom car radiobutton:
         #   clear carrierlist >>>>DONE, reset GUI from init >>>>DONE, clear playlists >>>>>DONE
         # (5) on table update from custom carrier table: update spinBox_numcarriers value >>>>DONE
-        # (6) modify validator: check carrierdistance/BW, if all carriers have min distance, lower bound, upper bound based on SR and LO
+        # (6) modify validator: check carrierdistance/BW, if all carriers have min distance, lower bound, upper bound based on SR and LO  >>>>DONE
         # (7) insert pause(2s) between all subsequent audio items ("silence")
         # (8) importer for i3u Files --> fill custom list and activate custom mode
 
@@ -1473,11 +1476,24 @@ class synthesizer_v(QObject):
                     auxi.standard_errorbox("custom carrier table contains non-numeric values, please correct !")
                     return False
             numcar = len(custom_carriers)
+            if len(self.custom_carriers) > 1:
+                # determine the minimum difference between two carrier frequencies in a non-equally spaced list
+                mindifference = np.min(np.diff(custom_carriers))
+                #set the carrierdistance field to the minimum value for later validation
+                self.gui.lineEdit_carrierdistance.setText(str(mindifference))
             self.gui.spinBox_numcarriers.valueChanged.disconnect(self.on_value_changed)
             self.gui.spinBox_numcarriers.setProperty("value", numcar)
             self.gui.spinBox_numcarriers.valueChanged.connect(self.on_value_changed)
+            if len(self.custom_carriers) > 0: #TODO: check what happens if only 1 carrier is selected --> catch in validator
+                fc_low = float(self.custom_carriers[0])
+                self.cf_HI = float(self.custom_carriers[-1])
+                self.gui.lineEdit_fc_low.setText(str(fc_low))
+
         else:
             numcar = self.gui.spinBox_numcarriers.value()
+        #TODO: make dependent on whether customcarriers or not !
+
+
         valid, errortext = self.validate_params()
         if not valid:
             self.gui.spinBox_numcarriers.valueChanged.disconnect(self.on_value_changed)
@@ -1487,6 +1503,8 @@ class synthesizer_v(QObject):
             time.sleep(0.1)
             self.gui.spinBox_numcarriers.valueChanged.connect(self.on_value_changed)
             self.gui.spinBox_numcarriers.editingFinished.connect(self.on_editing_finished)
+            if len(argv) > 1:
+                self.open_table_dialog()
             return False
 
         if numcar > self.numcarriers_old:
@@ -1545,17 +1563,11 @@ class synthesizer_v(QObject):
 
         self.m["numcarriers"] = numcar
 
-        #TODO: make dependent on whether customcarriers or not !
         if len(self.custom_carriers) > 0:
-            fc_low = float(self.custom_carriers[0])
-            self.cf_HI = float(self.custom_carriers[-1])
-            self.gui.lineEdit_fc_low.setText(str(fc_low))
-            #TODO: what should I set the distance to ? self.gui.lineEdit_carrierdistance.setText(str(9))
+            pass
         else:
-            fc_low = float(self.gui.lineEdit_fc_low.text())
+            fc_low = float(self.gui.lineEdit_fc_low.text())#TODO make this visible to validator
             self.cf_HI = fc_low + (self.m["numcarriers"] - 1) * self.m["carrier_distance"]
-        #TODO TODO TODO : entrypoint for individual carrierfrequencies
-        #TODO i case of flex_carrier_table: self.cf_HI = flex_carrier_table [-1] 
         self.carrierselect_update()
         return True
     
@@ -1598,7 +1610,7 @@ class synthesizer_v(QObject):
             errortext = "value is not numeric"
             return False, errortext
 
-    def validate_params(self):
+    def validate_params(self,*argv):
         """_validates certain parameter conditions which must be fulfilled for meaningful settings,
         e.g. carrier distance > 2* Audio-BW_
         :return: valid: True if all conditions met, else False
@@ -1606,6 +1618,12 @@ class synthesizer_v(QObject):
         :return: errortext: string specifying the type of violation
         :rtype: str
         """
+        cc_LABEL = False
+        if len(argv) > 1: #TODO DUMMY so far
+            if argv[2].find("custom_carrier") == 0:
+               cc_LABEL = True
+               pass
+            pass
         audioBW = float(self.gui.lineEdit_audiocutoff_freq.text())
         carrier_distance = float(self.gui.lineEdit_carrierdistance.text())
         sample_rate = int(self.gui.comboBox_targetSR.currentText())
@@ -1624,7 +1642,8 @@ class synthesizer_v(QObject):
         highlimit = f_LO + sample_rate/2 - audioBW
         lowlimit = f_LO - sample_rate/2 + audioBW
         violate_low = fc_low < lowlimit
-        violate_high = fc_low + carrier_distance * numcarriers > highlimit
+        #violate_high = fc_low + carrier_distance * numcarriers > highlimit
+        violate_high = self.cf_HI > highlimit
         if violate_low or violate_high :# and not self.load_index: ????
             self.rule_viol = True
             #Fclow > f_LO – samplerate/2 + AudioBW 
