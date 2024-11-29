@@ -45,6 +45,8 @@ class modulate_worker(QObject):
         self.mutex = QMutex() #TODO: check if necessary
         self.CHUNKSIZE = int(1024**2) #TODO: check if necessary, not used anywhere
         self.AUDIO_MAXAMP = 0.9 #max amplitude of the audio signal
+        self.SILENCE_DURATION = 10   #duration of silent periods between subsequent audio files (s)
+
  
     def set_carrier_frequencies(self,_value):
         self.__slots__[0] = _value
@@ -201,7 +203,7 @@ class modulate_worker(QObject):
         self.SigMessage.emit("----")
         return expected_max_amp, expected_RMS_amp
     
-    def read_and_process_audio_blockwise(self, file_list, carrier_freq, target_sample_rate, block_size, cutoff_freq, modulation_depth, zi, sample_offset, current_file_index, file_handles, audio_gain):
+    def read_and_process_audio_blockwise(self, file_list, carrier_freq, target_sample_rate, ref_block_size, cutoff_freq, modulation_depth, zi, sample_offset, current_file_index, file_handles, audio_gain, silence, cumulative_time):
         """
         Read and process audio blockwise from the current file in the file_list, keeping the file handle open.
         Process only one block and move to the next file when the current one is finished.
@@ -217,15 +219,22 @@ class modulate_worker(QObject):
         - sample_offset: Current sample offset for phase continuity in modulation.
         - current_file_index: Index of the current file in the file_list.
         - file_handles: Dictionary of file handles to keep files open.
+        - silence: flag which states whether the current block should be silent (zero audio for pauses between audio files)
+        - cumulative_time: time of silence which has passed for this carrier so far
 
         Returns:
         - modulated_output: Modulated block of audio.
         - zi: Updated filter state.
         - sample_offset: Updated sample offset.
         - current_file_index: Updated file index (incremented if necessary).
+        - silence: updated flag which states if there should remain silence at the moment
+        - cumulative_time: updated time of silence which has passed for this carrier so far
         """
         #print(f"read_and_process_audio_blockwise; current_file_index: {current_file_index}, carrier_freq {carrier_freq}")
+        #TODO TODO TODO:
+        #adapt blocksize dynamically according to the sampling rate of the current file
         sos = butter(4, cutoff_freq, btype='low', fs=target_sample_rate, output='sos')
+        reference_sample_rate = 44100
         #print(f"carrier-freq: {carrier_freq}")
         threshold_percentile=95
         spike_duration_ms=1
@@ -233,27 +242,41 @@ class modulate_worker(QObject):
             file_path = file_list[current_file_index]
 
             # check if file open, if not: check level and power statistics, afterwards open the file and save the handles
-            if current_file_index not in file_handles:
+            if (current_file_index not in file_handles) and (not silence):
                 #print(f"index: {current_file_index} file_handles: {file_handles}")
                 max_level, RMS_amp = self.get_wav_maxlevel(file_path, threshold_percentile, spike_duration_ms)
                 audio_gain = self.AUDIO_MAXAMP/max_level
                 self.logger.debug(f"Audiofile {file_path} max_level: {max_level}, RMS_amp: {RMS_amp}, audio_gain auto: {audio_gain}")
                 file_handles[current_file_index] = sf.SoundFile(file_path, 'r')
 
-            f = file_handles[current_file_index]
-            original_sample_rate = f.samplerate
-            num_channels = f.channels
+            if silence:
+                # generate zero audio block for silence between subsequent audio files
+                original_sample_rate = 44100
+                block_size = int(np.floor(ref_block_size *  original_sample_rate / reference_sample_rate))
+                audio_block = np.zeros(block_size)
+                num_channels = 1
+                cumulative_time += block_size/original_sample_rate
+                print(f"make silence block at carrier {carrier_freq} until {cumulative_time}")
+                # check if silence has already reached maximum length
+                if cumulative_time >= self.SILENCE_DURATION:
+                    silence = False
+                    cumulative_time = 0
+            else:    
+                # read next audio block from audio file
+                f = file_handles[current_file_index]
+                original_sample_rate = f.samplerate
+                num_channels = f.channels
+                #TODO: 
+                block_size = int(np.floor(ref_block_size *  original_sample_rate / reference_sample_rate))
+                audio_block = f.read(block_size)
 
-            # Blockweises Lesen
-            audio_block = f.read(block_size)
-
-            if len(audio_block) == 0:
+            if len(audio_block) == 0 and not silence:
                 # Audio file is finished, close file and open next one
-               
                 print(f"close file {file_path} with index {current_file_index}; open next in list")
                 f.close()
                 del file_handles[current_file_index]  # remove Handle
                 current_file_index += 1
+                silence = True
                 continue  # do not modulate, continue with the next audio file
 
             # Mono-conversion
@@ -265,11 +288,11 @@ class modulate_worker(QObject):
                 print(f"zeropad audio block, pad length = {delta}, len audioblock: {len(audio_block)}" )
                 aux[0 : len(audio_block)] = audio_block
                 audio_block = aux
-            # Resampling falls notwendig
+            # Resamplingif required
             if original_sample_rate != target_sample_rate:
                 audio_block = self.resample_audio(audio_block, original_sample_rate, target_sample_rate)
 
-            # Low-Pass-Filter audio signal
+            # Low-pass-filter audio signal
             filtered_block, zi = self.process_block(audio_block, sos, zi)
 
             # modulate to carrier
@@ -277,9 +300,9 @@ class modulate_worker(QObject):
             # update sample_offset for next block
             sample_offset += len(modulated_block)
 
-            return modulated_block, zi, sample_offset, current_file_index, audio_gain
+            return modulated_block, zi, sample_offset, current_file_index, audio_gain, silence, cumulative_time
         
-        return None, zi, sample_offset, current_file_index, audio_gain
+        return None, zi, sample_offset, current_file_index, audio_gain, silence, cumulative_time
 
     def process_multiple_carriers_blockwise(self, carrier_frequencies, playlists, sample_rate, block_size, cutoff_freq, modulation_depth, output_base_name, exp_num_samples):
         """
@@ -319,6 +342,8 @@ class modulate_worker(QObject):
         next_starttime = next_starttime.astimezone(pytz.utc)
         self.logger.debug(f"synthesizer worker sample rate before modulating: {sample_rate}")
         audio_gain = np.zeros(len(playlists))
+        cumulative_time = np.zeros(len(playlists))
+        silence = [False] * len(playlists)
         while not done:
             combined_signal_block = None  # Buffer for combined signal block
             done = True  # Assume done unless we find more data
@@ -326,15 +351,18 @@ class modulate_worker(QObject):
             # Process each carrier for the current block
             for i, (carrier_freq, zi) in enumerate(zip(carrier_frequencies, zis)):
                 #print(f"audiogain {audio_gain[i]}")
-                modulated_block, new_zi, sample_offsets[i], current_file_indices[i], audio_gain[i] = self.read_and_process_audio_blockwise(playlists[i], carrier_freq*1000, sample_rate, block_size, cutoff_freq, modulation_depth, zi, sample_offsets[i], current_file_indices[i], file_handles[i], audio_gain[i])
+                modulated_block, new_zi, sample_offsets[i], current_file_indices[i], audio_gain[i], silence[i], cumulative_time[i] = self.read_and_process_audio_blockwise(playlists[i], carrier_freq*1000, sample_rate, block_size, cutoff_freq, modulation_depth, zi, sample_offsets[i], current_file_indices[i], file_handles[i], audio_gain[i], silence[i], cumulative_time[i])
                 
-                # Wenn modulated_block None ist, dann ist das Playlist-Ende erreicht
+                # ifmodulated_block == None --> end of Playlist has been reached
                 if modulated_block is None:
                     continue
 
                 # Dynamically adjust combined signal block size based on modulated block size
+                # #TODO: This is rubbish if the individual carriers stem from audioblocks with different SR and hence different length per blocksize
+
                 if combined_signal_block is None or len(combined_signal_block) < len(modulated_block):
                     combined_signal_block = np.zeros(len(modulated_block), dtype = np.complex128)
+                    #TODO Rubbish ! all existing rows must be zeropadded until len(modulated_block)
                 gain = self.get_gain()
                 if np.abs(len(combined_signal_block) - len(modulated_block)) > 0:
                     print(f"modulated block std gain*mb = {np.std(gain*modulated_block)} , gain = {gain} @ t = {sample_offsets[i]}, carrier = {i}")
@@ -1428,8 +1456,8 @@ class synthesizer_v(QObject):
     def freq_carriers_update(self,*argv):
         """
         append or remove i elements to/from carrier list, i being the difference between the old number and
-        the new number selected with Spinbox
-        (1) gets number of carriers from Spinbox
+        the new number either selected with Spinbox or taken from custom carrier table
+        (1) gets number of carriers from Spinbox or custom carrier table
         (2) validates the number
         (3) initializes or removes i new elements in self.readFileList
         (4) transfers new number to model variable self.m["numcarriers"]  
@@ -1440,14 +1468,10 @@ class synthesizer_v(QObject):
         :return: False on failure
         :rtype: Boolean
         """
-#         Vergrößern: append differenz zu vorher mal self.readFileList mit []
-# 	Verkleinern: ermittle differenz zu vorher letzte self.readFileList Elemente
-# Wenn letzte self.readFileList[-1] nicht empty  Warnug, dass alle bis auf die verbleibenden Lisetneiträge gelöscht werde, Proceed ? Cancel ?
-# Wenn bestätigt:
-# 			Delete letzte self.readFileList Elemente
+
 
         #TODO: treat self.custom_carriers from custom carrier freq table, once this one has been edited.
-        # check if not empty; if populated, re-read values into current table
+        # TODO test what happens if empty ? check if not empty; if populated, re-read values into current table
         # (1) check if empty  >>>>DONE
         # (2) check if deviates from old list >>>>DONE
         # (3) if delta: >>>>DONE
