@@ -45,7 +45,7 @@ class modulate_worker(QObject):
         self.mutex = QMutex() #TODO: check if necessary
         self.CHUNKSIZE = int(1024**2) #TODO: check if necessary, not used anywhere
         self.AUDIO_MAXAMP = 0.9 #max amplitude of the audio signal
-        self.SILENCE_DURATION = 10   #duration of silent periods between subsequent audio files (s)
+        self.SILENCE_DURATION = 4   #duration of silent periods between subsequent audio files (s)
 
  
     def set_carrier_frequencies(self,_value):
@@ -234,7 +234,7 @@ class modulate_worker(QObject):
         #TODO TODO TODO:
         #adapt blocksize dynamically according to the sampling rate of the current file
         sos = butter(4, cutoff_freq, btype='low', fs=target_sample_rate, output='sos')
-        reference_sample_rate = 44100
+        reference_sample_rate = 56000#44100
         #print(f"carrier-freq: {carrier_freq}")
         threshold_percentile=95
         spike_duration_ms=1
@@ -1425,13 +1425,13 @@ class synthesizer_v(QObject):
     def carrierselect_update(self):
         #generate combobox entry list
         if len(self.custom_carriers) > 0:
-            carrier_array = self.custom_carriers
-            carrierselector = carrier_array
+            carrier_array = np.array(self.custom_carriers)
+            #carrierselector = carrier_array.tolist()
         else:
             carrier_array = np.arange(self.m["fc_low"], self.cf_HI+1, self.m["carrier_distance"])
         #carrier_array = TODO: entrypoint for individual carrierfrequencies, read array from editor
         # flex_carrier_table
-            carrierselector = carrier_array.tolist()
+        carrierselector = carrier_array.tolist()
         self.gui.comboBox_cur_carrierfreq.clear()
         for cf in carrierselector:
             self.gui.comboBox_cur_carrierfreq.addItem(str(cf))
