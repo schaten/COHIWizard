@@ -25,6 +25,7 @@ import struct
 import soundfile as sf
 from scipy.signal import sosfilt, butter, resample
 from pathlib import Path
+import m3u8
 from auxiliaries import WAVheader_tools
 
 
@@ -669,7 +670,8 @@ class synthesizer_v(QObject):
         self.gui.synthesizer_pushbutton_cancel.clicked.connect(self.cancel_modulate)
         self.gui.verticalSlider_Gain.setProperty("value", 76) #percent
         self.gui.pushButton_CustomCarriers.clicked.connect(self.open_table_dialog)
-        self.gui.radiobutton_CustomCarriers.toggled.connect(self.customcarrier_handler)      
+        self.gui.radiobutton_CustomCarriers.toggled.connect(self.customcarrier_handler)  
+        self.gui.pushButton_importProject.clicked.connect(self.import_m3u)    
         
         self.gui.verticalSlider_Gain.valueChanged.connect(self.setgain)
         self.previous_value = self.gui.spinBox_numcarriers.value()
@@ -1483,14 +1485,11 @@ class synthesizer_v(QObject):
         :return: False on failure
         :rtype: Boolean
         """
-
-
-        #TODO: treat self.custom_carriers from custom carrier freq table, once this one has been edited.
         # TODO test what happens if empty ? check if not empty; if populated, re-read values into current table
         # (1) check if empty  >>>>DONE
         # (2) check if deviates from old list >>>>DONE
         # (3) importer for i3u Files --> fill custom list and activate custom mode
-        # (4) Project save/load include custom table.
+
 
         self.numcarriers_old = self.m["numcarriers"]
         custom_carriers = []
@@ -2025,6 +2024,95 @@ class synthesizer_v(QObject):
             item = QTableWidgetItem(f"{value:.2f}")  # Float-Wert formatieren
             table.setItem(i, 0, item)  # (Zeile, Spalte)
 
+
+    def import_m3u(self):
+        """import an m3u playlist with special format containing fields of the form
+        #EXTGRP: <carrierfrequency>
+        where <carrierfrequency> is a number specifying the carrier frequency in kHz for the following sub-playlist
+
+        """
+        self.gui.pushButton_importProject.clicked.disconnect(self.import_m3u)
+        try:
+            stream = open("config_wizard.yaml", "r")
+            self.m["metadata"] = yaml.safe_load(stream)
+            stream.close()
+            if "last_m3u_path" in self.m["metadata"]:
+                self.m["last_m3u_path"] = self.m["metadata"]["last_m3u_path"]
+            else:
+                self.m["metadata"]["last_m3u_path"] = os.getcwd()
+        except:
+            self.m["metadata"]["last_m3u_path"] = os.getcwd()
+
+        filters = "m3u files (*.m3u);; all files (*.*)"
+        selected_filter = "m3u files (*.m3u)"
+
+        filename =  QtWidgets.QFileDialog.getOpenFileName(self.m["QTMAINWINDOWparent"],
+                                                        "Open data file"
+                                                        ,self.m["metadata"]["last_m3u_path"] , filters, selected_filter)
+
+        self.m["metadata"]["last_m3u_path"] = Path(filename[0]).parent.as_posix()
+        stream = open("config_wizard.yaml", "w")
+        yaml.dump(self.m["metadata"], stream)
+        stream.close()
+
+        #with open(filename, 'r', encoding='utf-8') as f:
+        with open(filename[0], 'r') as f:
+            playlist_content = f.read()
+
+        # # Parse the content using m3u8
+        # playlist = m3u8.loads(playlist_content)
+
+        # Initialize variables
+        sub_playlists = []  # This will hold the sub-playlists
+        headers = []        # This will hold the associated headers
+
+        # Temporary variables to store the current sub-playlist and header
+        current_playlist = []
+        current_header = None
+
+        # Iterate through each line in the playlist content
+        for line in playlist_content.splitlines():
+            # Look for #EXTGRP lines
+            if line.startswith('#EXTGRP:'):
+                # If there's already a current sub-playlist, store it
+                if current_playlist:
+                    sub_playlists.append(current_playlist)
+                    headers.append(current_header)
+                
+                # Extract the index from the #EXTGRP line (example: #EXTGRP: sometext_1)
+                # You can split on the underscore or colon based on your format
+                group_info = line.split(':')[1].strip()  # sometext_index
+                index = int(group_info.split('_')[-1])  # Extract the index part
+                
+                # Set the new current header and reset current_playlist
+                current_header = {'index': index}
+                current_playlist = []  # Reset the current playlist
+
+            else:
+                # Add playlist entries (e.g., media URLs) to the current sub-playlist
+                if line.startswith('#') and line:  # Ignoriere Kommentare und leere Zeilen
+                    print(line)  # Mediendateipfad
+                if not line.startswith('#') and line:  # Ignoriere Kommentare und leere Zeilen
+                    current_playlist.append(line)
+
+        # Append the last sub-playlist after the loop ends
+        if current_playlist:
+            sub_playlists.append(current_playlist)
+            headers.append(current_header)
+
+        # Now, sub_playlists holds the segmented playlists and headers contains the associated index for each
+        print(sub_playlists)
+        print(headers)
+        #TODO: validate, if headers is consistent and has the same length as sub_playlists
+        #if not: return without success
+        #if success: call method for integrating into current playlists:
+        #   copy sub_playlists into internal playlist structure
+        #   copy carriers to custom carriertable
+        #   set custom carrier button Checked without triggering table edit 
+        #   carry out GUI update and validation by accessing the slot function of table edit OK
+
+        self.gui.pushButton_importProject.clicked.connect(self.import_m3u)
+
 class TableDialog(QDialog):
     """Class for generating a popup TableWidget for entering the custom values"""
     def __init__(self, parent=None):
@@ -2106,19 +2194,21 @@ class TableDialog(QDialog):
 
 
 
+# playlist = m3u8.loads(playlist_content)
+# for segment in playlist.segments:
+
+#     print(segment.uri)
+
+#     #Zugriffe:
+# playlist.segments[1].uri
+# playlist.segments[1].duration
+# playlist.segments[1].title
+
+# #playlist.segments[1].playlist_type
+# playlist.segments[1].media_sequence
+
 
 #TODO: 
-# - Preset band Funktionen einbauen
-# - im alten Synthesizer: jeder Carrier muss ein wav-File mit voller Spiellänge haben
-#       nun wanted: Jeder Carrier hat eine eigene Playlist mit den vollen Pfadangaben aller Files
-#   (1) Jede Playlist ist indiziert mit einem Index entsprechend dem Carrier, der gerade eingestellt ist; ein Label für die aktive Playlist wird irgendwo angezeigt
-#   (2) Jede Playlist hat auch eine pathlist assoziiert, in der die Pfadnamen stehen
-#   (3) wenn der Carrier gewechselt wird, wird die entsprechende Target Playlist angezeigt
-#          Bei drag and drop soll das File nicht aus der Sourcelist verschwinden
-#
-#
-# Jedes File der Playlist wird gecheckt, ob es einen gültigen wavheader hat und die Spieldauer wird aus dem Header und der Filesize ermittelt:
-# wavheader-tool getsdruno_header() wurde erweitert, um auch Audio-header auszulesen
 # test = WAVheader_tools.get_sdruno_header(self,self.m["f1"],'audio')
 # import numpy as np
 # from scipy.signal import iirnotch, lfilter_zi, lfilter
