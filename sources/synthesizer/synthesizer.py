@@ -1086,7 +1086,11 @@ class synthesizer_v(QObject):
         pr["projectdata"]["LO"] = self.m["LO"]
         pr["projectdata"]["audio_BW"] = self.m["audioBW"]
         #pr["projectdata"]["sample_rate"] = self.m["sample_rate"]
-        pr["projectdata"]["current_listdir"] = self.current_listdir
+        try:
+            pr["projectdata"]["current_listdir"] = self.current_listdir
+        except:
+            auxi.standard_errorbox("no playlist specified, project file will not be written")
+            return
         pr["projectdata"]["targetSR_index"] = self.gui.comboBox_targetSR.currentIndex()
         pr["projectdata"]["presetband_index"] = self.gui.comboBox_targetSR_2.currentIndex()
         #pr["projectdata"]["preset_time"] = 
@@ -1102,6 +1106,9 @@ class synthesizer_v(QObject):
             filename = self.save_file_dialog()
         else:
             filename = "temp.proj"
+        pr["projectdata"]["carrier_array"] = self.m["carrierarray"].tolist()
+        pr["projectdata"]["custom_carriers_active"] = self.gui.radiobutton_CustomCarriers.isChecked()
+
         stream = open(filename, "w") ###replace project.yaml with filename
         yaml.dump(pr["projectdata"], stream)
         stream.close()
@@ -1116,6 +1123,7 @@ class synthesizer_v(QObject):
         : raises: none
 
         """
+        self.gui.pushButton_loadproject.clicked.disconnect(self.load_project)
         pr = {}
         pr["projectdata"] = {}
         if not self.autosave:
@@ -1157,6 +1165,11 @@ class synthesizer_v(QObject):
             self.gui.comboBox_targetSR_2.setCurrentIndex(pr["projectdata"]["presetband_index"])
             self.gui.lineEdit_modfactor.setText(str(pr["projectdata"]["modfactor"])) 
             self.load_index = True
+            self.m["carrierarray"] =  np.array(pr["projectdata"]["carrier_array"])
+            if pr["projectdata"]["custom_carriers_active"]:
+                self.gui.radiobutton_CustomCarriers.setChecked(True)
+            else:
+                self.gui.radiobutton_CustomCarriers.setChecked(False)
             try:
                 self.fillplaylist()
             except:
@@ -1169,6 +1182,7 @@ class synthesizer_v(QObject):
             self.carrierdistance_update()
             self.audioBW_update()
             self.fc_low_update()
+            self.carrierselect_update()
             self.load_index = False
 
             #TODO TODO TODO load all remaining settings
@@ -1179,6 +1193,7 @@ class synthesizer_v(QObject):
 
         except:
             self.logger.error('cannot load project yaml file (proj files)')
+        self.gui.pushButton_loadproject.clicked.connect(self.load_project)
 
     def save_file_dialog(self):
         # Erstellen des Datei-Speicher-Dialogs
@@ -1474,20 +1489,8 @@ class synthesizer_v(QObject):
         # TODO test what happens if empty ? check if not empty; if populated, re-read values into current table
         # (1) check if empty  >>>>DONE
         # (2) check if deviates from old list >>>>DONE
-        # (3) if delta: >>>>DONE
-        #   (a) set numcar to len(self.custom_carriers)  >>>>DONE
-        #   (b) set low and high end frequencies to self.custom_carriers[0] and [-1], resp.  >>>>DONE
-        #   (c) modify call to self.carrierselect_update() for considering self.custom_carriers   >>>>DONE
-        # do not forget: self.custom_carriers must be set to the current table >>>>DONE 
-        # any time the table is changed via the standard GUI elements 
-        # consider replacing access to self.custom_carriers by a new argument to this function (argv, argc) >>>>DONE
-
-        # (4) on uncheck custom car radiobutton:
-        #   clear carrierlist >>>>DONE, reset GUI from init >>>>DONE, clear playlists >>>>>DONE
-        # (5) on table update from custom carrier table: update spinBox_numcarriers value >>>>DONE
-        # (6) modify validator: check carrierdistance/BW, if all carriers have min distance, lower bound, upper bound based on SR and LO  >>>>DONE
-        # (7) insert pause(2s) between all subsequent audio items ("silence")
-        # (8) importer for i3u Files --> fill custom list and activate custom mode
+        # (3) importer for i3u Files --> fill custom list and activate custom mode
+        # (4) Project save/load include custom table.
 
         self.numcarriers_old = self.m["numcarriers"]
         custom_carriers = []
@@ -2011,6 +2014,7 @@ class synthesizer_v(QObject):
             for row in custom_carriers:
                 print(row)
         self.freq_carriers_update(self,custom_carriers)
+        self.fc_low_update()
 
     def populate_table(self, table, values):
         rows = len(values)
