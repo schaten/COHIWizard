@@ -1010,7 +1010,7 @@ def dynamic_import_from_config(config,sub_module,logger):
             logger.debug(f"dynamic import: Successfully imported {module} from {full_module_path}.")
             #print(f"Successfully imported {module} from {full_module_path}.")
         except ModuleNotFoundError as e:
-            #print(f"dynamic import Error importing {module} from {directory}: {e}")
+            print(f"dynamic import Error importing {module} from {directory}: {e}")
             logger.debug(f"dynamic import: Error importing {module} from {directory}: {e}")
     return imported_modules
 

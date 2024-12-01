@@ -25,7 +25,11 @@ import struct
 import soundfile as sf
 from scipy.signal import sosfilt, butter, resample
 from pathlib import Path
-import m3u8
+import urllib
+import urllib.request
+import io
+#import pydub
+#import m3u8
 from auxiliaries import WAVheader_tools
 
 
@@ -1414,7 +1418,33 @@ class synthesizer_v(QObject):
                 #wav_info = self.get_wav_info(file_path)
                 #duration += wav_info['duration_seconds']
                 #if duration Blödsinn, das kann passieren !
-                a = sf.SoundFile(file_path, 'r') #TODO: Umstellen auf mp3: 
+                parsed = urllib.parse.urlparse(file_path) #######TODO: Achtung, file_path ist falsch bei http: hat ein / nach http: zuwenig
+                if parsed.scheme == "http" or parsed.scheme == "https":
+                    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"}
+                    request = urllib.request.Request(file_path, headers=headers)
+                    with urllib.request.urlopen(request) as response:
+                        #TODO: schreibe die Datei auf ein File
+                        output_file = "local_file.aud"  # Der Name der lokalen Datei
+                        with open(output_file, "wb") as f:  # "wb" für Binärmodus
+                            f.write(response.read())
+                        #audio_data = io.BytesIO(response.read())  # Lade die Daten in einen Puffer
+                        # MP3-Datei aus dem Speicherpuffer lesen
+                        #audio = AudioSegment.from_file(audio_data, format="mp3")
+                        # Konvertiere MP3 zu WAV und lade es in einen neuen Puffer
+                       # wav_buffer = io.BytesIO()
+                        #audio.export(wav_buffer, format="wav")
+                        #wav_buffer.seek(0)  # Puffer an den Anfang zurücksetzen
+                        ## WAV-Daten mit Soundfile verarbeiten
+                        # data, samplerate = sf.read(wav_buffer)
+                        # # Beispiel: Lautstärke erhöhen
+                        # data = data * 1.5
+                        # # Veränderte Datei wieder in den Puffer schreiben
+                        # output_buffer = io.BytesIO()
+                        # sf.write(output_buffer, data, samplerate)
+                        print("########### current point of development reached, cannot proceed from here###########")
+                    a = sf.SoundFile(output_file, 'r') #TODO: Umstellen auf mp3:
+                else:
+                    a = sf.SoundFile(file_path, 'r') #TODO: Umstellen auf mp3: 
                 duration += a.frames/a.samplerate
                 a.close()
 
@@ -1481,7 +1511,9 @@ class synthesizer_v(QObject):
         (5) sets lowest and highest carrier frequencies 
         (6) calls self.carrierselect_update()
 
-        :parameters : *argv, variable number of args; arg
+        :parameters : *argv, variable number of args
+        : 1st arg: custom_carriers: list of custom carrier frequencies in kHz
+        :type : list
         :return: False on failure
         :rtype: Boolean
         """
@@ -1495,10 +1527,10 @@ class synthesizer_v(QObject):
         custom_carriers = []
         if len(argv) > 1:
             for x in argv[1]:
-                if self.isnumeric(x[0])[0]:
-                    custom_carriers.append(float(x[0]))
+                if self.isnumeric(x)[0]: ###########TODO: chars are a problem
+                    custom_carriers.append(float(x))
                     self.custom_carriers = custom_carriers
-                elif len(x[0]) > 0:
+                elif len(x) > 0:
                     auxi.standard_errorbox("custom carrier table contains non-numeric values, please correct !")
                     return False
             numcar = len(custom_carriers)
@@ -2031,6 +2063,7 @@ class synthesizer_v(QObject):
         where <carrierfrequency> is a number specifying the carrier frequency in kHz for the following sub-playlist
 
         """
+        #####TODO TODO TODO: the last block after the last EXTGRP is not transferred to the filelists
         self.gui.pushButton_importProject.clicked.disconnect(self.import_m3u)
         try:
             stream = open("config_wizard.yaml", "r")
@@ -2070,6 +2103,11 @@ class synthesizer_v(QObject):
         current_playlist = []
         current_header = None
 
+        #clear and iniialize playlist
+        self.readFileList = []
+        current_filelist = []
+        self.readFilePath = []
+        current_filepath = []
         # Iterate through each line in the playlist content
         for line in playlist_content.splitlines():
             # Look for #EXTGRP lines
@@ -2082,11 +2120,28 @@ class synthesizer_v(QObject):
                 # Extract the index from the #EXTGRP line (example: #EXTGRP: sometext_1)
                 # You can split on the underscore or colon based on your format
                 group_info = line.split(':')[1].strip()  # sometext_index
-                index = int(group_info.split('_')[-1])  # Extract the index part
-                
-                # Set the new current header and reset current_playlist
-                current_header = {'index': index}
+                current_header = (group_info.split('_')[-1])  # Extract the index part
+
+                # # Set the new current header and reset current_playlist
+                # current_header = {'index': index}
+                # index = 0 #TODO: only testindex
+                for element in current_playlist:
+                    current_filelist.append(Path(element).stem + Path(element).suffix)
+                    if element.find("http") == 0:
+                        pp = element[0:element.find(Path(element).stem)-1]
+                        current_filepath.append(pp)
+                    else:
+                        current_filepath.append(Path(element).parent.as_posix())
+                    #self.readFileList[index].append(Path(element).stem + Path(element).suffix)
+                #self.readFilePath[ix]
+                #TODO: transfer the filelist from the previous EXTGRP block to the self.readFileList;
+                #Problem: the very last block is not read, because no final EXTGRP
                 current_playlist = []  # Reset the current playlist
+                if len(current_filelist) > 0:
+                    self.readFileList.append(current_filelist)
+                    self.readFilePath.append(current_filepath)
+                current_filelist = []
+                current_filepath = []
 
             else:
                 # Add playlist entries (e.g., media URLs) to the current sub-playlist
@@ -2099,18 +2154,35 @@ class synthesizer_v(QObject):
         if current_playlist:
             sub_playlists.append(current_playlist)
             headers.append(current_header)
+            for element in current_playlist:
+                current_filelist.append(Path(element).stem + Path(element).suffix)
+                if element.find("http") == 0:
+                    pp = element[0:element.find(Path(element).stem)-1]
+                    current_filepath.append(pp)
+                else:
+                    current_filepath.append(Path(element).parent.as_posix())
+            self.readFileList.append(current_filelist)
+            self.readFilePath.append(current_filepath)
 
         # Now, sub_playlists holds the segmented playlists and headers contains the associated index for each
         print(sub_playlists)
         print(headers)
+        custom_carriers = []
+        for ix in range(len(headers)):#TODO necessary ?
+            #custom_carriers.append(headers[ix]["index"])
+            custom_carriers.append(headers[ix])
         #TODO: validate, if headers is consistent and has the same length as sub_playlists
         #if not: return without success
         #if success: call method for integrating into current playlists:
-        #   copy sub_playlists into internal playlist structure
-        #   copy carriers to custom carriertable
+        #   copy sub_playlists into internal playlist structure:
+        #self.readFilePath[ix]: list
+        #self.readFileList[ix]: list for carrier ix
+        #   copy carriers to custom carriertable >>>>>> DONE
         #   set custom carrier button Checked without triggering table edit 
         #   carry out GUI update and validation by accessing the slot function of table edit OK
-
+        self.freq_carriers_update(self,custom_carriers)
+        self.fc_low_update()
+        self.gui.radiobutton_CustomCarriers.setChecked(True)
         self.gui.pushButton_importProject.clicked.connect(self.import_m3u)
 
 class TableDialog(QDialog):
@@ -2141,8 +2213,8 @@ class TableDialog(QDialog):
     def get_table_data(self):
         """
         returns data of the custom carrier frequency table
-        :returns : data from custom carrier frequency table
-        :rtype : list
+        :returns : list of strings with custom carrier frequencies, frequencies in kHz
+        :rtype : list of str
         """
         data = []
         for row in range(self.table.rowCount()):
@@ -2150,7 +2222,7 @@ class TableDialog(QDialog):
             for col in range(self.table.columnCount()):
                 item = self.table.item(row, col)
                 row_data.append(item.text() if item else "")  # Leerstring, wenn keine Daten vorhanden
-            data.append(row_data)
+            data.append(row_data[0])
         return data
 
 
