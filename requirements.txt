@@ -16,6 +16,7 @@ importlib_resources==6.4.5
 Jinja2==3.1.4
 jschon==0.11.1
 kiwisolver==1.4.7
+m3u8==6.0.0
 Markdown==3.7
 MarkupSafe==3.0.2
 matplotlib==3.9.2
@@ -47,4 +48,5 @@ setuptools==75.6.0
 six==1.16.0
 soundfile==0.12.1
 tzdata==2024.2
+urllib3==2.2.3
 wasmtime==27.0.2
