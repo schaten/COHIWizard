@@ -39,7 +39,7 @@ class modulate_worker(QObject):
         __slots__: Dictionary with parameters
     :return : none
     """
-    __slots__ = ["carrier_frequencies", "playlists","sample_rate","block_size","cutoff_freq","modulation_depth","output_base_name","exp_num_samples","progress","logger","combined_signal_block","LO_freq","gain"]
+    __slots__ = ["carrier_frequencies", "playlists","sample_rate","block_size","cutoff_freq","modulation_depth","output_base_name","exp_num_samples","progress","logger","combined_signal_block","LO_freq","gain", "method_object"]
     SigFinished = pyqtSignal()
     SigPupdate = pyqtSignal()
     SigMessage = pyqtSignal(str)
@@ -105,6 +105,11 @@ class modulate_worker(QObject):
         self.__slots__[12] = _value
     def get_gain(self):
         return(self.__slots__[12])
+    def set_method_object(self,_value):
+        self.__slots__[13] = _value
+    def get_method_object(self):
+        return(self.__slots__[13])    
+    
     
     
     def modulate_terminate(self):
@@ -176,8 +181,12 @@ class modulate_worker(QObject):
         print(f"file: {Path(wav_file).stem} level checking")
         self.SigMessage.emit("auto level: " + Path(wav_file).stem)
         #self.gui.label_audioset_name.setText(f"file: {Path(wav_file).stem} level checking")
-        data, sample_rate = sf.read(wav_file)
-        
+        #TODO CHECK last change:data, sample_rate = sf.read(wav_file)
+        method_object = self.get_method_object()
+        print(f"calling method: {method_object.readsoundfile}, argument: {wav_file}")
+        a = method_object.readsoundfile(wav_file)
+        data = a.read()
+        sample_rate = a.samplerate
         # Konvertiere auf Mono, falls das Audiosignal Stereo ist TODO: check: mean may be lower than individual channel values !
         if len(data.shape) > 1:
             data = data.mean(axis=1)
@@ -248,11 +257,13 @@ class modulate_worker(QObject):
 
             # check if file open, if not: check level and power statistics, afterwards open the file and save the handles
             if (current_file_index not in file_handles) and (not silence):
-                #print(f"index: {current_file_index} file_handles: {file_handles}")
+                print(f"############### index: {current_file_index} file_handles: {file_handles}, file path: {file_path}")
                 max_level, RMS_amp = self.get_wav_maxlevel(file_path, threshold_percentile, spike_duration_ms)
                 audio_gain = self.AUDIO_MAXAMP/max_level
                 self.logger.debug(f"Audiofile {file_path} max_level: {max_level}, RMS_amp: {RMS_amp}, audio_gain auto: {audio_gain}")
-                file_handles[current_file_index] = sf.SoundFile(file_path, 'r')
+                #file_handles[current_file_index] = sf.SoundFile(file_path, 'r')
+                method_object = self.get_method_object()
+                file_handles[current_file_index] = method_object.readsoundfile(file_path)
 
             if silence:
                 # generate zero audio block for silence between subsequent audio files
@@ -533,7 +544,37 @@ class synthesizer_c(QObject):
 
     def dummy(self):
         print("hello from superclass")
+
         
+    def readsoundfile(self,file_path):
+        """read sound stream either from file or URL; for URL the stream must be written to a local temp file before
+        then open the file with Soundfile and return soundfile object
+
+        :param file_path: file path, either a local path or a http(s) URL
+        :type file_path: str
+        :return: a or False (on error)
+        :rtype: soundfile object (sf.Soundfile) or Boolean (on error)
+        """
+        parsed = urllib.parse.urlparse(file_path)
+        if parsed.scheme == "http" or parsed.scheme == "https":
+            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"}
+            request = urllib.request.Request(file_path, headers=headers)
+            try:
+                with urllib.request.urlopen(request) as response:
+                    # write stream to local temp file and open with sf.Soundfile, return soundfile object 
+                    output_file = "local_temp.aud"
+                    with open(output_file, "wb") as f:  
+                        f.write(response.read())
+            except:
+                auxi.standard_errorbox(f"cannot open URL for {file_path}; abort procedure")
+                return False
+            a = sf.SoundFile(output_file, 'r')
+        else:
+            a = sf.SoundFile(file_path, 'r')
+
+            #data, sample_rate = sf.read(wav_file)
+
+        return a
 
 class synthesizer_v(QObject):
     """_view methods for resampling module
@@ -923,6 +964,8 @@ class synthesizer_v(QObject):
         self.modulate_worker.set_exp_num_samples(exp_num_samples)
         self.modulate_worker.set_logger(self.logger)
         self.modulate_worker.set_LO_freq(LO_frequency)
+        self.modulate_worker.set_method_object(self.synthesizer_c)
+        print(f"createbandthread: method_object {self.synthesizer_c}")
         self.setgain()
         self.modulate_thread.started.connect(self.modulate_worker.start_modulator)
         self.modulate_worker.SigPupdate.connect(self.PupdateSignalHandler)
@@ -1418,33 +1461,8 @@ class synthesizer_v(QObject):
                 #wav_info = self.get_wav_info(file_path)
                 #duration += wav_info['duration_seconds']
                 #if duration Blödsinn, das kann passieren !
-                parsed = urllib.parse.urlparse(file_path) #######TODO: Achtung, file_path ist falsch bei http: hat ein / nach http: zuwenig
-                if parsed.scheme == "http" or parsed.scheme == "https":
-                    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"}
-                    request = urllib.request.Request(file_path, headers=headers)
-                    with urllib.request.urlopen(request) as response:
-                        #TODO: schreibe die Datei auf ein File
-                        output_file = "local_file.aud"  # Der Name der lokalen Datei
-                        with open(output_file, "wb") as f:  # "wb" für Binärmodus
-                            f.write(response.read())
-                        #audio_data = io.BytesIO(response.read())  # Lade die Daten in einen Puffer
-                        # MP3-Datei aus dem Speicherpuffer lesen
-                        #audio = AudioSegment.from_file(audio_data, format="mp3")
-                        # Konvertiere MP3 zu WAV und lade es in einen neuen Puffer
-                       # wav_buffer = io.BytesIO()
-                        #audio.export(wav_buffer, format="wav")
-                        #wav_buffer.seek(0)  # Puffer an den Anfang zurücksetzen
-                        ## WAV-Daten mit Soundfile verarbeiten
-                        # data, samplerate = sf.read(wav_buffer)
-                        # # Beispiel: Lautstärke erhöhen
-                        # data = data * 1.5
-                        # # Veränderte Datei wieder in den Puffer schreiben
-                        # output_buffer = io.BytesIO()
-                        # sf.write(output_buffer, data, samplerate)
-                        print("########### current point of development reached, cannot proceed from here###########")
-                    a = sf.SoundFile(output_file, 'r') #TODO: Umstellen auf mp3:
-                else:
-                    a = sf.SoundFile(file_path, 'r') #TODO: Umstellen auf mp3: 
+                a = self.synthesizer_c.readsoundfile(file_path)
+                print("########### current point of development reached, cannot proceed from here###########")
                 duration += a.frames/a.samplerate
                 a.close()
 
@@ -1468,6 +1486,7 @@ class synthesizer_v(QObject):
         #   add to playtime
         #   set progress bar value and color on overtime
         #
+
 
     def carrierselect_update(self):
         #generate combobox entry list
@@ -2063,7 +2082,9 @@ class synthesizer_v(QObject):
         where <carrierfrequency> is a number specifying the carrier frequency in kHz for the following sub-playlist
 
         """
-        #####TODO TODO TODO: the last block after the last EXTGRP is not transferred to the filelists
+        #####TODO TODO TODO: the last block after the last EXTGRP does not appear in the GUI 
+        # when activating the last carrier from the carrier soinbox, though the kist has been definitely transferred to the 
+        # central local filelists
         self.gui.pushButton_importProject.clicked.disconnect(self.import_m3u)
         try:
             stream = open("config_wizard.yaml", "r")
@@ -2092,17 +2113,12 @@ class synthesizer_v(QObject):
         with open(filename[0], 'r') as f:
             playlist_content = f.read()
 
-        # # Parse the content using m3u8
-        # playlist = m3u8.loads(playlist_content)
-
         # Initialize variables
         sub_playlists = []  # This will hold the sub-playlists
         headers = []        # This will hold the associated headers
-
         # Temporary variables to store the current sub-playlist and header
         current_playlist = []
         current_header = None
-
         #clear and iniialize playlist
         self.readFileList = []
         current_filelist = []
@@ -2116,12 +2132,10 @@ class synthesizer_v(QObject):
                 if current_playlist:
                     sub_playlists.append(current_playlist)
                     headers.append(current_header)
-                
                 # Extract the index from the #EXTGRP line (example: #EXTGRP: sometext_1)
                 # You can split on the underscore or colon based on your format
                 group_info = line.split(':')[1].strip()  # sometext_index
                 current_header = (group_info.split('_')[-1])  # Extract the index part
-
                 # # Set the new current header and reset current_playlist
                 # current_header = {'index': index}
                 # index = 0 #TODO: only testindex
@@ -2132,17 +2146,12 @@ class synthesizer_v(QObject):
                         current_filepath.append(pp)
                     else:
                         current_filepath.append(Path(element).parent.as_posix())
-                    #self.readFileList[index].append(Path(element).stem + Path(element).suffix)
-                #self.readFilePath[ix]
-                #TODO: transfer the filelist from the previous EXTGRP block to the self.readFileList;
-                #Problem: the very last block is not read, because no final EXTGRP
                 current_playlist = []  # Reset the current playlist
                 if len(current_filelist) > 0:
                     self.readFileList.append(current_filelist)
                     self.readFilePath.append(current_filepath)
                 current_filelist = []
                 current_filepath = []
-
             else:
                 # Add playlist entries (e.g., media URLs) to the current sub-playlist
                 if line.startswith('#') and line:  # Ignoriere Kommentare und leere Zeilen
@@ -2150,7 +2159,8 @@ class synthesizer_v(QObject):
                 if not line.startswith('#') and line:  # Ignoriere Kommentare und leere Zeilen
                     current_playlist.append(line)
 
-        # Append the last sub-playlist after the loop ends
+        # Append the last sub-playlist after the loop has ended
+        #TODO: not elegant, shift to strategically optimal point !
         if current_playlist:
             sub_playlists.append(current_playlist)
             headers.append(current_header)
