@@ -19,6 +19,7 @@ import copy
 import time
 import pytz
 import wave
+import subprocess
 import pyqtgraph as pg
 #import contextlib
 import struct
@@ -27,8 +28,9 @@ from scipy.signal import sosfilt, butter, resample
 from pathlib import Path
 import urllib
 import urllib.request
-import io
-#import pydub
+#import io
+# import pydub
+# from pydub import AudioSegment
 #import m3u8
 from auxiliaries import WAVheader_tools
 
@@ -278,8 +280,10 @@ class modulate_worker(QObject):
                     silence = False
                     cumulative_time = 0
             else:    
+                #print(f"#####nextsegment##### index: {current_file_index} file_handles: {file_handles}, file path: {file_path}")
                 # read next audio block from audio file
                 f = file_handles[current_file_index]
+                #print(f"#####nextsegment##### index: {current_file_index} cur file_handles: {f}")
                 original_sample_rate = f.samplerate
                 num_channels = f.channels
                 #TODO: 
@@ -290,6 +294,13 @@ class modulate_worker(QObject):
                 # Audio file is finished, close file and open next one
                 print(f"close file {file_path} with index {current_file_index}; open next in list")
                 f.close()
+                #TODO TODO TODO TODO: extract filename and add aud ! path refers to mp3, e.g. http://ght.phonomuseum.at/Sound/x/tre_00002188.mp3 
+                if file_path.find("http://")>=0 or file_path.find("https://")>=0:
+                    temp_file = Path(file_path).stem + ".aud"
+                    print(f"oooooooooo>>>>> worker, jump to next file, localize temp aud file {temp_file}")
+                    if os.path.isfile(temp_file):
+                        os.remove(temp_file)
+                        print(f"oooooooooo>>>>> worker, jump to next file, remove temp aud file {temp_file}")
                 del file_handles[current_file_index]  # remove Handle
                 current_file_index += 1
                 silence = True
@@ -546,15 +557,24 @@ class synthesizer_c(QObject):
         print("hello from superclass")
 
         
-    def readsoundfile(self,file_path):
+    def readsoundfile(self,file_path,*argv):
         """read sound stream either from file or URL; for URL the stream must be written to a local temp file before
         then open the file with Soundfile and return soundfile object
 
         :param file_path: file path, either a local path or a http(s) URL
         :type file_path: str
+        :param *argv: variable number of args; argv[1]: chackflag, if set "c" then write only a short temp file for URL sources in order to save time and memory
+        :type argv[1]: str
         :return: a or False (on error)
         :rtype: soundfile object (sf.Soundfile) or Boolean (on error)
         """
+        checkflag = False
+        if len(argv) > 0:
+            c = argv[0]
+            print(f"argv in read_soundfile: {argv}")
+            if c.find("c") == 0:
+                checkflag = True
+
         parsed = urllib.parse.urlparse(file_path)
         if parsed.scheme == "http" or parsed.scheme == "https":
             headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"}
@@ -562,19 +582,43 @@ class synthesizer_c(QObject):
             try:
                 with urllib.request.urlopen(request) as response:
                     # write stream to local temp file and open with sf.Soundfile, return soundfile object 
-                    output_file = "local_temp.aud"
-                    with open(output_file, "wb") as f:  
-                        f.write(response.read())
+                    #output_file = "local_temp.aud"
+                    output_file = Path(file_path).stem + ".aud"
+                    ### only for pydub: ### 
+                    true_tempfile = Path(file_path).stem + ".mp3"
+                    ### only for pydub: ### 
+                    print(f"temporary output_file: {output_file}, true temp file: {true_tempfile}")
+                    #print(f"temporary output_file: {output_file}")
+                    if not os.path.isfile(output_file):
+                        with open(output_file, "wb") as f:
+                            if checkflag:
+                                f.write(response.read(10000))
+                                print(">>>>>>>>>>>>>>>>>>>> readsoundfile write short buffer file")
+                            else:
+                                f.write(response.read())
+                                ### only for pydub: ### self.convert_to_mp3(output_file, true_tempfile)
+                                ### only for pydub: ### Path(output_file).unlink()
+                                ffmpeg_command =  "ffmpeg-master-latest-win64-gpl/bin/ffmpeg -y -i " + output_file +  " -c:a libmp3lame -qscale:a 2 " + true_tempfile
+                                subprocess.run(ffmpeg_command, check=True)
+                                #Path(output_file).unlink()
             except:
                 auxi.standard_errorbox(f"cannot open URL for {file_path}; abort procedure")
                 return False
-            a = sf.SoundFile(output_file, 'r')
+            #a = sf.SoundFile(output_file, 'r')
+            ### only for pydub: ### 
+            a = sf.SoundFile(true_tempfile, 'r')
+
         else:
             a = sf.SoundFile(file_path, 'r')
 
             #data, sample_rate = sf.read(wav_file)
 
         return a
+    
+
+    # def convert_to_mp3(input_file, output_file):
+    #     audio = AudioSegment.from_file(input_file)
+    #     audio.export(output_file, format="mp3", bitrate="192k")
 
 class synthesizer_v(QObject):
     """_view methods for resampling module
@@ -642,6 +686,7 @@ class synthesizer_v(QObject):
         self.oldFileList = []
         self.readFilePath = []
         self.autosave = False
+        self.m3uflag = False
         for self.m["carrier_ix"] in range(0,2):
             self.readFileList.append([])
             self.readFileList[self.m["carrier_ix"]] = []
@@ -754,6 +799,7 @@ class synthesizer_v(QObject):
 
 
     def clear_project(self):
+        self.m3uflag = False
         self.init_synthesizer_ui()
         self.gui.listWidget_sourcelist.clear()
         self.readFileList = []
@@ -854,6 +900,7 @@ class synthesizer_v(QObject):
             pass
         #TODO TODO TODO: delete out files produced so far ? or leave them ?
         self.gui.synthesizer_pushbutton_cancel.clicked.connect(self.cancel_modulate)
+        self.remove_aud()
         #self.cleanup()
 
     def canvasbuild(self):
@@ -965,7 +1012,7 @@ class synthesizer_v(QObject):
         self.modulate_worker.set_logger(self.logger)
         self.modulate_worker.set_LO_freq(LO_frequency)
         self.modulate_worker.set_method_object(self.synthesizer_c)
-        print(f"createbandthread: method_object {self.synthesizer_c}")
+        #print(f"createbandthread: method_object {self.synthesizer_c}")
         self.setgain()
         self.modulate_thread.started.connect(self.modulate_worker.start_modulator)
         self.modulate_worker.SigPupdate.connect(self.PupdateSignalHandler)
@@ -1008,7 +1055,21 @@ class synthesizer_v(QObject):
         auxi.standard_infobox("synthesis has been completed, files can be found in the recording path defined on the Player tab")
         self.gui.progressBar_synth.setValue(0)
         self.gui.synthesizer_pushbutton_create.setStyleSheet("background-color: lightgray; color: black;")
+        self.remove_aud()
         self.display_worker_message('Job finished, ready for new job')
+
+    def remove_aud(self):
+        """delete all temporary *.aud files
+        """
+        current_dir = os.getcwd()
+        for filename in os.listdir(current_dir):
+            if filename.endswith('.aud'):
+                file_path = os.path.join(current_dir, filename)
+                try:
+                    os.remove(file_path)
+                    print(f"temp file deleted: {file_path}")
+                except Exception as e:
+                    print(f"Error when deleting temporary file: {file_path}: {e}")
 
     def preset_SR_LO(self):
         """auto-define LO frequency and Rec bandwidth (= sampling rate) for pre-defined broadcasting bands on LW, MW and SW
@@ -1135,11 +1196,14 @@ class synthesizer_v(QObject):
         pr["projectdata"]["LO"] = self.m["LO"]
         pr["projectdata"]["audio_BW"] = self.m["audioBW"]
         #pr["projectdata"]["sample_rate"] = self.m["sample_rate"]
-        try:
-            pr["projectdata"]["current_listdir"] = self.current_listdir
-        except:
-            auxi.standard_errorbox("no playlist specified, project file will not be written")
-            return
+        if not self.m3uflag:
+            try:
+                pr["projectdata"]["current_listdir"] = self.current_listdir
+            except:
+                auxi.standard_errorbox("no playlist specified, project file will not be written")
+                return
+        else:
+            pr["projectdata"]["current_listdir"] = ""
         pr["projectdata"]["targetSR_index"] = self.gui.comboBox_targetSR.currentIndex()
         pr["projectdata"]["presetband_index"] = self.gui.comboBox_targetSR_2.currentIndex()
         #pr["projectdata"]["preset_time"] = 
@@ -1172,6 +1236,7 @@ class synthesizer_v(QObject):
         : raises: none
 
         """
+        self.m3uflag = False
         self.gui.pushButton_loadproject.clicked.disconnect(self.load_project)
         pr = {}
         pr["projectdata"] = {}
@@ -1461,11 +1526,19 @@ class synthesizer_v(QObject):
                 #wav_info = self.get_wav_info(file_path)
                 #duration += wav_info['duration_seconds']
                 #if duration Blödsinn, das kann passieren !
+                #a = self.synthesizer_c.readsoundfile(file_path,"c")
+                if file_path.find("http://")>=0 or file_path.find("https://")>=0:
+                    output_file = Path(file_path).stem + ".aud"
+                    self.gui.label_audioset_name.setText(f"download stream and write temporary output_file: {output_file}")
                 a = self.synthesizer_c.readsoundfile(file_path)
-                print("########### current point of development reached, cannot proceed from here###########")
+                print("show_playlength: ########### current point of development reached, proceed from here###########")
                 duration += a.frames/a.samplerate
                 a.close()
-
+                output_file = Path(file_path).stem + ".aud"
+                if os.path.isfile(output_file):
+                    self.gui.label_audioset_name.setText(f"remove temporary output_file: {output_file}")
+                    os.remove(output_file)
+                    print("duration check : remove temp aud file")
             else:
                 print("NNNNNNNNNN")
             ix += 1
@@ -1539,7 +1612,9 @@ class synthesizer_v(QObject):
         # TODO test what happens if empty ? check if not empty; if populated, re-read values into current table
         # (1) check if empty  >>>>DONE
         # (2) check if deviates from old list >>>>DONE
-        # (3) importer for i3u Files --> fill custom list and activate custom mode
+        # (3) import of URL playlists: same files on all carriers, check ; also interruptions possible
+        # (4) clear sourcelists when importing m3u playlists
+        # (5) emit info message on slowness when reading from URLs because of temp files
 
 
         self.numcarriers_old = self.m["numcarriers"]
@@ -1889,6 +1964,7 @@ class synthesizer_v(QObject):
         item = QtWidgets.QListWidgetItem()
         self.gui.listWidget_sourcelist.addItem(item)
         ix = 0
+        self.current_listdir = ""
         for x in os.listdir(rootdir):
             #if x.endswith(".wav"):
             #TODO TODO TODO: Umstellen auf generelle Source-Links über urllib unter Verwendung von M3U-Playlists
@@ -2085,6 +2161,8 @@ class synthesizer_v(QObject):
         #####TODO TODO TODO: the last block after the last EXTGRP does not appear in the GUI 
         # when activating the last carrier from the carrier soinbox, though the kist has been definitely transferred to the 
         # central local filelists
+        self.m3uflag = True
+        self.gui.listWidget_sourcelist.clear()
         self.gui.pushButton_importProject.clicked.disconnect(self.import_m3u)
         try:
             stream = open("config_wizard.yaml", "r")
