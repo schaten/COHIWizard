@@ -620,6 +620,89 @@ class synthesizer_c(QObject):
     #     audio = AudioSegment.from_file(input_file)
     #     audio.export(output_file, format="mp3", bitrate="192k")
 
+################### CODE for determining Playlength from URL
+
+# import subprocess
+# import re
+
+# def get_stream_duration(url):
+#     # ffmpeg-Befehl, um die Metadaten der Datei auszulesen
+#     ffmpeg_command = [
+#         "ffmpeg",
+#         "-i", url,
+#         "-hide_banner"  # Verbirgt unnötige Informationen
+#     ]
+
+#     # Prozess starten und Fehlerausgabe analysieren (da ffmpeg die Metadaten dort ausgibt)
+#     process = subprocess.Popen(ffmpeg_command, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+#     stdout, stderr = process.communicate()
+
+#     # Dauer aus der ffmpeg-Ausgabe extrahieren
+#     match = re.search(r"Duration: (\d+):(\d+):(\d+\.\d+)", stderr.decode())
+#     if match:
+#         hours, minutes, seconds = map(float, match.groups())
+#         return hours * 3600 + minutes * 60 + seconds  # Dauer in Sekunden
+#     else:
+#         return None  # Keine Dauer gefunden
+
+# # Beispielaufruf
+# stream_url = "https://example.com/audio.mp3"
+# duration = get_stream_duration(stream_url)
+# if duration:
+#     print(f"Die Gesamtdauer beträgt: {duration:.2f} Sekunden")
+# else:
+#     print("Dauer konnte nicht ermittelt werden.")
+
+
+################### CODE for reading audio blockwise from URL
+
+# import subprocess
+# import numpy as np
+
+# def read_audio_stream(url, block_size_samples, sample_rate=44100, channels=2, dtype="float32"):
+#     # Berechne die Blockgröße in Bytes (pro Block)
+#     block_size_bytes = block_size_samples * channels * np.dtype(dtype).itemsize
+
+#     # ffmpeg-Befehl vorbereiten
+#     ffmpeg_command = [
+#         "ffmpeg",
+#         "-i", url,
+#         "-f", "f32le",          # Rohformat: 32-Bit Float, Little Endian
+#         "-ac", str(channels),   # Kanäle
+#         "-ar", str(sample_rate),# Abtastrate
+#         "-"
+#     ]
+
+#     # ffmpeg-Prozess starten
+#     process = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, bufsize=10**8)
+
+#     try:
+#         while True:
+#             # Lese einen Block von Rohdaten
+#             raw_audio = process.stdout.read(block_size_bytes)
+
+#             # Überprüfen, ob der Stream endet
+#             if not raw_audio:
+#                 break
+
+#             # Konvertiere Rohdaten in ein NumPy-Array
+#             audio_block = np.frombuffer(raw_audio, dtype=dtype).reshape(-1, channels)
+
+#             # Hier kannst du mit dem Block weiterarbeiten (z. B. speichern, analysieren, etc.)
+#             yield audio_block
+#     finally:
+#         # Prozess sicher beenden
+#         process.terminate()
+#         process.wait()
+
+# # Beispielaufruf
+# stream_url = "https://example.com/audio-stream"
+# block_size = 64000  # 64k Samples pro Block
+
+# for block in read_audio_stream(stream_url, block_size):
+#     print(f"Blockgröße: {block.shape}")
+
+
 class synthesizer_v(QObject):
     """_view methods for resampling module
     TODO: gui.wavheader --> something less general ?
@@ -1261,6 +1344,7 @@ class synthesizer_v(QObject):
             self.gui.lineEdit_carrierdistance.setText(str(pr["projectdata"]["carrier_distance"]))
             self.m["carrier_distance"] = pr["projectdata"]["carrier_distance"]
             self.m["numcarriers"] = pr["projectdata"]["numcarriers"]
+            
             #self.gui.spinBox_numcarriers.valueChanged.disconnect(self.freq_carriers_update)
             self.gui.spinBox_numcarriers.valueChanged.disconnect(self.on_value_changed)
             self.gui.spinBox_numcarriers.editingFinished.disconnect(self.on_editing_finished)
@@ -1613,7 +1697,7 @@ class synthesizer_v(QObject):
         # (1) check if empty  >>>>DONE
         # (2) check if deviates from old list >>>>DONE
         # (3) import of URL playlists: same files on all carriers, check ; also interruptions possible
-        # (4) clear sourcelists when importing m3u playlists
+        # (4) clear sourcelists when importing m3u playlists >>>>> DONE
         # (5) emit info message on slowness when reading from URLs because of temp files
 
 
@@ -1643,8 +1727,7 @@ class synthesizer_v(QObject):
 
         else:
             numcar = self.gui.spinBox_numcarriers.value()
-        #TODO: make dependent on whether customcarriers or not !
-
+        #TODO: make dependent on whether customcarriers or not ! >>>> DONE ?
 
         valid, errortext = self.validate_params()
         if not valid:
@@ -1663,15 +1746,15 @@ class synthesizer_v(QObject):
             #extend list
             curlen = self.numcarriers_old
             delta = numcar - self.numcarriers_old
+            #TODO: Filelist wird hier aus m3u um 1 Zeile gekürzt
             for i in range(delta):
                 self.readFileList.append([])
-                self.readFileList[curlen + i] = [] #TODO TODO TODO: CHECK: voher hatte ich -1 
+                self.readFileList[curlen + i] = [] #TODO TODO TODO: CHECK: voher hatte ich -1 , hier wird eine m3u Liste gekürzt
                 self.oldFileList.append([])
                 self.oldFileList[curlen + i] = []
                 self.readFilePath.append([])
                 self.readFilePath[curlen + i] = []
         elif numcar < self.numcarriers_old:
-            #TODO TODO TODO TESTING ! delete n list elements and ask if that is wanted
             delta = self.numcarriers_old - numcar
             if not self.load_index:
                 msg = QMessageBox()
@@ -2156,11 +2239,9 @@ class synthesizer_v(QObject):
         """import an m3u playlist with special format containing fields of the form
         #EXTGRP: <carrierfrequency>
         where <carrierfrequency> is a number specifying the carrier frequency in kHz for the following sub-playlist
-
+        (1) read last importpath, if not found set to current directory
+        (2) open m3u file, parse lines and compose self.readFileList and self.readFilePath
         """
-        #####TODO TODO TODO: the last block after the last EXTGRP does not appear in the GUI 
-        # when activating the last carrier from the carrier soinbox, though the kist has been definitely transferred to the 
-        # central local filelists
         self.m3uflag = True
         self.gui.listWidget_sourcelist.clear()
         self.gui.pushButton_importProject.clicked.disconnect(self.import_m3u)
@@ -2268,6 +2349,7 @@ class synthesizer_v(QObject):
         #   copy carriers to custom carriertable >>>>>> DONE
         #   set custom carrier button Checked without triggering table edit 
         #   carry out GUI update and validation by accessing the slot function of table edit OK
+        self.m["numcarriers"] = len(self.readFileList)
         self.freq_carriers_update(self,custom_carriers)
         self.fc_low_update()
         self.gui.radiobutton_CustomCarriers.setChecked(True)
