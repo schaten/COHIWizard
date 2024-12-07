@@ -35,6 +35,11 @@ import urllib.request
 #import m3u8
 from auxiliaries import WAVheader_tools
 
+#BUGS:
+# recognize if web not connected if htp URL import
+# autodetect ffmpeg install and install
+# mixed files from http and local wav/mpeg is not working properly
+# allow for URL sources to be inserted interactively ??
 
 class modulate_worker(QObject):
     """ worker class for generating modulated signals in a separate thread
@@ -188,6 +193,9 @@ class modulate_worker(QObject):
         method_object = self.get_method_object()
         print(f"calling method: {method_object.readsoundfile}, argument: {wav_file}")
         a = method_object.readsoundfile(wav_file)
+        if not a:
+            self.SigFinished.emit()
+            return False
         data = a.read()
         sample_rate = a.samplerate
         # convert to Mono, if signal is stereo TODO: check: mean may be lower than individual channel values !
@@ -266,7 +274,11 @@ class modulate_worker(QObject):
                 self.logger.debug(f"Audiofile {file_path} max_level: {max_level}, RMS_amp: {RMS_amp}, audio_gain auto: {audio_gain}")
                 #file_handles[current_file_index] = sf.SoundFile(file_path, 'r')
                 method_object = self.get_method_object()
+               
                 file_handles[current_file_index] = method_object.readsoundfile(file_path)
+                if not file_handles[current_file_index]:
+                    self.SigFinished.emit()
+                    return False
 
             if silence:
                 # generate zero audio block for silence between subsequent audio files
@@ -288,7 +300,7 @@ class modulate_worker(QObject):
                 original_sample_rate = f.samplerate
                 num_channels = f.channels
                 #TODO: 
-                block_size = int(np.floor(ref_block_size *  original_sample_rate / reference_sample_rate))
+                block_size = int(np.floor(ref_block_size * original_sample_rate / reference_sample_rate))
                 audio_block = f.read(block_size)
 
             if len(audio_block) == 0 and not silence:
@@ -399,7 +411,6 @@ class modulate_worker(QObject):
                 if modulated_block is None: #--> end of Playlist has been reached
                     continue
                 # Dynamically adjust combined signal block size based on modulated block size
-                # #TODO: This is rubbish if the individual carriers stem from audioblocks with different SR and hence different length per blocksize
 
                 if combined_signal_block is None or len(combined_signal_block) < len(modulated_block):
                     
@@ -655,8 +666,21 @@ class synthesizer_c(QObject):
                 #                 ffmpeg_command =  self.m["ffmpeg_path"] + "ffmpeg -user_agent " + self.m["user_agent"] + " -y -i " + output_file +  " -c:a libmp3lame -qscale:a 2 " + true_tempfile
                 #                 subprocess.run(ffmpeg_command, check=True)
                 #                 #Path(output_file).unlink()
-            except:
-                auxi.standard_errorbox(f"cannot open URL for {file_path}; abort procedure")
+            except subprocess.CalledProcessError as e:
+                # Fehlercode und ffmpeg-Fehlermeldungen ausgeben
+                print(f"ffmpeg-Fehler: Rückgabecode {e.returncode}")
+                print("Fehlermeldung:", e.stderr)
+                if "404 Not Found" in e.stderr:
+                    #print("Fehler: URL nicht gefunden (404).")
+                    errortext_suffix = " Error 404: URL {file_path} cannot be found ffmpeg returncode {e.returncode}."
+                elif "Connection refused" in e.stderr or "Connection timed out" in e.stderr:
+                    #print("Fehler: Verbindung zur URL fehlgeschlagen.")
+                    errortext_suffix = " Connection to URL {file_path} refused or timed out ffmpeg returncode {e.returncode}."
+                else:
+                    #print("Unbekannter Fehler beim Zugriff auf die URL.")
+                    errortext_suffix = " Unknown error when trying to connect to URL {file_path}. ffmpeg returncode {e.returncode}."
+                auxi.standard_errorbox(errortext_suffix + " Aborting procedure ")
+
                 return False
             a = sf.SoundFile(true_tempfile, 'r')
 
@@ -839,6 +863,10 @@ class synthesizer_v(QObject):
                 self.clear_project()
                 self.freq_carriers_update()
             else:
+                if self.gui.radiobutton_CustomCarriers.isChecked():
+                    self.gui.pushButton_CustomCarriers.setChecked(True)
+                else:
+                    self.gui.pushButton_CustomCarriers.setChecked(False)
                 return
 
 
@@ -850,6 +878,9 @@ class synthesizer_v(QObject):
         self.oldFileList = []
         self.readFilePath = []
         self.autosave = False
+        self.custom_carriers = []
+        self.m["carrierarray"] = np.arange(0, 1, 1)
+        
         for self.m["carrier_ix"] in range(0,2):
             self.readFileList.append([])
             self.readFileList[self.m["carrier_ix"]] = []
@@ -988,7 +1019,6 @@ class synthesizer_v(QObject):
         time.sleep(0.5)
         self.load_project()
         self.autosave = False
-        self.gui.synthesizer_pushbutton_create.clicked.connect(self.create_band_thread)
         self.preset_gain()
         #if self.gui.radiobutton_AGC.isChecked():
         #TODO TODO TODO: implement AGC method and AUTO clipping repair or clipping warning
@@ -1040,7 +1070,7 @@ class synthesizer_v(QObject):
                 else:
                     existcheck = False
 
-        block_size = 2**16   # Maximum block length
+        block_size = 2**18   # Maximum block length
         total_reclength = self.get_reclength()
         exp_num_samples = total_reclength * self.m["sample_rate"]*1000
         self.toggle = False
@@ -1079,7 +1109,9 @@ class synthesizer_v(QObject):
         if self.modulate_thread.isRunning():
             self.logger.debug("modulate: modulate_ thread started")
             self.syntesisrunning = True
-        time.sleep(0.01) # wait state for worker to start up
+        time.sleep(0.1) # wait state for worker to start up
+        self.gui.synthesizer_pushbutton_create.clicked.connect(self.create_band_thread)
+
         return(True)
     
     def display_worker_message(self,s):
@@ -1266,7 +1298,10 @@ class synthesizer_v(QObject):
         else:
             filename = "temp.proj"
         pr["projectdata"]["carrier_array"] = self.m["carrierarray"].tolist()
-        pr["projectdata"]["custom_carriers_active"] = self.gui.radiobutton_CustomCarriers.isChecked()
+        if self.gui.radiobutton_CustomCarriers.isChecked():
+            pr["projectdata"]["custom_carriers_active"] = "True"
+        else:
+            pr["projectdata"]["custom_carriers_active"] = "False"
 
         stream = open(filename, "w") ###replace project.yaml with filename
         yaml.dump(pr["projectdata"], stream)
@@ -1327,7 +1362,9 @@ class synthesizer_v(QObject):
             self.gui.lineEdit_modfactor.setText(str(pr["projectdata"]["modfactor"])) 
             self.load_index = True
             self.m["carrierarray"] =  np.array(pr["projectdata"]["carrier_array"])
-            if pr["projectdata"]["custom_carriers_active"]:
+            
+            if pr["projectdata"]["custom_carriers_active"] == "True":
+                self.custom_carriers = self.m["carrierarray"]
                 self.gui.radiobutton_CustomCarriers.setChecked(True)
             else:
                 self.gui.radiobutton_CustomCarriers.setChecked(False)
@@ -1349,7 +1386,8 @@ class synthesizer_v(QObject):
             self.carrierselect_update("nup")
             self.load_index = False
 
-            #TODO TODO TODO load all remaining settings
+            #TODO TODO TODO copy custom carriers to custom table
+            #import custom carriers correctly
             #self.comboBox_targetSR_2.setCurrentIndex(###) Preset menu
             #modulation factor
 
@@ -1357,7 +1395,14 @@ class synthesizer_v(QObject):
 
         except:
             self.logger.error('cannot load project yaml file (proj files)')
+            auxi.standard_errorbox(f"Cannot correctly load {filename}. Please check project file for consistency")
+        try:
+            self.gui.pushButton_loadproject.clicked.disconnect(self.load_project)
+        except:
+            pass
+        time.sleep(0.1)
         self.gui.pushButton_loadproject.clicked.connect(self.load_project)
+        print("##")
 
 
     def save_file_dialog(self):
@@ -1537,6 +1582,8 @@ class synthesizer_v(QObject):
         except:
             pass
         duration = self.show_playlength()
+        if not duration:
+            return False
         self.show_fillprogress(duration)
         self.gui.listWidget_playlist.model().rowsInserted.connect(self.playlist_update_delayed)
 
@@ -1590,8 +1637,14 @@ class synthesizer_v(QObject):
                 #duration += a.frames/a.samplerate
                 #a.close()
                 #TODO TODO TODO: Anzeige, dass nun ein länger dauernder Prozess startet (Read from URL)
+                #TODO TODO TODO
                     ctime = datetime.now()
                     print(f"start read URL list @ {ctime}")
+                    aux = self.get_stream_duration(file_path)
+                    if aux == None:
+                        auxi.standard_errorbox(f"Error when determining duration of {file_path}. Giving up")
+                        self.clear_project()
+                        return False
                     duration += self.get_stream_duration(file_path)
                     print(f"end read URL list @ {ctime}, duration: {duration}")
                 #self.gui.label_audioset_name.setText("")
@@ -1641,8 +1694,17 @@ class synthesizer_v(QObject):
             "-hide_banner"  # Verbirgt unnötige Informationen
         ]
         # Prozess starten und Fehlerausgabe analysieren (da ffmpeg die Metadaten dort ausgibt)
+        
         process = subprocess.Popen(ffmpeg_command, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         stdout, stderr = process.communicate()
+
+        match1 = re.search(r"Failed to resolve", stderr.decode())
+        match2 = re.search(r"Error opening input file", stderr.decode())
+        if match1 or match2:
+            errortext_suffix = f"Error when trying to connect to URL {url}. Aborting procedure"
+            auxi.standard_errorbox(errortext_suffix + " Aborting procedure ")
+            
+            return None
 
         # Dauer aus der ffmpeg-Ausgabe extrahieren
         match = re.search(r"Duration: (\d+):(\d+):(\d+\.\d+)", stderr.decode())
@@ -1651,6 +1713,7 @@ class synthesizer_v(QObject):
             return hours * 3600 + minutes * 60 + seconds  # Dauer in Sekunden
         else:
             return None  # Keine Dauer gefunden
+
 
     # # Beispielaufruf
     # stream_url = "https://example.com/audio.mp3"
@@ -2087,9 +2150,6 @@ class synthesizer_v(QObject):
         ix = 0
         self.current_listdir = ""
         for x in os.listdir(rootdir):
-            #if x.endswith(".wav"):
-            #TODO TODO TODO: Umstellen auf generelle Source-Links über urllib unter Verwendung von M3U-Playlists
-            #Siehe m3U_und Streams_lesen_python.txt für Info von ChatGPT
 
             if x.endswith(".wav") or x.endswith(".mp3"):
                 if True: #x != (self.m["my_filename"] + self.m["ext"]): #TODO: obsolete old form when automatically loading opened file to playlist
@@ -2122,6 +2182,8 @@ class synthesizer_v(QObject):
         self.readFileList[self.m["carrier_ix"]] = [self.gui.listWidget_playlist.item(i).text() for i in range(self.gui.listWidget_playlist.count())]
         self.playlist_purge()
         duration = self.show_playlength()
+        if not duration:
+            return False
         self.show_fillprogress(duration)
         self.gui.listWidget_playlist.model().rowsInserted.connect(self.playlist_update_delayed)
         #print("playlist_update")
