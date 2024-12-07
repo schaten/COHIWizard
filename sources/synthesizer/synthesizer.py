@@ -249,8 +249,6 @@ class modulate_worker(QObject):
         - cumulative_time: updated time of silence which has passed for this carrier so far
         """
         #print(f"read_and_process_audio_blockwise; current_file_index: {current_file_index}, carrier_freq {carrier_freq}")
-        #TODO TODO TODO:
-        #adapt blocksize dynamically according to the sampling rate of the current file
         sos = butter(4, cutoff_freq, btype='low', fs=target_sample_rate, output='sos')
         reference_sample_rate = 56000#44100
         #print(f"carrier-freq: {carrier_freq}")
@@ -298,18 +296,12 @@ class modulate_worker(QObject):
                 print(f"close file {file_path} with index {current_file_index}; open next in list")
                 f.close()
 
-                #UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
-                #UUUUUUUUUU if URL: ffmpeg müsste das automatisch machen
-                # REMOVE !
-                #UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
-                # if file_path.find("http://")>=0 or file_path.find("https://")>=0:
-        
-                #     #read_audio_stream(url, block_size_samples, sample_rate=44100, channels=2, dtype="float32")
-                #     temp_file = Path(file_path).stem + ".aud"
-                #     print(f"oooooooooo>>>>> worker, jump to next file, localize temp aud file {temp_file}")
-                #     if os.path.isfile(temp_file):
-                #         os.remove(temp_file)
-                #         print(f"oooooooooo>>>>> worker, jump to next file, remove temp aud file {temp_file}")
+                if file_path.find("http://")>=0 or file_path.find("https://")>=0:
+                    temp_file = Path(file_path).stem + ".wav"
+                    print(f"oooooooooo>>>>> worker, jump to next file, localize temp aud file {temp_file}")
+                    if os.path.isfile(temp_file):
+                        os.remove(temp_file)
+                        print(f"oooooooooo>>>>> worker, jump to next file, remove temp aud file {temp_file}")
 
                 del file_handles[current_file_index]  # remove Handle
                 current_file_index += 1
@@ -350,8 +342,8 @@ class modulate_worker(QObject):
         :type carrier_frequencies: list of float
         :param playlists: _description_
         :type playlists: _type_
-        :param sample_rate: _description_
-        :type sample_rate: _type_
+        :param sample_rate: sample rate
+        :type sample_rate: float
         :param block_size: size of one data block for modulation
         :type block_size: int
         :param cutoff_freq: cutoff frequency of the lowpass filter for audio before modulation
@@ -379,11 +371,9 @@ class modulate_worker(QObject):
         self.logger.debug(f"synthesizer worker carrier frequencies: {carrier_frequencies}")
         # Initialize file_handles as a list of empty dictionaries for each carrier
         file_handles = [{} for _ in carrier_frequencies] 
-
         total_samples_written = 0
         overall_samples_written = 0
         file_index = 0
-
         # Open first output file to write combined signal blockwise
         output_file_name = f"{output_base_name}_{file_index}.wav"
         out_file = sf.SoundFile(output_file_name, 'w', samplerate=sample_rate, channels=1, subtype='PCM_16')
@@ -401,17 +391,13 @@ class modulate_worker(QObject):
         while not done:
             combined_signal_block = None  # Buffer for combined signal block
             done = True  # Assume done unless we find more data
-            
             # Process each carrier for the current block
             for i, (carrier_freq, zi) in enumerate(zip(carrier_frequencies, zis)):
-                #print(f"audiogain {audio_gain[i]}")
                 #print(f"filehandles in modulate_worker, process mult carr blw: {file_handles}")
                 modulated_block, new_zi, sample_offsets[i], current_file_indices[i], audio_gain[i], silence[i], cumulative_time[i] = self.read_and_process_audio_blockwise(playlists[i], carrier_freq*1000, sample_rate, block_size, cutoff_freq, modulation_depth, zi, sample_offsets[i], current_file_indices[i], file_handles[i], audio_gain[i], silence[i], cumulative_time[i])
-                
-                # ifmodulated_block == None --> end of Playlist has been reached
-                if modulated_block is None:
-                    continue
 
+                if modulated_block is None: #--> end of Playlist has been reached
+                    continue
                 # Dynamically adjust combined signal block size based on modulated block size
                 # #TODO: This is rubbish if the individual carriers stem from audioblocks with different SR and hence different length per blocksize
 
@@ -608,20 +594,26 @@ class synthesizer_c(QObject):
 
         parsed = urllib.parse.urlparse(file_path)
         if parsed.scheme == "http" or parsed.scheme == "https":
-                #UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
-                #UUUUUUUUUU ffmpeg Handle erzeugen
-
             try:
-                true_tempfile = Path(file_path).stem + ".mp3"
-                #ffmpeg_command =  self.m["ffmpeg_path"] + "ffmpeg -user_agent " + self.m["user_agent"] + "-i " + file_path +  " -c:a libmp3lame -qscale:a 2 " + true_tempfile
+                #true_tempfile = Path(file_path).stem + ".mp3"
+                true_tempfile = Path(file_path).stem + ".wav"
+                # ffmpeg_command = [
+                #     self.m["ffmpeg_path"] + "ffmpeg",
+                #     "-user_agent", self.m["user_agent"],
+                #     "-y", "-i", file_path,
+                #     "-c:a", "libmp3lame",      # Audiocodec
+                #     "-qscale:a", "2",   # Audio quality for MP3 (ignored for WAV)
+                #     true_tempfile
+                # ]
                 ffmpeg_command = [
                     self.m["ffmpeg_path"] + "ffmpeg",
                     "-user_agent", self.m["user_agent"],
                     "-y", "-i", file_path,
-                    "-c:a", "libmp3lame",      # Audiocodec
+                    "-c:a", "pcm_s16le",      # Audiocodec
                     "-qscale:a", "2",   # Audio quality for MP3 (ignored for WAV)
                     true_tempfile
                 ]
+                
                 
                 print(f">>>>>>>>>ooooooooooooooo############. ffmpeg_command: {ffmpeg_command}")
                 print("start subprocess")
@@ -652,58 +644,11 @@ class synthesizer_c(QObject):
             except:
                 auxi.standard_errorbox(f"cannot open URL for {file_path}; abort procedure")
                 return False
-            #a = sf.SoundFile(output_file, 'r')
-            ### only for pydub: ### 
             a = sf.SoundFile(true_tempfile, 'r')
 
         else:
             a = sf.SoundFile(file_path, 'r')
-
-            #data, sample_rate = sf.read(wav_file)
-
         return a
-
-################### CODE for reading audio blockwise from URL
-
-
-    # def convert_to_mp3(input_file, output_file):
-    #     audio = AudioSegment.from_file(input_file)
-    #     audio.export(output_file, format="mp3", bitrate="192k")
-
-################### CODE for determining Playlength from URL
-
-# import subprocess
-# import re
-
-# def get_stream_duration(url):
-#     # ffmpeg-Befehl, um die Metadaten der Datei auszulesen
-#     ffmpeg_command = [
-#         self.m["ffmpeg_path"],
-#         "ffmpeg",
-#         "-i", url,
-#         "-hide_banner"  # Verbirgt unnötige Informationen
-#     ]
-
-#     # Prozess starten und Fehlerausgabe analysieren (da ffmpeg die Metadaten dort ausgibt)
-#     process = subprocess.Popen(ffmpeg_command, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-#     stdout, stderr = process.communicate()
-
-#     # Dauer aus der ffmpeg-Ausgabe extrahieren
-#     match = re.search(r"Duration: (\d+):(\d+):(\d+\.\d+)", stderr.decode())
-#     if match:
-#         hours, minutes, seconds = map(float, match.groups())
-#         return hours * 3600 + minutes * 60 + seconds  # Dauer in Sekunden
-#     else:
-#         return None  # Keine Dauer gefunden
-
-# # Beispielaufruf
-# stream_url = "https://example.com/audio.mp3"
-# duration = get_stream_duration(stream_url)
-# if duration:
-#     print(f"Die Gesamtdauer beträgt: {duration:.2f} Sekunden")
-# else:
-#     print("Dauer konnte nicht ermittelt werden.")
-
 
 class synthesizer_v(QObject):
     """_view methods for resampling module
@@ -1378,7 +1323,9 @@ class synthesizer_v(QObject):
                 auxi.standard_errorbox("playlist is inconsistent with other settings, project file invalid, check project file")
                 return 
             self.current_listdir = pr["projectdata"]["current_listdir"]
-            self.fillsourcelist(self.current_listdir)
+            #########TODO TODO TODO: listdir = "" in case of URL --> fillsourcelist cannot be carried out
+            if len(self.current_listdir) > 0: 
+                self.fillsourcelist(self.current_listdir)
             self.RecBW_update()
             self.LO_update()
             self.carrierdistance_update()
@@ -2634,3 +2581,44 @@ class TableDialog(QDialog):
     #         process.terminate()
     #         process.wait()
 
+
+################### CODE for reading audio blockwise from URL
+
+
+    # def convert_to_mp3(input_file, output_file):
+    #     audio = AudioSegment.from_file(input_file)
+    #     audio.export(output_file, format="mp3", bitrate="192k")
+
+################### CODE for determining Playlength from URL
+
+# import subprocess
+# import re
+
+# def get_stream_duration(url):
+#     # ffmpeg-Befehl, um die Metadaten der Datei auszulesen
+#     ffmpeg_command = [
+#         self.m["ffmpeg_path"],
+#         "ffmpeg",
+#         "-i", url,
+#         "-hide_banner"  # Verbirgt unnötige Informationen
+#     ]
+
+#     # Prozess starten und Fehlerausgabe analysieren (da ffmpeg die Metadaten dort ausgibt)
+#     process = subprocess.Popen(ffmpeg_command, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+#     stdout, stderr = process.communicate()
+
+#     # Dauer aus der ffmpeg-Ausgabe extrahieren
+#     match = re.search(r"Duration: (\d+):(\d+):(\d+\.\d+)", stderr.decode())
+#     if match:
+#         hours, minutes, seconds = map(float, match.groups())
+#         return hours * 3600 + minutes * 60 + seconds  # Dauer in Sekunden
+#     else:
+#         return None  # Keine Dauer gefunden
+
+# # Beispielaufruf
+# stream_url = "https://example.com/audio.mp3"
+# duration = get_stream_duration(stream_url)
+# if duration:
+#     print(f"Die Gesamtdauer beträgt: {duration:.2f} Sekunden")
+# else:
+#     print("Dauer konnte nicht ermittelt werden.")
