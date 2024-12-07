@@ -402,15 +402,29 @@ class modulate_worker(QObject):
                 # #TODO: This is rubbish if the individual carriers stem from audioblocks with different SR and hence different length per blocksize
 
                 if combined_signal_block is None or len(combined_signal_block) < len(modulated_block):
-                    combined_signal_block = np.zeros(len(modulated_block), dtype = np.complex128)
+                    
+                    self.logger.debug(f"modulated block is None or short  @ t = {sample_offsets[i]}, carrier = {i}")
+                    if combined_signal_block is None:
+                        combined_signal_block = np.zeros(len(modulated_block), dtype = np.complex128)
+                        pass
+                    else:
+                        self.logger.debug(f"modulated block is None or short len = {len(combined_signal_block)}, ZEROPAD")
+                        self.logger.debug(f"None/shortlen: diff len combined block -len mod block: {len(combined_signal_block) - len(modulated_block)}")
+                        difflen = len(modulated_block) - len(combined_signal_block)  
+                        zero_padding = np.zeros(difflen, dtype=np.complex128)
+                        combined_signal_block = np.concatenate((combined_signal_block, zero_padding))
+                    ######combined_signal_block = np.zeros(len(modulated_block), dtype = np.complex128)
                     #TODO Rubbish ! all existing rows must be zeropadded until len(modulated_block)
                 gain = self.get_gain()
                 if np.abs(len(combined_signal_block) - len(modulated_block)) > 0:
                     print(f"modulated block std gain*mb = {np.std(gain*modulated_block)} , gain = {gain} @ t = {sample_offsets[i]}, carrier = {i}")
                     print(f"diff len combined block -len mod block: {len(combined_signal_block) - len(modulated_block)}")
+                    self.logger.debug(f"modulated block std gain*mb = {np.std(gain*modulated_block)} , gain = {gain} @ t = {sample_offsets[i]}, carrier = {i}")
+                    self.logger.debug(f"diff len combined block -len mod block: {len(combined_signal_block) - len(modulated_block)}")
                 combined_signal_block[:len(modulated_block)] += gain * modulated_block
                 if np.std(gain*modulated_block) < 1e-1:
                     print(f"modulated block is zero, std gain*mb = {np.std(gain*modulated_block)} , gain = {gain} @ t = {sample_offsets[i]}")   
+                    self.logger.debug(f"modulated block is zero, std gain*mb = {np.std(gain*modulated_block)} , gain = {gain} @ t = {sample_offsets[i]}")   
                 # If we processed any blocks, we're not done
                 done = False
 
@@ -1326,12 +1340,13 @@ class synthesizer_v(QObject):
             #########TODO TODO TODO: listdir = "" in case of URL --> fillsourcelist cannot be carried out
             if len(self.current_listdir) > 0: 
                 self.fillsourcelist(self.current_listdir)
-            self.RecBW_update()
-            self.LO_update()
-            self.carrierdistance_update()
-            self.audioBW_update()
-            self.fc_low_update()
-            self.carrierselect_update()
+            #call GUI apdaters withoud calling playlist updates (option "nup")
+            self.RecBW_update("nup")
+            self.LO_update("nup")
+            self.carrierdistance_update("nup")
+            self.audioBW_update("nup")
+            self.fc_low_update("nup")
+            self.carrierselect_update("nup")
             self.load_index = False
 
             #TODO TODO TODO load all remaining settings
@@ -1343,6 +1358,7 @@ class synthesizer_v(QObject):
         except:
             self.logger.error('cannot load project yaml file (proj files)')
         self.gui.pushButton_loadproject.clicked.connect(self.load_project)
+
 
     def save_file_dialog(self):
         # Erstellen des Datei-Speicher-Dialogs
@@ -1645,7 +1661,7 @@ class synthesizer_v(QObject):
     #     print("Dauer konnte nicht ermittelt werden.")
 
 
-    def carrierselect_update(self):
+    def carrierselect_update(self,*argv):
         #generate combobox entry list
         if len(self.custom_carriers) > 0:
             carrier_array = np.array(self.custom_carriers)
@@ -1896,7 +1912,7 @@ class synthesizer_v(QObject):
             return False, errortext
         return True, ""
 
-    def RecBW_update(self):
+    def RecBW_update(self,*argv):
         """slot function for the recording Bandwidth (=SR) combobox; sets the model parameter self.m['sample_rate'] and triggers validation"""
         RecBW = int(self.gui.comboBox_targetSR.currentText()) #TODO: redundant ?
         valid, errortext = self.validate_params()
@@ -1908,7 +1924,7 @@ class synthesizer_v(QObject):
         self.m["SR_currindex"] = self.gui.comboBox_targetSR.currentIndex()
         #self.freq_carriers_update()
 
-    def audioBW_update(self):
+    def audioBW_update(self,*argv):
         """slot function for the audio Bandwidth line_edit; sets the model parameter m['audioBW'] and triggers validation"""
         audioBW = self.gui.lineEdit_audiocutoff_freq.text()
         if not self.isnumeric(audioBW):
@@ -1927,10 +1943,15 @@ class synthesizer_v(QObject):
             self.gui.lineEdit_audiocutoff_freq.setText(str(self.m["audioBW"]))
             return False
         self.m["audioBW"] = float(self.gui.lineEdit_audiocutoff_freq.text())
+        if len(argv) > 0:
+            c = argv[0]
+            print(f"argv in AudioBWupdate: {argv}")
+            if c.find("nup") == 0:
+                return
         self.freq_carriers_update()
         #print(f"carrier spacing: {self.m['audioBW']}")
 
-    def LO_update(self):
+    def LO_update(self,*argv):
         """slot function for the LO frequency line_edit; sets the model parameter m['LO'] and triggers validation"""
         cf_LO = self.gui.lineEdit_LO.text()
         if not self.isnumeric(cf_LO):
@@ -1943,9 +1964,14 @@ class synthesizer_v(QObject):
             self.gui.lineEdit_LO.setText(str(self.m["LO"]))
             return False
         self.m["LO"] = float(self.gui.lineEdit_LO.text())
+        if len(argv) > 0:
+            c = argv[0]
+            print(f"argv in LO_update: {argv}")
+            if c.find("nup") == 0:
+                return
         self.freq_carriers_update()
 
-    def modfactor_update(self):
+    def modfactor_update(self,*argv):
         """slot function for the modulation factor line_edit; sets the model parameter m['modfactor'] and triggers validation"""
         self.gui.lineEdit_modfactor.editingFinished.disconnect(self.modfactor_update)
         modfactor = self.gui.lineEdit_modfactor.text()
@@ -1964,7 +1990,7 @@ class synthesizer_v(QObject):
         #self.freq_carriers_update()
         self.gui.lineEdit_modfactor.editingFinished.connect(self.modfactor_update)
 
-    def fc_low_update(self):
+    def fc_low_update(self,*argv):
         """slot function for the low carrier frequency line_edit; sets the model parameter m['fc_low'] and triggers validation"""
         #self.gui.lineEdit_fc_low.setText(str(self.cf_LO)) TODO: remove self.cf_LO
         fc_low = self.gui.lineEdit_fc_low.text()
@@ -1978,10 +2004,15 @@ class synthesizer_v(QObject):
             self.gui.lineEdit_fc_low.setText(str(self.m["fc_low"]))
             return False
         self.m["fc_low"] = float(self.gui.lineEdit_fc_low.text())
+        if len(argv) > 0:
+            c = argv[0]
+            print(f"argv in fc_low_update: {argv}")
+            if c.find("nup") == 0:
+                return
         self.freq_carriers_update()
         #print(f"carrier spacing: {self.m['fc_low']}")
 
-    def carrierdistance_update(self):
+    def carrierdistance_update(self,*argv):
         """slot function for the carrier distance line_edit; sets the model parameter m["carrier_distance"] and triggers validation"""
         self.gui.lineEdit_carrierdistance.editingFinished.disconnect(self.carrierdistance_update)
         old_carrierdistance = self.m["carrier_distance"]
@@ -2003,9 +2034,16 @@ class synthesizer_v(QObject):
             self.gui.lineEdit_carrierdistance.setText(str(old_carrierdistance))
             self.gui.lineEdit_carrierdistance.editingFinished.connect(self.carrierdistance_update)
             return False
-                
+        
+        nup = False
         self.m["carrier_distance"] = float(self.gui.lineEdit_carrierdistance.text())
-        self.freq_carriers_update()
+        if len(argv) > 0:
+            c = argv[0]
+            print(f"argv in fc_low_update: {argv}")
+            if c.find("nup") == 0:
+                nup = True
+        if not nup:       
+            self.freq_carriers_update()
         self.load_index = False
         self.gui.lineEdit_carrierdistance.editingFinished.connect(self.carrierdistance_update)
         #print(f"carrier spacing: {self.m['carrier_distance']}")
