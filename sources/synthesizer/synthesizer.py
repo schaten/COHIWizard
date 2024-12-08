@@ -755,6 +755,7 @@ class synthesizer_v(QObject):
         self.readFilePath = []
         self.autosave = False
         self.m3uflag = False
+        self.toggle = False
         for self.m["carrier_ix"] in range(0,2):
             self.readFileList.append([])
             self.readFileList[self.m["carrier_ix"]] = []
@@ -836,6 +837,56 @@ class synthesizer_v(QObject):
         self.RecBW_update()
         #self.gui.lineEdit_carrierdistance.textEdited.connect(self.carriedistance_update)
 
+    def reinitialize_gui(self):
+        self.cf_HI = int(self.STD_fclow) + int(self.STD_CARRIERDISTANCE) * self.DEF_NUMCARRIERS
+        self.m["carrier_distance"] = float(self.STD_CARRIERDISTANCE)
+        self.m["fc_low"] = int(self.STD_fclow)
+        self.m["audioBW"] = float(self.STD_AUDIOBW)
+        self.m["TEST"] = False
+        self.m["wavheader"] = {}
+        self.m["wavheader"]['centerfreq'] = 0
+        self.m["icorr"] = 0
+        self.m["cancelflag"] = False
+        self.m["LO"] = 1125 
+        self.toggle = False
+        self.rule_viol = False
+        self.blinkstate = False         
+        self.syntesisrunning = False
+        self.load_index = False
+        self.m["carrier_ix"] = 0
+        self.readFileList = []
+        self.oldFileList = []
+        self.readFilePath = []
+        self.autosave = False
+        self.m3uflag = False
+        for self.m["carrier_ix"] in range(0,2):
+            self.readFileList.append([])
+            self.readFileList[self.m["carrier_ix"]] = []
+            self.oldFileList.append([])
+            self.oldFileList[self.m["carrier_ix"]] = []
+            self.readFilePath.append([])
+            self.readFilePath[self.m["carrier_ix"]] = []
+        self.m["carrier_ix"] = 0
+        self.custom_carriers = []
+        self.m["SR_currindex"] = 5
+        self.gui.comboBox_targetSR.setCurrentIndex(self.m["SR_currindex"])
+        self.gui.lineEdit_LO.setText("1125")
+        preset_time = QTime(00, 30, 00) 
+        self.gui.timeEdit_reclength.setTime(preset_time)
+        self.gui.lineEdit_fc_low.setText("783")
+        self.gui.listWidget_playlist.clear()
+        # item = QtWidgets.QListWidgetItem()
+        # self.gui.listWidget_sourcelist.addItem(item)
+        self.gui.lineEdit_audiocutoff_freq.setText(self.STD_AUDIOBW)
+        self.gui.lineEdit_carrierdistance.setText(self.STD_CARRIERDISTANCE)
+        self.gui.spinBox_numcarriers.setProperty("value", self.DEF_NUMCARRIERS)
+        self.gui.pushButton_CustomCarriers.setEnabled(False)
+        self.gui.comboBox_targetSR_2.setCurrentIndex(1)
+        self.gui.verticalSlider_Gain.setProperty("value", 76) #percent
+        self.previous_value = self.gui.spinBox_numcarriers.value()        
+        self.m["numcarriers"] = self.gui.spinBox_numcarriers.value()
+
+
     def customcarrier_handler(self):
         
         if self.gui.radiobutton_CustomCarriers.isChecked():
@@ -872,7 +923,8 @@ class synthesizer_v(QObject):
 
     def clear_project(self):
         self.m3uflag = False
-        self.init_synthesizer_ui()
+        #self.init_synthesizer_ui()
+        self.reinitialize_gui()
         self.gui.listWidget_sourcelist.clear()
         self.readFileList = []
         self.oldFileList = []
@@ -1117,6 +1169,7 @@ class synthesizer_v(QObject):
     def display_worker_message(self,s):
         """display messages from the worker in the message window of the GUI"""
         self.gui.label_audioset_name.setText(s)
+        self.gui.label_audioset_name.setFont(QFont("Arial", 12))
         if s.find("----") == 0:
             self.gui.label_audioset_name.setText('modulating')
             self.gui.label_audioset_name.setStyleSheet("background-color: #FFFFFF; color: black;")
@@ -1372,7 +1425,8 @@ class synthesizer_v(QObject):
                 self.fillplaylist()
             except:
                 auxi.standard_errorbox("playlist is inconsistent with other settings, project file invalid, check project file")
-                return 
+                self.gui.pushButton_loadproject.clicked.connect(self.load_project)
+                return False
             self.current_listdir = pr["projectdata"]["current_listdir"]
             #########TODO TODO TODO: listdir = "" in case of URL --> fillsourcelist cannot be carried out
             if len(self.current_listdir) > 0: 
@@ -1582,6 +1636,8 @@ class synthesizer_v(QObject):
         except:
             pass
         duration = self.show_playlength()
+        self.display_worker_message('')
+        QApplication.processEvents()
         if not duration:
             return False
         self.show_fillprogress(duration)
@@ -1614,6 +1670,9 @@ class synthesizer_v(QObject):
         """
         ix = 0
         duration = 0
+        self.toggle = True
+        self.display_worker_message(f'loading playlist items, please wait, this can take a while')
+        QApplication.processEvents()
         for x in self.readFileList[self.m["carrier_ix"]]:
             try:
                 file_path =  self.readFilePath[self.m["carrier_ix"]][ix] + "/" + x
@@ -1627,7 +1686,7 @@ class synthesizer_v(QObject):
                 #a = self.synthesizer_c.readsoundfile(file_path,"c")
                 time.sleep(0.02)
                 self.toggle = True
-                self.display_worker_message('loading playlist item')
+
                 if file_path.find("http://")>=0 or file_path.find("https://")>=0:
                     #### OLD CODE without ffmpeg:
                 #     output_file = Path(file_path).stem + ".aud"
@@ -1654,7 +1713,8 @@ class synthesizer_v(QObject):
                     print("show_playlength: ########### current point of development reached, proceed from here###########")
                     duration += a.frames/a.samplerate
                     a.close()
-                self.display_worker_message('')
+                # self.display_worker_message('')
+                # QApplication.processEvents()
                 self.toggle = False
             else:
                 print("NNNNNNNNNN")
@@ -2182,6 +2242,8 @@ class synthesizer_v(QObject):
         self.readFileList[self.m["carrier_ix"]] = [self.gui.listWidget_playlist.item(i).text() for i in range(self.gui.listWidget_playlist.count())]
         self.playlist_purge()
         duration = self.show_playlength()
+        self.display_worker_message("playlist up to date")
+        QApplication.processEvents()
         if not duration:
             return False
         self.show_fillprogress(duration)
