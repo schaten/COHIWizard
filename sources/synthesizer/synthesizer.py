@@ -51,6 +51,7 @@ class modulate_worker(QObject):
     SigFinished = pyqtSignal()
     SigPupdate = pyqtSignal()
     SigMessage = pyqtSignal(str)
+    SigError = pyqtSignal(str)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -192,9 +193,15 @@ class modulate_worker(QObject):
         #TODO CHECK last change:data, sample_rate = sf.read(wav_file)
         method_object = self.get_method_object()
         print(f"calling method: {method_object.readsoundfile}, argument: {wav_file}")
-        a = method_object.readsoundfile(wav_file)
-        if not a:
+                    #TODO TODO TODO LAST: catch error when returned False: Fils not foun o.ä. --> break loop
+
+        errorstatus, a = method_object.readsoundfile(wav_file)
+        #TODO CHECK: treat errorstatus correctly
+        #if not a:
+        if errorstatus:
+            self.SigError.emit(str(a))
             self.SigFinished.emit()
+            #TODO: make correct errorhandling chain with errorstatus, value and treat in uppermost level !
             return False
         data = a.read()
         sample_rate = a.samplerate
@@ -275,8 +282,13 @@ class modulate_worker(QObject):
                 #file_handles[current_file_index] = sf.SoundFile(file_path, 'r')
                 method_object = self.get_method_object()
                
-                file_handles[current_file_index] = method_object.readsoundfile(file_path)
-                if not file_handles[current_file_index]:
+                errorstatus, value = method_object.readsoundfile(file_path)
+                file_handles[current_file_index] = value
+                #TODO CHECK: read errorstatus and react
+                #if not file_handles[current_file_index]:
+                if errorstatus:
+                    #TODO TODO TODO: connect errormessage method to SigError
+                    self.SigError.emit(str(value))
                     self.SigFinished.emit()
                     return False
 
@@ -611,6 +623,8 @@ class synthesizer_c(QObject):
         :rtype: soundfile object (sf.Soundfile) or Boolean (on error)
         """
         checkflag = False
+        errorstatus = False
+        value = None
         if len(argv) > 0:
             c = argv[0]
             print(f"argv in read_soundfile: {argv}")
@@ -620,8 +634,9 @@ class synthesizer_c(QObject):
         parsed = urllib.parse.urlparse(file_path)
         if parsed.scheme == "http" or parsed.scheme == "https":
             try:
-                #true_tempfile = Path(file_path).stem + ".mp3"
                 true_tempfile = Path(file_path).stem + ".wav"
+                #TODO: check if mp3 is also a good temp format
+                #true_tempfile = Path(file_path).stem + ".mp3"
                 # ffmpeg_command = [
                 #     self.m["ffmpeg_path"] + "ffmpeg",
                 #     "-user_agent", self.m["user_agent"],
@@ -639,54 +654,37 @@ class synthesizer_c(QObject):
                     true_tempfile
                 ]
                 
-                
-                print(f">>>>>>>>>ooooooooooooooo############. ffmpeg_command: {ffmpeg_command}")
-                print("start subprocess")
+                #print(f">>>>>>>>>ooooooooooooooo############. ffmpeg_command: {ffmpeg_command}")
+                print("\nstart subprocess")
                 subprocess.run(ffmpeg_command, check=True)
-                print("subprocess terminated")
+                print("\nsubprocess terminated")
                 #UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
-                # with urllib.request.urlopen(request) as response:
-                #     # write stream to local temp file and open with sf.Soundfile, return soundfile object 
-                #     #output_file = "local_temp.aud"
-                #     output_file = Path(file_path).stem + ".aud"
-                #     ### only for pydub: ### 
-                #     true_tempfile = Path(file_path).stem + ".mp3"
-                #     ### only for pydub: ### 
-                #     print(f"temporary output_file: {output_file}, true temp file: {true_tempfile}")
-                #     #print(f"temporary output_file: {output_file}")
-                #     if not os.path.isfile(output_file):
-                #         with open(output_file, "wb") as f:
-                #             if checkflag:
-                #                 f.write(response.read(10000))
-                #                 print(">>>>>>>>>>>>>>>>>>>> readsoundfile write short buffer file")
-                #             else:
-                #                 f.write(response.read())
-                #                 ### only for pydub: ### self.convert_to_mp3(output_file, true_tempfile)
-                #                 ### only for pydub: ### Path(output_file).unlink()
-                #                 ffmpeg_command =  self.m["ffmpeg_path"] + "ffmpeg -user_agent " + self.m["user_agent"] + " -y -i " + output_file +  " -c:a libmp3lame -qscale:a 2 " + true_tempfile
-                #                 subprocess.run(ffmpeg_command, check=True)
-                #                 #Path(output_file).unlink()
+            ############ ALTERNATIVE SOUNDFILE TREATMENT see appendix SFBUF
+
             except subprocess.CalledProcessError as e:
                 # Fehlercode und ffmpeg-Fehlermeldungen ausgeben
-                print(f"ffmpeg-Fehler: Rückgabecode {e.returncode}")
-                print("Fehlermeldung:", e.stderr)
+                print(f"ffmpeg-Fehler: Rückgabecode {str(e.returncode)}")
+                print("Fehlermeldung:", str(e.stderr))
+                print("stdout output: ", str(e.stdout))
                 if "404 Not Found" in e.stderr:
-                    #print("Fehler: URL nicht gefunden (404).")
-                    errortext_suffix = " Error 404: URL {file_path} cannot be found ffmpeg returncode {e.returncode}."
+                    print("Fehler: URL nicht gefunden (404).")
+                    value = f" Error 404: URL {file_path} cannot be found ffmpeg returncode {str(e.returncode)}."
                 elif "Connection refused" in e.stderr or "Connection timed out" in e.stderr:
-                    #print("Fehler: Verbindung zur URL fehlgeschlagen.")
-                    errortext_suffix = " Connection to URL {file_path} refused or timed out ffmpeg returncode {e.returncode}."
+                    print("Fehler: Verbindung zur URL fehlgeschlagen.")
+                    value = f" Connection to URL {file_path} refused or timed out ffmpeg returncode {str(e.returncode)}."
                 else:
-                    #print("Unbekannter Fehler beim Zugriff auf die URL.")
-                    errortext_suffix = " Unknown error when trying to connect to URL {file_path}. ffmpeg returncode {e.returncode}."
-                auxi.standard_errorbox(errortext_suffix + " Aborting procedure ")
-
-                return False
-            a = sf.SoundFile(true_tempfile, 'r')
-
+                    print("Unbekannter Fehler beim Zugriff auf die URL.")
+                    value = f"Unknown error when trying to connect to URL {file_path}. RTROPT"
+                errorstatus = True
+                return(errorstatus, value)
+            value = sf.SoundFile(true_tempfile, 'r')
         else:
-            a = sf.SoundFile(file_path, 'r')
-        return a
+            if os.path.exists(file_path):
+                value = sf.SoundFile(file_path, 'r')
+            else:
+                value = f"Error: Cannot find file {file_path}"
+                errorstatus = True
+        return(errorstatus, value)
 
 class synthesizer_v(QObject):
     """_view methods for resampling module
@@ -777,8 +775,9 @@ class synthesizer_v(QObject):
         except:
             self.default_directory = ""
 
-        self.custom_carriers = []
-        
+        self.m["carrierarray"] = []
+        #self.m["carrierarray"] = np.arange(0, 1, 1)
+        self.m["carrierarray"] = np.arange(783, 801, 9)
 
     def init_synthesizer_ui(self):
         self.m["SR_currindex"] = 5
@@ -867,7 +866,11 @@ class synthesizer_v(QObject):
             self.readFilePath.append([])
             self.readFilePath[self.m["carrier_ix"]] = []
         self.m["carrier_ix"] = 0
-        self.custom_carriers = []
+        #self.m["carrierarray"] = []
+        #self.m["carrierarray"] = np.arange(0, 1, 1)
+        self.m["carrierarray"] = np.arange(783, 801, 9)
+
+
         self.m["SR_currindex"] = 5
         self.gui.comboBox_targetSR.setCurrentIndex(self.m["SR_currindex"])
         self.gui.lineEdit_LO.setText("1125")
@@ -885,6 +888,10 @@ class synthesizer_v(QObject):
         self.gui.verticalSlider_Gain.setProperty("value", 76) #percent
         self.previous_value = self.gui.spinBox_numcarriers.value()        
         self.m["numcarriers"] = self.gui.spinBox_numcarriers.value()
+        try:
+            self.gui.synthesizer_pushbutton_create.clicked.connect(self.create_band_thread)
+        except:
+            pass
 
 
     def customcarrier_handler(self):
@@ -910,7 +917,7 @@ class synthesizer_v(QObject):
                 #self.gui.lineEdit_carrierdistance.setEnabled(True)
                 self.gui.lineEdit_fc_low.setEnabled(True)
                 self.gui.spinBox_numcarriers.setEnabled(True)
-                self.custom_carriers = [] # TODO: check if appropriate: if  custom carriers is unchecked, the table of custom defined carrier freqs is deleted
+                self.m["carrierarray"] = [] # TODO: check if appropriate: if  custom carriers is unchecked, the table of custom defined carrier freqs is deleted
                 self.clear_project()
                 self.freq_carriers_update()
             else:
@@ -929,9 +936,11 @@ class synthesizer_v(QObject):
         self.readFileList = []
         self.oldFileList = []
         self.readFilePath = []
+        self.m["carrierarray"] = []
         self.autosave = False
-        self.custom_carriers = []
-        self.m["carrierarray"] = np.arange(0, 1, 1)
+        #self.m["carrierarray"] = []
+        #self.m["carrierarray"] = np.arange(783, 801, 2)
+        self.m["carrierarray"] = np.arange(783, 801, 9)
         
         for self.m["carrier_ix"] in range(0,2):
             self.readFileList.append([])
@@ -1052,7 +1061,9 @@ class synthesizer_v(QObject):
 
 
     def create_band_thread(self):
-        """pre-set gain, check some conditions. Then configure and start worker thread 'modulate_worker' for synthesis
+        """slot function for the CREATE button
+        pre-set gain, check some conditions. 
+        Then configure and start worker thread 'modulate_worker' for synthesis
 
         """
         self.gui.synthesizer_pushbutton_create.clicked.disconnect(self.create_band_thread)
@@ -1069,7 +1080,10 @@ class synthesizer_v(QObject):
         self.save_project()
         print("save temporary project file")
         time.sleep(0.5)
-        self.load_project()
+        errorstatus, value = self.load_project()
+        if errorstatus:
+            self.errorhandler(value)
+            return
         self.autosave = False
         self.preset_gain()
         #if self.gui.radiobutton_AGC.isChecked():
@@ -1145,6 +1159,7 @@ class synthesizer_v(QObject):
         self.modulate_thread.started.connect(self.modulate_worker.start_modulator)
         self.modulate_worker.SigPupdate.connect(self.PupdateSignalHandler)
         self.modulate_worker.SigMessage.connect(self.display_worker_message)
+        self.modulate_worker.SigError.connect(self.errorhandler)
         self.modulate_worker.SigFinished.connect(self.modulate_thread.quit)
         self.modulate_worker.SigFinished.connect(lambda: print("#####>>>>>>>>>>>>>>>>>modulateworker SigFinished_arrived"))
         self.modulate_worker.SigFinished.connect(self.cleanup)
@@ -1166,6 +1181,21 @@ class synthesizer_v(QObject):
 
         return(True)
     
+    def errorhandler(self,value):
+        """handles errors when methods return errormessages on errorstate == True
+        (1) displays errormessage conveyed in 'value' and writes error to logfile
+        (2) optionally handles
+        (3) if no other measures are taken, the GUI is cleared and reset to initial state
+
+        :param value: error description which is to be displayed in the errormessage
+        :type value: str
+        """
+        self.logger.error(str(value))
+        auxi.standard_errorbox(str(value))
+        
+        #do other stuff on more detailed evaluation of value
+        self.clear_project()
+
     def display_worker_message(self,s):
         """display messages from the worker in the message window of the GUI"""
         self.gui.label_audioset_name.setText(s)
@@ -1177,6 +1207,7 @@ class synthesizer_v(QObject):
             self.gui.label_audioset_name.setStyleSheet("background-color: #ADD8E6; color: black;")  # Blassblau (#ADD8E6)
         else:
            self.gui.label_audioset_name.setStyleSheet("background-color: #FFDAB9; color: black;")  # Blassorange (#FFDAB9)
+        QApplication.processEvents()
         self.toggle = not self.toggle
 
     def cleanup(self):
@@ -1200,7 +1231,7 @@ class synthesizer_v(QObject):
                     os.remove(file_path)
                     print(f"temp file deleted: {file_path}")
                 except Exception as e:
-                    print(f"Error when deleting temporary file: {file_path}: {e}")
+                    print(f"Error when deleting temporary file: {file_path}: {str(e)}")
 
     def preset_SR_LO(self):
         """auto-define LO frequency and Rec bandwidth (= sampling rate) for pre-defined broadcasting bands on LW, MW and SW
@@ -1370,7 +1401,10 @@ class synthesizer_v(QObject):
         : raises: none
 
         """
+        errorstatus = False
+        value = None
         self.m3uflag = False
+        self.gui.listWidget_sourcelist.clear()
         self.gui.pushButton_loadproject.clicked.disconnect(self.load_project)
         pr = {}
         pr["projectdata"] = {}
@@ -1414,24 +1448,37 @@ class synthesizer_v(QObject):
             self.gui.comboBox_targetSR_2.setCurrentIndex(pr["projectdata"]["presetband_index"])
             self.gui.lineEdit_modfactor.setText(str(pr["projectdata"]["modfactor"])) 
             self.load_index = True
-            self.m["carrierarray"] =  np.array(pr["projectdata"]["carrier_array"])
-            
+            try:
+                self.gui.radiobutton_CustomCarriers.toggled.disconnect(self.customcarrier_handler)
+            except:
+                pass 
             if pr["projectdata"]["custom_carriers_active"] == "True":
-                self.custom_carriers = self.m["carrierarray"]
+                #self.custom_carriers = self.m["carrierarray"]
+                self.m["carrierarray"] =  np.array(pr["projectdata"]["carrier_array"])
                 self.gui.radiobutton_CustomCarriers.setChecked(True)
             else:
+                self.m["carrierarray"] = []
                 self.gui.radiobutton_CustomCarriers.setChecked(False)
-            try:
-                self.fillplaylist()
-            except:
-                auxi.standard_errorbox("playlist is inconsistent with other settings, project file invalid, check project file")
+            self.gui.radiobutton_CustomCarriers.toggled.connect(self.customcarrier_handler)  
+            errorstatus, value = self.fillplaylist()
+            if errorstatus:
+                auxi.standard_errorbox(value + "playlist is inconsistent with other settings, project file invalid, check project file")
                 self.gui.pushButton_loadproject.clicked.connect(self.load_project)
-                return False
+                errorstatus = True
+                self.errorhandler(value)
+                return(errorstatus, value)
             self.current_listdir = pr["projectdata"]["current_listdir"]
             #########TODO TODO TODO: listdir = "" in case of URL --> fillsourcelist cannot be carried out
             if len(self.current_listdir) > 0: 
                 self.fillsourcelist(self.current_listdir)
             #call GUI apdaters withoud calling playlist updates (option "nup")
+
+            # self.m3uflag = False
+            # self.m["numcarriers"] = len(self.readFileList)
+            # self.freq_carriers_update(self,custom_carriers)
+            # self.fc_low_update()
+
+            self.freq_carriers_update()
             self.RecBW_update("nup")
             self.LO_update("nup")
             self.carrierdistance_update("nup")
@@ -1447,16 +1494,17 @@ class synthesizer_v(QObject):
 
             #Target filename
 
-        except:
-            self.logger.error('cannot load project yaml file (proj files)')
-            auxi.standard_errorbox(f"Cannot correctly load {filename}. Please check project file for consistency")
+        except Exception as e:
+            errormessage = f"Error when loading project file. Please check the consistency of {filename}. Please check for consistency. Offending command: "
+            self.errorhandler(errormessage + str(e))
         try:
             self.gui.pushButton_loadproject.clicked.disconnect(self.load_project)
         except:
             pass
         time.sleep(0.1)
         self.gui.pushButton_loadproject.clicked.connect(self.load_project)
-        print("##")
+        #print("##")
+        return(errorstatus, value)
 
 
     def save_file_dialog(self):
@@ -1605,16 +1653,22 @@ class synthesizer_v(QObject):
         """_slot function of comboBox_cur_carrierfreq
         get corresponding carrier index and call playlist update
         """
+        errorstatus, value = self.fillplaylist()
+        if errorstatus:
+            self.errorhandler(value)
+            return
         self.m["carrier_ix"] = self.gui.comboBox_cur_carrierfreq.currentIndex()
         
         #print(f"carrier index changed to: {self.m['carrier_ix']}")
-        self.fillplaylist()
+
 
     def fillplaylist(self):
         """update playlist of carrier with index self.m['carrier_ix']; clear old list and write new one
          :param: none
          :returns: none 
          """
+        errorstatus = False
+        value = None
         try:
             self.gui.listWidget_playlist.model().rowsInserted.disconnect(self.playlist_update_delayed)
         except:
@@ -1635,13 +1689,21 @@ class synthesizer_v(QObject):
                 #self.current_listdir = self.readFileList[self.m["carrier_ix"]]
         except:
             pass
-        duration = self.show_playlength()
+        if len(self.readFileList[self.m["carrier_ix"]]) < 1:
+            value = "read File List empty"
+            return(errorstatus,value)
+        errorstatus, value = self.show_playlength()
+        if errorstatus:
+            self.errorhandler(value)
+            return(errorstatus,value)
+        duration = value
         self.display_worker_message('')
         QApplication.processEvents()
-        if not duration:
-            return False
+        # if not duration:
+        #     return False
         self.show_fillprogress(duration)
         self.gui.listWidget_playlist.model().rowsInserted.connect(self.playlist_update_delayed)
+        return(errorstatus,value)
 
     def show_context_menu(self, position):
         context_menu = QMenu(self.gui.listWidget_playlist)
@@ -1667,7 +1729,15 @@ class synthesizer_v(QObject):
 
     def show_playlength(self):
         """_update progress bar for total playlength for carrier with index [self.m['carrier_ix']
+
+
+        :return errorstatus : False if o.k., True if error
+        :rtype: Boolean
+        :value :
+        :rtype : any
         """
+        errorstatus = False
+        value = None
         ix = 0
         duration = 0
         self.toggle = True
@@ -1676,9 +1746,12 @@ class synthesizer_v(QObject):
         for x in self.readFileList[self.m["carrier_ix"]]:
             try:
                 file_path =  self.readFilePath[self.m["carrier_ix"]][ix] + "/" + x
-            except:
+            except Exception as e:
                 #print(f"show readFilePath index out of range at index: {self.m['carrier_ix']} [{ix}]")
-                return duration
+                print(e)
+                errorstatus = True
+                errorstring = f"Error when calculating playlength. Exception: {str(e)}"
+                return(errorstatus, errorstring)
             if not len(self.readFilePath[self.m["carrier_ix"]][ix] + x) < 1:
                 #wav_info = self.get_wav_info(file_path)
                 #duration += wav_info['duration_seconds']
@@ -1699,25 +1772,36 @@ class synthesizer_v(QObject):
                 #TODO TODO TODO
                     ctime = datetime.now()
                     print(f"start read URL list @ {ctime}")
+                    #TODO TODO TODO: Ermitteln, of ffmpeg installiert ist. Wenn nein:
+                    #Errorstring : "ERROR: ffmpeg notinstalled"
                     aux = self.get_stream_duration(file_path)
                     if aux == None:
                         auxi.standard_errorbox(f"Error when determining duration of {file_path}. Giving up")
                         self.clear_project()
                         return False
                     duration += self.get_stream_duration(file_path)
+                    value = duration
                     print(f"end read URL list @ {ctime}, duration: {duration}")
                 #self.gui.label_audioset_name.setText("")
                 #self.gui.label_audioset_name.setStyleSheet("background-color: #FFFFFF; color: black;")  # weiss
                 else:
-                    a = self.synthesizer_c.readsoundfile(file_path)
+                    errorstatus, a = self.synthesizer_c.readsoundfile(file_path)
+                    #TODO TODO TODO LAST: catch error when returned False: Fils not foun o.ä. --> break loop
+                    if errorstatus:
+                        value = a
+                        print("show_playlength, return error and break")
+                        break
                     print("show_playlength: ########### current point of development reached, proceed from here###########")
                     duration += a.frames/a.samplerate
+                    value = duration
                     a.close()
                 # self.display_worker_message('')
                 # QApplication.processEvents()
                 self.toggle = False
             else:
                 print("NNNNNNNNNN")
+                # errorstatus = True
+                # value = " length of reaffilelist < 1"
             ix += 1
 
         # print(f"Spieldauer: {wav_info['duration_seconds']} Sekunden")
@@ -1726,7 +1810,7 @@ class synthesizer_v(QObject):
         # print(f"Sample-Breite: {wav_info['sampwidth_bytes']} Bytes")
         # print(f"Datenformat: {wav_info['data_format']}")
         #print(f"full duration of this carrier track: {duration}")
-        return duration
+        return(errorstatus, value)
         #TODO TODO: write progress bar update >>> DONE ?
         #for x in self.readFileList[self.m["carrier_ix"]]:
         #   open file
@@ -1786,8 +1870,9 @@ class synthesizer_v(QObject):
 
     def carrierselect_update(self,*argv):
         #generate combobox entry list
-        if len(self.custom_carriers) > 0:
-            carrier_array = np.array(self.custom_carriers)
+        if len(self.m["carrierarray"]) > 0:
+            carrier_array = np.array(self.m["carrierarray"])
+            pass
             #carrierselector = carrier_array.tolist()
         else:
             carrier_array = np.arange(self.m["fc_low"], self.cf_HI+1, self.m["carrier_distance"])
@@ -1846,12 +1931,12 @@ class synthesizer_v(QObject):
             for x in argv[1]:
                 if self.isnumeric(x)[0]: ###########TODO: chars are a problem
                     custom_carriers.append(float(x))
-                    self.custom_carriers = custom_carriers
+                    self.m["carrierarray"] = custom_carriers
                 elif len(x) > 0:
                     auxi.standard_errorbox("custom carrier table contains non-numeric values, please correct !")
                     return False
             numcar = len(custom_carriers)
-            if len(self.custom_carriers) > 1:
+            if len(self.m["carrierarray"]) > 1:
                 # determine the minimum difference between two carrier frequencies in a non-equally spaced list
                 mindifference = np.min(np.diff(custom_carriers))
                 #set the carrierdistance field to the minimum value for later validation
@@ -1859,9 +1944,9 @@ class synthesizer_v(QObject):
             self.gui.spinBox_numcarriers.valueChanged.disconnect(self.on_value_changed)
             self.gui.spinBox_numcarriers.setProperty("value", numcar)
             self.gui.spinBox_numcarriers.valueChanged.connect(self.on_value_changed)
-            if len(self.custom_carriers) > 0: #TODO: check what happens if only 1 carrier is selected --> catch in validator
-                fc_low = float(self.custom_carriers[0])
-                self.cf_HI = float(self.custom_carriers[-1])
+            if len(self.m["carrierarray"]) > 0: #TODO: check what happens if only 1 carrier is selected --> catch in validator
+                fc_low = float(self.m["carrierarray"][0])
+                self.cf_HI = float(self.m["carrierarray"][-1])
                 self.gui.lineEdit_fc_low.setText(str(fc_low))
 
         else:
@@ -1937,7 +2022,7 @@ class synthesizer_v(QObject):
 
         self.m["numcarriers"] = numcar
 
-        if len(self.custom_carriers) > 0:
+        if len(self.m["carrierarray"]) > 0: #TODO: simplify
             pass
         else:
             fc_low = float(self.gui.lineEdit_fc_low.text())#TODO make this visible to validator
@@ -2241,11 +2326,15 @@ class synthesizer_v(QObject):
 
         self.readFileList[self.m["carrier_ix"]] = [self.gui.listWidget_playlist.item(i).text() for i in range(self.gui.listWidget_playlist.count())]
         self.playlist_purge()
-        duration = self.show_playlength()
+        errorstate, value = self.show_playlength()
+        if errorstate:
+            self.errorhandler(value)
+            return
+        duration = value
         self.display_worker_message("playlist up to date")
         QApplication.processEvents()
-        if not duration:
-            return False
+        # if not duration:
+        #     return False
         self.show_fillprogress(duration)
         self.gui.listWidget_playlist.model().rowsInserted.connect(self.playlist_update_delayed)
         #print("playlist_update")
@@ -2375,7 +2464,7 @@ class synthesizer_v(QObject):
         :rtype : list
         """
         dialog = TableDialog(None)
-        self.populate_table(dialog.table, self.custom_carriers)
+        self.populate_table(dialog.table, self.m["carrierarray"])
 
         if dialog.exec_() == QDialog.Accepted:  # Wenn der Benutzer auf 'Enter' klickt
             #dialog.set_table_data()
@@ -2511,6 +2600,7 @@ class synthesizer_v(QObject):
         #   copy carriers to custom carriertable >>>>>> DONE
         #   set custom carrier button Checked without triggering table edit 
         #   carry out GUI update and validation by accessing the slot function of table edit OK
+
         self.m["numcarriers"] = len(self.readFileList)
         self.freq_carriers_update(self,custom_carriers)
         self.fc_low_update()
@@ -2784,3 +2874,29 @@ class TableDialog(QDialog):
 #     print(f"Die Gesamtdauer beträgt: {duration:.2f} Sekunden")
 # else:
 #     print("Dauer konnte nicht ermittelt werden.")
+
+
+
+###########Appendix SFBUF
+
+                # with urllib.request.urlopen(request) as response:
+                #     # write stream to local temp file and open with sf.Soundfile, return soundfile object 
+                #     #output_file = "local_temp.aud"
+                #     output_file = Path(file_path).stem + ".aud"
+                #     ### only for pydub: ### 
+                #     true_tempfile = Path(file_path).stem + ".mp3"
+                #     ### only for pydub: ### 
+                #     print(f"temporary output_file: {output_file}, true temp file: {true_tempfile}")
+                #     #print(f"temporary output_file: {output_file}")
+                #     if not os.path.isfile(output_file):
+                #         with open(output_file, "wb") as f:
+                #             if checkflag:
+                #                 f.write(response.read(10000))
+                #                 print(">>>>>>>>>>>>>>>>>>>> readsoundfile write short buffer file")
+                #             else:
+                #                 f.write(response.read())
+                #                 ### only for pydub: ### self.convert_to_mp3(output_file, true_tempfile)
+                #                 ### only for pydub: ### Path(output_file).unlink()
+                #                 ffmpeg_command =  self.m["ffmpeg_path"] + "ffmpeg -user_agent " + self.m["user_agent"] + " -y -i " + output_file +  " -c:a libmp3lame -qscale:a 2 " + true_tempfile
+                #                 subprocess.run(ffmpeg_command, check=True)
+                #                 #Path(output_file).unlink()
