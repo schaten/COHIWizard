@@ -78,6 +78,7 @@ class core_m(QObject):
         self.mdl = {}
         self.mdl["sample"] = 0
         self.mdl["_log"] = False
+        self.mdl["rootpath"] = os.getcwd()
         # Create a custom logger
         logging.getLogger().setLevel(logging.DEBUG)
         # Erstelle einen Logger mit dem Modul- oder Skriptnamen
@@ -169,6 +170,7 @@ class core_c(QObject):
                     auxi.standard_errorbox("Recording path must be defined, please define it by clicking OK !")
             self.logger.debug("playrec recording path: %s", self.m["recording_path"])
             self.m["metadata"]["recording_path"] = self.m["recording_path"]
+            self.m["metadata"]["rootpath"] = self.m["rootpath"]
             stream = open("config_wizard.yaml", "w")
             yaml.dump(self.m["metadata"], stream)
             stream.close()
@@ -266,12 +268,19 @@ class core_v(QObject):
                 self.m["recording_path"] = self.m["metadata"]["recording_path"]
             if "startup_tab" in self.m["metadata"]:
                 self.m["startup_tab"] = int(self.m["metadata"]["startup_tab"])
+            if "rootpath" in self.m["metadata"]:
+                self.m["rootpath"] = self.m["metadata"]["recording_path"]
+            else:
+                self.m["rootpath"] = os.getcwd()
+                self.m["metadata"]["recording_path"] = self.m["rootpath"]
         except:
             print("cannot get config_wizard.yaml metadata, write a new initial config file")
             self.m["metadata"]["last_path"] = os.getcwd()
+            self.m["metadata"]["rootpath"] = os.getcwd()
             self.m["metadata"]["STM_IP_address"] = "000.000.000.000"
             self.m["metadata"]["recording_path"] = ""
             auxi.standard_infobox("configuration file does not yet exist, a basic file will be generated. Please configure the STEMLAB IP address before using the Player")
+
             
             #self.m["metadata"]["recording_path"] = self.m["recording_path"]
             stream = open("config_wizard.yaml", "w")
@@ -417,6 +426,7 @@ class core_v(QObject):
         self.SigRelay.emit("cm_playrec",["HostAddress",self.m["HostAddress"]])
         self.core_c.m["QTMAINWINDOWparent"] = gui
         self.SigRelay.emit("cm_all_",["QTMAINWINDOWparent",gui])
+        self.SigRelay.emit("cm_all_",self.m["rootpath"])
         pass
 
 
@@ -1189,5 +1199,7 @@ if __name__ == '__main__':
     # enable relaying startup settings to all modules if required
     xcore_v.updateConfigElements() 
     xcore_v.SigRelay.emit("cexex_all_",["canvasbuild",gui])   # communicate reference to gui instance to all modules which instanciate a canvas with auxi.generate_canvas(self,gridref,gridc,gridt,gui)
+    xcore_v.SigRelay.emit("cm_all_",xcore_v.m["rootpath"])
+
     sys.exit(app.exec_())
 

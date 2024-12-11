@@ -605,6 +605,12 @@ class synthesizer_c(QObject):
 
         self.m = synthesizer_m.mdl
         self.logger = synthesizer_m.logger
+        standardpath = os.getcwd()  #TODO TODO: take from core module via rxh; on file open core sets that to:
+        self.m["project_path"] = os.path.dirname(standardpath) + "\\projects"
+        if not os.path.exists(self.m["project_path"]):
+            # Verzeichnis erstellen
+            os.makedirs(self.m["project_path"])
+
 
 
     def dummy(self):
@@ -774,6 +780,11 @@ class synthesizer_v(QObject):
             self.default_directory = self.m["metadata"]["last_audiosource_path"]
         except:
             self.default_directory = ""
+        try:
+            self.m["rootpath"] = self.m["metadata"]["rootpath"]
+        except:
+            self.m["rootpath"] = os.getcwd()
+
 
         self.m["carrierarray"] = []
         #self.m["carrierarray"] = np.arange(0, 1, 1)
@@ -1191,9 +1202,32 @@ class synthesizer_v(QObject):
         :type value: str
         """
         self.logger.error(str(value))
-        auxi.standard_errorbox(str(value))
-        
+        #self.m["metadata"]["rootpath"]    
         #do other stuff on more detailed evaluation of value
+        
+        #preliminary handling of the lack of ffmpeg
+
+        #TODO: future versions: autoinstall with routines in Autoinstall_ffmpeg_import os.py
+        if value.find("ERRREQ1") == 0:
+            errortext = f"Please install ffmpeg manually in folder {self.m["rootpath"] + '/' + self.m['ffmpeg_path']}" 
+            print(errortext)
+            auxi.standard_errorbox(errortext)
+            # request_text = f"For synthesizing from URLs the free program ffpmeg must be installed on your PC in the directory {self.m['rootpath'] + '/' + self.m["ffmpeg_path"]}. Should it be installed now automatically ?" 
+            # msg = QMessageBox()
+            # msg.setIcon(QMessageBox.Question)
+            # msg.setText("Exception")
+            # msg.setInformativeText(request_text)
+            # msg.setWindowTitle("Exception")
+            # msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+            # msg.buttonClicked.connect(self.popup)
+            # msg.exec_()
+            # if self.yesno == "&Yes":
+            #     print("Yet TODO: call autoinstaller for ffmpeg")
+            # else:
+            #     print(f"Please install ffmpeg manually in folder {self.m['ffmpeg_path']}")
+        else:
+            auxi.standard_errorbox(str(value))
+
         self.clear_project()
 
     def display_worker_message(self,s):
@@ -1495,7 +1529,7 @@ class synthesizer_v(QObject):
             #Target filename
 
         except Exception as e:
-            errormessage = f"Error when loading project file. Please check the consistency of {filename}. Please check for consistency. Offending command: "
+            errormessage = f"Error when loading project file. Please check the consistency of {filename}. Offending command: "
             self.errorhandler(errormessage + str(e))
         try:
             self.gui.pushButton_loadproject.clicked.disconnect(self.load_project)
@@ -1509,11 +1543,13 @@ class synthesizer_v(QObject):
 
     def save_file_dialog(self):
         # Erstellen des Datei-Speicher-Dialogs
+        filters = "project files (*.proj);;all files (*)"
+        selected_filter = "project files (*.proj)"
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog  # Verwende das Qt-eigene Dialogfenster
         file_name, _ = QFileDialog.getSaveFileName(self.m["QTMAINWINDOWparent"], 
                                                    "Save File", 
-                                                   "*.proj",  # Standardmäßig kein voreingestellter Dateiname
+                                                   self.m["project_path"] + "\\*.proj",  # Standardmäßig kein voreingestellter Dateiname
                                                    "proj Files (*.proj);;All Files (*)",  # Filter für Dateitypen
                                                    options=options)
         if file_name:
@@ -1522,7 +1558,12 @@ class synthesizer_v(QObject):
             return None
 
     def load_file_dialog(self):
-        self.standardpath = os.getcwd()  #TODO TODO: take from core module via rxh; on file open core sets that to:
+        # self.standardpath = os.getcwd()  #TODO TODO: take from core module via rxh; on file open core sets that to:
+        # self.project_path = os.path.dirname(self.standardpath) + "\\projects"
+        # if not os.path.exists(self.project_path):
+        #     # Verzeichnis erstellen
+        #     os.makedirs(self.project_path)
+
         #        self.SigRelay.emit("cm_all_",["standardpath",self.standardpath]); 
         ########### SET DEDICATED PROJECT FOLDER !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -1532,7 +1573,7 @@ class synthesizer_v(QObject):
         options |= QFileDialog.DontUseNativeDialog  # Verwende das Qt-eigene Dialogfenster
         file_name, _ = QFileDialog.getOpenFileName(self.m["QTMAINWINDOWparent"], 
                                                 "Open project File", 
-                                                self.standardpath,  # Standardmäßig kein voreingestellter Dateiname
+                                                self.m["project_path"],
                                                 filters,  # Filter für Dateitypen
                                                 selected_filter,
                                                 options=options)
@@ -1727,6 +1768,14 @@ class synthesizer_v(QObject):
             element = self.gui.listWidget_playlist.item(new_index).text()
             #print(f"Element '{element}' shifted from {i} to {new_index}")
 
+    def is_ffmpeg_installed(self):
+        """Überprüft, ob ffmpeg auf dem System verfügbar ist."""
+        try:
+            subprocess.run(self.m["ffmpeg_path"] + "ffmpeg -version", stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+            return True
+        except FileNotFoundError:
+            return False
+
     def show_playlength(self):
         """_update progress bar for total playlength for carrier with index [self.m['carrier_ix']
 
@@ -1761,6 +1810,11 @@ class synthesizer_v(QObject):
                 self.toggle = True
 
                 if file_path.find("http://")>=0 or file_path.find("https://")>=0:
+                    if not self.is_ffmpeg_installed():
+                        errorstatus = True
+                        value = "ERRREQ1"
+                        break
+                        
                     #### OLD CODE without ffmpeg:
                 #     output_file = Path(file_path).stem + ".aud"
                 #     self.gui.label_audioset_name.setText(f"download stream and write temporary output_file: {output_file}")
@@ -1823,6 +1877,7 @@ class synthesizer_v(QObject):
 
 
     def get_stream_duration(self,url):
+
 
         # ffmpeg_command = [
         #     self.m["ffmpeg_path"],
@@ -2897,6 +2952,6 @@ class TableDialog(QDialog):
                 #                 f.write(response.read())
                 #                 ### only for pydub: ### self.convert_to_mp3(output_file, true_tempfile)
                 #                 ### only for pydub: ### Path(output_file).unlink()
-                #                 ffmpeg_command =  self.m["ffmpeg_path"] + "ffmpeg -user_agent " + self.m["user_agent"] + " -y -i " + output_file +  " -c:a libmp3lame -qscale:a 2 " + true_tempfile
+                #                egeg_command =  self.m["ffmpeg_path"] + "ffmpeg -user_agent " + self.m["user_agent"] + " -y -i " + output_file +  " -c:a libmp3lame -qscale:a 2 " + true_tempfile
                 #                 subprocess.run(ffmpeg_command, check=True)
                 #                 #Path(output_file).unlink()
