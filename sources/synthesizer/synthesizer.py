@@ -571,7 +571,7 @@ class synthesizer_m(QObject):
         self.mdl["modfactor"] = 0.8
         self.mdl["ffmpeg_path"] ="ffmpeg-master-latest-win64-gpl/bin/"
         self.mdl["user_agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-
+        self.mdl["proj_loaded"] = False
         # Create a custom logger
         logging.getLogger().setLevel(logging.DEBUG)
         # Erstelle einen Logger mit dem Modul- oder Skriptnamen
@@ -971,6 +971,7 @@ class synthesizer_v(QObject):
         self.readFilePath = []
         self.m["carrierarray"] = []
         self.autosave = False
+        self.m["proj_loaded"] = False
         #self.m["carrierarray"] = []
         #self.m["carrierarray"] = np.arange(783, 801, 2)
         self.m["carrierarray"] = np.arange(783, 801, 9)
@@ -983,9 +984,10 @@ class synthesizer_v(QObject):
             self.readFilePath.append([])
             self.readFilePath[self.m["carrier_ix"]] = []
         self.m["carrier_ix"] = 0
-        self.SigActivateOtherTabs.emit("synthesizer","inactivate",["Synthesizer"])
+        self.SigActivateOtherTabs.emit("synthesizer","activate",["Synthesizer"])
         self.gui.progressBar_synth.setValue(0)
-        self.activate_control_elements(False)
+        self.activate_control_elements(True)
+        self.display_worker_message('')
 
     def setgain(self):
         """set gain which is set by the gain slider and pass it to the modulator worker
@@ -1103,10 +1105,13 @@ class synthesizer_v(QObject):
 
         """
         self.gui.synthesizer_pushbutton_create.clicked.disconnect(self.create_band_thread)
+        time.sleep(0.1)
+        self.activate_control_elements(False)
         palette = self.gui.synthesizer_pushbutton_create.palette()
         self.cancel_background_color = palette.color(self.gui.synthesizer_pushbutton_create.backgroundRole())
         self.syntesisrunning = False
-        self.gui.label_audioset_name.setText("Create Job")
+        #self.gui.label_audioset_name.setText("Create Job")
+        self.display_worker_message("Create Job")
         self.gui.label_audioset_name.setStyleSheet("background-color: #FFFFFF; color: black;")  # weiss
 
         # save settings to temp project
@@ -1121,15 +1126,17 @@ class synthesizer_v(QObject):
             self.clear_project()
             return
 
-        self.autosave = True
-        self.save_project()
-        print("save temporary project file")
-        time.sleep(0.5)
-        errorstatus, value = self.load_project()
-        if errorstatus:
-            self.errorhandler(value)
-            return
-        self.autosave = False
+        if not self.m["proj_loaded"]:
+            self.autosave = True
+            # necessary only if no project has been loaded previously 
+            self.save_project()
+            print("save temporary project file")
+            time.sleep(0.5)
+            errorstatus, value = self.load_project()
+            if errorstatus:
+                self.errorhandler(value)
+                return
+            self.autosave = False
         self.preset_gain()
         #if self.gui.radiobutton_AGC.isChecked():
         #TODO TODO TODO: implement AGC method and AUTO clipping repair or clipping warning
@@ -1147,7 +1154,7 @@ class synthesizer_v(QObject):
             return
         self.SigActivateOtherTabs.emit("synthesizer","inactivate",["Synthesizer"])
         self.gui.progressBar_synth.setValue(0)
-        self.activate_control_elements(False)
+        #self.activate_control_elements(False)
         self.logger.debug("modulate: configure modulate_worker thread et al")
         self.m["cancelflag"] = False
         modulation_depth = float(self.gui.lineEdit_modfactor.text())  # Modulation depth
@@ -1180,6 +1187,12 @@ class synthesizer_v(QObject):
                         existcheck = False
                 else:
                     existcheck = False
+            else:
+                existcheck = False
+                self.activate_control_elements(True)
+                self.gui.synthesizer_pushbutton_create.clicked.connect(self.create_band_thread)
+                return(False)
+        
 
         block_size = 2**18   # Maximum block length
         #total_reclength = self.get_reclength()
@@ -1348,6 +1361,7 @@ class synthesizer_v(QObject):
         self.gui.pushButton_select_source.setEnabled(value)
         self.gui.comboBox_targetSR.setEnabled(value)
         self.gui.lineEdit_LO.setEnabled(value)
+        self.gui.pushButton_importProject.setEnabled(value)
 
         self.gui.comboBox_targetSR_2.setEnabled(value)
         self.gui.lineEdit_fc_low.setEnabled(value)
@@ -1476,6 +1490,7 @@ class synthesizer_v(QObject):
         self.gui.pushButton_loadproject.clicked.disconnect(self.load_project)
         pr = {}
         pr["projectdata"] = {}
+        self.activate_control_elements(False)
         if not self.autosave:
             filename = self.load_file_dialog()
         else:
@@ -1545,7 +1560,7 @@ class synthesizer_v(QObject):
             # self.m["numcarriers"] = len(self.readFileList)
             # self.freq_carriers_update(self,custom_carriers)
             # self.fc_low_update()
-
+            
             self.freq_carriers_update()
             self.RecBW_update("nup")
             self.LO_update("nup")
@@ -1572,6 +1587,8 @@ class synthesizer_v(QObject):
         time.sleep(0.1)
         self.gui.pushButton_loadproject.clicked.connect(self.load_project)
         #print("##")
+        self.activate_control_elements(True)
+        self.m["proj_loaded"] = True
         return(errorstatus, value)
 
 
@@ -1729,11 +1746,12 @@ class synthesizer_v(QObject):
         """_slot function of comboBox_cur_carrierfreq
         get corresponding carrier index and call playlist update
         """
+        self.m["carrier_ix"] = self.gui.comboBox_cur_carrierfreq.currentIndex()
         errorstatus, value = self.fillplaylist()
         if errorstatus:
             self.errorhandler(value)
             return
-        self.m["carrier_ix"] = self.gui.comboBox_cur_carrierfreq.currentIndex()
+
         
         #print(f"carrier index changed to: {self.m['carrier_ix']}")
 
@@ -1767,13 +1785,16 @@ class synthesizer_v(QObject):
             pass
         if len(self.readFileList[self.m["carrier_ix"]]) < 1:
             value = "read File List empty"
+            self.gui.listWidget_playlist.model().rowsInserted.connect(self.playlist_update_delayed)
             return(errorstatus,value)
         errorstatus, value = self.show_playlength()
         if errorstatus:
             self.errorhandler(value)
+            self.gui.listWidget_playlist.model().rowsInserted.connect(self.playlist_update_delayed)
             return(errorstatus,value)
         duration = value
-        self.display_worker_message('')
+        #self.display_worker_message('')
+        time.sleep(0.2)
         QApplication.processEvents()
         # if not duration:
         #     return False
@@ -1884,7 +1905,10 @@ class synthesizer_v(QObject):
                     duration += a.frames/a.samplerate
                     value = duration
                     a.close()
-                # self.display_worker_message('')
+                self.display_worker_message('')
+                QApplication.processEvents()
+                self.display_worker_message('')
+                QApplication.processEvents()
                 # QApplication.processEvents()
                 self.toggle = False
             else:
@@ -2419,6 +2443,7 @@ class synthesizer_v(QObject):
         errorstate, value = self.show_playlength()
         if errorstate:
             self.errorhandler(value)
+            self.gui.listWidget_playlist.model().rowsInserted.connect(self.playlist_update_delayed)
             return
         duration = value
         self.display_worker_message("playlist up to date")
@@ -2584,6 +2609,7 @@ class synthesizer_v(QObject):
         (2) open m3u file, parse lines and compose self.readFileList and self.readFilePath
         """
         self.m3uflag = True
+        self.m["proj_loaded"] = True
         self.gui.listWidget_sourcelist.clear()
         self.gui.pushButton_importProject.clicked.disconnect(self.import_m3u)
         try:
