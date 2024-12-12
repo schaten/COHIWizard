@@ -20,6 +20,7 @@ import time
 import pytz
 import wave
 import subprocess
+import shutil
 import re
 import pyqtgraph as pg
 #import contextlib
@@ -606,7 +607,7 @@ class synthesizer_c(QObject):
         self.m = synthesizer_m.mdl
         self.logger = synthesizer_m.logger
         standardpath = os.getcwd()  #TODO TODO: take from core module via rxh; on file open core sets that to:
-        self.m["project_path"] = os.path.dirname(standardpath) + "\\projects"
+        self.m["project_path"] = os.path.dirname(standardpath) + "\\sources\\projects"
         if not os.path.exists(self.m["project_path"]):
             # Verzeichnis erstellen
             os.makedirs(self.m["project_path"])
@@ -615,6 +616,27 @@ class synthesizer_c(QObject):
 
     def dummy(self):
         print("hello from superclass")
+
+    def checkdiskspace(self,expected_filesize, _dir):
+        """check if free diskspace is sufficient for writing expeczed_filesize bytes on directory _dir
+        :param: expected_filesize
+        :type: int
+        :param: _dir
+        :type: str
+        ...
+        :raises: none
+        ...
+        :return: True if enough space, False else
+        :rtype: Boolean
+        """
+        total, used, free = shutil.disk_usage(_dir)
+        if free < expected_filesize:
+            errorstatus = True
+            value = f"not enough diskspace for this process, please free at least {expected_filesize - free} bytes"
+        else:
+            errorstatus = False
+            value = ""
+        return(errorstatus, value)
 
         
     def readsoundfile(self,file_path,*argv):
@@ -961,6 +983,9 @@ class synthesizer_v(QObject):
             self.readFilePath.append([])
             self.readFilePath[self.m["carrier_ix"]] = []
         self.m["carrier_ix"] = 0
+        self.SigActivateOtherTabs.emit("synthesizer","inactivate",["Synthesizer"])
+        self.gui.progressBar_synth.setValue(0)
+        self.activate_control_elements(False)
 
     def setgain(self):
         """set gain which is set by the gain slider and pass it to the modulator worker
@@ -1086,6 +1111,15 @@ class synthesizer_v(QObject):
 
         # save settings to temp project
          #re-load the same project (patch bug with direct create)
+        total_reclength = self.get_reclength()
+        exp_num_samples = total_reclength * self.m["sample_rate"]*1000 
+        expected_filesize = exp_num_samples * 4
+        errorstate, value = self.synthesizer_c.checkdiskspace(expected_filesize, self.m["recording_path"])
+        if errorstate:
+            self.logger.debug(errorstatus)
+            auxi.standard_errorbox(value)
+            self.clear_project()
+            return
 
         self.autosave = True
         self.save_project()
@@ -1148,8 +1182,8 @@ class synthesizer_v(QObject):
                     existcheck = False
 
         block_size = 2**18   # Maximum block length
-        total_reclength = self.get_reclength()
-        exp_num_samples = total_reclength * self.m["sample_rate"]*1000
+        #total_reclength = self.get_reclength()
+        #exp_num_samples = total_reclength * self.m["sample_rate"]*1000
         self.toggle = False
         self.modulate_thread = QThread(parent = self)
         self.modulate_worker = modulate_worker()
@@ -1546,7 +1580,7 @@ class synthesizer_v(QObject):
         filters = "project files (*.proj);;all files (*)"
         selected_filter = "project files (*.proj)"
         options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog  # Verwende das Qt-eigene Dialogfenster
+        #options |= QFileDialog.DontUseNativeDialog  # Verwende das Qt-eigene Dialogfenster
         file_name, _ = QFileDialog.getSaveFileName(self.m["QTMAINWINDOWparent"], 
                                                    "Save File", 
                                                    self.m["project_path"] + "\\*.proj",  # Standardmäßig kein voreingestellter Dateiname
@@ -1570,12 +1604,13 @@ class synthesizer_v(QObject):
         filters = "project files (*.proj);;all files (*)"
         selected_filter = "project files (*.proj)"
         options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog  # Verwende das Qt-eigene Dialogfenster
+        #options |= QFileDialog.DontUseNativeDialog  # Verwende das Qt-eigene Dialogfenster
         file_name, _ = QFileDialog.getOpenFileName(self.m["QTMAINWINDOWparent"], 
                                                 "Open project File", 
                                                 self.m["project_path"],
                                                 filters,  # Filter für Dateitypen
                                                 selected_filter,
+                                                #"all files (*)",
                                                 options=options)
         if file_name:
             return file_name
