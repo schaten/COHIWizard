@@ -1074,7 +1074,7 @@ class synthesizer_v(QObject):
             pass
         #TODO TODO TODO: delete out files produced so far ? or leave them ?
         self.gui.synthesizer_pushbutton_cancel.clicked.connect(self.cancel_modulate)
-        self.remove_aud()
+        self.remove_temp_audiofiles()
         #self.cleanup()
 
     def canvasbuild(self):
@@ -1298,15 +1298,15 @@ class synthesizer_v(QObject):
         auxi.standard_infobox("synthesis has been completed, files can be found in the recording path defined on the Player tab")
         self.gui.progressBar_synth.setValue(0)
         self.gui.synthesizer_pushbutton_create.setStyleSheet("background-color: lightgray; color: black;")
-        self.remove_aud()
+        self.remove_temp_audiofiles()
         self.display_worker_message('Job finished, ready for new job')
 
-    def remove_aud(self):
+    def remove_temp_audiofiles(self):
         """delete all temporary *.aud files
         """
         current_dir = os.getcwd()
         for filename in os.listdir(current_dir):
-            if filename.endswith('.aud'):
+            if filename.endswith('.wav'):
                 file_path = os.path.join(current_dir, filename)
                 try:
                     os.remove(file_path)

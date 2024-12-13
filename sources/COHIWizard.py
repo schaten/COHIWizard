@@ -233,7 +233,13 @@ class core_v(QObject):
         self.bps = ['16', '24', '32'] #TODO:future system state
         self.standardLO = 1100 #TODO:future system state
         self.annotationdir_prefix = 'ANN_' #TODO:future system state
-        self.m["recording_path"] = ""
+        #self.m["recording_path"] =""
+        default_recordingpath = self.m["rootpath"] + "\\out"
+        if not os.path.exists(default_recordingpath):
+            # Verzeichnis erstellen
+            os.makedirs(default_recordingpath)
+        self.m["recording_path"] = default_recordingpath
+        print(f"initialize recording path to {default_recordingpath}")
 
         # create method which inactivates all tabs except the one which is passed as keyword
         self.GUI_reset_status()
@@ -278,7 +284,12 @@ class core_v(QObject):
             self.m["metadata"]["last_path"] = os.getcwd()
             self.m["metadata"]["rootpath"] = os.getcwd()
             self.m["metadata"]["STM_IP_address"] = "000.000.000.000"
-            self.m["metadata"]["recording_path"] = ""
+            if not os.path.exists(default_recordingpath):
+                # Verzeichnis erstellen
+                os.makedirs(default_recordingpath)
+            default_recordingpath = self.m["rootpath"] + "\\out"
+            self.m["metadata"]["recording_path"] = self.m["metadata"]["rootpath"] + "\\out"
+
             auxi.standard_infobox("configuration file does not yet exist, a basic file will be generated. Please configure the STEMLAB IP address before using the Player")
 
             
