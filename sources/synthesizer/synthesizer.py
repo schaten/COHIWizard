@@ -640,8 +640,11 @@ class synthesizer_c(QObject):
 
         
     def readsoundfile(self,file_path,*argv):
-        """read sound stream either from file or URL; for URL the stream must be written to a local temp file before
+        """read sound stream either from file or URL; 
+        for URL the stream must be written to a local temp file before
         then open the file with Soundfile and return soundfile object
+        for file check if the format is wav or other format (mp3). 
+        If the file has another format --> first convert to wav (as for URL)
 
         :param file_path: file path, either a local path or a http(s) URL
         :type file_path: str
@@ -660,19 +663,10 @@ class synthesizer_c(QObject):
                 checkflag = True
 
         parsed = urllib.parse.urlparse(file_path)
+        true_tempfile = Path(file_path).stem + ".wav"
         if parsed.scheme == "http" or parsed.scheme == "https":
             try:
-                true_tempfile = Path(file_path).stem + ".wav"
-                #TODO: check if mp3 is also a good temp format
-                #true_tempfile = Path(file_path).stem + ".mp3"
-                # ffmpeg_command = [
-                #     self.m["ffmpeg_path"] + "ffmpeg",
-                #     "-user_agent", self.m["user_agent"],
-                #     "-y", "-i", file_path,
-                #     "-c:a", "libmp3lame",      # Audiocodec
-                #     "-qscale:a", "2",   # Audio quality for MP3 (ignored for WAV)
-                #     true_tempfile
-                # ]
+                
                 ffmpeg_command = [
                     self.m["ffmpeg_path"] + "ffmpeg",
                     "-user_agent", self.m["user_agent"],
@@ -681,12 +675,10 @@ class synthesizer_c(QObject):
                     "-qscale:a", "2",   # Audio quality for MP3 (ignored for WAV)
                     true_tempfile
                 ]
-                
                 #print(f">>>>>>>>>ooooooooooooooo############. ffmpeg_command: {ffmpeg_command}")
                 print("\nstart subprocess")
                 subprocess.run(ffmpeg_command, check=True)
                 print("\nsubprocess terminated")
-                #UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
             ############ ALTERNATIVE SOUNDFILE TREATMENT see appendix SFBUF
 
             except subprocess.CalledProcessError as e:
@@ -694,15 +686,19 @@ class synthesizer_c(QObject):
                 print(f"ffmpeg-Fehler: Rückgabecode {str(e.returncode)}")
                 print("Fehlermeldung:", str(e.stderr))
                 print("stdout output: ", str(e.stdout))
-                if "404 Not Found" in e.stderr:
-                    print("Fehler: URL nicht gefunden (404).")
-                    value = f" Error 404: URL {file_path} cannot be found ffmpeg returncode {str(e.returncode)}."
-                elif "Connection refused" in e.stderr or "Connection timed out" in e.stderr:
-                    print("Fehler: Verbindung zur URL fehlgeschlagen.")
-                    value = f" Connection to URL {file_path} refused or timed out ffmpeg returncode {str(e.returncode)}."
-                else:
-                    print("Unbekannter Fehler beim Zugriff auf die URL.")
-                    value = f"Unknown error when trying to connect to URL {file_path}. RTROPT"
+                try:
+                    if "404 Not Found" in e.stderr:
+                        print("Fehler: URL nicht gefunden (404).")
+                        value = f" Error 404: URL {file_path} cannot be found ffmpeg returncode {str(e.returncode)}."
+                    elif "Connection refused" in e.stderr or "Connection timed out" in e.stderr:
+                        print("Fehler: Verbindung zur URL fehlgeschlagen.")
+                        value = f" Connection to URL {file_path} refused or timed out ffmpeg returncode {str(e.returncode)}."
+                    else:
+                        print("Unbekannter Fehler beim Zugriff auf die URL.")
+                        value = f"Unknown error when trying to connect to URL {file_path}. RTROPT"
+                except:
+                    print("error with no return values")
+                    value = "Unknown error when trying to connect to URL {file_path}. RTROPT"
                 errorstatus = True
                 return(errorstatus, value)
             value = sf.SoundFile(true_tempfile, 'r')
@@ -712,7 +708,108 @@ class synthesizer_c(QObject):
             else:
                 value = f"Error: Cannot find file {file_path}"
                 errorstatus = True
+            if value.format.find("WAV") == 0:
+                pass
+            else:
+                #convert to wav to be on the safe side to prevent improper mp3 encodings
+                errorstatus, value = self.convert_to_wav_stereo(file_path, true_tempfile, 44100)
+                if not errorstatus:
+                    value = sf.SoundFile(true_tempfile, 'r')
         return(errorstatus, value)
+
+    def convert_to_wav_stereo(self, input_file, output_file, target_sampling_rate=44100):
+        """convert MP3 to WAV with target samplingrate and force stereo output
+
+        :param input_file: path/filename of audiofile to be converted 
+        :type input_file: str
+        :param output_file: path/filename of target wav audiofile 
+        :type output_file: str
+
+        :return: errorstatus: True or False, True if error
+        :rtype: Boolean      
+        :return: value: if no error: ###############
+                        if error: errorstring
+        :rtype: ##### or str           
+        """
+        errorstatus = False
+        try:
+            # get sampling rate and number of channels of input file
+            errorstatus, value = self.get_audio_properties(input_file)
+            if errorstatus == False:
+                current_sampling_rate, current_channels = value[0], value[1]
+            else:
+                return(errorstatus, value)
+            # initialize ffmpeg command
+            ffmpeg_cmd = [self.m["ffmpeg_path"] + 'ffmpeg', '-y', '-i', input_file]
+            # force to target sampling rate
+            if current_sampling_rate != target_sampling_rate:
+                ffmpeg_cmd += ['-ar', str(target_sampling_rate)]
+            # force to stereo
+            if current_channels == 1:
+                ffmpeg_cmd += ['-ac', '2']
+            # append output file path
+            ffmpeg_cmd.append(output_file)
+            # execute ffmpeg
+            subprocess.run(ffmpeg_cmd, check=True)
+            print(f"conversion accomplished: {output_file}")
+        except subprocess.CalledProcessError as e:
+            errorstatus = True
+            if str(e) == None:
+                value = f"Unknown Error when converting {output_file} to wav-format"
+            else:
+                value = f"Error when converting {output_file} to wav-format, Errormessage: {str(e)}"
+        except Exception as e:
+            errorstatus = True
+            if str(e) == None:
+                value = f"Unknown Error when converting {output_file} to wav-format"
+            else:
+                value = f"Error when converting {output_file} to wav-format, Errormessage: {str(e)}"
+        return(errorstatus, value)
+
+
+    def get_audio_properties(self, input_file):
+        """checking sampling rate and number of channels in audio file
+
+        :param input file: path/filename of audiofile to be checked 
+        :type input file: str
+        :return: errorstatus: True or False, True if error
+        :rtype: Boolean      
+        :return: value: if no error: list of the form [samplingrate, channels]
+                        if error: errorstring
+        :rtype: list or str           
+        """
+        errorstatus = False
+        try:
+            # check sampling rate
+            sampling_rate = subprocess.run(
+                [self.m["ffmpeg_path"] + 'ffprobe', '-v', 'error', '-select_streams', 'a:0', '-show_entries', 'stream=sample_rate',
+                '-of', 'default=noprint_wrappers=1:nokey=1', input_file],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            ).stdout.strip()
+            
+            # Abfrage der Kanalanzahl
+            channels = subprocess.run(
+                [self.m["ffmpeg_path"] + 'ffprobe', '-v', 'error', '-select_streams', 'a:0', '-show_entries', 'stream=channels',
+                '-of', 'default=noprint_wrappers=1:nokey=1', input_file],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            ).stdout.strip()
+            errorstatus = False
+            value = [int(sampling_rate), int(channels)]
+            
+            #return int(sampling_rate), int(channels)
+        except Exception as e:
+            #print(f"Fehler beim Abrufen der Audioeigenschaften: {e}")
+            errorstatus = True
+            if str(e) == None:
+                value = f"Error when checking: {input_file}: unknown type of exception."
+            else:
+                value = f"Error when checking: {input_file}: exception type: {str(e)}"
+        return(errorstatus, value)
+
 
 class synthesizer_v(QObject):
     """_view methods for resampling module
@@ -1168,6 +1265,7 @@ class synthesizer_v(QObject):
         while existcheck:
             options = QFileDialog.Options()
             options |= QFileDialog.DontUseNativeDialog
+            #TODO: why does it take so long to display the existing file list ?
             output_base_name, _ = QFileDialog.getSaveFileName(self.m["QTMAINWINDOWparent"], 
                                                     "Save File", 
                                                     self.m["recording_path"],  # Standard rec path, Standardmäßig kein voreingestellter Dateiname
@@ -1193,6 +1291,8 @@ class synthesizer_v(QObject):
                 self.gui.synthesizer_pushbutton_create.clicked.connect(self.create_band_thread)
                 return(False)
         
+        #TODO TODO: modify output base name so that it doesn't contain any extension and no _# at the end
+
 
         block_size = 2**18   # Maximum block length
         #total_reclength = self.get_reclength()
@@ -1857,7 +1957,7 @@ class synthesizer_v(QObject):
                 errorstatus = True
                 errorstring = f"Error when calculating playlength. Exception: {str(e)}"
                 return(errorstatus, errorstring)
-            if not len(self.readFilePath[self.m["carrier_ix"]][ix] + x) < 1:
+            if not len(file_path) < 1:
                 #wav_info = self.get_wav_info(file_path)
                 #duration += wav_info['duration_seconds']
                 #if duration Blödsinn, das kann passieren !
@@ -1870,26 +1970,17 @@ class synthesizer_v(QObject):
                         errorstatus = True
                         value = "ERRREQ1"
                         break
-                        
-                    #### OLD CODE without ffmpeg:
-                #     output_file = Path(file_path).stem + ".aud"
-                #     self.gui.label_audioset_name.setText(f"download stream and write temporary output_file: {output_file}")
-                # a = self.synthesizer_c.readsoundfile(file_path)
-                # print("show_playlength: ########### current point of development reached, proceed from here###########")
-                #duration += a.frames/a.samplerate
-                #a.close()
+
                 #TODO TODO TODO: Anzeige, dass nun ein länger dauernder Prozess startet (Read from URL)
-                #TODO TODO TODO
                     ctime = datetime.now()
                     print(f"start read URL list @ {ctime}")
-                    #TODO TODO TODO: Ermitteln, of ffmpeg installiert ist. Wenn nein:
-                    #Errorstring : "ERROR: ffmpeg notinstalled"
-                    aux = self.get_stream_duration(file_path)
-                    if aux == None:
-                        auxi.standard_errorbox(f"Error when determining duration of {file_path}. Giving up")
+                    #TODO TODO TODO: Ermitteln, of ffmpeg installiert ist. Wenn nein:autoinstall
+                    errorstatus, aux = self.get_stream_duration(file_path)
+                    if errorstatus:
+                        #auxi.standard_errorbox(f"Error when determining duration of {file_path}. Giving up")
                         self.clear_project()
-                        return False
-                    duration += self.get_stream_duration(file_path)
+                        return(errorstatus, value)
+                    duration += aux
                     value = duration
                     print(f"end read URL list @ {ctime}, duration: {duration}")
                 #self.gui.label_audioset_name.setText("")
@@ -1901,7 +1992,7 @@ class synthesizer_v(QObject):
                         value = a
                         print("show_playlength, return error and break")
                         break
-                    print("show_playlength: ########### current point of development reached, proceed from here###########")
+                    #print("show_playlength: ########### current point of development reached, proceed from here###########")
                     duration += a.frames/a.samplerate
                     value = duration
                     a.close()
@@ -1909,9 +2000,8 @@ class synthesizer_v(QObject):
                 QApplication.processEvents()
                 self.display_worker_message('')
                 QApplication.processEvents()
-                # QApplication.processEvents()
                 self.toggle = False
-            else:
+            else: #TODO: check and replace by more meaningfull actions
                 print("NNNNNNNNNN")
                 # errorstatus = True
                 # value = " length of reaffilelist < 1"
@@ -1924,35 +2014,22 @@ class synthesizer_v(QObject):
         # print(f"Datenformat: {wav_info['data_format']}")
         #print(f"full duration of this carrier track: {duration}")
         return(errorstatus, value)
-        #TODO TODO: write progress bar update >>> DONE ?
-        #for x in self.readFileList[self.m["carrier_ix"]]:
-        #   open file
-        #   read fileheader with test = WAVheader_tools.get_sdruno_header(self,self.m["f1"],'audio')
-        #   close file
-        #   calculate playtime from filesize and header info
-        #   add to playtime
-        #   set progress bar value and color on overtime
-        #
-
 
     def get_stream_duration(self,url):
+        """_summary_
 
-
-        # ffmpeg_command = [
-        #     self.m["ffmpeg_path"],
-        #     "ffmpeg",
-        #     "-user_agent", self.m["user_agent"],
-        #     "-i", url,
-        #     "-hide_banner"  # Verbirgt unnötige Informationen
-        # ]
+        :param url: URL of the streamed audiofile
+        :type url: str
+        :return: _description_
+        :rtype: _type_
+        """
+        errorstatus = False
         ffmpeg_command = [
             self.m["ffmpeg_path"] + "ffmpeg",
             "-user_agent", self.m["user_agent"],
             "-i", url,
-            "-hide_banner"  # Verbirgt unnötige Informationen
-        ]
-        # Prozess starten und Fehlerausgabe analysieren (da ffmpeg die Metadaten dort ausgibt)
-        
+            "-hide_banner"  # hide unnecessary info outputs
+        ]        
         process = subprocess.Popen(ffmpeg_command, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         stdout, stderr = process.communicate()
 
@@ -1960,18 +2037,20 @@ class synthesizer_v(QObject):
         match2 = re.search(r"Error opening input file", stderr.decode())
         if match1 or match2:
             errortext_suffix = f"Error when trying to connect to URL {url}. Aborting procedure"
-            auxi.standard_errorbox(errortext_suffix + " Aborting procedure ")
-            
-            return None
-
+            #auxi.standard_errorbox(errortext_suffix + " Aborting procedure ")
+            value = errortext_suffix + " Aborting procedure "
+            errorstatus = True
+            return(errorstatus, value)
         # Dauer aus der ffmpeg-Ausgabe extrahieren
         match = re.search(r"Duration: (\d+):(\d+):(\d+\.\d+)", stderr.decode())
         if match:
             hours, minutes, seconds = map(float, match.groups())
-            return hours * 3600 + minutes * 60 + seconds  # Dauer in Sekunden
+            value = hours * 3600 + minutes * 60 + seconds  # Dauer in Sekunden
         else:
-            return None  # Keine Dauer gefunden
-
+            value = "Error when trying to get duration of stream {url}. Aborting procedure "
+            errorstatus = True
+            return(errorstatus, value)
+        return(errorstatus, value)
 
     # # Beispielaufruf
     # stream_url = "https://example.com/audio.mp3"
