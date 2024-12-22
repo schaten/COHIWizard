@@ -54,7 +54,7 @@ class modulate_worker(QObject):
         __slots__: Dictionary with parameters
     :return : none
     """
-    __slots__ = ["carrier_frequencies", "playlists","sample_rate","block_size","cutoff_freq","modulation_depth","output_base_name","exp_num_samples","progress","logger","combined_signal_block","LO_freq","gain", "method_object"]
+    __slots__ = ["carrier_frequencies", "playlists","sample_rate","block_size","cutoff_freq","modulation_depth","output_base_name","exp_num_samples","progress","logger","combined_signal_block","LO_freq","gain", "method_object","silence_duration"]
     SigFinished = pyqtSignal()
     SigPupdate = pyqtSignal()
     SigMessage = pyqtSignal(str)
@@ -66,7 +66,7 @@ class modulate_worker(QObject):
         self.mutex = QMutex() #TODO: check if necessary
         self.CHUNKSIZE = int(1024**2) #TODO: check if necessary, not used anywhere
         self.AUDIO_MAXAMP = 0.9 #max amplitude of the audio signal
-        self.SILENCE_DURATION = 4   #duration of silent periods between subsequent audio files (s)
+        #self.SILENCE_DURATION = 4   #Default duration of silent periods between subsequent audio files (s)
 
  
     def set_carrier_frequencies(self,_value):
@@ -124,8 +124,11 @@ class modulate_worker(QObject):
     def set_method_object(self,_value):
         self.__slots__[13] = _value
     def get_method_object(self):
-        return(self.__slots__[13])    
-    
+        return(self.__slots__[13])
+    def set_silence_duration(self,_value):
+        self.__slots__[14] = _value
+    def get_silence_duration(self):
+        return(self.__slots__[14])  
     
     
     def modulate_terminate(self):
@@ -334,7 +337,7 @@ class modulate_worker(QObject):
                 cumulative_time += block_size/original_sample_rate
                 print(f"make silence block at carrier {carrier_freq} until {cumulative_time}")
                 # check if silence has already reached maximum length
-                if cumulative_time >= self.SILENCE_DURATION:
+                if cumulative_time >= self.get_silence_duration():
                     silence = False
                     cumulative_time = 0
             else:    
@@ -894,7 +897,7 @@ class synthesizer_v(QObject):
         self.FILTER_OVERLAP = 800  #overlap samples due to filter delay
         self.READ_BIAS = -100     # pre-read audio samples to enable filter delay compensation
         #self.CANVAS == False    # allow for building monitor canvas. Flag is set True once built, then no new build should occur on call for canvas initialization
-
+        self.SILENCE_DURATION = 4
         self.AUTOSCALE_RF = 0     # Set to 1 to select autoscale mode causing exact RF levelling to max, otherwise set to 0 for fixed RF levelling  
         self.FIXSCALE_FAKTOR_RF = 0.8 # guard factor for fixed RF levelling: assumed max. RF level: #carriers * (1+C_m) * C_FIXSCALE_FAKTOR_RF. RF overload may occur if C_FIXSCALE_FAKTOR_RF < 1 
 
@@ -997,6 +1000,7 @@ class synthesizer_v(QObject):
         self.gui.listWidget_sourcelist.addItem(item)
         self.gui.lineEdit_audiocutoff_freq.setText(self.STD_AUDIOBW)
         self.gui.lineEdit_carrierdistance.setText(self.STD_CARRIERDISTANCE)
+        self.gui.spinBox_pauseseconds.setProperty("value", self.SILENCE_DURATION)
 
         #self.gui.spinBox_numcarriers.editingFinished.connect(self.freq_carriers_update)
         #react to arrows press
@@ -1134,6 +1138,10 @@ class synthesizer_v(QObject):
 
 
     def clear_project(self):
+        errorstatus, value = self.checkffmpeg_install()
+        if errorstatus:
+            self.errorhandler("NOCLEAR" + value)
+            return
         self.m3uflag = False
         #self.init_synthesizer_ui()
         self.reinitialize_gui()
@@ -1158,6 +1166,7 @@ class synthesizer_v(QObject):
         self.m["carrier_ix"] = 0
         self.SigActivateOtherTabs.emit("synthesizer","activate",["Synthesizer"])
         self.gui.progressBar_synth.setValue(0)
+
         self.activate_control_elements(True)
         self.display_worker_message('')
 
@@ -1284,7 +1293,7 @@ class synthesizer_v(QObject):
 
         # if not ffmpeg_installtools.is_ffmpeg_installed():  
         #     errorstatus = True
-        #     value = "ERRREQ1"
+        #     value = "NOCLEAR"
         #     self.errorhandler(value)
         #     return(errorstatus,value)        
         
@@ -1399,6 +1408,7 @@ class synthesizer_v(QObject):
         self.modulate_worker.set_logger(self.logger)
         self.modulate_worker.set_LO_freq(LO_frequency)
         self.modulate_worker.set_method_object(self.synthesizer_c)
+        self.modulate_worker.set_silence_duration(self.gui.spinBox_pauseseconds.value())
         #print(f"createbandthread: method_object {self.synthesizer_c}")
         self.setgain()
         self.modulate_thread.started.connect(self.modulate_worker.start_modulator)
@@ -1462,12 +1472,6 @@ class synthesizer_v(QObject):
             errorstatus = True
             value = "This OS is not being supported"
             return(errorstatus, value)
-        #querystr = "Should the ffmpeg path being configured automatically ?"
-        #configure_choice = input("Soll der ffmpeg-Pfad automatisch konfiguriert werden? (ja/nein): ").strip().lower()
-        # if self.query(querystr):         #configure_choice in ("ja", "j", "yes", "y"):
-        #     ffmpeg_installtools.configure_path(ffmpeg_path)
-        # else:
-        #     print(f"ffmpeg wurde in {ffmpeg_path} installiert. Bitte fügen Sie diesen Pfad manuell zu den Umgebungsvariablen hinzu.")
         
         print("Installation has been completed.")
         return(errorstatus, value)
@@ -1475,7 +1479,7 @@ class synthesizer_v(QObject):
     def checkffmpeg_install(self):
         errorstatus = False
         value = None
-        if ffmpeg_installtools.is_ffmpeg_installed():
+        if ffmpeg_installtools.is_ffmpeg_installed(self.m["ffmpeg_path"]):
             errorstatus = False
             value = ""
             return(errorstatus,value)
@@ -1485,7 +1489,7 @@ class synthesizer_v(QObject):
             errorstatus, value = self.ffmpeg_install_handler()
             if errorstatus:
                 self.activate_control_elements(False)
-                self.errorhandler("ERRREQ1 \n" + value)
+                self.errorhandler("NOCLEAR \n" + value)
             else:
                 ffmpeg_exepath = value[0]
                 self.m["ffmpeg_path"] = value[1]
@@ -1496,26 +1500,22 @@ class synthesizer_v(QObject):
         else:
             ffmpeg_link = "https://www.ffmpeg.org/download.html"
             #TODO TODO TODO: place this URL in a more general place like config_wizard.yaml for easy exchange
-            #auxi.standard_errorbox(infotext)            infotext = "<font size = 12> You must install sox before being able to resample; <br> Download from: <br><a href='%s'>sox version 14.2.2 </a> <br><br>Either install sox to RFCorder directory or set the system path to the sox installation directory. <br> See also RFCorder user manual; </font>" % ffmpeg_link
-            #"https://sourceforge.net/projects/sox/files/sox/14.4.2/"
-            #pathinfo = os.getcwd() + '\\' + "ffmpeg-master-latest-win64-gpl\\"
-            #TODO CHECK pathinfo = os.getcwd() + '\\' + "ffmpeg-master-latest-win64-gpl\\"
             pathinfo = os.path.join(os.getcwd(), "ffmpeg-master-latest-win64-gpl")
             infotext = "<font size = 8> Synthesizer requires ffmpeg to be installed on your computer; <br> Please install ffmpeg manually in folder  <br> ~rootpath/ffmpeg-master-latest-win64-gpl/ <br> Download from: <a href='%s'>ffmpeg </a> <br> <br> Synthesizer will be inactivated until ffmpeg is available. </font>" % ffmpeg_link
-
-            #errortext = f"Synthesizer requires ffmpeg to be installed on your computer. Please install ffmpeg manually in folder {self.m["rootpath"] + '/' + self.m['ffmpeg_path']}" 
-            print(infotext)
-            print (pathinfo)
+            self.logger.error(infotext)
+            self.logger.error(pathinfo)
             auxi.standard_errorbox(infotext)
             self.activate_control_elements(False)
-
+            errorstatus = True
+            value = infotext
+        return(errorstatus,value)
 
 
     def errorhandler(self,value):
         """handles errors when methods return errormessages on errorstate == True
-        (1) displays errormessage conveyed in 'value' and writes error to logfile
-        (2) optionally handles
-        (3) if no other measures are taken, the GUI is cleared and reset to initial state
+        (1) displays errormessage conveyed in 'value', clears GUI and writes error to logfile
+        (2) if 'value' contains the keyword 'NOCLEAR' at the initial position, the GUI is not cleared. This is important for calls from functions
+        which themselves call errorhandler; otherwise an endless loop would emerge.
 
         :param value: error description which is to be displayed in the errormessage
         :type value: str
@@ -1527,10 +1527,9 @@ class synthesizer_v(QObject):
         #preliminary handling of the lack of ffmpeg
 
         #TODO: future versions: autoinstall with routines in Autoinstall_ffmpeg_import os.py
-        if value.find("ERRREQ1") == 0:
+        if value.find("NOCLEAR") == 0:
             self.activate_control_elements(False)
-            #TODO TODO TODO: inactivate also NEW and CANCEL or call installer handler from NEW
-            auxi.standard_errorbox(str(value))
+            auxi.standard_errorbox(str(value[7:]))
         else:
             auxi.standard_errorbox(str(value))
             self.clear_project()
@@ -2107,7 +2106,7 @@ class synthesizer_v(QObject):
         value = None
         # if not ffmpeg_installtools.is_ffmpeg_installed():
         #     errorstatus = True
-        #     value = "ERRREQ1"
+        #     value = "NOCLEAR"
         #     return(errorstatus,value)
         ix = 0
         duration = 0
@@ -2134,7 +2133,7 @@ class synthesizer_v(QObject):
                 if file_path.find("http://")>=0 or file_path.find("https://")>=0:
                     # if not ffmpeg_installtools.is_ffmpeg_installed():
                     #     errorstatus = True
-                    #     value = "ERRREQ1"
+                    #     value = "NOCLEAR"
                     #     break
 
                 #TODO TODO TODO: Anzeige, dass nun ein länger dauernder Prozess startet (Read from URL)
@@ -2783,7 +2782,6 @@ class synthesizer_v(QObject):
                 if self.syntesisrunning:
                     self.blinkstate = self.blinksynth(self.blinkstate)
                     #self.PupdateSignalHandler()
-
 
     def logfilehandler(self,_value):
         if _value is False:

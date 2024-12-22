@@ -17,6 +17,8 @@ import zipfile
 import tarfile
 import shutil
 
+
+
 class ffmpeg_installtools():
     """contains many auxiliariy methods fo the COHIWizard
     :return: _description_
@@ -34,42 +36,9 @@ class ffmpeg_installtools():
         # Constants
         #self.status = {}    # Test Mode Flag for testing the App without a
 
-    def test_something():
-        system = platform.system().lower()
-        print(f"system: {system}")
-
-    # def ffmpeg_autoinstaller(self):
-
-    #     ##TODO TODO: Quest menu for installing
-
-    #     install_choice = input("Möchten Sie ffmpeg installieren? (ja/nein): ").strip().lower()
-    #     if install_choice not in ("ja", "j", "yes", "y"):
-    #         print("Installation cancelled.")
-    #         return
-        
-    #     root_dir = os.getcwd() #os.path.dirname(os.path.abspath(__file__))
-    #     ffmpeg_dir = os.path.join(root_dir, "ffmpeg")
-        
-    #     system = platform.system().lower()
-    #     if system == "linux":
-    #         ffmpeg_path = self.install_ffmpeg_linux(ffmpeg_dir)
-    #     elif system == "windows":
-    #         ffmpeg_path = self.install_ffmpeg_windows(ffmpeg_dir)
-    #     else:
-    #         print("Dieses Betriebssystem wird nicht unterstützt.")
-    #         return
-        
-        configure_choice = input("Soll der ffmpeg-Pfad automatisch konfiguriert werden? (ja/nein): ").strip().lower()
-        if configure_choice in ("ja", "j", "yes", "y"):
-            self.configure_path(ffmpeg_path)
-        else:
-            print(f"ffmpeg wurde in {ffmpeg_path} installiert. Bitte fügen Sie diesen Pfad manuell zu den Umgebungsvariablen hinzu.")
-        
-        print("ffmpeg-Installation abgeschlossen.")
 
 
-
-    def is_ffmpeg_installed():
+    def is_ffmpeg_installed(ffmpeg_path):
         """check if ffmpeg is available on the system"""
         try:
             #check for global installation with PATH set in the OS
@@ -78,10 +47,11 @@ class ffmpeg_installtools():
             return True
         except FileNotFoundError:
             #check for local installation in ffmpeg standardpath of the COHIWIzard filesystem
-            ffmpeg_dir = os.path.join(os.getcwd(), "ffmpeg-master-latest-win64-gpl", "bin")
+            #ffmpeg_dir = os.path.join(os.getcwd(), "ffmpeg-master-latest-win64-gpl", "bin")
+            
             #self.logger.debug(f"__init_ m check for ffmpeg_path: {self.mdl["ffmpeg_path"]}, file not found")
             try:
-                subprocess.run(os.path.join(ffmpeg_dir,"ffmpeg") + " -version", stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+                subprocess.run(os.path.join(ffmpeg_path, "ffmpeg") + " -version", stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
                 return True
             except FileNotFoundError:
                 return False
@@ -91,6 +61,11 @@ class ffmpeg_installtools():
         print(f"Download ffmpeg from {url} ...")
         urllib.request.urlretrieve(url, output_path)
         print("Download accomplished.")
+
+
+
+
+
 
     def install_ffmpeg_linux(self, destination):
         """Installs ffmpeg under Linux."""
@@ -136,7 +111,7 @@ class ffmpeg_installtools():
             self.download_ffmpeg(ffmpeg_url, archive_path)
         except:
             errorstatus = True
-            value = f"cannot download installation files from {ffmpeg_url}. Please check internet connection and retry after restarting the COHIWizard"
+            value = f"cannot download installation files from {ffmpeg_url}. \n \n Please check internet connection and retry after restarting the COHIWizard"
             return(errorstatus,value)
         print("unzip ffmpeg...")
         with zipfile.ZipFile(archive_path, "r") as zip_ref:
