@@ -13,6 +13,7 @@ import datetime as ndatetime
 import matplotlib.pyplot as plt
 #import pyfda.pyfdax
 from auxiliaries import auxiliaries as auxi
+from auxiliaries import ffmpeg_installtools as ffinst
 import logging
 import yaml
 import copy
@@ -30,12 +31,17 @@ from scipy.signal import sosfilt, butter, resample
 from pathlib import Path
 import urllib
 import urllib.request
+
+import platform
+import zipfile
+import tarfile
+
 #import io
 # import pydub
 # from pydub import AudioSegment
 #import m3u8
 from auxiliaries import WAVheader_tools
-
+from auxiliaries import ffmpeg_installtools
 #BUGS:
 # recognize if web not connected if htp URL import
 # autodetect ffmpeg install and install
@@ -605,7 +611,15 @@ class synthesizer_m(QObject):
         self.mdl["LO"] = 0
         self.mdl["SR_currindex"] = 0
         self.mdl["modfactor"] = 0.8
-        self.mdl["ffmpeg_path"] ="ffmpeg-master-latest-win64-gpl/bin/"
+        self.mdl["ffmpeg_autocheck"] = False
+        try:
+            subprocess.run("ffmpeg -version", stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+            #self.logger.debug(f"__init_ m check for ffmpeg , installation found")
+            self.mdl["ffmpeg_path"] = ""
+        except FileNotFoundError:
+            pass
+            #self.mdl["ffmpeg_path"] = os.path.join(os.getcwd(), "ffmpeg-master-latest-win64-gpl", "bin")
+            #self.logger.debug(f"__init_ m check for ffmpeg_path: {self.mdl["ffmpeg_path"]}, file not found")
         self.mdl["user_agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
         self.mdl["proj_loaded"] = False
         # Create a custom logger
@@ -643,11 +657,15 @@ class synthesizer_c(QObject):
         self.m = synthesizer_m.mdl
         self.logger = synthesizer_m.logger
         standardpath = os.getcwd()  #TODO TODO: take from core module via rxh; on file open core sets that to:
-        self.m["project_path"] = os.path.dirname(standardpath) + "\\sources\\.synthesizer_projects"
+        #self.m["project_path"] = os.path.dirname(standardpath) + "\\sources\\.synthesizer_projects"
+        #self.m["project_path"] = standardpath + "\\.synthesizer_projects"
+        self.m["project_path"] = os.path.join(standardpath,".synthesizer_projects")
         if not os.path.exists(self.m["project_path"]):
             # Verzeichnis erstellen
             os.makedirs(self.m["project_path"])
-        self.m["temp_path"] = os.path.dirname(standardpath) + "\\sources\\.synthesizer_temp"
+        #self.m["temp_path"] = os.path.dirname(standardpath) + "\\sources\\.synthesizer_temp"
+        self.m["temp_path"] = os.path.join(standardpath, ".synthesizer_temp")
+        #self.m["temp_path"] = standardpath + "\\.synthesizer_temp"
         if not os.path.exists(self.m["temp_path"]):
             # Verzeichnis erstellen
             os.makedirs(self.m["temp_path"])
@@ -703,13 +721,14 @@ class synthesizer_c(QObject):
                 checkflag = True
 
         parsed = urllib.parse.urlparse(file_path)
-        true_tempfile = self.m["temp_path"] + "\\" + Path(file_path).stem + ".wav"
+        #true_tempfile = self.m["temp_path"] + "\\" + Path(file_path).stem + ".wav"
+        true_tempfile = os.path.join(self.m["temp_path"], Path(file_path).stem + ".wav")
         #print(f">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> true tempfile path: {true_tempfile}, basispath: {self.m["temp_path"]}")
         if parsed.scheme == "http" or parsed.scheme == "https":
             try:
                 
                 ffmpeg_command = [
-                    self.m["ffmpeg_path"] + "ffmpeg",
+                    os.path.join(self.m["ffmpeg_path"], "ffmpeg"),
                     "-user_agent", self.m["user_agent"],
                     "-y", "-i", file_path,
                     "-c:a", "pcm_s16le",      # Audiocodec
@@ -782,7 +801,7 @@ class synthesizer_c(QObject):
             else:
                 return(errorstatus, value)
             # initialize ffmpeg command
-            ffmpeg_cmd = [self.m["ffmpeg_path"] + 'ffmpeg', '-y', '-i', input_file]
+            ffmpeg_cmd = [os.path.join(self.m["ffmpeg_path"], 'ffmpeg'), '-y', '-i', input_file]
             # force to target sampling rate
             if current_sampling_rate != target_sampling_rate:
                 ffmpeg_cmd += ['-ar', str(target_sampling_rate)]
@@ -824,7 +843,7 @@ class synthesizer_c(QObject):
         try:
             # check sampling rate
             sampling_rate = subprocess.run(
-                [self.m["ffmpeg_path"] + 'ffprobe', '-v', 'error', '-select_streams', 'a:0', '-show_entries', 'stream=sample_rate',
+                [os.path.join(self.m["ffmpeg_path"], 'ffprobe'), '-v', 'error', '-select_streams', 'a:0', '-show_entries', 'stream=sample_rate',
                 '-of', 'default=noprint_wrappers=1:nokey=1', input_file],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -833,7 +852,7 @@ class synthesizer_c(QObject):
             
             # Abfrage der Kanalanzahl
             channels = subprocess.run(
-                [self.m["ffmpeg_path"] + 'ffprobe', '-v', 'error', '-select_streams', 'a:0', '-show_entries', 'stream=channels',
+                [os.path.join(self.m["ffmpeg_path"], 'ffprobe'), '-v', 'error', '-select_streams', 'a:0', '-show_entries', 'stream=channels',
                 '-of', 'default=noprint_wrappers=1:nokey=1', input_file],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -950,6 +969,10 @@ class synthesizer_v(QObject):
             self.m["rootpath"] = self.m["metadata"]["rootpath"]
         except:
             self.m["rootpath"] = os.getcwd()
+        try:
+            self.m["ffmpeg_path"] = self.m["metadata"]["ffmpeg_path"]
+        except:
+            self.m["ffmpeg_path"] = ""
 
 
         self.m["carrierarray"] = []
@@ -1012,6 +1035,8 @@ class synthesizer_v(QObject):
         self.gui.verticalSlider_Gain.valueChanged.connect(self.setgain)
         self.previous_value = self.gui.spinBox_numcarriers.value()
         self.RecBW_update()
+        standardpath = os.getcwd()
+        self.logger.debug(f"synthesizer_v.__init__ path infos: standardpath: {standardpath}, project path: {self.m["project_path"]}")
         #self.gui.lineEdit_carrierdistance.textEdited.connect(self.carriedistance_update)
 
     def reinitialize_gui(self):
@@ -1247,12 +1272,22 @@ class synthesizer_v(QObject):
         self.gui.verticalSlider_Gain.setProperty("value", float(slider))
 
 
+
     def create_band_thread(self):
         """slot function for the CREATE button
         pre-set gain, check some conditions. 
         Then configure and start worker thread 'modulate_worker' for synthesis
 
         """
+        errorstatus = False
+        value = ""
+
+        # if not ffmpeg_installtools.is_ffmpeg_installed():  
+        #     errorstatus = True
+        #     value = "ERRREQ1"
+        #     self.errorhandler(value)
+        #     return(errorstatus,value)        
+        
         self.gui.synthesizer_pushbutton_create.clicked.disconnect(self.create_band_thread)
         time.sleep(0.1)
         self.activate_control_elements(False)
@@ -1268,8 +1303,8 @@ class synthesizer_v(QObject):
         total_reclength = self.get_reclength()
         exp_num_samples = total_reclength * self.m["sample_rate"]*1000 
         expected_filesize = exp_num_samples * 4
-        errorstate, value = self.synthesizer_c.checkdiskspace(expected_filesize, self.m["recording_path"])
-        if errorstate:
+        errorstatus, value = self.synthesizer_c.checkdiskspace(expected_filesize, self.m["recording_path"])
+        if errorstatus:
             self.logger.debug(errorstatus)
             auxi.standard_errorbox(value)
             self.clear_project()
@@ -1390,7 +1425,92 @@ class synthesizer_v(QObject):
         self.gui.synthesizer_pushbutton_create.clicked.connect(self.create_band_thread)
 
         return(True)
+
+    def query(self,query):
+        """Query for automatic installation
+ 
+        :param query: string with the query
+        :type query: str
+        """
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Question)
+        msg.setText("Question")
+        msg.setInformativeText(query)
+        msg.setWindowTitle("autoinstall ffmpeg")
+        msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        msg.buttonClicked.connect(self.popup)
+        msg.exec_()
+
+        if self.yesno == "&Yes":
+            return True
+        else:
+            return False
+
+    def ffmpeg_install_handler(self):
+        #self.m["ffmpeg_path"]
+        #root_dir = os.path.dirname(os.path.abspath(__file__))
+        errorstatus = False
+        value = ""
+        ffmpeg_dir = os.getcwd()        
+        system = platform.system().lower()
+        if system == "linux":
+            errorstatus, value = ffmpeg_installtools.install_ffmpeg_linux(ffmpeg_installtools,ffmpeg_dir)
+        elif system == "windows":
+            errorstatus, value = ffmpeg_installtools.install_ffmpeg_windows(ffmpeg_installtools,ffmpeg_dir)
+        else:
+            print("This OS is not being supported")
+            errorstatus = True
+            value = "This OS is not being supported"
+            return(errorstatus, value)
+        #querystr = "Should the ffmpeg path being configured automatically ?"
+        #configure_choice = input("Soll der ffmpeg-Pfad automatisch konfiguriert werden? (ja/nein): ").strip().lower()
+        # if self.query(querystr):         #configure_choice in ("ja", "j", "yes", "y"):
+        #     ffmpeg_installtools.configure_path(ffmpeg_path)
+        # else:
+        #     print(f"ffmpeg wurde in {ffmpeg_path} installiert. Bitte fügen Sie diesen Pfad manuell zu den Umgebungsvariablen hinzu.")
+        
+        print("Installation has been completed.")
+        return(errorstatus, value)
     
+    def checkffmpeg_install(self):
+        errorstatus = False
+        value = None
+        if ffmpeg_installtools.is_ffmpeg_installed():
+            errorstatus = False
+            value = ""
+            return(errorstatus,value)
+        querystr = "ffmpeg is not installed on this computer. \n This 3rd party software is required for running the synthesizer module. \n \n Would you like it to be installed now by COHIWizard ?"
+        if self.query(querystr):
+            self.logger.debug("try to install ffmpeg")
+            errorstatus, value = self.ffmpeg_install_handler()
+            if errorstatus:
+                self.activate_control_elements(False)
+                self.errorhandler("ERRREQ1 \n" + value)
+            else:
+                ffmpeg_exepath = value[0]
+                self.m["ffmpeg_path"] = value[1]
+            self.m["metadata"]["ffmpeg_path"] = self.m["ffmpeg_path"]
+            stream = open("config_wizard.yaml", "w")
+            yaml.dump(self.m["metadata"], stream)
+            stream.close()
+        else:
+            ffmpeg_link = "https://www.ffmpeg.org/download.html"
+            #TODO TODO TODO: place this URL in a more general place like config_wizard.yaml for easy exchange
+            #auxi.standard_errorbox(infotext)            infotext = "<font size = 12> You must install sox before being able to resample; <br> Download from: <br><a href='%s'>sox version 14.2.2 </a> <br><br>Either install sox to RFCorder directory or set the system path to the sox installation directory. <br> See also RFCorder user manual; </font>" % ffmpeg_link
+            #"https://sourceforge.net/projects/sox/files/sox/14.4.2/"
+            #pathinfo = os.getcwd() + '\\' + "ffmpeg-master-latest-win64-gpl\\"
+            #TODO CHECK pathinfo = os.getcwd() + '\\' + "ffmpeg-master-latest-win64-gpl\\"
+            pathinfo = os.path.join(os.getcwd(), "ffmpeg-master-latest-win64-gpl")
+            infotext = "<font size = 8> Synthesizer requires ffmpeg to be installed on your computer; <br> Please install ffmpeg manually in folder  <br> ~rootpath/ffmpeg-master-latest-win64-gpl/ <br> Download from: <a href='%s'>ffmpeg </a> <br> <br> Synthesizer will be inactivated until ffmpeg is available. </font>" % ffmpeg_link
+
+            #errortext = f"Synthesizer requires ffmpeg to be installed on your computer. Please install ffmpeg manually in folder {self.m["rootpath"] + '/' + self.m['ffmpeg_path']}" 
+            print(infotext)
+            print (pathinfo)
+            auxi.standard_errorbox(infotext)
+            self.activate_control_elements(False)
+
+
+
     def errorhandler(self,value):
         """handles errors when methods return errormessages on errorstate == True
         (1) displays errormessage conveyed in 'value' and writes error to logfile
@@ -1408,26 +1528,12 @@ class synthesizer_v(QObject):
 
         #TODO: future versions: autoinstall with routines in Autoinstall_ffmpeg_import os.py
         if value.find("ERRREQ1") == 0:
-            errortext = f"Please install ffmpeg manually in folder {self.m["rootpath"] + '/' + self.m['ffmpeg_path']}" 
-            print(errortext)
-            auxi.standard_errorbox(errortext)
-            # request_text = f"For synthesizing from URLs the free program ffpmeg must be installed on your PC in the directory {self.m['rootpath'] + '/' + self.m["ffmpeg_path"]}. Should it be installed now automatically ?" 
-            # msg = QMessageBox()
-            # msg.setIcon(QMessageBox.Question)
-            # msg.setText("Exception")
-            # msg.setInformativeText(request_text)
-            # msg.setWindowTitle("Exception")
-            # msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-            # msg.buttonClicked.connect(self.popup)
-            # msg.exec_()
-            # if self.yesno == "&Yes":
-            #     print("Yet TODO: call autoinstaller for ffmpeg")
-            # else:
-            #     print(f"Please install ffmpeg manually in folder {self.m['ffmpeg_path']}")
+            self.activate_control_elements(False)
+            #TODO TODO TODO: inactivate also NEW and CANCEL or call installer handler from NEW
+            auxi.standard_errorbox(str(value))
         else:
             auxi.standard_errorbox(str(value))
-
-        self.clear_project()
+            self.clear_project()
 
     def display_worker_message(self,s):
         """display messages from the worker in the message window of the GUI"""
@@ -1758,8 +1864,9 @@ class synthesizer_v(QObject):
         options = QFileDialog.Options()
         #options |= QFileDialog.DontUseNativeDialog  # Verwende das Qt-eigene Dialogfenster
         file_name, _ = QFileDialog.getSaveFileName(self.m["QTMAINWINDOWparent"], 
-                                                   "Save File", 
-                                                   self.m["project_path"] + "\\*.proj",  # Standardmäßig kein voreingestellter Dateiname
+                                                   "Save File",
+                                                   os.path.join(self.m["project_path"], "*.proj"),
+                                                   #self.m["project_path"] + "\\*.proj",  # Standardmäßig kein voreingestellter Dateiname
                                                    "proj Files (*.proj);;All Files (*)",  # Filter für Dateitypen
                                                    options=options)
         if file_name:
@@ -1985,13 +2092,7 @@ class synthesizer_v(QObject):
             element = self.gui.listWidget_playlist.item(new_index).text()
             #print(f"Element '{element}' shifted from {i} to {new_index}")
 
-    def is_ffmpeg_installed(self):
-        """Überprüft, ob ffmpeg auf dem System verfügbar ist."""
-        try:
-            subprocess.run(self.m["ffmpeg_path"] + "ffmpeg -version", stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-            return True
-        except FileNotFoundError:
-            return False
+        
 
     def show_playlength(self):
         """_update progress bar for total playlength for carrier with index [self.m['carrier_ix']
@@ -2004,6 +2105,10 @@ class synthesizer_v(QObject):
         """
         errorstatus = False
         value = None
+        # if not ffmpeg_installtools.is_ffmpeg_installed():
+        #     errorstatus = True
+        #     value = "ERRREQ1"
+        #     return(errorstatus,value)
         ix = 0
         duration = 0
         self.toggle = True
@@ -2027,10 +2132,10 @@ class synthesizer_v(QObject):
                 self.toggle = True
 
                 if file_path.find("http://")>=0 or file_path.find("https://")>=0:
-                    if not self.is_ffmpeg_installed():
-                        errorstatus = True
-                        value = "ERRREQ1"
-                        break
+                    # if not ffmpeg_installtools.is_ffmpeg_installed():
+                    #     errorstatus = True
+                    #     value = "ERRREQ1"
+                    #     break
 
                 #TODO TODO TODO: Anzeige, dass nun ein länger dauernder Prozess startet (Read from URL)
                     ctime = datetime.now()
@@ -2086,7 +2191,7 @@ class synthesizer_v(QObject):
         """
         errorstatus = False
         ffmpeg_command = [
-            self.m["ffmpeg_path"] + "ffmpeg",
+            os.path.join(self.m["ffmpeg_path"], "ffmpeg"),
             "-user_agent", self.m["user_agent"],
             "-i", url,
             "-hide_banner"  # hide unnecessary info outputs
@@ -2669,9 +2774,15 @@ class synthesizer_v(QObject):
             if  _value[0].find("logfilehandler") == 0:
                 self.logfilehandler(_value[1])
             if  _value[0].find("timertick") == 0:
-                    if self.syntesisrunning:
-                        self.blinkstate = self.blinksynth(self.blinkstate)
-                        #self.PupdateSignalHandler()
+                if not self.m["ffmpeg_autocheck"]:
+                    #print(f"timertick: value of self.m['ffmpeg_autocheck'] {self.m["ffmpeg_autocheck"]}")
+                    self.m["ffmpeg_autocheck"] = True
+                    self.checkffmpeg_install()
+
+                #print(f"timertick: value of self.m['ffmpeg_autocheck'] {self.m["ffmpeg_autocheck"]}")
+                if self.syntesisrunning:
+                    self.blinkstate = self.blinksynth(self.blinkstate)
+                    #self.PupdateSignalHandler()
 
 
     def logfilehandler(self,_value):
@@ -3157,3 +3268,23 @@ class TableDialog(QDialog):
                 #                egeg_command =  self.m["ffmpeg_path"] + "ffmpeg -user_agent " + self.m["user_agent"] + " -y -i " + output_file +  " -c:a libmp3lame -qscale:a 2 " + true_tempfile
                 #                 subprocess.run(ffmpeg_command, check=True)
                 #                 #Path(output_file).unlink()
+
+    # def is_ffmpeg_installed(self):
+    #     """check if ffmpeg is available on the system"""
+    #     try:
+    #         #check for global installation with PATH set in the OS
+    #         subprocess.run("ffmpeg -version", stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+    #         self.logger.debug(f"check for ffmpeg , installation found")
+    #         self.m["ffmpeg_path"] = ""
+    #         return True
+    #     except FileNotFoundError:
+    #         #check for local installation in ffmpeg standardpath of the COHIWIzard filesystem
+    #         self.m["ffmpeg_path"] = os.path.join(os.getcwd(), "ffmpeg-master-latest-win64-gpl", "bin")
+    #         #self.logger.debug(f"__init_ m check for ffmpeg_path: {self.mdl["ffmpeg_path"]}, file not found")
+    #         try:
+    #             subprocess.run(os.path.join(self.m["ffmpeg_path"],"ffmpeg") + " -version", stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+    #             self.logger.debug(f"check for ffmpeg_path: {self.m["ffmpeg_path"]}, file found")
+    #             return True
+    #         except FileNotFoundError:
+    #             self.logger.debug(f"check for ffmpeg_path: {self.m["ffmpeg_path"]}, file not found")
+    #             return False

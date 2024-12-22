@@ -21,7 +21,7 @@ def download_ffmpeg(url, output_path):
     print("Download abgeschlossen.")
 
 def install_ffmpeg_linux(destination):
-    """Installiert ffmpeg unter Linux."""
+    """Installiert ffmpeg unter LINUX."""
     os.makedirs(destination, exist_ok=True)
     ffmpeg_url = "https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz"
     archive_path = os.path.join(destination, "ffmpeg.tar.xz")
