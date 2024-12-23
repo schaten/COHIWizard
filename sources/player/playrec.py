@@ -770,6 +770,7 @@ class playrec_c(QObject):
         prfilehandle.close()
         self.m["fileopened"] = False #OBSOLETE ?
         self.SigRelay.emit("cm_all_",["fileopened",False]) ####TODO geht nicht
+        self.m["wavheader"]['nextfilename'] = self.m["wavheader"]['nextfilename'].rstrip()
         if self.m["stopstate"] == True:
             self.logger.info("EOF-manager: player has been stopped")
             time.sleep(0.5)
