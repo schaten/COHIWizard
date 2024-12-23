@@ -1128,6 +1128,7 @@ if __name__ == '__main__':
     tab_m = []
     tab_c = []
     tab_v = []
+    #instantiate modules
     for ix in range(len(list_mvct_directories)):
         try:
             mod_name = config["module_names"][list_mvct_directories[ix]]

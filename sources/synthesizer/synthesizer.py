@@ -54,7 +54,7 @@ class modulate_worker(QObject):
         __slots__: Dictionary with parameters
     :return : none
     """
-    __slots__ = ["carrier_frequencies", "playlists","sample_rate","block_size","cutoff_freq","modulation_depth","output_base_name","exp_num_samples","progress","logger","combined_signal_block","LO_freq","gain", "method_object","silence_duration"]
+    __slots__ = ["carrier_frequencies", "playlists","sample_rate","block_size","cutoff_freq","modulation_depth","output_base_name","exp_num_samples","progress","logger","combined_signal_block","LO_freq","gain", "method_object","silence_duration","filesize_limit"]
     SigFinished = pyqtSignal()
     SigPupdate = pyqtSignal()
     SigMessage = pyqtSignal(str)
@@ -129,7 +129,10 @@ class modulate_worker(QObject):
         self.__slots__[14] = _value
     def get_silence_duration(self):
         return(self.__slots__[14])  
-    
+    def set_filesize_limit(self,_value):
+        self.__slots__[15] = _value
+    def get_filesize_limit(self):
+        return(self.__slots__[15]) 
     
     def modulate_terminate(self):
         print("modulate terminate received")
@@ -419,7 +422,8 @@ class modulate_worker(QObject):
         self.set_progress(0)
         self.logger.debug(f"process_multiple_carriers_blockwise; carrier_frequencies:{carrier_frequencies}")
         self.stopix = False
-        max_file_size = 2 * 1024**3  # 2 GB in bytes
+        max_file_size = self.get_filesize_limit() #2 * 1024**3  # 2 GB in bytes
+        self.logger.debug(f"max filesize set to: {max_file_size}")
         self.logger.debug(f"process_multiple_carriers_blockwise: expected overall filesize: {4*exp_num_samples}")
         max_samples_per_file = max_file_size // 4  # complex 16-bit PCM = 4 bytes per sample
         perc_progress_old = 0
@@ -518,7 +522,8 @@ class modulate_worker(QObject):
                 output_file_name_wavheader = output_file_name
                 file_index += 1
                 output_file_name = f"{output_base_name}_{file_index}.wav"
-                next_starttime = self.wav_header_generator(output_file_name_wavheader,filesize,sample_rate,next_starttime,output_file_name)
+                filesize_towav = min(2 * 1024**3, filesize)
+                next_starttime = self.wav_header_generator(output_file_name_wavheader,filesize_towav,sample_rate,next_starttime,output_file_name)
                 print("wavheader written")
                 out_file = sf.SoundFile(output_file_name, 'w', samplerate=sample_rate, channels=1, subtype='PCM_16')
                 total_samples_written = 0  # Reset the sample counter for the new file
@@ -693,7 +698,7 @@ class synthesizer_c(QObject):
         total, used, free = shutil.disk_usage(_dir)
         if free < expected_filesize:
             errorstatus = True
-            value = f"not enough diskspace for this process, please free at least {expected_filesize - free} bytes"
+            value = f"not enough diskspace for this process (including temporary files), please free at least {expected_filesize - free} bytes"
         else:
             errorstatus = False
             value = ""
@@ -900,7 +905,7 @@ class synthesizer_v(QObject):
         self.SILENCE_DURATION = 4
         self.AUTOSCALE_RF = 0     # Set to 1 to select autoscale mode causing exact RF levelling to max, otherwise set to 0 for fixed RF levelling  
         self.FIXSCALE_FAKTOR_RF = 0.8 # guard factor for fixed RF levelling: assumed max. RF level: #carriers * (1+C_m) * C_FIXSCALE_FAKTOR_RF. RF overload may occur if C_FIXSCALE_FAKTOR_RF < 1 
-
+        self.NO2GBSPLITTING = False # if True suppress 2 GB splitting of outputfiles
         self.DATABLOCKSIZE = 1024*32
         self.STD_AUDIOBW = "4.5"
         self.STD_CARRIERDISTANCE = "9"
@@ -1035,7 +1040,7 @@ class synthesizer_v(QObject):
         self.gui.pushButton_CustomCarriers.clicked.connect(self.open_table_dialog)
         self.gui.radiobutton_CustomCarriers.toggled.connect(self.customcarrier_handler)  
         self.gui.pushButton_importProject.clicked.connect(self.import_m3u)    
-        
+        self. gui.synthesizer_radioBut_no2GBsplitting.toggled.connect(self.setno2GBsplitting)
         self.gui.verticalSlider_Gain.valueChanged.connect(self.setgain)
         self.previous_value = self.gui.spinBox_numcarriers.value()
         self.RecBW_update()
@@ -1096,12 +1101,20 @@ class synthesizer_v(QObject):
         self.previous_value = self.gui.spinBox_numcarriers.value()        
         self.m["numcarriers"] = self.gui.spinBox_numcarriers.value()
         self.gui.synthesizer_pushbutton_create.setStyleSheet("background-color: lightgray; color: black;")
-
+        self.gui.synthesizer_radioBut_no2GBsplitting.setEnabled(True)
+        self.gui.synthesizer_radioBut_no2GBsplitting.setChecked(False)
         try:
             self.gui.synthesizer_pushbutton_create.clicked.connect(self.create_band_thread)
         except:
             pass
 
+    def setno2GBsplitting(self):
+        if self.gui.synthesizer_radioBut_no2GBsplitting.isChecked():
+            self.gui.synthesizer_radioBut_no2GBsplitting.setEnabled(True)
+            self.NO2GBSPLITTING = True
+        else:
+            self.gui.synthesizer_radioBut_no2GBsplitting.setEnabled(True)
+            self.NO2GBSPLITTING = False
 
     def customcarrier_handler(self):
         
@@ -1311,7 +1324,7 @@ class synthesizer_v(QObject):
          #re-load the same project (patch bug with direct create)
         total_reclength = self.get_reclength()
         exp_num_samples = total_reclength * self.m["sample_rate"]*1000 
-        expected_filesize = exp_num_samples * 4
+        expected_filesize = (exp_num_samples * 4)*1.5 #1.5 is safety margin, may still be insufficient in extreme cases
         errorstatus, value = self.synthesizer_c.checkdiskspace(expected_filesize, self.m["recording_path"])
         if errorstatus:
             self.logger.debug(errorstatus)
@@ -1409,6 +1422,10 @@ class synthesizer_v(QObject):
         self.modulate_worker.set_LO_freq(LO_frequency)
         self.modulate_worker.set_method_object(self.synthesizer_c)
         self.modulate_worker.set_silence_duration(self.gui.spinBox_pauseseconds.value())
+        if self.NO2GBSPLITTING:
+            self.modulate_worker.set_filesize_limit(2**10 * 1024**3)  # 1024 GB in bytes
+        else:
+            self.modulate_worker.set_filesize_limit(2 * 1024**3)  # 2 GB in bytes
         #print(f"createbandthread: method_object {self.synthesizer_c}")
         self.setgain()
         self.modulate_thread.started.connect(self.modulate_worker.start_modulator)
@@ -1527,10 +1544,13 @@ class synthesizer_v(QObject):
         #preliminary handling of the lack of ffmpeg
 
         #TODO: future versions: autoinstall with routines in Autoinstall_ffmpeg_import os.py
-        if value.find("NOCLEAR") == 0:
+        try: 
+            value.find("NOCLEAR") == 0
             self.activate_control_elements(False)
             auxi.standard_errorbox(str(value[7:]))
-        else:
+        except:
+            if str(value) == "None":
+                value = "unknown error, maybe the internet connection was required and could not be established. Please check."
             auxi.standard_errorbox(str(value))
             self.clear_project()
 
@@ -1636,7 +1656,8 @@ class synthesizer_v(QObject):
         self.gui.timeEdit_reclength.setEnabled(value)
         #self.gui.synthesizer_radioBut_Spectrum.setEnabled(value)
         self.gui.radiobutton_AGC.setEnabled(value)
-
+        self.gui.synthesizer_radioBut_no2GBsplitting.setEnabled(value)
+        
 
     def PupdateSignalHandler(self):
         """
@@ -2675,7 +2696,10 @@ class synthesizer_v(QObject):
         to the central list of playlists self.readFileList[self.m["carrier_ix"]]. Then playlist_purge()
         is called
         """
-        self.gui.listWidget_playlist.model().rowsInserted.disconnect(self.playlist_update_delayed)
+        try:
+            self.gui.listWidget_playlist.model().rowsInserted.disconnect(self.playlist_update_delayed)
+        except:
+            pass
         try:
             self.oldFileList[self.m["carrier_ix"]] = copy.deepcopy(self.readFileList[self.m["carrier_ix"]])
             #TODO TODO TODO: Bei Indexerhöhung muss ein dummy self.oldFileList[self.m["carrier_ix"]] mit dem erhöhten Index angelegt werden, sonst stürzt später due diff-Methode in purge ab

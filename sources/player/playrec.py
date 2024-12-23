@@ -588,7 +588,9 @@ class playrec_c(QObject):
             auxi.standard_errorbox("dataformat not supported, only 16, 24 and 32 bits per sample are possible")
             return False
         self.m["timescaler"] = self.m["wavheader"]['nSamplesPerSec']*self.m["wavheader"]['nBlockAlign']
-        self.m["playlength"] = self.m["wavheader"]['filesize']/self.m["wavheader"]['nAvgBytesPerSec']
+        true_filesize = os.path.getsize(self.m["f1"])
+        self.m["playlength"] = true_filesize/self.m["wavheader"]['nAvgBytesPerSec']
+        #self.m["playlength"] = self.m["wavheader"]['filesize']/self.m["wavheader"]['nAvgBytesPerSec'] #TODO test OLD: before 22-12-2024
         self.playthread = QThread()
         self.playrec_tworker = playrec_worker(self.stemlabcontrol)
         self.playrec_tworker.moveToThread(self.playthread)
@@ -764,7 +766,7 @@ class playrec_c(QObject):
         prfilehandle = self.playrec_tworker.get_4()
         self.playthread.quit()
         self.playthread.wait()
-        time.sleep(0.1)
+        time.sleep(0.05)
         prfilehandle.close()
         self.m["fileopened"] = False #OBSOLETE ?
         self.SigRelay.emit("cm_all_",["fileopened",False]) ####TODO geht nicht
@@ -772,24 +774,27 @@ class playrec_c(QObject):
             self.logger.info("EOF-manager: player has been stopped")
             time.sleep(0.5)
             return
-        if (os.path.isfile(self.m["my_dirname"] + '/' + self.m["wavheader"]['nextfilename']) == True and self.m["wavheader"]['nextfilename'] != "" ):
+        #if (os.path.isfile(self.m["my_dirname"] + '/' + self.m["wavheader"]['nextfilename']) == True and self.m["wavheader"]['nextfilename'] != "" ): #TODO delete after tests 23-12-2024: 
+        if (os.path.isfile(os.path.join(self.m["my_dirname"], self.m["wavheader"]['nextfilename'])) and self.m["wavheader"]['nextfilename'] != "" ):
+
             # play next file in nextfile-list
-            self.m["f1"] = self.m["my_dirname"] + '/' + self.m["wavheader"]['nextfilename']
+            #self.m["f1"] = self.m["my_dirname"] + '/' + self.m["wavheader"]['nextfilename'] TODO: delete after tests 23-12-2024
+            self.m["f1"] = os.path.join(self.m["my_dirname"], self.m["wavheader"]['nextfilename'])
             self.m["my_filename"] = Path(self.m["f1"]).stem
             ####TODO geht nicht
-            self.SigRelay.emit("cm_all_",["f1",self.m["my_dirname"] + '/' + self.m["wavheader"]['nextfilename']])
-            self.SigRelay.emit("cm_all_",["my_filename",self.m["my_filename"]])####TODO geht nicht
+            #self.SigRelay.emit("cm_all_",["f1",self.m["my_dirname"] + '/' + self.m["wavheader"]['nextfilename']])
+            #self.SigRelay.emit("cm_all_",["my_filename",self.m["my_filename"]])####TODO geht nicht
             self.m["wavheader"] = WAVheader_tools.get_sdruno_header(self,self.m["f1"])
-            time.sleep(0.1)
+            time.sleep(0.02)
             self.play_tstarter()
-            time.sleep(0.1)
+            time.sleep(0.02)
             self.m["fileopened"] = True
-            self.SigRelay.emit("cm_all_",["fileopened",True])####TODO geht nicht
+            #self.SigRelay.emit("cm_all_",["fileopened",True])####TODO geht nicht
             #TODO: self.my_filename + self.ext müssen updated werden, übernehmen aus open file
-            self.SigRelay.emit("cexex_all_",["updateGUIelements",0])####TODO geht nicht
+            #self.SigRelay.emit("cexex_all_",["updateGUIelements",0])####TODO geht nicht
             self.SigRelay.emit("cexex_playrec",["updateotherGUIelements",0])
             self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
-            self.logger.info("fetch nextfile")
+            #self.logger.info("fetch nextfile")
             print(f"playrec namechange after nextfile test, filename: {self.m['my_filename']}")
         elif self.m["Buttloop_pressed"]:
             time.sleep(0.1)
@@ -824,12 +829,9 @@ class playrec_c(QObject):
                     self.SigRelay.emit("cm_all_",["wavheader",self.m["wavheader"]])
                     self.SigRelay.emit("cm_all_",["my_filename",self.m["my_filename"]])
                     ####TODO: maybe the following is obsolete:
-                    #statefileopened = self.m["fileopened"]
                     self.SigRelay.emit("cm_all_",["fileopened",True])
                     self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
-                    #self.SigRelay.emit("cm_all_",["fileopened",statefileopened])
-                    ##################################################################
-                    #self.SigRelay.emit("cexex_playrec",["updateotherGUIelements",0])
+
 
                     item_valid = True
                     if not self.m["wavheader"]:
@@ -859,11 +861,8 @@ class playrec_c(QObject):
                 #TODO: write new header to wav edior
                 time.sleep(0.1)
                 
-                #TODO TODO TODO: remove the following after change to all new modules and Relay
-                #self.my_dirname = os.path.dirname(system_state["f1"])
-                #self.my_filename, self.ext = os.path.splitext(os.path.basename(system_state["f1"]))
-                #self.gui.label_Filename_Annotate.setText(self.my_filename + self.ext)
-                #self.ui.label_Filename_WAVHeader.setText(self.my_filename + self.ext)
+                #TODO: does this work ?
+                #TODO: rplace by os.path.join:
                 self.m["my_filename"], self.m["ext"] = os.path.splitext(os.path.basename(self.m["f1"]))
                 self.SigRelay.emit("cm_all_",["my_filename",self.m["my_filename"]])
                 self.SigRelay.emit("cm_all_",["ext",self.m["ext"]])
@@ -1081,6 +1080,8 @@ class playrec_v(QObject):
         self.gui.pushButton_adv1byte.setEnabled(False)  #TODO: rename: manual tracking
         self.gui.verticalSlider_Gain.valueChanged.connect(self.cb_setgain)
         self.gui.ScrollBar_playtime.sliderReleased.connect(self.jump_to_position)
+        #self.gui.ScrollBar_playtime.mousePressEvent = self.gui.scrollbar_mousePressEvent
+
         self.gui.lineEdit_LO_bias.setFont(QFont('arial',12))
         self.gui.lineEdit_LO_bias.setEnabled(False)
         self.gui.lineEdit_LO_bias.setText("0000")
@@ -1415,6 +1416,8 @@ class playrec_v(QObject):
         """
         self.m["playprogress"] = self.gui.ScrollBar_playtime.value()
         self.playrec_c.jump_to_position_c()
+        #self.m["QTMAINWINDOWparent"]
+        #self.gui.ScrollBar_playtime.mousePressEvent = self.m["QTMAINWINDOWparent"].scrollbar_mousePressEvent
 
     def toggleUTC(self):
         if self.gui.checkBox_UTC.isChecked():
@@ -1961,7 +1964,21 @@ class playrec_v(QObject):
         self.m["playprogress"] = 0
         time.sleep(0.01)
         timestr = str(self.m["wavheader"]['starttime_dt'] + ndatetime.timedelta(seconds=self.m["curtime"]))
-        playlength = self.m["wavheader"]['filesize']/self.m["wavheader"]['nAvgBytesPerSec']
+        #TODO TODO TODO: test after scaling with true filesize, not self.m["wavheader"]['filesize'] 12 2024
+        #filename = os.path.join(self.m["my_dirname"],self.m["my_filename"] + self.m["ext"])
+        #print(f"updatecurtime filename: {filename}")
+        true_filesize = os.path.getsize(self.m["f1"])
+        playlength = true_filesize/self.m["wavheader"]['nAvgBytesPerSec'] #NEW
+        #playlength = self.m["wavheader"]['filesize']/self.m["wavheader"]['nAvgBytesPerSec'] #OLD before 22-12-2014
+
+        # self.my_dirname = os.path.dirname(self.m["f1"])
+        # self.m["ext"] = Path(self.m["f1"]).suffix
+        # self.m["my_filename"] = Path(self.m["f1"]).stem
+        # self.m["temp_directory"] = self.my_dirname + "/temp"
+        # self.SigRelay.emit("cm_all_",["my_dirname", self.my_dirname])
+        # self.SigRelay.emit("cm_all_",["ext",self.m["ext"]])
+        # self.SigRelay.emit("cm_all_",["my_filename",self.m["my_filename"]])
+        # self.SigRelay.emit("cm_all_",["temp_directory",self.my_dirname + "/temp"])
 
         if increment == 0:
             timestr = str(ndatetime.timedelta(seconds=0))

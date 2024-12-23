@@ -63,10 +63,6 @@ class ffmpeg_installtools():
         print("Download accomplished.")
 
 
-
-
-
-
     def install_ffmpeg_linux(self, destination):
         """Installs ffmpeg under Linux."""
         errorstatus = False
