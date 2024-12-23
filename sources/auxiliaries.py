@@ -42,7 +42,7 @@ class ffmpeg_installtools():
         """check if ffmpeg is available on the system"""
         try:
             #check for global installation with PATH set in the OS
-            subprocess.run("ffmpeg -version", stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+            subprocess.run(["ffmpeg", "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
             ffmpeg_dir = ""
             return True
         except FileNotFoundError:
@@ -51,7 +51,7 @@ class ffmpeg_installtools():
             
             #self.logger.debug(f"__init_ m check for ffmpeg_path: {self.mdl["ffmpeg_path"]}, file not found")
             try:
-                subprocess.run(os.path.join(ffmpeg_path, "ffmpeg") + " -version", stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+                subprocess.run([os.path.join(ffmpeg_path, "ffmpeg"), "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
                 return True
             except FileNotFoundError:
                 return False

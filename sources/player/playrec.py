@@ -785,6 +785,7 @@ class playrec_c(QObject):
             #self.SigRelay.emit("cm_all_",["f1",self.m["my_dirname"] + '/' + self.m["wavheader"]['nextfilename']])
             #self.SigRelay.emit("cm_all_",["my_filename",self.m["my_filename"]])####TODO geht nicht
             self.m["wavheader"] = WAVheader_tools.get_sdruno_header(self,self.m["f1"])
+            self.m["wavheader"]['nextfilename'] = self.m["wavheader"]['nextfilename'].rstrip()
             time.sleep(0.02)
             self.play_tstarter()
             time.sleep(0.02)
@@ -826,6 +827,7 @@ class playrec_c(QObject):
                     self.logger.info("EOF manager file in loop: %s", self.m["f1"])
                     self.logger.debug("EOF manager file in loop: %s , index: %i", item, self.m["playlist_ix"])
                     self.m["wavheader"] = WAVheader_tools.get_sdruno_header(self,self.m["f1"])
+                    self.m["wavheader"]['nextfilename'] = self.m["wavheader"]['nextfilename'].rstrip()
                     self.SigRelay.emit("cm_all_",["wavheader",self.m["wavheader"]])
                     self.SigRelay.emit("cm_all_",["my_filename",self.m["my_filename"]])
                     ####TODO: maybe the following is obsolete:

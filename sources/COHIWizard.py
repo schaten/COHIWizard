@@ -281,14 +281,15 @@ class core_v(QObject):
                 self.m["metadata"]["recording_path"] = self.m["rootpath"]
         except:
             print("cannot get config_wizard.yaml metadata, write a new initial config file")
-            self.m["metadata"]["last_path"] = os.getcwd()
+            self.m["metadata"] = {"last_path": self.standardpath}
             self.m["metadata"]["rootpath"] = os.getcwd()
             self.m["metadata"]["STM_IP_address"] = "000.000.000.000"
+            self.m["metadata"]["ffmpeg_path"] = os.path.join(self.m["rootpath"],"ffmpeg-7.1-essentials_build")
             if not os.path.exists(default_recordingpath):
                 # Verzeichnis erstellen
                 os.makedirs(default_recordingpath)
-            default_recordingpath = self.m["rootpath"] + "\\out"
-            self.m["metadata"]["recording_path"] = self.m["metadata"]["rootpath"] + "\\out"
+            default_recordingpath = os.path.join(self.m["rootpath"],"out")
+            self.m["metadata"]["recording_path"] = os.path.join(self.m["metadata"]["rootpath"], "out")
 
             auxi.standard_infobox("configuration file does not yet exist, a basic file will be generated. Please configure the STEMLAB IP address before using the Player")
 

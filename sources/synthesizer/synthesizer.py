@@ -619,15 +619,15 @@ class synthesizer_m(QObject):
         self.mdl["LO"] = 0
         self.mdl["SR_currindex"] = 0
         self.mdl["modfactor"] = 0.8
-        self.mdl["ffmpeg_autocheck"] = False
-        try:
-            subprocess.run("ffmpeg -version", stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-            #self.logger.debug(f"__init_ m check for ffmpeg , installation found")
-            self.mdl["ffmpeg_path"] = ""
-        except FileNotFoundError:
-            pass
-            #self.mdl["ffmpeg_path"] = os.path.join(os.getcwd(), "ffmpeg-master-latest-win64-gpl", "bin")
-            #self.logger.debug(f"__init_ m check for ffmpeg_path: {self.mdl["ffmpeg_path"]}, file not found")
+        self.mdl["ffmpeg_autocheck"] = True
+        # try:
+        #     subprocess.run("ffmpeg -version", stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        #     #self.logger.debug(f"__init_ m check for ffmpeg , installation found")
+        #     self.mdl["ffmpeg_path"] = ""
+        # except FileNotFoundError:
+        #     pass
+        #     #self.mdl["ffmpeg_path"] = os.path.join(os.getcwd(), "ffmpeg-master-latest-win64-gpl", "bin")
+        #     #self.logger.debug(f"__init_ m check for ffmpeg_path: {self.mdl["ffmpeg_path"]}, file not found")
         self.mdl["user_agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
         self.mdl["proj_loaded"] = False
         # Create a custom logger
@@ -987,6 +987,7 @@ class synthesizer_v(QObject):
         #self.m["carrierarray"] = np.arange(0, 1, 1)
         self.m["carrierarray"] = np.arange(783, 801, 9)
         self.remove_temp_audiofiles()
+        self.m["ffmpeg_autocheck"] = False
 
     def init_synthesizer_ui(self):
         self.m["SR_currindex"] = 5
@@ -1516,9 +1517,10 @@ class synthesizer_v(QObject):
             stream.close()
         else:
             ffmpeg_link = "https://www.ffmpeg.org/download.html"
+            #ffmpeg_link = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
             #TODO TODO TODO: place this URL in a more general place like config_wizard.yaml for easy exchange
             pathinfo = os.path.join(os.getcwd(), "ffmpeg-master-latest-win64-gpl")
-            infotext = "<font size = 8> Synthesizer requires ffmpeg to be installed on your computer; <br> Please install ffmpeg manually in folder  <br> ~rootpath/ffmpeg-master-latest-win64-gpl/ <br> Download from: <a href='%s'>ffmpeg </a> <br> <br> Synthesizer will be inactivated until ffmpeg is available. </font>" % ffmpeg_link
+            infotext = "<font size = 8> Synthesizer requires ffmpeg to be installed on your computer; <br> Please install ffmpeg manually in folder  <br> ~rootpath/ffmpeg-7.1-essentials_build/ <br> Download from: <a href='%s'>ffmpeg </a> <br> <br> Synthesizer will be inactivated until ffmpeg is available. </font>" % ffmpeg_link
             self.logger.error(infotext)
             self.logger.error(pathinfo)
             auxi.standard_errorbox(infotext)
