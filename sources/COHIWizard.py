@@ -234,7 +234,7 @@ class core_v(QObject):
         self.standardLO = 1100 #TODO:future system state
         self.annotationdir_prefix = 'ANN_' #TODO:future system state
         #self.m["recording_path"] =""
-        default_recordingpath = self.m["rootpath"] + "\\out"
+        default_recordingpath = os.path.join(self.m["rootpath"], "out")
         if not os.path.exists(default_recordingpath):
             # Verzeichnis erstellen
             os.makedirs(default_recordingpath)

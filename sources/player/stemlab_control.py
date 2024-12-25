@@ -189,6 +189,7 @@ class StemlabControl(QObject):
         self.sshsendcommandseq(shcomm)
         time.sleep(0.2)     # wait state for letting the server react before it is being accessed; issue after tetst unter LINUX Debian 12
         self.SigMessage.emit("transmit ssh command for ssh start")
+        return True
 
     def sdrserverstop(self):
         '''
