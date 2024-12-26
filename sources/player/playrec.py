@@ -1026,33 +1026,34 @@ class playrec_c(QObject):
         ###TODO TODO TODO: obsolete, nextfile is handled by tworker
         if False:
         #if (os.path.isfile(os.path.join(self.m["my_dirname"], self.m["wavheader"]['nextfilename'])) and self.m["wavheader"]['nextfilename'] != "" ):
-            if not self.TESTFILELISTCONTINUOUS:
-                ###TODO TODO TODO: obsolete, nextfile is handled by tworker
-                # play next file in nextfile-list
-                #self.m["f1"] = self.m["my_dirname"] + '/' + self.m["wavheader"]['nextfilename'] TODO: delete after tests 23-12-2024
-                self.m["f1"] = os.path.join(self.m["my_dirname"], self.m["wavheader"]['nextfilename'])
-                self.m["my_filename"] = Path(self.m["f1"]).stem
-                ####TODO geht nicht
-                #self.SigRelay.emit("cm_all_",["f1",self.m["my_dirname"] + '/' + self.m["wavheader"]['nextfilename']])
-                #self.SigRelay.emit("cm_all_",["my_filename",self.m["my_filename"]])####TODO geht nicht
-                self.m["wavheader"] = WAVheader_tools.get_sdruno_header(self,self.m["f1"])
-                self.m["wavheader"]['nextfilename'] = self.m["wavheader"]['nextfilename'].rstrip()
-                time.sleep(0.02)
-                errorstate,value = self.play_tstarter()
-                if errorstate:
-                    self.errorhandler(value)
-                time.sleep(0.02)
-                self.m["fileopened"] = True
-                #self.SigRelay.emit("cm_all_",["fileopened",True])####TODO geht nicht
-                #TODO: self.my_filename + self.ext müssen updated werden, übernehmen aus open file
-                #self.SigRelay.emit("cexex_all_",["updateGUIelements",0])####TODO geht nicht
-                self.SigRelay.emit("cexex_playrec",["updateotherGUIelements",0])
-                self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
-                #self.logger.info("fetch nextfile")
-                print(f"playrec namechange after nextfile test, filename: {self.m['my_filename']}")
-            else:
-                print("automatic nextfile treatment, no nextfilehandling necessary")
+            # if not self.TESTFILELISTCONTINUOUS:
+            #     ###TODO TODO TODO: obsolete, nextfile is handled by tworker
+            #     # play next file in nextfile-list
+            #     #self.m["f1"] = self.m["my_dirname"] + '/' + self.m["wavheader"]['nextfilename'] TODO: delete after tests 23-12-2024
+            #     self.m["f1"] = os.path.join(self.m["my_dirname"], self.m["wavheader"]['nextfilename'])
+            #     self.m["my_filename"] = Path(self.m["f1"]).stem
+            #     ####TODO geht nicht
+            #     #self.SigRelay.emit("cm_all_",["f1",self.m["my_dirname"] + '/' + self.m["wavheader"]['nextfilename']])
+            #     #self.SigRelay.emit("cm_all_",["my_filename",self.m["my_filename"]])####TODO geht nicht
+            #     self.m["wavheader"] = WAVheader_tools.get_sdruno_header(self,self.m["f1"])
+            #     self.m["wavheader"]['nextfilename'] = self.m["wavheader"]['nextfilename'].rstrip()
+            #     time.sleep(0.02)
+            #     errorstate,value = self.play_tstarter()
+            #     if errorstate:
+            #         self.errorhandler(value)
+            #     time.sleep(0.02)
+            #     self.m["fileopened"] = True
+            #     #self.SigRelay.emit("cm_all_",["fileopened",True])####TODO geht nicht
+            #     #TODO: self.my_filename + self.ext müssen updated werden, übernehmen aus open file
+            #     #self.SigRelay.emit("cexex_all_",["updateGUIelements",0])####TODO geht nicht
+            #     self.SigRelay.emit("cexex_playrec",["updateotherGUIelements",0])
+            #     self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
+            #     #self.logger.info("fetch nextfile")
+            #     print(f"playrec namechange after nextfile test, filename: {self.m['my_filename']}")
+            # else:
+            #     print("automatic nextfile treatment, no nextfilehandling necessary")
                 pass
+        
         elif self.m["Buttloop_pressed"]:
             time.sleep(0.1)
             #("restart same file in endless loop")
