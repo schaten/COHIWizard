@@ -43,8 +43,9 @@ class ffmpeg_installtools():
         try:
             #check for global installation with PATH set in the OS
             subprocess.run(["ffmpeg", "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-            ffmpeg_dir = ""
-            return True
+            value = ""
+            errorstate = False
+            return(errorstate, value)
         except FileNotFoundError:
             #check for local installation in ffmpeg standardpath of the COHIWIzard filesystem
             #ffmpeg_dir = os.path.join(os.getcwd(), "ffmpeg-master-latest-win64-gpl", "bin")
@@ -52,9 +53,13 @@ class ffmpeg_installtools():
             #self.logger.debug(f"__init_ m check for ffmpeg_path: {self.mdl["ffmpeg_path"]}, file not found")
             try:
                 subprocess.run([os.path.join(ffmpeg_path, "ffmpeg"), "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-                return True
+                errorstate = False
+                value = ffmpeg_path
+                return(errorstate, value)
             except FileNotFoundError:
-                return False
+                errorstate = True
+                value = "Cannot find ffmpeg path in the system. Please install ffmpeg."
+                return(errorstate,value)
 
     def download_ffmpeg(url, output_path):
         """downloads ffmpeg from specified URL and copies to output_path"""

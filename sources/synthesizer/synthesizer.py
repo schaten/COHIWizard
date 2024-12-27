@@ -1497,7 +1497,9 @@ class synthesizer_v(QObject):
     def checkffmpeg_install(self):
         errorstatus = False
         value = None
-        if ffmpeg_installtools.is_ffmpeg_installed(self.m["ffmpeg_path"]):
+        errorstatus, value = ffmpeg_installtools.is_ffmpeg_installed(self.m["ffmpeg_path"]) 
+        if not errorstatus:
+            self.m["ffmpeg_path"] = value
             errorstatus = False
             value = ""
             return(errorstatus,value)

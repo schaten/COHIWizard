@@ -27,9 +27,6 @@ from auxiliaries import WAVheader_tools
 from datetime import datetime
 import datetime as ndatetime
 from player import stemlab_control
-#import matplotlib.pyplot as plt
-#from stemlab_control import StemlabControl
-
 
 class playrec_worker(QObject):
     """ worker class for data streaming thread from PC to STEMLAB
@@ -111,150 +108,6 @@ class playrec_worker(QObject):
     def set_fileclose(self,_value):
         self.__slots__[9] = _value
 
-    def play_loop16(self):
-        """
-        worker loop for sending data to STEMLAB server
-        data format i16; 2xi16 complex; FormatTag 1
-        sends signals:     
-            SigFinished = pyqtSignal()
-            SigIncrementCurTime = pyqtSignal()
-            SigBufferOverflow = pyqtSignal()
-
-        :param : no regular parameters; as this is a thread worker communication occurs via
-        class slots __slots__[i], i = 0...8
-        __slots__[0]: filename = complete file path pathname/filename Type: str TODO TODO TODO: --> NEW: list
-        __slots__[1]: timescaler = bytes per second  TODO: rescaling to samples per second would probably be more logical, Type int
-        __slots__[2]: TEST = flag for test mode Type: bool
-        __slots__[3]: pause : if True then do not send data; Boolean
-        __slots__[4]: filehandle: returns current filehandle to main thread Type: filehandle
-        __slots__[5]: data segment to be returned every second
-        __slots__[6]: gain, scaling factor for playback
-        __slots__[7]: formatlist: [formattag blockalign bitpsample]
-        __slots__[8]: datablocksize
-        __slots__[9]: fileclose: set to True after closing a file, info to main Thread
-        """
-        #print("reached playloopthread")
-        filename = self.get_filename()
-        timescaler = self.get_timescaler()
-        TEST = self.get_TEST()
-        gain = self.get_gain()
-        #TODO: self.fmtscl = self.__slots__[7] #scaler for data format        
-        self.stopix = False
-        fileHandle = open(filename, 'rb')
-        self.set_fileclose(False)
-        #print(f"filehandle for set_4: {fileHandle} of file {filename} ")
-        self.set_fileHandle(fileHandle)
-        format = self.get_formattag()
-        self.set_datablocksize(self.DATABLOCKSIZE)
-        #print(f"Filehandle :{fileHandle}")
-
-        fileHandle.seek(216, 1)  #TODO: other formats than wav SDRUno not supported !
-        #TODO: if format[0] == 1 and format[2] == 16 
-        #data = np.empty(self.DATABLOCKSIZE, dtype=np.int16)
-        #TODO: if format[0] == 1 and format[2] == 32
-        if format[2] == 16:
-            data = np.empty(self.DATABLOCKSIZE, dtype=np.int16)
-        else:
-            data = np.empty(self.DATABLOCKSIZE, dtype=np.float32) #TODO: check if true for 32-bit wavs wie Gianni's
-
-        #print(f"playloop: BitspSample: {format[2]}; wFormatTag: {format[0]}; Align: {format[1]}")
-        if format[0] == 1:
-            normfactor = int(2**int(format[2]-1))-1
-        else:
-            normfactor = 1
-        #print(f"normfactor = {normfactor}")
-        if format[2] == 16 or format[2] == 32:
-            size = fileHandle.readinto(data)
-        elif format[2] == 24:
-            data = self.read24(format,data,fileHandle)
-            size = len(data)
-
-        self.set_data(data)
-        junkspersecond = timescaler / self.JUNKSIZE
-        count = 0
-        # print(f"Junkspersec:{junkspersecond}")
-        while size > 0 and not self.stopix:
-            if not TEST:
-                if not self.get_pause():
-                    try:
-                        self.stemlabcontrol.data_sock.send(
-                                                gain*data[0:size].astype(np.float32)
-                                                /normfactor)  # send next DATABLOCKSIZE samples
-                    except BlockingIOError:
-                        print("Blocking data socket error in playloop worker")
-                        time.sleep(0.1)
-                        self.SigError.emit("Blocking data socket error in playloop worker")
-                        self.SigFinished.emit()
-                        time.sleep(0.1)
-                        return
-                    except ConnectionResetError:
-                        print("Diagnostic Message: Connection data socket error in playloop worker")
-                        time.sleep(0.1)
-                        self.SigError.emit("Diagnostic Message: Connection data socket error in playloop worker")
-                        self.SigFinished.emit()
-                        time.sleep(0.1)
-                        return
-                    except Exception as e:
-                        print("Class e type error  data socket error in playloop worker")
-                        print(e)
-                        time.sleep(0.1)
-                        self.SigError.emit(f"Diagnostic Message: Error in playloop worker: {str(e)}")
-                        self.SigFinished.emit()
-                        time.sleep(0.1)
-                        return
-                    if format[2] == 16 or format[2] == 32:
-                        size = fileHandle.readinto(data)
-                    elif format[2] == 24:
-                        data = self.read24(format,data,fileHandle)
-                        size = len(data)
-
-                    #  read next 2048 samples
-                    count += 1
-                    if count > junkspersecond:
-                        self.SigIncrementCurTime.emit()
-                        count = 0
-                        #self.mutex.lock()
-                        gain = self.get_gain()
-                        #print(f"diagnostic: gain in worker: {gain}")
-                        self.set_data(data)
-                        #self.mutex.unlock()
-                else:
-                    #print("Pause, do not do anything")
-                    time.sleep(0.1)
-                    if self.stopix is True:
-                        break
-            else:
-                if not self.get_pause():
-                    #print("test reached")
-                    if format[2] == 16 or format[2] == 32:
-                        size = fileHandle.readinto(data)
-                    elif format[2] == 24:
-                        data = self.read24(format,data,fileHandle)
-                        size = len(data)
-                    #print(f"size read: {size}")
-                    #print(data[1:10])
-                    #size = fileHandle.readinto(data)
-                    time.sleep(0.0001)
-                    #  read next 2048 bytes
-                    count += 1
-                    if count > junkspersecond and size > 0:
-                        #print('timeincrement reached')
-                        self.SigIncrementCurTime.emit()
-                        gain = self.get_gain()
-                        #print(f"diagnostic: gain in worker: {gain}")
-                        #print(f"maximum: {np.max(data)}")
-                        #self.set_data(gain*data)
-                        self.set_data(data)
-                        count = 0
-                else:
-                    time.sleep(1)
-                    if self.stopix is True:
-                        break
-        #print('worker  thread finished')
-        self.set_fileclose(True)
-        self.SigFinished.emit()
-        #print("SigFinished from playloop emitted")
-
     def play_loop_filelist(self):
         """
         worker loop for sending data to STEMLAB server
@@ -281,7 +134,7 @@ class playrec_worker(QObject):
         timescaler = self.get_timescaler()
         TEST = self.get_TEST()
         gain = self.get_gain()
-        #TODO: self.fmtscl = self.__slots__[7] #scaler for data format        
+        #TODO: self.fmtscl = self.__slots__[7] #scaler for data format      ? not used so far  
         self.stopix = False
         self.set_fileclose(False)
         for ix,filename in enumerate(filenames):
@@ -399,9 +252,6 @@ class playrec_worker(QObject):
     def stop_loop(self):
         self.stopix = True
 
-    # def resetCounter(self):  #TODO: not used anywhere ?
-    #     self.count = 0
-
     def read24(self,format,data,filehandle):
        for lauf in range(0,self.DATABLOCKSIZE):
         d = filehandle.read(3)
@@ -421,7 +271,7 @@ class playrec_worker(QObject):
         worker loop for receiving data from STEMLAB server
         data is written to file
         loop runs until EOF or interruption by stopping
-        loop can be paused ??????how????????
+        loop cannot be paused
         data format i16; 2xi16 complex; FormatTag 1
         sends signals:     
             SigFinished = pyqtSignal()
@@ -430,19 +280,18 @@ class playrec_worker(QObject):
 
         :param : no regular parameters; as this is a thread worker communication occurs via
         class slots __slots__[i], i = 0...3
-        __slots__[0]: filename = complete file path pathname/filename Type: str
+        __slots__[0]: filename = complete file path pathname/filename Type: list
         __slots__[1]: timescaler = bytes per second  TODO: rescaling to samples per second would probably be more logical, Type int
         __slots__[2]: TEST = flag for test mode Type: bool
-        __slots__[3]: modality; currently not used TODO: remove ?
-        __slots__[4]: filehandle
+        __slots__[3]: pause : if True then do not send data; Boolean
+        __slots__[4]: filehandle: returns current filehandle to main thread methods on request 
         __slots__[5]: data segment to be returned every second
         __slots__[6]: gain, scaling factor for playback
         __slots__[7]: formatlist: [formattag blockalign bitpsample]
+        __slots__[8]: datablocksize
 
         :type : none
-        
-        :raises [ErrorType]: none
-        
+
         :return: none
         :rtype: none
         """
@@ -450,7 +299,7 @@ class playrec_worker(QObject):
         self.stopix = False
         filename = self.get_filename()
         self.timescaler = self.get_timescaler()
-        RECSEC = self.timescaler*2 ###TODO TODO TODO check if this is still appropriate; has to do with Bytes per sample (nBytesAlign)
+        RECSEC = self.timescaler*2 #TODO only true for complex 32 format (2x i16); in case of format change this has to be adapted acc to Bytes per sample (nBytesAlign)
         self.TEST = self.get_TEST()
         #TODO: self.fmtscl = self.get_formattag() #scaler for data format        
         fileHandle = open(filename, 'ab') #TODO check if append mode is appropriate
@@ -516,7 +365,6 @@ class playrec_m(QObject):
     __slots__ = ["None"]
     SigModelXXX = pyqtSignal()
 
-    #TODO: replace all gui by respective state references if appropriate
     def __init__(self):
         super().__init__()
         # Constants
@@ -566,11 +414,9 @@ class playrec_c(QObject):
     SigEOFStart = pyqtSignal()
     SigActivateOtherTabs = pyqtSignal(str,str,object)
 
-    def __init__(self, playrec_m): #TODO: remove gui
+    def __init__(self, playrec_m): 
         super().__init__()
 
-    # def __init__(self, *args, **kwargs): #TEST 09-01-2024
-    #     super().__init__(*args, **kwargs)
         self.m = playrec_m.mdl
         self.stemlabcontrol = stemlab_control.StemlabControl()
         self.m["playlist_ix"] = 0
@@ -580,32 +426,27 @@ class playrec_c(QObject):
         
         #self.SigRelay.connect()
 
-    def checkSTEMLABrates(self):        # TODO: this is ratrer a controller method than a GUI method. Transfer to other module
+    def checkSTEMLABrates(self):        # TODO: this is rather a controller method than a GUI method. Transfer to other module
         """
         CONTROLLER
         _checks if the items ifreq, irate and icorr in system_state have the proper values acc. to RFCorder filename convention
         checks if system_state["irate"] has a value out of the values defined for the STEMLAB in system_state["rates"] 
+        standard errorhandling via errorstate (True, False) and value (errormessage or '')
         :param: none
         :type: none
-        ...
-        :raises TODO [popup error message]: corresponding to different format errors
-        ...
-        :return: True/False acc to success of the check
-        :rtype: bool
+
+        :return: errorstate, value
+        :rtype: bool, str
         """
-        #TODO TODO TODO TODO: good errerhandling with errorstate, value, errorhandler 
-        #system_state = sys_state.get_status()
         errorstate = False
         value = ""
         self.m["errorf"] = False
         if self.m["ifreq"] < 0 or self.m["ifreq"] > 62500000:
-            #self.m["errorf"] = True
             value = "center frequency not in range (0 - 62500000) \
                       after _lo\n Probably not a COHIRADIA File"
             errorstate = True
 
         if self.m["irate"] not in self.m["rates"]:
-            #self.m["errorf"] = True
             value = "The sample rate of this file is inappropriate for the STEMLAB!\n\
             Probably it is not a COHIRADIA File. \n \n \
             PLEASE USE THE 'Resample' TAB TO CREATE A PLAYABLE FILE ! \n\n \
@@ -613,20 +454,13 @@ class playrec_c(QObject):
             errorstate = True
 
         if self.m["icorr"] < -100 or self.m["icorr"] > 100:
-            #self.m["errorf"] = True
             value = "frequency correction min ppm must be in \
                       the interval (-100 - 100) after _c \n \
                       Probably not a COHIRADIA File "
             errorstate = True
-        # if self.m["errorf"]:
-        #     auxi.standard_errorbox(errortxt)
-        #     self.SigRelay.emit("cexex_all_",["reset_GUI",0])     ###TODO geht nicht
-        #     return False
-        # else:
-        #     return True
         return(errorstate, value)
         
-    def stemlabcontrol_errorhandler(self,errorstring): #TODO TODO TODO: join with general errorhandler with correc errorstate,value method ?
+    def stemlabcontrol_errorhandler(self,errorstring):
         """handler for error signals from stemlabcontrol class
             display error in standard errormessagebox
             NOT YET IMPLEMENTED: reset playerbuttongroup and GUI
@@ -637,13 +471,14 @@ class playrec_c(QObject):
         :return: none
         :rtype: none
         """     
-        auxi.standard_errorbox(errorstring)
-        self.logger.error(errorstring)
+        self.errorhandler(errorstring)
+        #auxi.standard_errorbox(errorstring)
+        #self.logger.error(errorstring)
 
-    def display_status(self,messagestring): ##TODO TODO TODO: seems not to be used anywhere
+    def display_status(self,messagestring): #shows connection status messages from stemlabcontrol
         """handler for message signals from stemlabcontrol class
             display message in GUI status field, if exists
-        VIEW
+            currently not used, reserved function
         :param: messaagestring
         :type: str
         :raises [none]: [none]
@@ -677,14 +512,12 @@ class playrec_c(QObject):
             return(errorstate,value)
             #return False
         self.stemlabcontrol.SigError.connect(self.stemlabcontrol_errorhandler)
-        self.stemlabcontrol.SigMessage.connect(self.display_status) #TODO: is that needed ????
+        self.stemlabcontrol.SigMessage.connect(self.display_status) #currently not activem activate by re-writing display_status(message)
         self.stemlabcontrol.set_play()
         self.m["modality"] = "play"
         #generate List of files if nextfile present in wavheader:
-        #self.m["wavheader"] = WAVheader_tools.get_sdruno_header(self,self.m["f1"])
         self.contingent_file_list = []
         self.contingent_file_list.append(self.m["f1"])
-        #TODO: correct handling of full paths
         self.m["wavheader"]['nextfilename'] = self.m["wavheader"]['nextfilename'].rstrip("\x00")
         curr_nextfilestem = Path(self.m["wavheader"]['nextfilename'].rstrip()).stem
         while True:
@@ -759,7 +592,7 @@ class playrec_c(QObject):
             self.logger.error(str(value))
             self.cb_Butt_STOP()
 
-    def play_tstarter(self):  # TODO: Argument (self, modality), modality= "recording", "play", move to module cplayrec controller
+    def play_tstarter(self):
         """_start playback via data stream to STEMLAB sdr server
         starts thread 'playthread' for data streaming to the STEMLAB
         instantiates thread worker method
@@ -795,11 +628,6 @@ class playrec_c(QObject):
         self.playthread = QThread()
         self.playrec_tworker = playrec_worker(self.stemlabcontrol)
         self.playrec_tworker.moveToThread(self.playthread)
-        if not self.TESTFILELISTCONTINUOUS:  #TODO TODO TODO TODO: transition to filelist play in tworker 26-12-2024
-            self.playrec_tworker.set_filename(self.m["f1"])
-        else:
-            self.playrec_tworker.set_filename(self.contingent_file_list)
-        #TODO TODO TODO TODO: set_filename(self.contingent_file_list)
         self.playrec_tworker.set_timescaler(self.m["timescaler"])
         self.playrec_tworker.set_TEST(self.m["TEST"])
         self.playrec_tworker.set_pause(False)
@@ -812,13 +640,14 @@ class playrec_c(QObject):
         
         #self.prfilehandle = self.playrec_tworker.get_fileHandle() #TODO CHECK IF REQUIRED test output, no special other function
         if self.m["modality"] == "play": #TODO: activate
-        #if True:
             if not self.TESTFILELISTCONTINUOUS:
+                self.playrec_tworker.set_filename(self.m["f1"])
                 self.playthread.started.connect(self.playrec_tworker.play_loop16)
             else:
+                self.playrec_tworker.set_filename(self.contingent_file_list)
                 self.playthread.started.connect(self.playrec_tworker.play_loop_filelist) #TODO TODO TODO TODO: activate for nextfile list
-
         else:
+            self.playrec_tworker.set_filename(self.m["f1"])
             self.playthread.started.connect(self.playrec_tworker.rec_loop)
 
         self.playrec_tworker.SigFinished.connect(self.EOF_manager)
@@ -863,49 +692,58 @@ class playrec_c(QObject):
         self.m["f1"] = filename
         self.m["wavheader"] = WAVheader_tools.get_sdruno_header(self,self.m["f1"])
         self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
+        self.SigRelay.emit("cexex_playrec",["showFilename", filename])
         
 
     def errorsigmanager(self,message):
         auxi.standard_errorbox(message)
 
-    def recordingsequence(self):
-        """start SDR server unless already started. References to 
-        :class: `StemlabControl`
-        :return: False if STEMLAB socket cannot be started
-                 False if playback thread cannot be started 
-        :rtype: Boolean
+    def recordingsequence(self,expected_seconds):
+        """handle recordig of a file:
+        (1) check for sufficient diskspace
+
+        :param expected_seconds: expected duration of the recording in seconds
+        :type expected_seconds: int
         """
         #CHECK FOR SUFFICIENT DISK SPACE ON VOLUME
+        errorstate = False
+        value = ""
         self.stemlabcontrol.SigError.connect(self.stemlabcontrol_errorhandler)
-        expected_filesize = 2**31
-        if self.checkdiskspace(expected_filesize, self.m["recording_path"]) is False:
-            return False
+        expected_filesize = expected_seconds * self.m["irate"] * self.RecBitsPerSample/4 #2**31
+        #TODO TODO TODO: not correct !
+        errorstate, value = self.checkdiskspace(expected_filesize, self.m["recording_path"])
+        if errorstate:
+            return(errorstate,value)
         ovwrt_flag = False
         WAVheader_tools.write_sdruno_header(self,self.m["f1"],self.m["wavheader"],ovwrt_flag) ##TODO TODO TODO Linux conf: self.m["f1"],self.m["wavheader"] must be in Windows format
         self.m["sdr_configparams"] = {"ifreq":self.m["ifreq"], "irate":self.m["irate"],
                     "rates": self.m["rates"], "icorr":self.m["icorr"],
                     "HostAddress":self.m["HostAddress"], "LO_offset":self.m["LO_offset"]}
         if self.m["TEST"] is False:
-            if self.stemlabcontrol.sdrserverstart(self.m["sdr_configparams"]) == False:
+            if not self.stemlabcontrol.sdrserverstart(self.m["sdr_configparams"]):
                 self.cb_Butt_STOP()
-                return False
+                errorstate = False
+                value = ""
+                return(errorstate, value)
             self.stemlabcontrol.set_rec()
             # configparams = {"ifreq":self.m["ifreq"], "irate":self.m["irate"],
             #         "rates": self.m["rates"], "icorr":self.m["icorr"],
             #         "HostAddress":self.m["HostAddress"], "LO_offset":self.m["LO_offset"]}
             if self.stemlabcontrol.config_socket(self.m["sdr_configparams"]):
-                #self.play_tstarter() #TODO TODO TODO: better errorhandling and messaging with errorstate, value and errorhandler
                 errorstate,value = self.play_tstarter()
-                if errorstate: #TODO TODO TODO: better errorhandling and messaging with errorstate, value and errorhandler
-                    return False
+                if errorstate:
+                    return(errorstate, value)
             else:
-                return False
+                errorstate = True
+                value = "Cannot configure STEMLAB socket, please check the connection to STEMLAB."
+                return(errorstate, value)
         else:
             errorstate,value = self.play_tstarter()
-            if errorstate: #TODO TODO TODO: better errorhandling and messaging with errorstate, value and errorhandler
-                return False
+            if errorstate:
+                return(errorstate, value)
         self.m["recstate"] = True
         self.m["stopstate"] = False
+        return(errorstate, value)
 
     def checkdiskspace(self,expected_filesize, _dir): #TODO: transfer to auxiliary module 
         """check if free diskspace is sufficient for writing expeczed_filesize bytes on directory _dir
@@ -919,13 +757,16 @@ class playrec_c(QObject):
         :return: True if enough space, False else
         :rtype: Boolean
         """
+        errorstate = False
+        value = ""
         total, used, free = shutil.disk_usage(_dir)
         if free < expected_filesize:
             #print(f"not enough diskspace for this process, please free at least {expected_filesize - free} bytes")
-            auxi.standard_errorbox(f"not enough diskspace for this process, please free at least {expected_filesize - free} bytes")
-            return False
-        else:
-            return True
+            #auxi.standard_errorbox(f"not enough diskspace for this process, please free at least {expected_filesize - free} bytes")
+            errorstate = True
+            value = f"not enough diskspace for this process, please free at least {expected_filesize - free} bytes"
+        return(errorstate, value)
+
 
     def generate_recfilename(self):
         """generate filenae for recording file from:
@@ -990,7 +831,9 @@ class playrec_c(QObject):
             #wavheader_old['nextfilename'] = self.m["f1"]
             wavheader_old['nextfilename'] = Path(self.m["f1"]).name
             WAVheader_tools.write_sdruno_header(self,f1old,wavheader_old,self.m["ovwrt_flag"]) ##TODO TODO TODO Linux conf: self.m["f1"],self.m["wavheader"] must be in Windows format
-            self.recordingsequence()
+            errorstate, value = self.recordingsequence()
+            if errorstate:
+                self.errorhandler(value)
 
     def EOF_manager(self):
         """_target of SigFinished from playloop. If signal is received, a decision is made whether 
@@ -1023,8 +866,8 @@ class playrec_c(QObject):
             time.sleep(0.5)
             return
         #if (os.path.isfile(self.m["my_dirname"] + '/' + self.m["wavheader"]['nextfilename']) == True and self.m["wavheader"]['nextfilename'] != "" ): #TODO delete after tests 23-12-2024: 
-        ###TODO TODO TODO: obsolete, nextfile is handled by tworker
-        if False:
+        ###TODO TODO TODO: remove after testing 26-12-2024r
+        #if False:
         #if (os.path.isfile(os.path.join(self.m["my_dirname"], self.m["wavheader"]['nextfilename'])) and self.m["wavheader"]['nextfilename'] != "" ):
             # if not self.TESTFILELISTCONTINUOUS:
             #     ###TODO TODO TODO: obsolete, nextfile is handled by tworker
@@ -1052,9 +895,9 @@ class playrec_c(QObject):
             #     print(f"playrec namechange after nextfile test, filename: {self.m['my_filename']}")
             # else:
             #     print("automatic nextfile treatment, no nextfilehandling necessary")
-                pass
+            #    pass
         
-        elif self.m["Buttloop_pressed"]:
+        if self.m["Buttloop_pressed"]:
             time.sleep(0.1)
             #("restart same file in endless loop")
             self.logger.debug("restart same file in endless loop")
@@ -1073,70 +916,68 @@ class playrec_c(QObject):
                 self.m["playlist_ix"] += 1 #TODO: aktuell Hack, um bei erstem File keine Doppelabspielung zu triggern
             if self.m["playlist_ix"] < self.m["playlist_len"]: #TODO check if indexing is correct
                 self.m["playthreadActive"] = False
-                self.SigRelay.emit("cm_all_",["playthreadActive",self.m["playthreadActive"]])####TODO geht nicht
+                #self.SigRelay.emit("cm_all_",["playthreadActive",self.m["playthreadActive"]])####TODO geht nicht
                 self.SigRelay.emit("cexex_playrec",["listhighlighter",self.m["playlist_ix"]])
                 self.logger.debug("EOF manager: playlist index: %i", self.m['playlist_ix'])
                 self.logger.info("fetch next list file")
-                item_valid = False
-                while (not item_valid) and (self.m["playlist_ix"] < self.m["playlist_len"]):
-                    item = self.m["playlist"][self.m["playlist_ix"]]
-                    self.m["my_filename"] = item
-                    self.m["f1"] = self.m["my_dirname"] + '/' + item #TODO replace by line below
-                    self.SigRelay.emit("cm_all_",["f1",self.m["my_dirname"] + '/' + item]) #TODO: geht nicht
-                    self.logger.info("EOF manager file in loop: %s", self.m["f1"])
-                    self.logger.debug("EOF manager file in loop: %s , index: %i", item, self.m["playlist_ix"])
-                    self.m["wavheader"] = WAVheader_tools.get_sdruno_header(self,self.m["f1"])
+                Formatcheck_False = True
+                while Formatcheck_False:
+                    item_valid = False
+                    while (not item_valid) and (self.m["playlist_ix"] < self.m["playlist_len"]):
+                        item = self.m["playlist"][self.m["playlist_ix"]]
+                        self.m["my_filename"] = item
+                        self.m["f1"] = self.m["my_dirname"] + '/' + item 
+                        #self.SigRelay.emit("cm_all_",["f1",self.m["my_dirname"] + '/' + item]) #TODO: geht nicht
+                        self.logger.info("EOF manager file in loop: %s", self.m["f1"])
+                        self.logger.debug("EOF manager file in loop: %s , index: %i", item, self.m["playlist_ix"])
+                        self.m["wavheader"] = WAVheader_tools.get_sdruno_header(self,self.m["f1"])
 
-                    self.m["wavheader"]['nextfilename'] = self.m["wavheader"]['nextfilename'].rstrip("\x00")
-                    self.m["wavheader"]['nextfilename'] = self.m["wavheader"]['nextfilename'].rstrip()
-                    self.SigRelay.emit("cm_all_",["wavheader",self.m["wavheader"]])#TODO: geht nicht
-                    self.SigRelay.emit("cm_all_",["my_filename",self.m["my_filename"]])#TODO: geht nicht
-                    ####TODO: maybe the following is obsolete:
-                    self.SigRelay.emit("cm_all_",["fileopened",True])#TODO: geht nicht
-                    self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
+                        self.m["wavheader"]['nextfilename'] = self.m["wavheader"]['nextfilename'].rstrip("\x00")
+                        self.m["wavheader"]['nextfilename'] = self.m["wavheader"]['nextfilename'].rstrip()
+                        #self.SigRelay.emit("cm_all_",["wavheader",self.m["wavheader"]])#TODO: geht nicht
+                        #self.SigRelay.emit("cm_all_",["my_filename",self.m["my_filename"]])#TODO: geht nicht
+                        ####TODO: maybe the following is obsolete:
+                        #self.SigRelay.emit("cm_all_",["fileopened",True])#TODO: geht nicht
+                        self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
 
-                    item_valid = True
-                    if not self.m["wavheader"]:
-                        self.logger.warning("EOF_manager: wrong wav file, skip to next listentry")
-                        self.m["playlist_ix"] += 1
-                        item_valid = False
+                        item_valid = True
+                        if not self.m["wavheader"]:
+                            self.logger.warning("EOF_manager: wrong wav file, skip to next listentry")
+                            self.m["playlist_ix"] += 1
+                            item_valid = False
 
-                if not (self.m["playlist_ix"] < self.m["playlist_len"]):
-                    self.m["playlist_ix"] = 0
-                    self.logger.info("EOF_manager: end of list, stop player")
-                    time.sleep(0.5)
-                    self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
-                    self.cb_Butt_STOP()
-                    self.SigRelay.emit("cexex_playrec",["reset_GUI",0]) #TODO remove after tests
-                    self.SigRelay.emit("cexex_playrec",["reset_playerbuttongroup",0])
-                    return()
-                if self.m["wavheader"]['sdrtype_chckID'].find('rcvr') > -1:
-                    self.m["readoffset"] = 86
-                else:
-                    self.m["readoffset"] = 216
-                self.m["playlist_ix"] += 1                #TODO: self.m Eintragung von icorr etc erfolgt an mehreren STellen, fileopen, extract dat header und hier. Könnte an einer Stelle passieren, immer, sobald ein wav-header extrahiert wird
-                self.m["ifreq"] = self.m["wavheader"]['centerfreq'] + self.m["LO_offset"]
-                self.m["irate"] = self.m["wavheader"]['nSamplesPerSec']
-                self.m["icorr"] = 0
-                self.m["timescaler"] = self.m["wavheader"]['nSamplesPerSec']*self.m["wavheader"]['nBlockAlign']
-                self.logger.debug("EOF manager new wavheader: %i", self.m["wavheader"]["nSamplesPerSec"])
-                #TODO: write new header to wav edior
-                #TODO TODO TODO TODO: check for correct SDR-settings already during buildup fo the playlist
-                errorstate, value = self.checkSTEMLABrates()
-                if errorstate:
-                    self.errorhandler(value)
-                    return()
-                time.sleep(0.1)
+                    if not (self.m["playlist_ix"] < self.m["playlist_len"]):
+                        self.m["playlist_ix"] = 0
+                        self.logger.info("EOF_manager: end of list, stop player")
+                        time.sleep(0.5)
+                        self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
+                        self.cb_Butt_STOP()
+                        self.SigRelay.emit("cexex_playrec",["reset_GUI",0]) #TODO remove after tests
+                        self.SigRelay.emit("cexex_playrec",["reset_playerbuttongroup",0])
+                        return()
+                    if self.m["wavheader"]['sdrtype_chckID'].find('rcvr') > -1:
+                        self.m["readoffset"] = 86
+                    else:
+                        self.m["readoffset"] = 216
+                    self.m["playlist_ix"] += 1                #TODO: self.m Eintragung von icorr etc erfolgt an mehreren STellen, fileopen, extract dat header und hier. Könnte an einer Stelle passieren, immer, sobald ein wav-header extrahiert wird
+                    self.m["ifreq"] = self.m["wavheader"]['centerfreq'] + self.m["LO_offset"]
+                    self.m["irate"] = self.m["wavheader"]['nSamplesPerSec']
+                    self.m["icorr"] = 0
+                    self.m["timescaler"] = self.m["wavheader"]['nSamplesPerSec']*self.m["wavheader"]['nBlockAlign']
+                    self.logger.debug("EOF manager new wavheader: %i", self.m["wavheader"]["nSamplesPerSec"])
+                    #TODO: write new header to wav editor is this necessary ?
+                    #TODO TODO TODO TODO: check for correct SDR-settings already during buildup fo the playlist
+                    errorstate, value = self.checkSTEMLABrates()
+                    Formatcheck_False = False
+                    if errorstate:
+                        Formatcheck_False = True
+                        #self.errorhandler(value)
+                        print(f"invalid STEMLABRATES, skip file in list: {self.m["f1"]}")
+                    self.SigRelay.emit("cexex_playrec",["listhighlighter",self.m["playlist_ix"]])
+                    time.sleep(0.1)
                 
-                #TODO: does this work ?
                 #TODO: rplace by os.path.join:
                 self.m["my_filename"], self.m["ext"] = os.path.splitext(os.path.basename(self.m["f1"]))
-                #TODO: all cm_all Relays do not work from controller !
-                #self.SigRelay.emit("cm_all_",["my_filename",self.m["my_filename"]])#TODO: geht nicht
-                #self.SigRelay.emit("cm_all_",["ext",self.m["ext"]])#TODO: geht nicht
-                #self.SigRelay.emit("cm_all_",["f1",self.m["f1"]])#TODO: geht nicht
-                #self.SigRelay.emit("cm_all_",["wavheader",self.m["wavheader"]])#TODO: geht nicht
-
                 self.logger.debug("EOF manager new file before playing: %s", self.m["my_filename"])
                 if not self.m["TEST"]:
                     self.stemlabcontrol.sdrserverstop()
@@ -1147,7 +988,7 @@ class playrec_c(QObject):
                 self.m["fileopened"] = True
                 self.SigRelay.emit("cm_all_",["fileopened",True])
                 self.SigRelay.emit("cexex_all_",["updateGUIelements",0])
-                time.sleep(0.5) #TODO: necessary because otherwise file may not yet have been opened by playloopworker and then updatecurtime crashes because of invalid filehandel 
+                time.sleep(0.5) #necessary because otherwise file may not yet have been opened by playloopworker and then updatecurtime crashes because of invalid filehandel 
                 #may be solved by updatecurtime not accessing the filehandle returned from playworker but directly from self.m["f1"]
                 #self.updatecurtime(0) #TODO: true datetime from record
                 self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
@@ -1158,7 +999,7 @@ class playrec_c(QObject):
                 time.sleep(0.5)
                 self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
                 self.cb_Butt_STOP()
-                self.SigRelay.emit("cexex_playrec",["reset_GUI",0]) #TODO remove after tests
+                #self.SigRelay.emit("cexex_playrec",["reset_GUI",0]) #TODO remove after tests
                 self.SigRelay.emit("cexex_playrec",["reset_playerbuttongroup",0])
         else:
             #no next file,no endless loop --> stop player
@@ -1642,6 +1483,8 @@ class playrec_v(QObject):
                 #print(f"UPDATECURTIME: {_value[1]}")
             if  _value[0].find("showRFdata") == 0:
                 self.showRFdata()
+            if  _value[0].find("showFilename") == 0:
+                self.gui.label_Filename_Player.setText(Path(_value[1]).name)
             if  _value[0].find("listhighlighter") == 0:
                 try:
                     self.listhighlighter(_value[1])
@@ -2003,12 +1846,15 @@ class playrec_v(QObject):
         hours = time_from_qtimeedit.hour()
         minutes = time_from_qtimeedit.minute()
         seconds = time_from_qtimeedit.second()
-        self.target_datetime = current_datetime.addSecs(hours * 3600 + minutes * 60 + seconds)
+        expected_seconds = hours * 3600 + minutes * 60 + seconds
+        self.target_datetime = current_datetime.addSecs(expected_seconds)
         self.gui.playrec_label_REC_duration.setStyleSheet("background-color : yellow")
         font = self.gui.playrec_label_REC_duration.font()
         font.setPointSize(14)
         self.gui.playrec_label_REC_duration.setFont(font)
-        self.playrec_c.recordingsequence()
+        errorstate, value = self.playrec_c.recordingsequence(expected_seconds)
+        if errorstate:
+            self.playrec_c.errorhandler(value)
         self.reftime = datetime.now()
         
         #self.m["recstate"] = True
@@ -2221,7 +2067,7 @@ class playrec_v(QObject):
 
 
 
-    def updatecurtime(self,increment):             #increment current time in playtime window and update statusbar
+    def updatecurtime(self,increment):             #TODO: check if can be implemented with less ressources need
         """
         _increments time indicator by value in increment, except for 0. 
         With increment == 0 the indicator is reset to 0
@@ -2249,16 +2095,16 @@ class playrec_v(QObject):
             return
         #print(f"updatecurtime UPDATECURTIME: {increment}")
         #self.m["curtime"] varies between 0 and system_state["playlength"]
-        self.m["timescaler"] = self.m["wavheader"]['nSamplesPerSec']*self.m["wavheader"]['nBlockAlign']
-        self.m["playprogress"] = 0
-        time.sleep(0.01)
+        self.m["timescaler"] = self.m["wavheader"]['nSamplesPerSec']*self.m["wavheader"]['nBlockAlign'] #TODO: can be shifted to the instant where the wav ehader is opened
+        self.m["playprogress"] = 0 #TODO: always ?
+        time.sleep(0.01) #why so long ?
         timestr = str(self.m["wavheader"]['starttime_dt'] + ndatetime.timedelta(seconds=self.m["curtime"]))
         #print(f">>>>>>>>>>>>> updatecurtime: wavheaderstarttime: {self.m['wavheader']['starttime_dt']} curtime: {self.m['curtime']}")
         #TODO TODO TODO: test after scaling with true filesize, not self.m["wavheader"]['filesize'] 12 2024
         #filename = os.path.join(self.m["my_dirname"],self.m["my_filename"] + self.m["ext"])
         #print(f"updatecurtime filename: {filename}")
-        true_filesize = os.path.getsize(self.m["f1"])
-        playlength = true_filesize/self.m["wavheader"]['nAvgBytesPerSec'] #NEW
+        true_filesize = os.path.getsize(self.m["f1"]) #TODO: can be calculated outside on file opening
+        playlength = true_filesize/self.m["wavheader"]['nAvgBytesPerSec'] #TODO: can be calculated outside on file opening
         #playlength = self.m["wavheader"]['filesize']/self.m["wavheader"]['nAvgBytesPerSec'] #OLD before 22-12-2014
 
         # self.my_dirname = os.path.dirname(self.m["f1"])
@@ -2476,3 +2322,151 @@ class playrec_v(QObject):
         self.gui.pushButton_IP.setText("Set IP Address")
         self.gui.pushButton_IP.adjustSize()
         self.SigRelay.emit("cm_xcore",["HostAddress",self.m["HostAddress"]])
+
+
+
+
+
+    # def play_loop16(self):
+    #     """
+    #     worker loop for sending data to STEMLAB server
+    #     data format i16; 2xi16 complex; FormatTag 1
+    #     sends signals:     
+    #         SigFinished = pyqtSignal()
+    #         SigIncrementCurTime = pyqtSignal()
+    #         SigBufferOverflow = pyqtSignal()
+
+    #     :param : no regular parameters; as this is a thread worker communication occurs via
+    #     class slots __slots__[i], i = 0...8
+    #     __slots__[0]: filename = complete file path pathname/filename Type: str TODO TODO TODO: --> NEW: list
+    #     __slots__[1]: timescaler = bytes per second  TODO: rescaling to samples per second would probably be more logical, Type int
+    #     __slots__[2]: TEST = flag for test mode Type: bool
+    #     __slots__[3]: pause : if True then do not send data; Boolean
+    #     __slots__[4]: filehandle: returns current filehandle to main thread Type: filehandle
+    #     __slots__[5]: data segment to be returned every second
+    #     __slots__[6]: gain, scaling factor for playback
+    #     __slots__[7]: formatlist: [formattag blockalign bitpsample]
+    #     __slots__[8]: datablocksize
+    #     __slots__[9]: fileclose: set to True after closing a file, info to main Thread
+    #     """
+    #     #print("reached playloopthread")
+    #     filename = self.get_filename()
+    #     timescaler = self.get_timescaler()
+    #     TEST = self.get_TEST()
+    #     gain = self.get_gain()
+    #     #TODO: self.fmtscl = self.__slots__[7] #scaler for data format        
+    #     self.stopix = False
+    #     fileHandle = open(filename, 'rb')
+    #     self.set_fileclose(False)
+    #     #print(f"filehandle for set_4: {fileHandle} of file {filename} ")
+    #     self.set_fileHandle(fileHandle)
+    #     format = self.get_formattag()
+    #     self.set_datablocksize(self.DATABLOCKSIZE)
+    #     #print(f"Filehandle :{fileHandle}")
+
+    #     fileHandle.seek(216, 1)  #TODO: other formats than wav SDRUno not supported !
+    #     #TODO: if format[0] == 1 and format[2] == 16 
+    #     #data = np.empty(self.DATABLOCKSIZE, dtype=np.int16)
+    #     #TODO: if format[0] == 1 and format[2] == 32
+    #     if format[2] == 16:
+    #         data = np.empty(self.DATABLOCKSIZE, dtype=np.int16)
+    #     else:
+    #         data = np.empty(self.DATABLOCKSIZE, dtype=np.float32) #TODO: check if true for 32-bit wavs wie Gianni's
+
+    #     #print(f"playloop: BitspSample: {format[2]}; wFormatTag: {format[0]}; Align: {format[1]}")
+    #     if format[0] == 1:
+    #         normfactor = int(2**int(format[2]-1))-1
+    #     else:
+    #         normfactor = 1
+    #     #print(f"normfactor = {normfactor}")
+    #     if format[2] == 16 or format[2] == 32:
+    #         size = fileHandle.readinto(data)
+    #     elif format[2] == 24:
+    #         data = self.read24(format,data,fileHandle)
+    #         size = len(data)
+
+    #     self.set_data(data)
+    #     junkspersecond = timescaler / self.JUNKSIZE
+    #     count = 0
+    #     # print(f"Junkspersec:{junkspersecond}")
+    #     while size > 0 and not self.stopix:
+    #         if not TEST:
+    #             if not self.get_pause():
+    #                 try:
+    #                     self.stemlabcontrol.data_sock.send(
+    #                                             gain*data[0:size].astype(np.float32)
+    #                                             /normfactor)  # send next DATABLOCKSIZE samples
+    #                 except BlockingIOError:
+    #                     print("Blocking data socket error in playloop worker")
+    #                     time.sleep(0.1)
+    #                     self.SigError.emit("Blocking data socket error in playloop worker")
+    #                     self.SigFinished.emit()
+    #                     time.sleep(0.1)
+    #                     return
+    #                 except ConnectionResetError:
+    #                     print("Diagnostic Message: Connection data socket error in playloop worker")
+    #                     time.sleep(0.1)
+    #                     self.SigError.emit("Diagnostic Message: Connection data socket error in playloop worker")
+    #                     self.SigFinished.emit()
+    #                     time.sleep(0.1)
+    #                     return
+    #                 except Exception as e:
+    #                     print("Class e type error  data socket error in playloop worker")
+    #                     print(e)
+    #                     time.sleep(0.1)
+    #                     self.SigError.emit(f"Diagnostic Message: Error in playloop worker: {str(e)}")
+    #                     self.SigFinished.emit()
+    #                     time.sleep(0.1)
+    #                     return
+    #                 if format[2] == 16 or format[2] == 32:
+    #                     size = fileHandle.readinto(data)
+    #                 elif format[2] == 24:
+    #                     data = self.read24(format,data,fileHandle)
+    #                     size = len(data)
+
+    #                 #  read next 2048 samples
+    #                 count += 1
+    #                 if count > junkspersecond:
+    #                     self.SigIncrementCurTime.emit()
+    #                     count = 0
+    #                     #self.mutex.lock()
+    #                     gain = self.get_gain()
+    #                     #print(f"diagnostic: gain in worker: {gain}")
+    #                     self.set_data(data)
+    #                     #self.mutex.unlock()
+    #             else:
+    #                 #print("Pause, do not do anything")
+    #                 time.sleep(0.1)
+    #                 if self.stopix is True:
+    #                     break
+    #         else:
+    #             if not self.get_pause():
+    #                 #print("test reached")
+    #                 if format[2] == 16 or format[2] == 32:
+    #                     size = fileHandle.readinto(data)
+    #                 elif format[2] == 24:
+    #                     data = self.read24(format,data,fileHandle)
+    #                     size = len(data)
+    #                 #print(f"size read: {size}")
+    #                 #print(data[1:10])
+    #                 #size = fileHandle.readinto(data)
+    #                 time.sleep(0.0001)
+    #                 #  read next 2048 bytes
+    #                 count += 1
+    #                 if count > junkspersecond and size > 0:
+    #                     #print('timeincrement reached')
+    #                     self.SigIncrementCurTime.emit()
+    #                     gain = self.get_gain()
+    #                     #print(f"diagnostic: gain in worker: {gain}")
+    #                     #print(f"maximum: {np.max(data)}")
+    #                     #self.set_data(gain*data)
+    #                     self.set_data(data)
+    #                     count = 0
+    #             else:
+    #                 time.sleep(1)
+    #                 if self.stopix is True:
+    #                     break
+    #     #print('worker  thread finished')
+    #     self.set_fileclose(True)
+    #     self.SigFinished.emit()
+    #     #print("SigFinished from playloop emitted")
