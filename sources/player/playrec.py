@@ -1372,8 +1372,10 @@ class playrec_v(QObject):
     def Buttloopmanager(self):
         if self.gui.pushButton_Loop.isChecked() == True:
             self.m["Buttloop_pressed"] = True
+            self.gui.pushButton_Loop.setIcon(QIcon("./core/ressources/icons/loopactive_v4.PNG"))
         else:
             self.m["Buttloop_pressed"] = False
+            self.gui.pushButton_Loop.setIcon(QIcon("./core/ressources/icons/loop_v4.PNG"))
 
     def updateGUIelements(self):
         """
@@ -1837,6 +1839,7 @@ class playrec_v(QObject):
         self.gui.pushButton_Play.setEnabled(False)
         self.gui.verticalSlider_Gain.setEnabled(False)
         #TODO TODO TODO warning if host not reachable
+        
 
         current_datetime = QDateTime.currentDateTime()    
         # Zeit aus dem QTimeEdit-Objekt
