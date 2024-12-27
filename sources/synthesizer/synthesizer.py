@@ -1046,7 +1046,7 @@ class synthesizer_v(QObject):
         self.previous_value = self.gui.spinBox_numcarriers.value()
         self.RecBW_update()
         standardpath = os.getcwd()
-        self.logger.debug(f"synthesizer_v.__init__ path infos: standardpath: {standardpath}, project path: {self.m["project_path"]}")
+        self.logger.debug(f"synthesizer_v.__init__ path infos: standardpath: {standardpath}, project path: {self.m['project_path']}")
         #self.gui.lineEdit_carrierdistance.textEdited.connect(self.carriedistance_update)
 
     def reinitialize_gui(self):
