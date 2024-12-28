@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="./">
 <head>
@@ -6,18 +8,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>sources &mdash; COHIWizard_v1.2 1.2.8 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=4d6f9085"></script>
-        <script src="_static/doctools.js?v=9a2dae69"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=4d6f9085"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -122,6 +120,8 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="COHIWizard.html#COHIWizard.starter"><code class="docutils literal notranslate"><span class="pre">starter</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="COHIWizard.html#COHIWizard.dynamic_import_from_config"><code class="docutils literal notranslate"><span class="pre">dynamic_import_from_config()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="COHIWizard.html#COHIWizard.load_config_from_yaml"><code class="docutils literal notranslate"><span class="pre">load_config_from_yaml()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="Trash.html">Trash package</a><ul>
@@ -214,23 +214,7 @@
 <li class="toctree-l2"><a class="reference internal" href="Trash.html#module-Trash">Module contents</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="abstract_module.html">abstract_module module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="abstract_module.html#abstract_module.abstract_module_c"><code class="docutils literal notranslate"><span class="pre">abstract_module_c</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="abstract_module.html#abstract_module.abstract_module_c.dummy"><code class="docutils literal notranslate"><span class="pre">abstract_module_c.dummy()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="abstract_module.html#abstract_module.abstract_module_m"><code class="docutils literal notranslate"><span class="pre">abstract_module_m</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="abstract_module.html#abstract_module.abstract_module_v"><code class="docutils literal notranslate"><span class="pre">abstract_module_v</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="abstract_module.html#abstract_module.abstract_module_v.canvasbuild"><code class="docutils literal notranslate"><span class="pre">abstract_module_v.canvasbuild()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="abstract_module.html#abstract_module.abstract_module_v.init_abstractmodule_ui"><code class="docutils literal notranslate"><span class="pre">abstract_module_v.init_abstractmodule_ui()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="abstract_module.html#abstract_module.abstract_module_v.logfilehandler"><code class="docutils literal notranslate"><span class="pre">abstract_module_v.logfilehandler()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="abstract_module.html#abstract_module.abstract_module_v.reset_GUI"><code class="docutils literal notranslate"><span class="pre">abstract_module_v.reset_GUI()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="abstract_module.html#abstract_module.abstract_module_v.rxhandler"><code class="docutils literal notranslate"><span class="pre">abstract_module_v.rxhandler()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="abstract_module.html#abstract_module.abstract_module_v.updateGUIelements"><code class="docutils literal notranslate"><span class="pre">abstract_module_v.updateGUIelements()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="abstract_module.html">abstract_module module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="annotator.html">annotator package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="annotator.html#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="annotator.html#module-annotator.annotate">annotator.annotate module</a><ul>
@@ -362,6 +346,14 @@
 <li class="toctree-l3"><a class="reference internal" href="auxiliaries.html#auxiliaries.auxiliaries.waiting_effect"><code class="docutils literal notranslate"><span class="pre">auxiliaries.waiting_effect()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="auxiliaries.html#auxiliaries.ffmpeg_installtools"><code class="docutils literal notranslate"><span class="pre">ffmpeg_installtools</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="auxiliaries.html#auxiliaries.ffmpeg_installtools.configure_path"><code class="docutils literal notranslate"><span class="pre">ffmpeg_installtools.configure_path()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="auxiliaries.html#auxiliaries.ffmpeg_installtools.download_ffmpeg"><code class="docutils literal notranslate"><span class="pre">ffmpeg_installtools.download_ffmpeg()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="auxiliaries.html#auxiliaries.ffmpeg_installtools.install_ffmpeg_linux"><code class="docutils literal notranslate"><span class="pre">ffmpeg_installtools.install_ffmpeg_linux()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="auxiliaries.html#auxiliaries.ffmpeg_installtools.install_ffmpeg_windows"><code class="docutils literal notranslate"><span class="pre">ffmpeg_installtools.install_ffmpeg_windows()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="auxiliaries.html#auxiliaries.ffmpeg_installtools.is_ffmpeg_installed"><code class="docutils literal notranslate"><span class="pre">ffmpeg_installtools.is_ffmpeg_installed()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="auxiliaries.html#auxiliaries.timer_worker"><code class="docutils literal notranslate"><span class="pre">timer_worker</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="auxiliaries.html#auxiliaries.timer_worker.stoptick"><code class="docutils literal notranslate"><span class="pre">timer_worker.stoptick()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="auxiliaries.html#auxiliaries.timer_worker.tick"><code class="docutils literal notranslate"><span class="pre">timer_worker.tick()</span></code></a></li>
@@ -399,9 +391,12 @@
 <li class="toctree-l4"><a class="reference internal" href="player.html#player.playrec.playrec_c.checkSTEMLABrates"><code class="docutils literal notranslate"><span class="pre">playrec_c.checkSTEMLABrates()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="player.html#player.playrec.playrec_c.checkdiskspace"><code class="docutils literal notranslate"><span class="pre">playrec_c.checkdiskspace()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="player.html#player.playrec.playrec_c.display_status"><code class="docutils literal notranslate"><span class="pre">playrec_c.display_status()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="player.html#player.playrec.playrec_c.errorhandler"><code class="docutils literal notranslate"><span class="pre">playrec_c.errorhandler()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="player.html#player.playrec.playrec_c.errorsigmanager"><code class="docutils literal notranslate"><span class="pre">playrec_c.errorsigmanager()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="player.html#player.playrec.playrec_c.generate_recfilename"><code class="docutils literal notranslate"><span class="pre">playrec_c.generate_recfilename()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="player.html#player.playrec.playrec_c.jump_1_byte"><code class="docutils literal notranslate"><span class="pre">playrec_c.jump_1_byte()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="player.html#player.playrec.playrec_c.jump_to_position_c"><code class="docutils literal notranslate"><span class="pre">playrec_c.jump_to_position_c()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="player.html#player.playrec.playrec_c.nextfilemanager"><code class="docutils literal notranslate"><span class="pre">playrec_c.nextfilemanager()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="player.html#player.playrec.playrec_c.play_manager"><code class="docutils literal notranslate"><span class="pre">playrec_c.play_manager()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="player.html#player.playrec.playrec_c.play_tstarter"><code class="docutils literal notranslate"><span class="pre">playrec_c.play_tstarter()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="player.html#player.playrec.playrec_c.recloopmanager"><code class="docutils literal notranslate"><span class="pre">playrec_c.recloopmanager()</span></code></a></li>
@@ -454,19 +449,19 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="player.html#player.playrec.playrec_worker"><code class="docutils literal notranslate"><span class="pre">playrec_worker</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="player.html#player.playrec.playrec_worker.play_loop16"><code class="docutils literal notranslate"><span class="pre">playrec_worker.play_loop16()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="player.html#player.playrec.playrec_worker.play_loop_filelist"><code class="docutils literal notranslate"><span class="pre">playrec_worker.play_loop_filelist()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="player.html#player.playrec.playrec_worker.read24"><code class="docutils literal notranslate"><span class="pre">playrec_worker.read24()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="player.html#player.playrec.playrec_worker.rec_loop"><code class="docutils literal notranslate"><span class="pre">playrec_worker.rec_loop()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="player.html#player.playrec.playrec_worker.resetCounter"><code class="docutils literal notranslate"><span class="pre">playrec_worker.resetCounter()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="player.html#player.playrec.playrec_worker.stop_loop"><code class="docutils literal notranslate"><span class="pre">playrec_worker.stop_loop()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="player.html#player.playrec.playrec_worker.TEST"><code class="docutils literal notranslate"><span class="pre">playrec_worker.TEST</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="player.html#player.playrec.playrec_worker.data"><code class="docutils literal notranslate"><span class="pre">playrec_worker.data</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="player.html#player.playrec.playrec_worker.datablocksize"><code class="docutils literal notranslate"><span class="pre">playrec_worker.datablocksize</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="player.html#player.playrec.playrec_worker.fileHandle"><code class="docutils literal notranslate"><span class="pre">playrec_worker.fileHandle</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="player.html#player.playrec.playrec_worker.fileclose"><code class="docutils literal notranslate"><span class="pre">playrec_worker.fileclose</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="player.html#player.playrec.playrec_worker.filename"><code class="docutils literal notranslate"><span class="pre">playrec_worker.filename</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="player.html#player.playrec.playrec_worker.formattag"><code class="docutils literal notranslate"><span class="pre">playrec_worker.formattag</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="player.html#player.playrec.playrec_worker.gain"><code class="docutils literal notranslate"><span class="pre">playrec_worker.gain</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="player.html#player.playrec.playrec_worker.modality"><code class="docutils literal notranslate"><span class="pre">playrec_worker.modality</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="player.html#player.playrec.playrec_worker.pause"><code class="docutils literal notranslate"><span class="pre">playrec_worker.pause</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="player.html#player.playrec.playrec_worker.timescaler"><code class="docutils literal notranslate"><span class="pre">playrec_worker.timescaler</span></code></a></li>
 </ul>
 </li>
@@ -648,9 +643,16 @@
 <li class="toctree-l2"><a class="reference internal" href="synthesizer.html#synthesizer-synthesizer-module">synthesizer.synthesizer module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="synthesizer.html#synthesizer-synthesizer-widget-module">synthesizer.synthesizer_widget module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="synthesizer.html#module-synthesizer">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="synthesizer.html#synthesizer.TableDialog"><code class="docutils literal notranslate"><span class="pre">TableDialog</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.TableDialog.add_row"><code class="docutils literal notranslate"><span class="pre">TableDialog.add_row()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.TableDialog.remove_selected_row"><code class="docutils literal notranslate"><span class="pre">TableDialog.remove_selected_row()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.TableDialog.show_context_menu"><code class="docutils literal notranslate"><span class="pre">TableDialog.show_context_menu()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="synthesizer.html#synthesizer.modulate_worker"><code class="docutils literal notranslate"><span class="pre">modulate_worker</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.modulate_worker.convert_to_mono"><code class="docutils literal notranslate"><span class="pre">modulate_worker.convert_to_mono()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.modulate_worker.display_signal_level"><code class="docutils literal notranslate"><span class="pre">modulate_worker.display_signal_level()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.modulate_worker.generate_multisine_phases"><code class="docutils literal notranslate"><span class="pre">modulate_worker.generate_multisine_phases()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.modulate_worker.modulate_signal"><code class="docutils literal notranslate"><span class="pre">modulate_worker.modulate_signal()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.modulate_worker.modulate_terminate"><code class="docutils literal notranslate"><span class="pre">modulate_worker.modulate_terminate()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.modulate_worker.process_block"><code class="docutils literal notranslate"><span class="pre">modulate_worker.process_block()</span></code></a></li>
@@ -665,23 +667,30 @@
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.modulate_worker.combined_signal_block"><code class="docutils literal notranslate"><span class="pre">modulate_worker.combined_signal_block</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.modulate_worker.cutoff_freq"><code class="docutils literal notranslate"><span class="pre">modulate_worker.cutoff_freq</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.modulate_worker.exp_num_samples"><code class="docutils literal notranslate"><span class="pre">modulate_worker.exp_num_samples</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.modulate_worker.filesize_limit"><code class="docutils literal notranslate"><span class="pre">modulate_worker.filesize_limit</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.modulate_worker.gain"><code class="docutils literal notranslate"><span class="pre">modulate_worker.gain</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.modulate_worker.logger"><code class="docutils literal notranslate"><span class="pre">modulate_worker.logger</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.modulate_worker.method_object"><code class="docutils literal notranslate"><span class="pre">modulate_worker.method_object</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.modulate_worker.modulation_depth"><code class="docutils literal notranslate"><span class="pre">modulate_worker.modulation_depth</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.modulate_worker.output_base_name"><code class="docutils literal notranslate"><span class="pre">modulate_worker.output_base_name</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.modulate_worker.playlists"><code class="docutils literal notranslate"><span class="pre">modulate_worker.playlists</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.modulate_worker.progress"><code class="docutils literal notranslate"><span class="pre">modulate_worker.progress</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.modulate_worker.sample_rate"><code class="docutils literal notranslate"><span class="pre">modulate_worker.sample_rate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.modulate_worker.silence_duration"><code class="docutils literal notranslate"><span class="pre">modulate_worker.silence_duration</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_c"><code class="docutils literal notranslate"><span class="pre">synthesizer_c</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_c.checkdiskspace"><code class="docutils literal notranslate"><span class="pre">synthesizer_c.checkdiskspace()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_c.convert_to_wav_stereo"><code class="docutils literal notranslate"><span class="pre">synthesizer_c.convert_to_wav_stereo()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_c.dummy"><code class="docutils literal notranslate"><span class="pre">synthesizer_c.dummy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_c.readsoundfile"><code class="docutils literal notranslate"><span class="pre">synthesizer_c.readsoundfile()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_m"><code class="docutils literal notranslate"><span class="pre">synthesizer_m</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v"><code class="docutils literal notranslate"><span class="pre">synthesizer_v</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.LO_update"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.LO_update()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.PupdateSignalHandler"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.PupdateSignalHandler()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.RecBW_update"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.RecBW_update()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.activate_control_elements"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.activate_control_elements()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.add_children"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.add_children()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.audioBW_update"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.audioBW_update()</span></code></a></li>
@@ -691,39 +700,58 @@
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.carrier_ix_changed"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.carrier_ix_changed()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.carrierdistance_update"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.carrierdistance_update()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.carrierselect_update"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.carrierselect_update()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.checkffmpeg_install"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.checkffmpeg_install()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.cleanup"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.cleanup()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.clear_project"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.clear_project()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.create_band_thread"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.create_band_thread()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.customcarrier_handler"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.customcarrier_handler()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.delete_at_index"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.delete_at_index()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.delete_selected_items"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.delete_selected_items()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.display_worker_message"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.display_worker_message()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.errorhandler"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.errorhandler()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.fc_low_update"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.fc_low_update()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.ffmpeg_install_handler"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.ffmpeg_install_handler()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.fillplaylist"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.fillplaylist()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.fillsourcelist"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.fillsourcelist()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.find_first_difference"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.find_first_difference()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.freq_carriers_update"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.freq_carriers_update()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.import_m3u"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.import_m3u()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.init_synthesizer_ui"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.init_synthesizer_ui()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.insert_or_append"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.insert_or_append()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.isfloat"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.isfloat()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.isint"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.isint()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.isnumeric"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.isnumeric()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.load_file_dialog"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.load_file_dialog()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.load_project"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.load_project()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.logfilehandler"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.logfilehandler()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.modfactor_update"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.modfactor_update()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.on_editing_finished"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.on_editing_finished()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.on_rows_moved"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.on_rows_moved()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.on_value_changed"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.on_value_changed()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.open_table_dialog"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.open_table_dialog()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.playlist_purge"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.playlist_purge()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.playlist_update"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.playlist_update()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.playlist_update_delayed"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.playlist_update_delayed()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.populate_table"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.populate_table()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.popup"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.popup()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.preset_SR_LO"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.preset_SR_LO()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.preset_gain"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.preset_gain()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.query"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.query()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.reinitialize_gui"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.reinitialize_gui()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.remove_temp_audiofiles"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.remove_temp_audiofiles()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.reset_GUI"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.reset_GUI()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.rxhandler"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.rxhandler()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.save_file_dialog"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.save_file_dialog()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.save_project"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.save_project()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.select_tree"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.select_tree()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.setgain"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.setgain()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.setno2GBsplitting"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.setno2GBsplitting()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.showRFdata"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.showRFdata()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.show_context_menu"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.show_context_menu()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.show_fillprogress"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.show_fillprogress()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.show_playlength"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.show_playlength()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.updateGUIelements"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.updateGUIelements()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="synthesizer.html#synthesizer.synthesizer_v.validate_params"><code class="docutils literal notranslate"><span class="pre">synthesizer_v.validate_params()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -740,32 +768,32 @@
 <li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.MyDelegate.setModelData"><code class="docutils literal notranslate"><span class="pre">MyDelegate.setModelData()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.waveditor_c"><code class="docutils literal notranslate"><span class="pre">waveditor_c</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.waveditor_c.contvars"><code class="docutils literal notranslate"><span class="pre">waveditor_c.contvars</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.wavheader_editor_c"><code class="docutils literal notranslate"><span class="pre">wavheader_editor_c</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.wavheader_editor_c.contvars"><code class="docutils literal notranslate"><span class="pre">wavheader_editor_c.contvars</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.waveditor_m"><code class="docutils literal notranslate"><span class="pre">waveditor_m</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.waveditor_m.None"><code class="docutils literal notranslate"><span class="pre">waveditor_m.None</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.wavheader_editor_m"><code class="docutils literal notranslate"><span class="pre">wavheader_editor_m</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.wavheader_editor_m.None"><code class="docutils literal notranslate"><span class="pre">wavheader_editor_m.None</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.waveditor_v"><code class="docutils literal notranslate"><span class="pre">waveditor_v</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.waveditor_v.activate_WAVEDIT"><code class="docutils literal notranslate"><span class="pre">waveditor_v.activate_WAVEDIT()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.waveditor_v.activate_insertheader"><code class="docutils literal notranslate"><span class="pre">waveditor_v.activate_insertheader()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.waveditor_v.calculate_timediff"><code class="docutils literal notranslate"><span class="pre">waveditor_v.calculate_timediff()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.waveditor_v.check_consistency"><code class="docutils literal notranslate"><span class="pre">waveditor_v.check_consistency()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.waveditor_v.clear_WAVwidgets"><code class="docutils literal notranslate"><span class="pre">waveditor_v.clear_WAVwidgets()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.waveditor_v.create_delegate"><code class="docutils literal notranslate"><span class="pre">waveditor_v.create_delegate()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.waveditor_v.fill_wavtable"><code class="docutils literal notranslate"><span class="pre">waveditor_v.fill_wavtable()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.waveditor_v.init_waveditor_ui"><code class="docutils literal notranslate"><span class="pre">waveditor_v.init_waveditor_ui()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.waveditor_v.logfilehandler"><code class="docutils literal notranslate"><span class="pre">waveditor_v.logfilehandler()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.waveditor_v.overwrite_header"><code class="docutils literal notranslate"><span class="pre">waveditor_v.overwrite_header()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.waveditor_v.popup"><code class="docutils literal notranslate"><span class="pre">waveditor_v.popup()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.waveditor_v.reset_GUI"><code class="docutils literal notranslate"><span class="pre">waveditor_v.reset_GUI()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.waveditor_v.rxhandler"><code class="docutils literal notranslate"><span class="pre">waveditor_v.rxhandler()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.waveditor_v.scroll_to_end"><code class="docutils literal notranslate"><span class="pre">waveditor_v.scroll_to_end()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.waveditor_v.updateGUIelements"><code class="docutils literal notranslate"><span class="pre">waveditor_v.updateGUIelements()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.waveditor_v.write_edited_wavheader"><code class="docutils literal notranslate"><span class="pre">waveditor_v.write_edited_wavheader()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.waveditor_v.viewvars"><code class="docutils literal notranslate"><span class="pre">waveditor_v.viewvars</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.wavheader_editor_v"><code class="docutils literal notranslate"><span class="pre">wavheader_editor_v</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.wavheader_editor_v.activate_WAVEDIT"><code class="docutils literal notranslate"><span class="pre">wavheader_editor_v.activate_WAVEDIT()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.wavheader_editor_v.activate_insertheader"><code class="docutils literal notranslate"><span class="pre">wavheader_editor_v.activate_insertheader()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.wavheader_editor_v.calculate_timediff"><code class="docutils literal notranslate"><span class="pre">wavheader_editor_v.calculate_timediff()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.wavheader_editor_v.check_consistency"><code class="docutils literal notranslate"><span class="pre">wavheader_editor_v.check_consistency()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.wavheader_editor_v.clear_WAVwidgets"><code class="docutils literal notranslate"><span class="pre">wavheader_editor_v.clear_WAVwidgets()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.wavheader_editor_v.create_delegate"><code class="docutils literal notranslate"><span class="pre">wavheader_editor_v.create_delegate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.wavheader_editor_v.fill_wavtable"><code class="docutils literal notranslate"><span class="pre">wavheader_editor_v.fill_wavtable()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.wavheader_editor_v.init_wavheader_editor_ui"><code class="docutils literal notranslate"><span class="pre">wavheader_editor_v.init_wavheader_editor_ui()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.wavheader_editor_v.logfilehandler"><code class="docutils literal notranslate"><span class="pre">wavheader_editor_v.logfilehandler()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.wavheader_editor_v.overwrite_header"><code class="docutils literal notranslate"><span class="pre">wavheader_editor_v.overwrite_header()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.wavheader_editor_v.popup"><code class="docutils literal notranslate"><span class="pre">wavheader_editor_v.popup()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.wavheader_editor_v.reset_GUI"><code class="docutils literal notranslate"><span class="pre">wavheader_editor_v.reset_GUI()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.wavheader_editor_v.rxhandler"><code class="docutils literal notranslate"><span class="pre">wavheader_editor_v.rxhandler()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.wavheader_editor_v.scroll_to_end"><code class="docutils literal notranslate"><span class="pre">wavheader_editor_v.scroll_to_end()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.wavheader_editor_v.updateGUIelements"><code class="docutils literal notranslate"><span class="pre">wavheader_editor_v.updateGUIelements()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.wavheader_editor_v.write_edited_wavheader"><code class="docutils literal notranslate"><span class="pre">wavheader_editor_v.write_edited_wavheader()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="wavheader_editor.html#wavheader_editor.wavheader_editor.wavheader_editor_v.viewvars"><code class="docutils literal notranslate"><span class="pre">wavheader_editor_v.viewvars</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -787,23 +815,23 @@
 <li class="toctree-l2"><a class="reference internal" href="yaml_editor.html#yaml-editor-yaml-editor-module">yaml_editor.yaml_editor module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="yaml_editor.html#yaml-editor-yaml-editor-widget-module">yaml_editor.yaml_editor_widget module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="yaml_editor.html#module-yaml_editor">Module contents</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="yaml_editor.html#yaml_editor.yamleditor_c"><code class="docutils literal notranslate"><span class="pre">yamleditor_c</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="yaml_editor.html#yaml_editor.yamleditor_c.contvars"><code class="docutils literal notranslate"><span class="pre">yamleditor_c.contvars</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="yaml_editor.html#yaml_editor.yaml_editor_c"><code class="docutils literal notranslate"><span class="pre">yaml_editor_c</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="yaml_editor.html#yaml_editor.yaml_editor_c.contvars"><code class="docutils literal notranslate"><span class="pre">yaml_editor_c.contvars</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="yaml_editor.html#yaml_editor.yamleditor_m"><code class="docutils literal notranslate"><span class="pre">yamleditor_m</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="yaml_editor.html#yaml_editor.yamleditor_m.None"><code class="docutils literal notranslate"><span class="pre">yamleditor_m.None</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="yaml_editor.html#yaml_editor.yaml_editor_m"><code class="docutils literal notranslate"><span class="pre">yaml_editor_m</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="yaml_editor.html#yaml_editor.yaml_editor_m.None"><code class="docutils literal notranslate"><span class="pre">yaml_editor_m.None</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="yaml_editor.html#yaml_editor.yamleditor_v"><code class="docutils literal notranslate"><span class="pre">yamleditor_v</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="yaml_editor.html#yaml_editor.yamleditor_v.popup"><code class="docutils literal notranslate"><span class="pre">yamleditor_v.popup()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="yaml_editor.html#yaml_editor.yamleditor_v.read_yaml_header"><code class="docutils literal notranslate"><span class="pre">yamleditor_v.read_yaml_header()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="yaml_editor.html#yaml_editor.yamleditor_v.reset_GUI"><code class="docutils literal notranslate"><span class="pre">yamleditor_v.reset_GUI()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="yaml_editor.html#yaml_editor.yamleditor_v.rxhandler"><code class="docutils literal notranslate"><span class="pre">yamleditor_v.rxhandler()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="yaml_editor.html#yaml_editor.yamleditor_v.updateGUIelements"><code class="docutils literal notranslate"><span class="pre">yamleditor_v.updateGUIelements()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="yaml_editor.html#yaml_editor.yamleditor_v.write_yaml_header"><code class="docutils literal notranslate"><span class="pre">yamleditor_v.write_yaml_header()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="yaml_editor.html#yaml_editor.yamleditor_v.yaml_header_buttonfcn"><code class="docutils literal notranslate"><span class="pre">yamleditor_v.yaml_header_buttonfcn()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="yaml_editor.html#yaml_editor.yamleditor_v.viewvars"><code class="docutils literal notranslate"><span class="pre">yamleditor_v.viewvars</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="yaml_editor.html#yaml_editor.yaml_editor_v"><code class="docutils literal notranslate"><span class="pre">yaml_editor_v</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="yaml_editor.html#yaml_editor.yaml_editor_v.popup"><code class="docutils literal notranslate"><span class="pre">yaml_editor_v.popup()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="yaml_editor.html#yaml_editor.yaml_editor_v.read_yaml_header"><code class="docutils literal notranslate"><span class="pre">yaml_editor_v.read_yaml_header()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="yaml_editor.html#yaml_editor.yaml_editor_v.reset_GUI"><code class="docutils literal notranslate"><span class="pre">yaml_editor_v.reset_GUI()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="yaml_editor.html#yaml_editor.yaml_editor_v.rxhandler"><code class="docutils literal notranslate"><span class="pre">yaml_editor_v.rxhandler()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="yaml_editor.html#yaml_editor.yaml_editor_v.updateGUIelements"><code class="docutils literal notranslate"><span class="pre">yaml_editor_v.updateGUIelements()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="yaml_editor.html#yaml_editor.yaml_editor_v.write_yaml_header"><code class="docutils literal notranslate"><span class="pre">yaml_editor_v.write_yaml_header()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="yaml_editor.html#yaml_editor.yaml_editor_v.yaml_header_buttonfcn"><code class="docutils literal notranslate"><span class="pre">yaml_editor_v.yaml_header_buttonfcn()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="yaml_editor.html#yaml_editor.yaml_editor_v.viewvars"><code class="docutils literal notranslate"><span class="pre">yaml_editor_v.viewvars</span></code></a></li>
 </ul>
 </li>
 </ul>

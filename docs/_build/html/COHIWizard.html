@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="./">
 <head>
@@ -6,18 +8,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COHIWizard &mdash; COHIWizard_v1.2 1.2.8 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=4d6f9085"></script>
-        <script src="_static/doctools.js?v=9a2dae69"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=4d6f9085"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -77,6 +75,8 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#COHIWizard.starter"><code class="docutils literal notranslate"><span class="pre">starter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#COHIWizard.dynamic_import_from_config"><code class="docutils literal notranslate"><span class="pre">dynamic_import_from_config()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#COHIWizard.load_config_from_yaml"><code class="docutils literal notranslate"><span class="pre">load_config_from_yaml()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="Trash.html">Trash package</a></li>
@@ -122,8 +122,12 @@
              
   <section id="module-COHIWizard">
 <span id="cohiwizard"></span><h1>COHIWizard<a class="headerlink" href="#module-COHIWizard" title="Link to this heading"></a></h1>
-<p>Created on Sa Dec 08 2023</p>
-<p><a class="reference external" href="mailto:#&#37;&#52;&#48;author">#<span>&#64;</span>author</a>: scharfetter_admin</p>
+<p>Created on 20-1-2024
+<a class="reference external" href="mailto:#&#37;&#52;&#48;author">#<span>&#64;</span>author</a>: scharfetter_admin</p>
+<p>Core code with the purpose to 
+- instantiate all GUI widgets and modules
+- build basic connections between system signals and modules
+- setup the relaying mechanism for the exchange of variables between modules</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="COHIWizard.SplashScreen">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">COHIWizard.</span></span><span class="sig-name descname"><span class="pre">SplashScreen</span></span><a class="headerlink" href="#COHIWizard.SplashScreen" title="Link to this definition"></a></dt>
@@ -247,7 +251,8 @@ if all conditions are met FileOpen() is called which does the detailed work
 returns without action if a playthread is currently active; 
 if a file is open, the method asks if a new file should be opened (yes/no); returns on ‘No’
 The method relays the variable m[“fileopened”] via the SigRelay signal to all other modules</p>
-<img alt="../../source/images/cb_open_file.svg" src="../../source/images/cb_open_file.svg" /><dl class="field-list simple">
+<img alt="../../source/images/cb_open_file.svg" src="../../source/images/cb_open_file.svg" />
+<dl class="field-list simple">
 <dt class="field-odd">Param<span class="colon">:</span></dt>
 <dd class="field-odd"><p>none</p>
 </dd>
@@ -337,7 +342,8 @@ Returns: nothing</p>
 <dd class="field-odd"><p>Boolean</p>
 </dd>
 </dl>
-<img alt="../../source/images/fileopen.svg" src="../../source/images/fileopen.svg" /></dd></dl>
+<img alt="../../source/images/fileopen.svg" src="../../source/images/fileopen.svg" />
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="COHIWizard.core_v.popup">
@@ -364,7 +370,15 @@ Returns: nothing</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="COHIWizard.core_v.rxhandler">
 <span class="sig-name descname"><span class="pre">rxhandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#COHIWizard.core_v.rxhandler" title="Link to this definition"></a></dt>
-<dd><p>handles remote calls from other modules via Signal SigRX(_key,_value)</p>
+<dd><p>handles the exchange of variables between modules and remote calls of specific standard methods 
+from other modules via Signal SigRX(_key,_value). Also communication between module_c and module_v 
+needs to be relayed via this hadler, because module_c cannot access methods of module_v directly. 
+On reception of this signal _key is interpreted and if it contains a specific prefix an action is carried out:</p>
+<p>(1): Prefix = ‘<a href="#id1"><span class="problematic" id="id2">cm_all_</span></a>’: copy _value [1] to the model variable m[‘_value[0]’]. Example: Another module sends 
+SigRelay(’<a href="#id3"><span class="problematic" id="id4">cm_all_</span></a>’,[‘myvar’,self.m[‘myvar’]]), then the current module takes over this variable into the own 
+model, i.e. the variable self.m[‘myvar] exists from that moment or is overwritten. Caution: Use with care. model 
+variables with the same name as in other modules may be overwritten, If this is to be avoided , the the 
+respective names should not be used(listed in aa dictionary of reserved names).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Param<span class="colon">:</span></dt>
 <dd class="field-odd"><p>_key</p>
@@ -520,6 +534,18 @@ this method is connected in the __main__ of the core module
 <dd class="field-odd"><p>none</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="COHIWizard.dynamic_import_from_config">
+<span class="sig-prename descclassname"><span class="pre">COHIWizard.</span></span><span class="sig-name descname"><span class="pre">dynamic_import_from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#COHIWizard.dynamic_import_from_config" title="Link to this definition"></a></dt>
+<dd><p>Dynamic import of modules based on module configuration</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="COHIWizard.load_config_from_yaml">
+<span class="sig-prename descclassname"><span class="pre">COHIWizard.</span></span><span class="sig-name descname"><span class="pre">load_config_from_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#COHIWizard.load_config_from_yaml" title="Link to this definition"></a></dt>
+<dd><p>load module configuration from yaml file</p>
 </dd></dl>
 
 </section>

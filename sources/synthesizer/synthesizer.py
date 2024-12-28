@@ -714,10 +714,10 @@ class synthesizer_c(QObject):
 
         :param file_path: file path, either a local path or a http(s) URL
         :type file_path: str
-        :param *argv: variable number of args; argv[1]: chackflag, if set "c" then write only a short temp file for URL sources in order to save time and memory
+        :param *argv: variable number of args; argv[1]: checkflag, if set "c" then write only a short temp file for URL sources in order to save time and memory
         :type argv[1]: str
-        :return: a or False (on error)
-        :rtype: soundfile object (sf.Soundfile) or Boolean (on error)
+        :return: errorstatus: True or False, True if error, value: errorstring or soundfile object
+        :rtype: Boolean, soundfile object (sf.Soundfile) or str (on error)
         """
         checkflag = False
         errorstatus = False
@@ -1110,6 +1110,10 @@ class synthesizer_v(QObject):
             pass
 
     def setno2GBsplitting(self):
+        """suppress splitting of recordings into 2GB tranches, generate one big file; 
+        This is accomplished by setting a flag variable self.NO2GBSPLITTING. When False then 
+        max filesize is set to 1000 GB in self.create_band_thread()
+        """
         if self.gui.synthesizer_radioBut_no2GBsplitting.isChecked():
             self.gui.synthesizer_radioBut_no2GBsplitting.setEnabled(True)
             self.NO2GBSPLITTING = True
@@ -1293,8 +1297,6 @@ class synthesizer_v(QObject):
         #improvement: phase scrambling for multisinus approach
         slider = (20*np.log10(wanted_gain) + self.GAINOFFSET)*10/9
         self.gui.verticalSlider_Gain.setProperty("value", float(slider))
-
-
 
     def create_band_thread(self):
         """slot function for the CREATE button
@@ -2048,7 +2050,9 @@ class synthesizer_v(QObject):
 
     def fillplaylist(self):
         """update playlist of carrier with index self.m['carrier_ix']; clear old list and write new one
+
          :param: none
+
          :returns: none 
          """
         errorstatus = False
@@ -2287,11 +2291,17 @@ class synthesizer_v(QObject):
         """
         append or remove i elements to/from carrier list, i being the difference between the old number and
         the new number either selected with Spinbox or taken from custom carrier table
+
         (1) gets number of carriers from Spinbox or custom carrier table
+
         (2) validates the number
+
         (3) initializes or removes i new elements in self.readFileList
+
         (4) transfers new number to model variable self.m["numcarriers"]  
+
         (5) sets lowest and highest carrier frequencies 
+
         (6) calls self.carrierselect_update()
 
         :parameters : *argv, variable number of args
@@ -2306,11 +2316,12 @@ class synthesizer_v(QObject):
         # (3) import of URL playlists: same files on all carriers, check ; also interruptions possible
         # (4) clear sourcelists when importing m3u playlists >>>>> DONE
         # (5) emit info message on slowness when reading from URLs because of temp files
-
-
+        #TODO TODO TODO: good errorhandling einbauen
+        custom_flag = False
         self.numcarriers_old = self.m["numcarriers"]
         custom_carriers = []
         if len(argv) > 1:
+            custom_flag = True
             for x in argv[1]:
                 if self.isnumeric(x)[0]: ###########TODO: chars are a problem
                     custom_carriers.append(float(x))
@@ -2410,7 +2421,10 @@ class synthesizer_v(QObject):
         else:
             fc_low = float(self.gui.lineEdit_fc_low.text())#TODO make this visible to validator
             self.cf_HI = fc_low + (self.m["numcarriers"] - 1) * self.m["carrier_distance"]
-        self.carrierselect_update()
+        if custom_flag:
+            self.carrierselect_update(custom_carriers)
+        else:
+            self.carrierselect_update()
         return True
     
     def popup(self,i):
@@ -2582,7 +2596,8 @@ class synthesizer_v(QObject):
         self.gui.lineEdit_modfactor.editingFinished.connect(self.modfactor_update)
 
     def fc_low_update(self,*argv):
-        """slot function for the low carrier frequency line_edit; sets the model parameter m['fc_low'] and triggers validation"""
+        """slot function for the low carrier frequency line_edit; sets the model parameter m['fc_low'] 
+        and triggers validation"""
         #self.gui.lineEdit_fc_low.setText(str(self.cf_LO)) TODO: remove self.cf_LO
         fc_low = self.gui.lineEdit_fc_low.text()
         if not self.isnumeric(fc_low):
@@ -2692,6 +2707,15 @@ class synthesizer_v(QObject):
                     self.current_listdir = rootdir
 
     def playlist_update_delayed(self,dum,first,last):
+        """intermediate function to call playlist_update() with a delay of 0.1 seconds
+
+        :param dum: dummy parameter
+        :type dum: not specified
+        :param first: dummy parameter
+        :type first: not specified
+        :param last: dummy parameter
+        :type last: not specified
+        """
         #print(f"playlist_update, signal addrow: first ix: {first}, last ix: {last}")
         QTimer.singleShot(0, self.playlist_update)
 
@@ -2882,9 +2906,14 @@ class synthesizer_v(QObject):
         """import an m3u playlist with special format containing fields of the form
         #EXTGRP: <carrierfrequency>
         where <carrierfrequency> is a number specifying the carrier frequency in kHz for the following sub-playlist
+
         (1) read last importpath, if not found set to current directory
+
         (2) open m3u file, parse lines and compose self.readFileList and self.readFilePath
+
+        (3) call update of carrier frequencies
         """
+        #TODO: good errorhandling
         self.m3uflag = True
         self.m["proj_loaded"] = True
         self.gui.listWidget_sourcelist.clear()
@@ -2980,7 +3009,7 @@ class synthesizer_v(QObject):
 
         # Now, sub_playlists holds the segmented playlists and headers contains the associated index for each
         print(sub_playlists)
-        print(headers)
+        #print(headers)
         custom_carriers = []
         for ix in range(len(headers)):#TODO necessary ?
             #custom_carriers.append(headers[ix]["index"])
@@ -2997,7 +3026,7 @@ class synthesizer_v(QObject):
 
         self.m["numcarriers"] = len(self.readFileList)
         self.freq_carriers_update(self,custom_carriers)
-        self.fc_low_update()
+        #self.fc_low_update()
         self.gui.radiobutton_CustomCarriers.setChecked(True)
         self.gui.pushButton_importProject.clicked.connect(self.import_m3u)
 

@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="./">
 <head>
@@ -6,18 +8,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>player package &mdash; COHIWizard_v1.2 1.2.8 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=4d6f9085"></script>
-        <script src="_static/doctools.js?v=9a2dae69"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=4d6f9085"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -193,13 +191,17 @@ set all tabs which
 <dd><p>CONTROLLER
 _checks if the items ifreq, irate and icorr in system_state have the proper values acc. to RFCorder filename convention
 checks if system_state[“irate”] has a value out of the values defined for the STEMLAB in system_state[“rates”] 
+standard errorhandling via errorstate (True, False) and value (errormessage or ‘’)
 :param: none
-:type: none
-…
-:raises TODO [popup error message]: corresponding to different format errors
-…
-:return: True/False acc to success of the check
-:rtype: bool</p>
+:type: none</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>errorstate, value</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool, str</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -221,16 +223,46 @@ checks if system_state[“irate”] has a value out of the values defined for th
 <dt class="sig sig-object py" id="player.playrec.playrec_c.display_status">
 <span class="sig-name descname"><span class="pre">display_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">messagestring</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_c.display_status" title="Link to this definition"></a></dt>
 <dd><dl class="simple">
-<dt>handler for message signals from stemlabcontrol class</dt><dd><p>display message in GUI status field, if exists</p>
+<dt>handler for message signals from stemlabcontrol class</dt><dd><p>display message in GUI status field, if exists
+currently not used, reserved function</p>
 </dd>
 </dl>
-<p>VIEW
-:param: messaagestring
-:type: str
-:raises [none]: [none]
-:return: none
-:rtype: none</p>
+<dl class="field-list simple">
+<dt class="field-odd">Param<span class="colon">:</span></dt>
+<dd class="field-odd"><p>messaagestring</p>
+</dd>
+<dt class="field-even">Type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>[</strong><strong>none</strong><strong>]</strong> – [none]</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>none</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>none</p>
+</dd>
+</dl>
 </dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_c.errorhandler">
+<span class="sig-name descname"><span class="pre">errorhandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_c.errorhandler" title="Link to this definition"></a></dt>
+<dd><p>handles errors when methods return errormessages on errorstate == True
+(1) displays errormessage conveyed in ‘value’ and writes error to logfile
+(2) if ‘value’ contains the keyword ‘ERRORSP’ at the initial position, some special actions are performed</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>value</strong> (<em>str</em>) – error description which is to be displayed in the errormessage</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_c.errorsigmanager">
+<span class="sig-name descname"><span class="pre">errorsigmanager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_c.errorsigmanager" title="Link to this definition"></a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="player.playrec.playrec_c.generate_recfilename">
@@ -283,6 +315,21 @@ if self.modality == “play”:</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="player.playrec.playrec_c.nextfilemanager">
+<span class="sig-name descname"><span class="pre">nextfilemanager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_c.nextfilemanager" title="Link to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>sets parameters for the currently opened file in list of files played by tworker in case of liwt in nextfile chain</dt><dd><p>reads new wavheader
+resets the time updater via signalling</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>filename</strong> (<em>str</em>) – name of the currently opened file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="player.playrec.playrec_c.play_manager">
 <span class="sig-name descname"><span class="pre">play_manager</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_c.play_manager" title="Link to this definition"></a></dt>
 <dd><dl class="simple">
@@ -310,25 +357,26 @@ True if player can be started successfully</p>
 <dd><p>_start playback via data stream to STEMLAB sdr server
 starts thread ‘playthread’ for data streaming to the STEMLAB
 instantiates thread worker method
-initializes <a href="#id9"><span class="problematic" id="id10">signalling_</span></a>
-CONTROLLER
-:return: _False if error, True on <a href="#id11"><span class="problematic" id="id12">succes_</span></a>
-:rtype: _Boolean_
-‘’’
-Purpose: 
-SigFinished:                 emitted by: thread worker on end of stream</p>
+initializes <a href="#id9"><span class="problematic" id="id10">signalling_</span></a></p>
+<p>: Signals handled :
+- SigFinished: emitted by: thread worker on end of stream thread termination, activate slot function for Stop button
+- thread.finished:thread termination
+- thread.started: start worker method streaming loop
+- SigIncrementCurTime: emitted by thread worker every second</p>
 <blockquote>
-<div><p>thread termination, activate callback for Stop button</p>
+<div><p>increment playtime counter by 1 second</p>
 </div></blockquote>
-<dl class="simple">
-<dt>thread.finished:</dt><dd><p>thread termination</p>
+<ul class="simple">
+<li><p>SigError(errorstring): emitted by thread worker on error, invokes errormessager</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>_False if error, True on <a href="#id11"><span class="problematic" id="id12">succes_</span></a></p>
 </dd>
-<dt>thread.started:</dt><dd><p>start worker method streaming loop</p>
-</dd>
-<dt>SigIncrementCurTime:         emitted by: thread worker every second</dt><dd><p>increment playtime counter by 1 second</p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>_Boolean_</p>
 </dd>
 </dl>
-<p>Returns: False if error, True on success</p>
 </dd></dl>
 
 <dl class="py method">
@@ -338,16 +386,12 @@ SigFinished:                 emitted by: thread worker on end of stream</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="player.playrec.playrec_c.recordingsequence">
-<span class="sig-name descname"><span class="pre">recordingsequence</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_c.recordingsequence" title="Link to this definition"></a></dt>
-<dd><p>start SDR server unless already started. References to 
-:class: <cite>StemlabControl</cite>
-:return: False if STEMLAB socket cannot be started</p>
-<blockquote>
-<div><p>False if playback thread cannot be started</p>
-</div></blockquote>
+<span class="sig-name descname"><span class="pre">recordingsequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">expected_seconds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_c.recordingsequence" title="Link to this definition"></a></dt>
+<dd><p>handle recordig of a file:
+(1) check for sufficient diskspace</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Boolean</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>expected_seconds</strong> (<em>int</em>) – expected duration of the recording in seconds</p>
 </dd>
 </dl>
 </dd></dl>
@@ -739,10 +783,10 @@ object for playback and recording thread
 :param : no regular parameters; as this is a thread worker communication occurs via</p>
 <blockquote>
 <div><p>__slots__: Dictionary with entries:
-__slots__[0]: self.f1 = complete file path pathname/filename Type: str
+__slots__[0]: filename = complete file path pathname/filename Type: str
 __slots__[1]: timescaler = bytes per second  TODO: rescaling to samples per second would probably be more logical, Type int
 __slots__[2]: TEST = flag for test mode Type: bool
-__slots__[3]: modality; currently not used TODO: remove ?
+__slots__[3]: pause = flag if stream should be paused (True) or not (False)
 __slots__[4]: filehandle
 __slots__[5]: data segment to be returned every second
 __slots__[6]: gain, scaling factor for playback
@@ -763,8 +807,8 @@ __slots__[7]: formatlist: [formattag blockalign bitpsample]</p>
 </dl>
 </div></blockquote>
 <dl class="py method">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.play_loop16">
-<span class="sig-name descname"><span class="pre">play_loop16</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.play_loop16" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.play_loop_filelist">
+<span class="sig-name descname"><span class="pre">play_loop_filelist</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.play_loop_filelist" title="Link to this definition"></a></dt>
 <dd><p>worker loop for sending data to STEMLAB server
 data format i16; 2xi16 complex; FormatTag 1
 sends signals:</p>
@@ -774,27 +818,21 @@ SigIncrementCurTime = pyqtSignal()
 SigBufferOverflow = pyqtSignal()</p>
 </div></blockquote>
 <p>:param : no regular parameters; as this is a thread worker communication occurs via
-class slots __slots__[i], i = 0…3
-__slots__[0]: self.f1 = complete file path pathname/filename Type: str
+class slots __slots__[i], i = 0…8
+__slots__[0]: filename = complete file path pathname/filename Type: list
 __slots__[1]: timescaler = bytes per second  TODO: rescaling to samples per second would probably be more logical, Type int
 __slots__[2]: TEST = flag for test mode Type: bool
-__slots__[3]: modality; currently not used TODO: remove ?
-__slots__[4]: filehandle
+__slots__[3]: pause : if True then do not send data; Boolean
+__slots__[4]: filehandle: returns current filehandle to main thread methods on request 
 __slots__[5]: data segment to be returned every second
 __slots__[6]: gain, scaling factor for playback
 __slots__[7]: formatlist: [formattag blockalign bitpsample]
-__slots__[8]: datablocksize
-:type : none
-‘’’
-:raises [ErrorType]: none
-‘’’
-:return: none
-:rtype: none</p>
+__slots__[8]: datablocksize</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="player.playrec.playrec_worker.read24">
-<span class="sig-name descname"><span class="pre">read24</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">format</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.read24" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">read24</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">format</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filehandle</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.read24" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -803,7 +841,7 @@ __slots__[8]: datablocksize
 <dd><p>worker loop for receiving data from STEMLAB server
 data is written to file
 loop runs until EOF or interruption by stopping
-loop can be paused ??????how????????
+loop cannot be paused
 data format i16; 2xi16 complex; FormatTag 1
 sends signals:</p>
 <blockquote>
@@ -813,26 +851,25 @@ SigBufferOverflow = pyqtSignal()</p>
 </div></blockquote>
 <p>:param : no regular parameters; as this is a thread worker communication occurs via
 class slots __slots__[i], i = 0…3
-__slots__[0]: self.f1 = complete file path pathname/filename Type: str
+__slots__[0]: filename = complete file path pathname/filename Type: list
 __slots__[1]: timescaler = bytes per second  TODO: rescaling to samples per second would probably be more logical, Type int
 __slots__[2]: TEST = flag for test mode Type: bool
-__slots__[3]: modality; currently not used TODO: remove ?
-__slots__[4]: filehandle
+__slots__[3]: pause : if True then do not send data; Boolean
+__slots__[4]: filehandle: returns current filehandle to main thread methods on request 
 __slots__[5]: data segment to be returned every second
 __slots__[6]: gain, scaling factor for playback
 __slots__[7]: formatlist: [formattag blockalign bitpsample]
-:type : none
-‘’’
-:raises [ErrorType]: none
-‘’’
-:return: none
-:rtype: none</p>
+__slots__[8]: datablocksize</p>
+<p>:type : none</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>none</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>none</p>
+</dd>
+</dl>
 </dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.resetCounter">
-<span class="sig-name descname"><span class="pre">resetCounter</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#player.playrec.playrec_worker.resetCounter" title="Link to this definition"></a></dt>
-<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="player.playrec.playrec_worker.stop_loop">
@@ -860,6 +897,11 @@ __slots__[7]: formatlist: [formattag blockalign bitpsample]
 <dd></dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.fileclose">
+<span class="sig-name descname"><span class="pre">fileclose</span></span><a class="headerlink" href="#player.playrec.playrec_worker.fileclose" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="player.playrec.playrec_worker.filename">
 <span class="sig-name descname"><span class="pre">filename</span></span><a class="headerlink" href="#player.playrec.playrec_worker.filename" title="Link to this definition"></a></dt>
 <dd></dd></dl>
@@ -875,8 +917,8 @@ __slots__[7]: formatlist: [formattag blockalign bitpsample]
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="player.playrec.playrec_worker.modality">
-<span class="sig-name descname"><span class="pre">modality</span></span><a class="headerlink" href="#player.playrec.playrec_worker.modality" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="player.playrec.playrec_worker.pause">
+<span class="sig-name descname"><span class="pre">pause</span></span><a class="headerlink" href="#player.playrec.playrec_worker.pause" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">

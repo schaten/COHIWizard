@@ -535,7 +535,11 @@ class WAVheader_tools():
             aaa = (self.fileHandle.read(96)).decode('utf-8')
             wavheader['nextfilename'] = aaa.replace('\\\\','\\')
             wavheader['starttime_dt'] =  datetime(starttime[0],starttime[1],starttime[3],starttime[4],starttime[5],starttime[6])
-            wavheader['stoptime_dt'] =  datetime(stoptime[0],stoptime[1],stoptime[3],stoptime[4],stoptime[5],stoptime[6])
+            try:
+                wavheader['stoptime_dt'] =  datetime(stoptime[0],stoptime[1],stoptime[3],stoptime[4],stoptime[5],stoptime[6])
+            except:
+                #TODO: Hack for SDRangel files, where stoptime frequently is set to 0
+                wavheader['stoptime_dt'] = wavheader['starttime_dt']
             ccc = (self.fileHandle.read(4)).decode('utf-8')
             wavheader['diff'] = 0
             wavheader['data_ckID'] = ccc
