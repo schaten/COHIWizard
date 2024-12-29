@@ -523,7 +523,8 @@ class playrec_c(QObject):
         while True:
             if len(curr_nextfilestem) > 0:
                 nextfilename = self.m["my_dirname"] + "/" + curr_nextfilestem + ".wav"
-                if (os.path.isfile(nextfilename)):
+                if (os.path.isfile(nextfilename)) and not self.contingent_file_list.__contains__(nextfilename):
+                    #TODO TODO TODO: if filename already in continget_file_list, then skip !
                     self.contingent_file_list.append(nextfilename)
                     nextwavheader = WAVheader_tools.get_sdruno_header(WAVheader_tools,nextfilename)
                     curr_nextfilestem = Path(nextwavheader['nextfilename'].rstrip()).stem
