@@ -1076,6 +1076,7 @@ if __name__ == '__main__':
     config['module_names'] = {**widget_base, **config['module_names']}
     loaded_modules = dynamic_import_from_config(config,sub_module,xcore_v.logger)
     #print(f"__main__ first if NEW: {loaded_modules}")
+
     gui.show()
 
     list_mvct_directories = list(config['modules'].keys())

@@ -2256,10 +2256,18 @@ class synthesizer_v(QObject):
 
 
     def carrierselect_update(self,*argv):
+        """updates ccarrier selector combobox with new carrier frequencies
+        if argv[0] is passed and contains the vale 'custom_carriers', the carrier frequencies are taken from the custom carrier table
+
+        """
         #generate combobox entry list
-        if len(self.m["carrierarray"]) > 0:
-            carrier_array = np.array(self.m["carrierarray"])
-            pass
+        if len(self.m["carrierarray"]) > 0 and len(argv) > 0:
+            #carrier_array = np.array(self.m["carrierarray"])
+            if argv[0] == "nup":
+                carrier_array = np.array(self.m["carrierarray"])
+                pass
+            else:
+                carrier_array = np.array(argv[0])
             #carrierselector = carrier_array.tolist()
         else:
             carrier_array = np.arange(self.m["fc_low"], self.cf_HI+1, self.m["carrier_distance"])
@@ -2416,7 +2424,7 @@ class synthesizer_v(QObject):
 
         self.m["numcarriers"] = numcar
 
-        if len(self.m["carrierarray"]) > 0: #TODO: simplify
+        if len(self.m["carrierarray"]) > 0 and custom_flag: #TODO: simplify
             pass
         else:
             fc_low = float(self.gui.lineEdit_fc_low.text())#TODO make this visible to validator
