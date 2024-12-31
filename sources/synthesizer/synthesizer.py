@@ -906,6 +906,7 @@ class synthesizer_v(QObject):
         self.AUTOSCALE_RF = 0     # Set to 1 to select autoscale mode causing exact RF levelling to max, otherwise set to 0 for fixed RF levelling  
         self.FIXSCALE_FAKTOR_RF = 0.8 # guard factor for fixed RF levelling: assumed max. RF level: #carriers * (1+C_m) * C_FIXSCALE_FAKTOR_RF. RF overload may occur if C_FIXSCALE_FAKTOR_RF < 1 
         self.NO2GBSPLITTING = False # if True suppress 2 GB splitting of outputfiles
+        self.NOPLAYLISTUPDATE = False
         self.DATABLOCKSIZE = 1024*32
         self.STD_AUDIOBW = "4.5"
         self.STD_CARRIERDISTANCE = "9"
@@ -1042,6 +1043,7 @@ class synthesizer_v(QObject):
         self.gui.radiobutton_CustomCarriers.toggled.connect(self.customcarrier_handler)  
         self.gui.pushButton_importProject.clicked.connect(self.import_m3u)    
         self. gui.synthesizer_radioBut_no2GBsplitting.toggled.connect(self.setno2GBsplitting)
+        self. gui.synthesizer_radioBut_SuppressPlaylistinfo.toggled.connect(self.setsuppressplaylistinfo)
         self.gui.verticalSlider_Gain.valueChanged.connect(self.setgain)
         self.previous_value = self.gui.spinBox_numcarriers.value()
         self.RecBW_update()
@@ -1121,6 +1123,16 @@ class synthesizer_v(QObject):
             self.gui.synthesizer_radioBut_no2GBsplitting.setEnabled(True)
             self.NO2GBSPLITTING = False
 
+    def setsuppressplaylistinfo(self):
+        """suppress update of playlist and playlength info during project import
+        """
+        if self.gui.synthesizer_radioBut_SuppressPlaylistinfo.isChecked():
+            self.gui.synthesizer_radioBut_SuppressPlaylistinfo.setEnabled(True)
+            self.NOPLAYLISTUPDATE = True
+        else:
+            self.gui.synthesizer_radioBut_SuppressPlaylistinfo.setEnabled(True)
+            self.NOPLAYLISTUPDATE = False
+
     def customcarrier_handler(self):
         
         if self.gui.radiobutton_CustomCarriers.isChecked():
@@ -1170,6 +1182,7 @@ class synthesizer_v(QObject):
         self.m["carrierarray"] = []
         self.autosave = False
         self.m["proj_loaded"] = False
+        self.gui.progressBar_fillPlaylist.setValue(0)
         #self.m["carrierarray"] = []
         #self.m["carrierarray"] = np.arange(783, 801, 2)
         self.m["carrierarray"] = np.arange(783, 801, 9)
@@ -2039,7 +2052,11 @@ class synthesizer_v(QObject):
         get corresponding carrier index and call playlist update
         """
         self.m["carrier_ix"] = self.gui.comboBox_cur_carrierfreq.currentIndex()
-        errorstatus, value = self.fillplaylist()
+        if not self.NOPLAYLISTUPDATE:
+            errorstatus, value = self.fillplaylist()
+        else:
+            errorstatus = False
+            value = ""
         if errorstatus:
             self.errorhandler(value)
             return
@@ -2922,6 +2939,7 @@ class synthesizer_v(QObject):
         (3) call update of carrier frequencies
         """
         #TODO: good errorhandling
+        self.clear_project()
         self.m3uflag = True
         self.m["proj_loaded"] = True
         self.gui.listWidget_sourcelist.clear()
