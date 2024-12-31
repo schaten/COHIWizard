@@ -2940,6 +2940,7 @@ class synthesizer_v(QObject):
         """
         #TODO: good errorhandling
         self.clear_project()
+        self.activate_control_elements(False)
         self.m3uflag = True
         self.m["proj_loaded"] = True
         self.gui.listWidget_sourcelist.clear()
@@ -3054,6 +3055,7 @@ class synthesizer_v(QObject):
         self.freq_carriers_update(self,custom_carriers)
         #self.fc_low_update()
         self.gui.radiobutton_CustomCarriers.setChecked(True)
+        self.activate_control_elements(True)
         self.gui.pushButton_importProject.clicked.connect(self.import_m3u)
 
 class TableDialog(QDialog):
