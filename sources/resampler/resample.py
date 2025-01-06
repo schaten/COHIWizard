@@ -7,11 +7,13 @@ from PyQt5.QtCore import *
 from PyQt5 import QtGui
 from pathlib import Path, PureWindowsPath
 import datetime as ndatetime
+from datetime import timedelta
 import logging
 #import signal
 import psutil
 import os 
 import subprocess
+import re
 import shutil
 from PyQt5 import QtWidgets
 from matplotlib.patches import Rectangle
@@ -464,6 +466,128 @@ class res_workers(QObject):
                         current_output_file.write(data_chunk)
                         current_output_file_size += len(data_chunk)
         self.logger.debug("#################_______________merge2G: merge files done")
+        self.SigFinishedmerge2G.emit()
+
+        
+    def correct_times_nextfn_worker(self): 
+        """worker for correcting the times and nextfilenames all files in system_state["list_out_files_resampled"]
+
+        1. loops through resampling playlist
+
+        2. reads the wavheader and corrects the starttime, stoptime and nextfilename
+
+        3. if length of playlist is reached:
+            - finalize wav-header of current outputfile, 
+            - rename current file according to name convention and move to target folder
+        
+        stopix is set true from outside via the function soxworker_terminate()
+        
+        :communication: with other threads via getters and setters
+
+        :param: none
+        :return: none
+        """
+        self.logger = self.get_logger()
+        self.stopix = False
+        output_file_prefix = self.get_tfname()
+        current_output_file_index = 1
+        current_output_file_size = 0
+        # change to filename
+        #current_output_file_path = f"{output_file_prefix}_{current_output_file_index}.dat"
+        #MAX_TARGETFILE_SIZE = int(2**31)
+        #MAX_GAP = self.get_maxgap()
+        input_file_list = self.get_inputfilelist()
+        self.logger.debug("#################_______________correct wavheaders: start ")
+        #self.logger.debug("merge2G worker: start merging files")
+
+        maxprogress = 100
+        lenlist = len(input_file_list)
+        list_ix = 0
+        time.sleep(5) #TODO: check if 5 s is necessary
+        #TODO: Entrypoint für zu wählenden Ausgangsfilenamen über getter/setter, wie oben
+        basename = self.get_ret()
+        self.set_progress(1)
+        self.logger.debug(f'#################_______________wavheader corection init progress: {1}')
+        #self.logger.debug("merge2G worker init progress: 1")
+        self.SigPupdate.emit()
+        firstpass = True
+        output_file_list = []
+        for list_ix,input_file in enumerate(input_file_list): #TODO: rewrite with enumerate for list index
+            current_output_file = input_file
+            if firstpass:
+                firstpass = False
+                wavheader = WAVheader_tools.get_sdruno_header(self,input_file)
+                stt = wavheader["starttime_dt"]
+
+            progress = list_ix/lenlist*maxprogress
+            self.set_progress(progress)
+            self.logger.debug(f'header correct progress: {progress}; next input file: {input_file}')
+            self.SigPupdate.emit()
+            time.sleep(0.1)
+
+            if self.stopix is True: #CANCEL PROCESS
+                self.logger.debug("***correct wavheader worker cancel process")
+                time.sleep(1)
+                self.logger.debug("***correct wavheader worker input file closed")
+                self.SigFinishedmerge2G.emit()  ##TODO SIGNALNAME
+                return()
+            #get duration of current file
+            current_output_file_size = os.path.getsize(input_file)
+            duration = (current_output_file_size - 216)/wavheader["nAvgBytesPerSec"]
+            #get starttime of the whoe list from starttime of the first file
+            #calculate stoptime and other wavheader items
+            spt = stt + ndatetime.timedelta(seconds = np.floor(duration)) + ndatetime.timedelta(milliseconds = 1000*(duration - np.floor(duration)))
+            wavheader['stoptime_dt'] = spt
+            wavheader['stoptime'] = [spt.year, spt.month, 0, spt.day, spt.hour, spt.minute, spt.second, int(spt.microsecond/1000)] 
+            #wavheader['filesize'] = current_output_file_size will not be changed
+            #wavheader['data_nChunkSize'] = wavheader['filesize'] - 208
+            wavheader['nextfilename'] = "" #TODO: could be generated here ?
+            #write new wavheader with corrected times
+            WAVheader_tools.write_sdruno_header(self,current_output_file.name,wavheader,True) ##TODO TODO TODO Linux conf: self.m["f1"],self.m["wavheader"] must be in Windows format
+            #generate new filename: use the trunk of the old filename and add the standard string with new date/starttime/kHz entry
+            nametrunk, extension = os.path.splitext(current_output_file.name)
+            #TODO TODO TODO: basename should be the trunk before the standard timesequence, if it exists. Otherwise the whole name
+            nametrunk = f"{os.path.dirname(current_output_file)}/{basename}_"
+            #generate standard time/date/LO string
+            aux = str(wavheader['starttime_dt'])
+            if aux.find('.') < 1:
+                SDRUno_suff = aux
+            else:
+                SDRUno_suff = aux[:aux.find('.')]
+            SDRUno_suff = SDRUno_suff.replace(" ","_")
+            SDRUno_suff = SDRUno_suff.replace(":","")
+            SDRUno_suff = SDRUno_suff.replace("-","")
+            new_name = nametrunk + str(SDRUno_suff) + '_' + str(int(np.round(wavheader["centerfreq"]/1000))) + 'kHz.wav'
+            output_file_list.append(new_name)
+            time.sleep(0.01)
+            jx = 0
+            #rename file
+            while jx <1:
+                try:
+                    #print(f"merge2Gworker try shutil {current_output_file_path} to {new_name}")
+                    shutil.move(current_output_file, new_name)
+                except:
+                    jx += 1
+                    #print(f"merge2Gworker renamefile trial {str(jx)}")
+                    print("Warning 202 merge2Gworker: cannot access temp file, retry in 2 s")
+
+                    time.sleep(0.5)
+            #self.logger.debug("break correct wavheader")
+
+            # prepare next wavheader starttime
+            wavheader['starttime_dt'] = wavheader['stoptime_dt']
+            #wavheader['starttime'] = wavheader['stoptime']     
+
+            # current filename is the nextfilename of the previous file in he list -->
+            #retrospectively enter in wav header of previous file
+            #TODO TODO: fetch name of next file from list, if it exists, extract starttime and generate nextfilename
+            if list_ix > 0 and list_ix < lenlist:   
+                prev_input_file = output_file_list[list_ix - 1]
+                aux_wavheader = WAVheader_tools.get_sdruno_header(self,prev_input_file) #TODO: check if this works
+                aux_wavheader['nextfilename'] = Path(new_name).name
+                WAVheader_tools.write_sdruno_header(self,prev_input_file,aux_wavheader,True) ##TODO TODO TODO Linux conf: self.m["f1"],self.m["wavheader"] must be in Windows format
+
+        self.logger.debug("#################____________correctwavheader: job done")
         self.SigFinishedmerge2G.emit()
 
     def sox_writer(self):
@@ -1328,6 +1452,7 @@ class resample_c(QObject):
         auxi.standard_errorbox("Error produced by SOX, probably due to inconsistent cutting times; process terminated")
         #TODO: push GUI into a safe state: leave scheduler process and reset GUI, resample_c GUI 
         
+        
     def accomplish_resampling(self):
         """_after sox-resampling a wav_fileheader is inserted into the resampled dat-File.
         Afterwards temporary files are removed
@@ -1947,11 +2072,49 @@ class resample_v(QObject):
         self.gui.label_Filename_resample.setText('')
         self.gui.pushButton_resample_split2G.clicked.connect(self.cb_split2G_Button)
         self.gui.checkBox_Cut.setEnabled(False)
+        self.gui.pushButton_resample_correctwavheaders.clicked.connect(self.correctwavheaders)
+        self.gui.pushButton_resample_correctwavheaders.setEnabled(False)
 
         #self.gui.checkBox_writelog.clicked.connect(self.togglelogmodus) #TODO TODO TODO: logfilemodus anders implementieren
 
         #TODO TODO TODO: mache das targetfilenameprefix KONFIGURIERBAR ???
 
+    def popup(self,i):
+        """
+        """
+        self.yesno = i.text()
+
+    def correctwavheaders(self):
+
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Question)
+        msg.setText("Correct wavheaders")
+        msg.setInformativeText("all wav headers of the selected playlist will be changed; nextfilenames will be corrected and the time stamps will be changed according the starttime entry in the header of the first file. Do you really want to proceed ?")
+        msg.setWindowTitle("Correct wavheaders")
+        msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        msg.buttonClicked.connect(self.popup)
+        msg.exec_()
+        if self.yesno == "&No":
+            ###RESET playgroup
+            self.reset_playerbuttongroup()
+            self.reset_LO_bias()
+            #sys_state.set_status(system_state)
+            return False
+        #TODO: validate reslist: check if all files are wav files and if list is not empty
+        if len(self.m["reslist"]) == 0:
+            #TODO: implement errorhandler method
+            self.logger.debug("no files in playlist")
+            return False    
+        reslist = []
+        for row in range(self.gui.listWidget_playlist_2.count()):
+            reslist.append(self.gui.listWidget_playlist_2.item(row).text())
+            # self.gui.listWidget_playlist_2.addItem(item.text())
+        
+        errorstate, value = self.correct_times_nextfn(reslist)
+        if errorstate:
+            self.logger.debug("error in correct_times_nextfn")
+            self.errorhandler(value)
+        pass
 
     def rxhandler(self,_key,_value):
         """
@@ -1977,8 +2140,10 @@ class resample_v(QObject):
                 self.resample_c.SigUpdateGUIelements.connect(self.updateGUIelements)
             if  _value[0].find("disconnect_updateGUIelements") == 0:
                 self.logger.debug("rxh: disconnect updateGUIelements")
-                self.resample_c.SigUpdateGUIelements.disconnect(self.updateGUIelements)
-                
+                try:
+                    self.resample_c.SigUpdateGUIelements.disconnect(self.updateGUIelements)
+                except:
+                    pass
             if  _value[0].find("updateGUIelements") == 0:
                 self.logger.debug("call updateGUIelements")
                 self.updateGUIelements()    
@@ -2680,6 +2845,7 @@ class resample_v(QObject):
             self.gui.timeEdit_resample_startcut.setEnabled(True)
             self.gui.checkBox_merge_selectall.setEnabled(True)
             self.gui.lineEdit_resample_targetnameprefix.setEnabled(True)
+            self.gui.pushButton_resample_correctwavheaders.setEnabled(True)
             self.gui.checkBox_Cut.setEnabled(True)
             # gui.ui.lineEdit_resample_Gain.setEnabled(True)
             # gui.ui.radioButton_resgain.setEnabled(True)
@@ -2691,6 +2857,7 @@ class resample_v(QObject):
             self.gui.lineEdit_resample_Gain.setEnabled(False)
             self.gui.checkBox_merge_selectall.setEnabled(False)
             self.gui.checkBox_Cut.setEnabled(False)
+            self.gui.pushButton_resample_correctwavheaders.setEnabled(False)
             #self.gui.lineEdit_resample_targetnameprefix.setEnabled(False)
             # gui.ui.radioButton_resgain.setChecked(False)
             # gui.ui.radioButton_resgain.setEnabled(False)
@@ -2749,7 +2916,7 @@ class resample_v(QObject):
         self.gui.radioButton_advanced_sampling.setEnabled(status)
         self.gui.pushButton_resample_resample.setEnabled(status)
         self.gui.pushButton_resample_split2G.setEnabled(status)
-        
+        self.gui.pushButton_resample_correctwavheaders.setEnabled(status)
         #self.gui.pushButton_resample_GainOnly.setEnabled(status)
         self.gui.lineEdit_resample_targetnameprefix.setEnabled(status)
 
@@ -2867,6 +3034,167 @@ class resample_v(QObject):
         self.gui.pushButton_resample_split2G.clicked.connect(self.cb_split2G_Button)
 
 
+        
+    def correct_times_nextfn(self, input_file_list): 
+        """corrects the times and nextfilenames as well as the names of of all files 
+        in input_file_list according to the starttime of the first file in the list
+        The method loops through the input_file_list and does the follofing for each entry:
+
+        1. reads the wavheader and corrects the starttime and stoptime entries
+
+        2. renames current file according to name convention and move to target folder
+
+        3. writes corrected wavheader to current file
+
+        4. writes nextfilename to previous file (if not first file)
+        
+        stopix is set true from outside via the function soxworker_terminate()
+
+        :param: input_file_list: list of filenames to be corrected
+        :type: list
+
+        :raises: none
+
+        :return: none
+        """
+        #self.logger = self.get_logger()
+        errorstate = False
+        value = ""
+        self.stopix = False
+        self.logger.debug("_correct wavheaders: start ")
+        maxprogress = 100
+        lenlist = len(input_file_list)
+        if lenlist == 0:
+            errorstate = True
+            value = "NOCLEAR no files in list"
+            return(errorstate, value)   
+        list_ix = 0
+        firstpass = True
+        for list_ix,input_file in enumerate(input_file_list):
+            #here the filename does not contain the ful path, only the name
+            file_under_operation = os.path.join(self.m["my_dirname"], input_file)
+            wavheader = WAVheader_tools.get_sdruno_header(self,file_under_operation)
+            wavheader['nextfilename'] = "" 
+            spt = wavheader['stoptime_dt']
+            if firstpass:
+                #initialize time chain with starttime fo first file
+                stt = wavheader["starttime_dt"]
+                delta = timedelta(seconds = 0)
+            else:
+                #calculate time difference between starttime of current and stoptime of previous file
+                #for adding this as an offset to the next starttime
+                delta = wavheader["starttime_dt"] - old_stp
+            old_stp = spt
+            #add offset for starttime of current file
+            stt += delta
+            progress = (list_ix+1)/lenlist*maxprogress
+            #self.set_progress(progress)
+            self.logger.debug(f'correct_times_nextfn progress: {progress}; next input file: {input_file}')
+            #self.SigPupdate.emit()
+            #time.sleep(0.1)
+            if self.stopix is True: #CANCEL PROCESS
+                self.logger.debug("***correct_times_nextfn cancel process")
+                errorstate = True
+                value = "process cancelled by user"
+                return(errorstate, value)
+            #get duration of current file
+            file_under_operation_size = os.path.getsize(file_under_operation)
+            #os.path.split(file_under_operation)[0]
+            #extract new datetime string from current filename to be edited
+            #A filename ends with a string like: filenamebase_20231231_235959Z_xxHz.wav
+            filename = Path(file_under_operation).name
+            pattern = r"_\d{8}_\d{6}Z_[A-Za-z0-9]+Hz."
+            # Search for the pattern in the filename
+            match = re.search(pattern, filename)
+            if match:
+                # Get the start position of the match
+                start_position = match.start()
+                #match.span()[0] match.span()[1]
+            else:
+                errorstate = True
+                value = "Pattern not found in the filename. Aborting procedure"
+                return(errorstate, value)
+            
+            nametrunk = filename[:start_position+1]
+            aux = str(stt) # stt ?
+            if aux.find('.') < 1:
+                SDRUno_suff = aux
+            else:
+                SDRUno_suff = aux[:aux.find('.')]
+            SDRUno_suff = SDRUno_suff.replace(" ","_")
+            SDRUno_suff = SDRUno_suff.replace(":","")
+            SDRUno_suff = SDRUno_suff.replace("-","")
+            new_name = nametrunk + str(SDRUno_suff) + 'Z_' + str(int(np.round(wavheader["centerfreq"]/1000))) + 'kHz.wav'
+            new_path = os.path.join(self.m["my_dirname"], new_name) 
+            #calculate duration of current file
+            duration = (file_under_operation_size - 216)/wavheader["nAvgBytesPerSec"]
+            #get starttime of the whoe list from starttime of the first file
+            #calculate stoptime and other wavheader items
+            spt = stt + ndatetime.timedelta(seconds = np.floor(duration)) + ndatetime.timedelta(milliseconds = 1000*(duration - np.floor(duration)))
+            wavheader['stoptime_dt'] = spt
+            wavheader['stoptime'] = [spt.year, spt.month, 0, spt.day, spt.hour, spt.minute, spt.second, int(spt.microsecond/1000)] 
+            wavheader['starttime'] = [stt.year, stt.month, 0, stt.day, stt.hour, stt.minute, stt.second, int(stt.microsecond/1000)] 
+            #write new wavheader with corrected times
+            WAVheader_tools.write_sdruno_header(self,file_under_operation,wavheader,True) ##TODO TODO TODO Linux conf: self.m["f1"],self.m["wavheader"] must be in Windows format
+            #generate new filename: use the trunk of the old filename and add the standard string with new date/starttime/kHz entry
+            if not firstpass:
+                prev_wavheader = WAVheader_tools.get_sdruno_header(self,previous_filepath)
+                prev_wavheader["nextfilename"] = new_name
+                WAVheader_tools.write_sdruno_header(self,previous_filepath,prev_wavheader,True)
+                #calculate new starttime for next file
+            firstpass = False
+            stt = spt #+ delta  #TODO: False summation, must be corrected
+            previous_filepath = new_path
+            rename_done = False
+            #rename file
+            while not rename_done:
+                try:
+                    #print(f"merge2Gworker try shutil {file_under_operation_path} to {new_name}")
+                    shutil.move(file_under_operation, new_path)
+                    rename_done = True
+                except:
+                    #print(f"merge2Gworker renamefile trial {str(jx)}")
+                    print("Warning correct wavheader: cannot rename file, retry in 0.5 s")
+                    time.sleep(0.5)
+                    #TODO: abort after n trials
+            #self.logger.debug("break correct wavheader")
+            #wavheader['starttime_dt'] = wavheader['stoptime_dt']
+            #wavheader['starttime'] = wavheader['stoptime']     
+
+        self.logger.debug("correct_times_nextfn: job done")
+        auxi.standard_infobox("correct times and nextfilenames as well as filenames: job done")
+        return(errorstate, value)
+        #self.SigFinishedmerge2G.emit()
+
+
+
+    def errorhandler(self,value):
+        """handles errors when methods return errormessages on errorstate == True
+        (1) displays errormessage conveyed in 'value', clears GUI and writes error to logfile
+        (2) if 'value' contains the keyword 'NOCLEAR' at the initial position, the GUI is not cleared. This is important for calls from functions
+        which themselves call errorhandler; otherwise an endless loop would emerge.
+
+        :param value: error description which is to be displayed in the errormessage
+        :type value: str
+        """
+        self.logger.error(str(value))
+        #self.m["metadata"]["rootpath"]    
+        #do other stuff on more detailed evaluation of value
+        
+        try: 
+            if value.find("NOCLEAR") == 0:
+                #self.activate_control_elements(False)
+                auxi.standard_errorbox(str(value[7:]))
+            else:
+                auxi.standard_errorbox(str(value)) 
+                self.reset_GUI()
+        except:
+            if str(value) == "None":
+                value = "unknown error, maybe the internet connection was required and could not be established. Please check."
+            auxi.standard_errorbox(str(value))
+            self.reset_GUI()
+            #self.clear_project()
+            #self.activate_control_elements(True)
 
     def check_listconsistency(self):
         """check if all files in the list to be resampled have the same sampling parameters
@@ -2876,9 +3204,12 @@ class resample_v(QObject):
         :return: True if successful, False if inconsistency
         :rtype: Boolean
         """
-        #return ##########TODO TODO TODO: remove after tests
+        #return ##########TODO TODO TODO: good errorhandling !
         lw = self.gui.listWidget_playlist_2
         reslist_len = self.gui.listWidget_playlist_2.count()
+        if reslist_len == 0:
+            auxi.standard_errorbox("No files in the list to be resampled")
+            return False
         item = lw.item(0)
         filename_prev, ext = os.path.splitext(item.text())
         filename = self.m["my_dirname"] + '/' + item.text()

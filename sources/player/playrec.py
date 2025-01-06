@@ -1614,14 +1614,12 @@ class playrec_v(QObject):
     def cb_Butt_toggleplay(self):
         """ 
         toggles the play button between play and pause states
-        TODO
+
+
+        .. image:: ../../source/images/cb_Butt_toggleplay.svg
+
         :param: none
         :type: none
-        ...
-        :raises: none
-        ...
-        :return: none
-        :rtype: none
         """
         self.playlist_update()
         self.update_LO_bias()
@@ -1686,7 +1684,6 @@ class playrec_v(QObject):
             self.gui.ScrollBar_playtime.setEnabled(True)
             self.gui.pushButton_adv1byte.setEnabled(True)
         else:
-
             self.gui.pushButton_Play.setIcon(QIcon("./core/ressources/icons/play_v4.PNG"))
             self.m["pausestate"] = True ##TODO CHECK: necessary ? es gibt ja self.playrec_c.playrec_tworker.pausestate
             if self.m["playthreadActive"] == True:

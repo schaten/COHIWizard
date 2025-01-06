@@ -143,6 +143,36 @@ __slots__[1]: return string from sox execution, type : str</p>
 <dd></dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.res_workers.correct_times_nextfn_worker">
+<span class="sig-name descname"><span class="pre">correct_times_nextfn_worker</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.res_workers.correct_times_nextfn_worker" title="Link to this definition"></a></dt>
+<dd><p>worker for correcting the times and nextfilenames all files in system_state[“list_out_files_resampled”]</p>
+<ol class="arabic simple">
+<li><p>loops through resampling playlist</p></li>
+<li><p>reads the wavheader and corrects the starttime, stoptime and nextfilename</p></li>
+<li><dl class="simple">
+<dt>if length of playlist is reached:</dt><dd><ul class="simple">
+<li><p>finalize wav-header of current outputfile,</p></li>
+<li><p>rename current file according to name convention and move to target folder</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ol>
+<p>stopix is set true from outside via the function soxworker_terminate()</p>
+<dl class="field-list simple">
+<dt class="field-odd">Communication<span class="colon">:</span></dt>
+<dd class="field-odd"><p>with other threads via getters and setters</p>
+</dd>
+<dt class="field-even">Param<span class="colon">:</span></dt>
+<dd class="field-even"><p>none</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>none</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="resampler.resample.res_workers.merge2G_worker">
 <span class="sig-name descname"><span class="pre">merge2G_worker</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.res_workers.merge2G_worker" title="Link to this definition"></a></dt>
 <dd><p>worker for merging all files in system_state[“list_out_files_resampled”]</p>
@@ -686,6 +716,41 @@ check if the time gap between subsequent files is below a certain threshold</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.correct_times_nextfn">
+<span class="sig-name descname"><span class="pre">correct_times_nextfn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_file_list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.correct_times_nextfn" title="Link to this definition"></a></dt>
+<dd><p>worker for correcting the times and nextfilenames all files in system_state[“list_out_files_resampled”]</p>
+<ol class="arabic simple">
+<li><p>loops through resampling playlist</p></li>
+<li><p>reads the wavheader and corrects the starttime, stoptime and nextfilename</p></li>
+<li><dl class="simple">
+<dt>if length of playlist is reached:</dt><dd><ul class="simple">
+<li><p>finalize wav-header of current outputfile,</p></li>
+<li><p>rename current file according to name convention and move to target folder</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ol>
+<p>stopix is set true from outside via the function soxworker_terminate()</p>
+<dl class="field-list simple">
+<dt class="field-odd">Communication<span class="colon">:</span></dt>
+<dd class="field-odd"><p>with other threads via getters and setters</p>
+</dd>
+<dt class="field-even">Param<span class="colon">:</span></dt>
+<dd class="field-even"><p>none</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>none</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.correctwavheaders">
+<span class="sig-name descname"><span class="pre">correctwavheaders</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.correctwavheaders" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="resampler.resample.resample_v.enable_resamp_GUI_elemets">
 <span class="sig-name descname"><span class="pre">enable_resamp_GUI_elemets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">status</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.enable_resamp_GUI_elemets" title="Link to this definition"></a></dt>
 <dd><p>enables or disables resampling GUI elements depending on ‘status’: True or False
@@ -762,6 +827,11 @@ TODO: all references are still ‘self’, check !
 :return: flag False or True, False on unsuccessful execution
 :rtype: Boolean</p>
 </dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="resampler.resample.resample_v.popup">
+<span class="sig-name descname"><span class="pre">popup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resampler.resample.resample_v.popup" title="Link to this definition"></a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="resampler.resample.resample_v.read_gain">

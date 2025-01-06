@@ -1987,7 +1987,7 @@ class Ui_synthesizer_widget(object):
         self.synthesizer_radioBut_no2GBsplitting.setToolTip(_translate("synthesizer_widget", "suppress splitting of output file in 2GB slices - make on large file only"))
         self.synthesizer_radioBut_no2GBsplitting.setText(_translate("synthesizer_widget", "no 2GB splitting"))
         self.synthesizer_radioBut_SuppressPlaylistinfo.setToolTip(_translate("synthesizer_widget", "Do not display playlength information and playlist to save initial project loading time"))
-        self.synthesizer_radioBut_SuppressPlaylistinfo.setText(_translate("synthesizer_widget", "Suppress playlength"))
+        self.synthesizer_radioBut_SuppressPlaylistinfo.setText(_translate("synthesizer_widget", "Suppress playtime"))
 
 
 if __name__ == "__main__":

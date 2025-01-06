@@ -521,7 +521,9 @@ get corresponding carrier index and call playlist update</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="synthesizer.synthesizer_v.carrierselect_update">
 <span class="sig-name descname"><span class="pre">carrierselect_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">argv</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.carrierselect_update" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>updates ccarrier selector combobox with new carrier frequencies
+if argv[0] is passed and contains the vale ‘custom_carriers’, the carrier frequencies are taken from the custom carrier table</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="synthesizer.synthesizer_v.checkffmpeg_install">
@@ -596,9 +598,15 @@ and triggers validation</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="synthesizer.synthesizer_v.fillplaylist">
 <span class="sig-name descname"><span class="pre">fillplaylist</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.fillplaylist" title="Link to this definition"></a></dt>
-<dd><p>update playlist of carrier with index self.m[‘carrier_ix’]; clear old list and write new one
-:param: none
-:returns: none</p>
+<dd><p>update playlist of carrier with index self.m[‘carrier_ix’]; clear old list and write new one</p>
+<dl class="field-list simple">
+<dt class="field-odd">Param<span class="colon">:</span></dt>
+<dd class="field-odd"><p>none</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>none</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -745,7 +753,17 @@ is called</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="synthesizer.synthesizer_v.playlist_update_delayed">
 <span class="sig-name descname"><span class="pre">playlist_update_delayed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dum</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.playlist_update_delayed" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>intermediate function to call playlist_update() with a delay of 0.1 seconds</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dum</strong> (<em>not specified</em>) – dummy parameter</p></li>
+<li><p><strong>first</strong> (<em>not specified</em>) – dummy parameter</p></li>
+<li><p><strong>last</strong> (<em>not specified</em>) – dummy parameter</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="synthesizer.synthesizer_v.populate_table">
@@ -851,6 +869,12 @@ is called</p>
 <dd><p>suppress splitting of recordings into 2GB tranches, generate one big file; 
 This is accomplished by setting a flag variable self.NO2GBSPLITTING. When False then 
 max filesize is set to 1000 GB in self.create_band_thread()</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="synthesizer.synthesizer_v.setsuppressplaylistinfo">
+<span class="sig-name descname"><span class="pre">setsuppressplaylistinfo</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#synthesizer.synthesizer_v.setsuppressplaylistinfo" title="Link to this definition"></a></dt>
+<dd><p>suppress update of playlist and playlength info during project import</p>
 </dd></dl>
 
 <dl class="py method">

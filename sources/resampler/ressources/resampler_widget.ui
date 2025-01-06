@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>997</width>
-    <height>682</height>
+    <width>1127</width>
+    <height>704</height>
    </rect>
   </property>
   <property name="font">
@@ -246,6 +246,16 @@
        <item>
         <property name="text">
          <string>2500</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>5000</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>10000</string>
         </property>
        </item>
       </widget>
@@ -1021,24 +1031,6 @@
        </property>
       </widget>
      </item>
-     <item row="15" column="5">
-      <widget class="QPushButton" name="pushButton_resample_GainOnly">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>10</pointsize>
-        </font>
-       </property>
-       <property name="toolTip">
-        <string>start resampling procedure and splt reulting files in 2GB tranches</string>
-       </property>
-       <property name="text">
-        <string>Gain only</string>
-       </property>
-      </widget>
-     </item>
      <item row="12" column="5">
       <widget class="QCheckBox" name="checkBox_AutoMerge2G">
        <property name="font">
@@ -1100,6 +1092,31 @@
       <widget class="QCheckBox" name="checkBox_Cut">
        <property name="text">
         <string>Cut Start / End</string>
+       </property>
+      </widget>
+     </item>
+     <item row="15" column="5">
+      <widget class="QPushButton" name="pushButton_resample_correctwavheaders">
+       <property name="text">
+        <string>correct times/nexfilenames</string>
+       </property>
+      </widget>
+     </item>
+     <item row="15" column="4">
+      <widget class="QPushButton" name="pushButton_resample_GainOnly">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
+       <property name="toolTip">
+        <string>start resampling procedure and splt reulting files in 2GB tranches</string>
+       </property>
+       <property name="text">
+        <string>Gain only</string>
        </property>
       </widget>
      </item>

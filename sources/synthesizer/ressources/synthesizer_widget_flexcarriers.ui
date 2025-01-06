@@ -4861,7 +4861,7 @@
        <bool>true</bool>
       </property>
       <property name="text">
-       <string>Suppress playlength</string>
+       <string>Suppress playtime</string>
       </property>
       <property name="autoExclusive">
        <bool>false</bool>

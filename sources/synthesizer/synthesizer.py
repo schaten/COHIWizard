@@ -457,6 +457,7 @@ class modulate_worker(QObject):
         cumulative_time = np.zeros(len(playlists))
         silence = [False] * len(playlists)
         while not done:
+            reftime = time.time()
             if self.stopix is True:
                 break
             combined_signal_block = None  # Buffer for combined signal block
@@ -503,7 +504,7 @@ class modulate_worker(QObject):
 
                 # Update filter state for this carrier
                 zis[i] = new_zi
-            
+
             # If all files are done, break the loop
             if done:
                 break
@@ -549,7 +550,8 @@ class modulate_worker(QObject):
                 self.SigPupdate.emit()
                 if perc_progress > 100:
                     break
-
+            deltatime = time.time() - reftime
+            print(f"block with size : {block_size} written, time: {deltatime}")            
         # Close the final output file
         out_file.close()
         filesize = total_samples_written*4
@@ -1341,7 +1343,11 @@ class synthesizer_v(QObject):
         total_reclength = self.get_reclength()
         exp_num_samples = total_reclength * self.m["sample_rate"]*1000 
         expected_filesize = (exp_num_samples * 4)*1.5 #1.5 is safety margin, may still be insufficient in extreme cases
-        errorstatus, value = self.synthesizer_c.checkdiskspace(expected_filesize, self.m["recording_path"])
+        try:
+            errorstatus, value = self.synthesizer_c.checkdiskspace(expected_filesize, self.m["recording_path"])
+        except:
+            errorstatus = True
+            value = "Error when checking disk space, please make sure that the recording path (set in player Tab) is correct"
         if errorstatus:
             self.logger.debug(errorstatus)
             auxi.standard_errorbox(value)
