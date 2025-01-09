@@ -376,6 +376,8 @@ class playrec_m(QObject):
         self.mdl = {}
         self.mdl["fileopened"] = False
         self.mdl["imported_device_modules"] = []
+        self.mdl["imported_sdr_controllers"] = []
+        self.mdl["currentSDRindex"] = -1
         self.mdl["playlist_active"] = False
         self.mdl["sample"] = 0
         self.mdl["LO_offset"] = 0
@@ -409,6 +411,7 @@ class playrec_m(QObject):
         self.logger.addHandler(debug_handler)
         self.logger.debug('Init logger in playrec  reached')
         self.mdl["devicelist"] = os.listdir(os.path.join(os.getcwd(), "dev_drivers"))
+        self.mdl["SDRcontrol"] = None
         #os.path.isdir(os.getcwd)
 
 class playrec_c(QObject):
@@ -433,6 +436,14 @@ class playrec_c(QObject):
         self.TESTFILELISTCONTINUOUS = True
         
         #self.SigRelay.connect()
+
+    def instantiate_SDRcontrol(self,SDRindex):
+        #self.stemlabcontrol = getattr(self.m["imported_device_modules"][self.m["currentSDRindex"]],'playrec_worker')(self.stemlabcontrol)
+        self.m["SDRcontrol"] = getattr(self.m["imported_sdr_controllers"][SDRindex],'SDR_control')()
+        #TODO: Überbrückungslösung f erste Tests:
+        self.stemlabcontrol = self.m["SDRcontrol"]
+        ######################################################
+        pass
 
     def checkSTEMLABrates(self):        # TODO: this is rather a controller method than a GUI method. Transfer to other module
         """
@@ -652,9 +663,9 @@ class playrec_c(QObject):
 ######################  TODO: change for general devicedrivers
 # instead of self.stemlabcontrol --> self.SDRcontrol
 # instead of class playrec_worker --> class cohi_playrecworker
-
-        self.playrec_tworker = playrec_worker(self.stemlabcontrol)
-        #neu: getattr(self.m["imported_device_modules"][1],'cohi_playrec_worker')
+        #TODO TODO TODO: check ob diese Implementierung nun die stemlab-Workerfunktionen richtig bedient
+        #self.playrec_tworker = playrec_worker(self.stemlabcontrol)
+        self.playrec_tworker = getattr(self.m["imported_device_modules"][self.m["currentSDRindex"]],'playrec_worker')(self.stemlabcontrol)
 ######################  END: change for general devicedrivers
 
         self.playrec_tworker.moveToThread(self.playthread)
@@ -1255,6 +1266,7 @@ class playrec_v(QObject):
         self.gui.playrec_RECSTART_dateTimeEdit.setDateTime(datetime.now())
         self.gui.playrec_radioButton_RECAUTOSTART.clicked.connect(self.toggleRecAutostart)
         self.gui.label_Filename_Player.setText('')
+        self.gui.comboBox_stemlab.currentIndexChanged.connect(self.sdrdevice_changehandler)
         self.gui.comboBox_stemlab.clear()
         #self.mdl["devicelist"] = os.listdir(os.path.join(os.getcwd(), "dev_drivers"))
 
@@ -1262,8 +1274,20 @@ class playrec_v(QObject):
         for ix, cf in enumerate(self.m["devicelist"][0:auxl-1]):
             if not cf.find("__") == 0:
                 self.gui.comboBox_stemlab.addItem(str(cf))
+                #import playrec_worker classes
                 full_module_path = f"dev_drivers.{cf}.cohi_playrecworker"
                 self.m["imported_device_modules"].append(importlib.import_module(full_module_path))
+                # import SDRcontrol classes
+                full_module_path = f"dev_drivers.{cf}.SDR_control"
+                self.m["imported_sdr_controllers"].append(importlib.import_module(full_module_path))
+                #text = self.gui.comboBox_playrec_targetSR_2.currentText()
+                #set SDR choice combobox to stemlab 125-14
+                if cf.find("stemlab_125_14") == 0:
+                    self.m["currentSDRindex"] = ix
+        self.gui.comboBox_stemlab.setCurrentIndex(self.m["currentSDRindex"])
+        #instantiate stemlab control
+        #self.playrec_c.instantiate_SDRcontrol(self.m["currentSDRindex"])
+        # now self.m["SDRcontrol"] is the same as stemlab_control
             #cohi_playrecworker
             #from dev_drivers.fl2k import cohi_playrecworker
 
@@ -1324,7 +1348,9 @@ class playrec_v(QObject):
     #         print(f"dynamic import Error importing {module} from {directory}: {e}")
     #         logger.debug(f"dynamic import: Error importing {module} from {directory}: {e}")
 
-
+    def sdrdevice_changehandler(self):
+        self.logger.debug("sdrdevice_changehandler")
+        self.m["currentSDRindex"] = self.gui.comboBox_stemlab.currentIndex()
 
     def preset_SR_LO(self):
         text = self.gui.comboBox_playrec_targetSR_2.currentText()

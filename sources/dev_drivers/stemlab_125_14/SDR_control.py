@@ -17,7 +17,7 @@ from scipy import signal as sig
 from auxiliaries import auxiliaries as auxi
 import paramiko
 
-class StemlabControl(QObject):
+class SDR_control(QObject):
     """     Class for STEMLAB ssh connection, server start and stop,
     data stream socket control and shutdown of the STEMLAB LINUX
     some methods emit a pyqtSignal(str) named SigMessage(messagestring) with argument messagestring 
