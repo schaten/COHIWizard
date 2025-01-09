@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1323</width>
-    <height>847</height>
+    <width>1351</width>
+    <height>877</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -61,7 +61,7 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>1278</width>
+         <width>1306</width>
          <height>838</height>
         </rect>
        </property>
@@ -7064,6 +7064,200 @@ UFL</string>
                 </property>
                </widget>
               </item>
+              <item row="6" column="12">
+               <widget class="QComboBox" name="comboBox_stemlab">
+                <item>
+                 <property name="text">
+                  <string>stemlab</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item row="6" column="11">
+               <widget class="QLabel" name="label_8">
+                <property name="palette">
+                 <palette>
+                  <active>
+                   <colorrole role="Button">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>255</red>
+                      <green>254</green>
+                      <blue>210</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                   <colorrole role="Light">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>255</red>
+                      <green>254</green>
+                      <blue>210</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                   <colorrole role="Midlight">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>255</red>
+                      <green>254</green>
+                      <blue>210</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                   <colorrole role="Window">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>255</red>
+                      <green>254</green>
+                      <blue>210</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                   <colorrole role="AlternateBase">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>255</red>
+                      <green>254</green>
+                      <blue>210</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                   <colorrole role="NoRole">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>255</red>
+                      <green>254</green>
+                      <blue>210</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </active>
+                  <inactive>
+                   <colorrole role="Button">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>234</red>
+                      <green>234</green>
+                      <blue>234</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                   <colorrole role="Light">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>255</red>
+                      <green>254</green>
+                      <blue>210</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                   <colorrole role="Midlight">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>255</red>
+                      <green>254</green>
+                      <blue>210</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                   <colorrole role="Window">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>255</red>
+                      <green>254</green>
+                      <blue>210</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                   <colorrole role="AlternateBase">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>246</red>
+                      <green>246</green>
+                      <blue>246</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                   <colorrole role="NoRole">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>0</red>
+                      <green>0</green>
+                      <blue>0</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </inactive>
+                  <disabled>
+                   <colorrole role="Button">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>234</red>
+                      <green>234</green>
+                      <blue>234</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                   <colorrole role="Light">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>255</red>
+                      <green>255</green>
+                      <blue>255</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                   <colorrole role="Midlight">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>247</red>
+                      <green>247</green>
+                      <blue>247</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                   <colorrole role="Window">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>255</red>
+                      <green>254</green>
+                      <blue>210</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                   <colorrole role="AlternateBase">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>246</red>
+                      <green>246</green>
+                      <blue>246</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                   <colorrole role="NoRole">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>0</red>
+                      <green>0</green>
+                      <blue>0</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </disabled>
+                 </palette>
+                </property>
+                <property name="autoFillBackground">
+                 <bool>true</bool>
+                </property>
+                <property name="text">
+                 <string>SDR device:</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+               </widget>
+              </item>
              </layout>
             </item>
            </layout>
@@ -7081,7 +7275,7 @@ UFL</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1323</width>
+     <width>1351</width>
      <height>26</height>
     </rect>
    </property>

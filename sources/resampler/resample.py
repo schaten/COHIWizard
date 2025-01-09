@@ -3099,17 +3099,18 @@ class resample_v(QObject):
                 return(errorstate, value)
             #get duration of current file
             file_under_operation_size = os.path.getsize(file_under_operation)
-            #os.path.split(file_under_operation)[0]
             #extract new datetime string from current filename to be edited
-            #A filename ends with a string like: filenamebase_20231231_235959Z_xxHz.wav
+            #A filename ends with a string like: filenamebase_20231231_235959Z_xxHz.wav or filenamebase_20231231_235959_xxHz.wav 
             filename = Path(file_under_operation).name
-            pattern = r"_\d{8}_\d{6}Z_[A-Za-z0-9]+Hz."
-            # Search for the pattern in the filename
-            match = re.search(pattern, filename)
-            if match:
-                # Get the start position of the match
-                start_position = match.start()
+            pattern1 = r"_\d{8}_\d{6}Z_[A-Za-z0-9]+Hz."
+            pattern2 = r"_\d{8}_\d{6}_[A-Za-z0-9]+Hz."
+            match1 = re.search(pattern1, filename)
+            match2 = re.search(pattern2, filename)
+            if match1:
+                start_position = match1.start()
                 #match.span()[0] match.span()[1]
+            elif match2:
+                start_position = match2.start()
             else:
                 errorstate = True
                 value = "Pattern not found in the filename. Aborting procedure"

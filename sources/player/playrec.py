@@ -17,16 +17,20 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5 import QtGui
+import importlib
 #from scipy import signal as sig
 import yaml
 import shutil
 import pyqtgraph as pg
 import logging
+import subprocess
 from auxiliaries import auxiliaries as auxi
 from auxiliaries import WAVheader_tools
 from datetime import datetime
 import datetime as ndatetime
 from player import stemlab_control
+#from dev_drivers.fl2k import cohi_playrecworker
+
 
 class playrec_worker(QObject):
     """ worker class for data streaming thread from PC to STEMLAB
@@ -371,6 +375,7 @@ class playrec_m(QObject):
         self.CONST_SAMPLE = 0 # sample constant
         self.mdl = {}
         self.mdl["fileopened"] = False
+        self.mdl["imported_device_modules"] = []
         self.mdl["playlist_active"] = False
         self.mdl["sample"] = 0
         self.mdl["LO_offset"] = 0
@@ -403,6 +408,8 @@ class playrec_m(QObject):
         self.logger.addHandler(warning_handler)
         self.logger.addHandler(debug_handler)
         self.logger.debug('Init logger in playrec  reached')
+        self.mdl["devicelist"] = os.listdir(os.path.join(os.getcwd(), "dev_drivers"))
+        #os.path.isdir(os.getcwd)
 
 class playrec_c(QObject):
     """_view method
@@ -418,6 +425,7 @@ class playrec_c(QObject):
         super().__init__()
 
         self.m = playrec_m.mdl
+        #TODO: change for general devicedrivers
         self.stemlabcontrol = stemlab_control.StemlabControl()
         self.m["playlist_ix"] = 0
         self.logger = playrec_m.logger
@@ -511,10 +519,15 @@ class playrec_c(QObject):
             value = "No file opened, cannot proceed" 
             return(errorstate,value)
             #return False
+    ######################  TODO: change for general devicedrivers
         self.stemlabcontrol.SigError.connect(self.stemlabcontrol_errorhandler)
         self.stemlabcontrol.SigMessage.connect(self.display_status) #currently not activem activate by re-writing display_status(message)
-        self.stemlabcontrol.set_play()
+        errorstate, value = self.stemlabcontrol.set_play()
+        if errorstate:
+            self.playrec_c.errorhandler(value)
         self.m["modality"] = "play"
+    ######################  END change for general devicedrivers
+    
         #generate List of files if nextfile present in wavheader:
         self.contingent_file_list = []
         self.contingent_file_list.append(self.m["f1"])
@@ -538,16 +551,24 @@ class playrec_c(QObject):
                 "rates": self.m["rates"], "icorr":self.m["icorr"],
                 "HostAddress":self.m["HostAddress"], "LO_offset":self.m["LO_offset"]}
 
+    ######################  TODO: change for general devicedrivers
+        # call respective driver here:
+
+        # dev_driver#(self.m["configparams"],)
+        # e.g. for fl2k: start fl2k_tcp and then launch connected data_messenger
+        # in self.SDR#control.sdrserverstart(self.m["sdr_configparams"])
+        # statt stemlabcontrol wird eine generelle Instanz SDRcontrol  gestartet
+
         if self.m["TEST"] is False:
             if not self.stemlabcontrol.sdrserverstart(self.m["sdr_configparams"]): #TODO TODO TODO: errorhandling: generate errormsg in function instead of True/False
-                self.SigRelay.emit("cexex_playrec",["reset_GUI",0]) #TODO remove after tests
+                #self.SigRelay.emit("cexex_playrec",["reset_GUI",0]) #TODO remove after tests
                 self.SigRelay.emit("cexex_playrec",["reset_playerbuttongroup",0])
                 errorstate = True
                 value = "SDR Server could not be started, please check if STEMLAB is connected correctly."
                 return(errorstate,value)
             self.logger.info(f'play_manager configparams: {self.m["sdr_configparams"]}')
             if self.stemlabcontrol.config_socket(self.m["sdr_configparams"]): #TODO TODO TODO: better errorhandling and messaging with errorstate, value and errorhandler
-                self.logger.info("playthread now activated in play_manager")
+                self.logger.info("config_socket now activated in play_manager")
                 errorstate,value = self.play_tstarter() 
             else:
                 errorstate = True  #TODO TODO TODO: better errorhandling and messaging with errorstate, value and errorhandler
@@ -557,6 +578,7 @@ class playrec_c(QObject):
                 #return(errorstate,value)
             # if not self.play_tstarter():
             #     return False
+    ######################  END: change for general devicedrivers
 
             self.logger.info("stemlabcontrols activated")
         # errorstate = True
@@ -627,7 +649,14 @@ class playrec_c(QObject):
         self.m["playlength"] = true_filesize/self.m["wavheader"]['nAvgBytesPerSec'] ##########
         #self.m["playlength"] = self.m["wavheader"]['filesize']/self.m["wavheader"]['nAvgBytesPerSec'] #TODO test OLD: before 22-12-2024
         self.playthread = QThread()
+######################  TODO: change for general devicedrivers
+# instead of self.stemlabcontrol --> self.SDRcontrol
+# instead of class playrec_worker --> class cohi_playrecworker
+
         self.playrec_tworker = playrec_worker(self.stemlabcontrol)
+        #neu: getattr(self.m["imported_device_modules"][1],'cohi_playrec_worker')
+######################  END: change for general devicedrivers
+
         self.playrec_tworker.moveToThread(self.playthread)
         self.playrec_tworker.set_timescaler(self.m["timescaler"])
         self.playrec_tworker.set_TEST(self.m["TEST"])
@@ -641,7 +670,7 @@ class playrec_c(QObject):
         
         #self.prfilehandle = self.playrec_tworker.get_fileHandle() #TODO CHECK IF REQUIRED test output, no special other function
         if self.m["modality"] == "play": #TODO: activate
-            if not self.TESTFILELISTCONTINUOUS:
+            if not self.TESTFILELISTCONTINUOUS: # This is obsolete , test after 01-01-2025
                 self.playrec_tworker.set_filename(self.m["f1"])
                 self.playthread.started.connect(self.playrec_tworker.play_loop16)
             else:
@@ -726,7 +755,9 @@ class playrec_c(QObject):
                 errorstate = False
                 value = ""
                 return(errorstate, value)
-            self.stemlabcontrol.set_rec()
+            errorstate, value = self.stemlabcontrol.set_rec()
+            if errorstate:
+                return(errorstate, value)
             # configparams = {"ifreq":self.m["ifreq"], "irate":self.m["irate"],
             #         "rates": self.m["rates"], "icorr":self.m["icorr"],
             #         "HostAddress":self.m["HostAddress"], "LO_offset":self.m["LO_offset"]}
@@ -1224,6 +1255,21 @@ class playrec_v(QObject):
         self.gui.playrec_RECSTART_dateTimeEdit.setDateTime(datetime.now())
         self.gui.playrec_radioButton_RECAUTOSTART.clicked.connect(self.toggleRecAutostart)
         self.gui.label_Filename_Player.setText('')
+        self.gui.comboBox_stemlab.clear()
+        #self.mdl["devicelist"] = os.listdir(os.path.join(os.getcwd(), "dev_drivers"))
+
+        auxl = len(self.m["devicelist"])
+        for ix, cf in enumerate(self.m["devicelist"][0:auxl-1]):
+            if not cf.find("__") == 0:
+                self.gui.comboBox_stemlab.addItem(str(cf))
+                full_module_path = f"dev_drivers.{cf}.cohi_playrecworker"
+                self.m["imported_device_modules"].append(importlib.import_module(full_module_path))
+            #cohi_playrecworker
+            #from dev_drivers.fl2k import cohi_playrecworker
+
+            #self.dynamic_import(self.m["devicelist"][ix])
+        #self.gui.comboBox_stemlab.
+        #self.mdl["devicelist"] # comboBox_stemlab
         
         self.gui.checkBox_TESTMODE.clicked.connect(self.toggleTEST)
         preset_time = QTime(00, 30, 00) 
@@ -1254,6 +1300,29 @@ class playrec_v(QObject):
         #     self.logger.error("reset_gui: cannot get metadata")
         # return True
 
+    # def dynamic_import(self,devicelist):
+    # # sub_module = "modules"
+    # # mod_base = {'player':'playrec'}
+    # # config['modules'] = {**mod_base, **config['modules']}
+    # # #print(f"config file content: {config}")
+    # # widget_base = {'player': 'Player'}
+    # # config['module_names'] = {**widget_base, **config['module_names']}
+    # # loaded_modules = dynamic_import_from_config(config,sub_module,xcore_v.logger)
+
+    #     #self.mdl["devicelist"] = os.listdir(os.path.join(os.getcwd(), "dev_drivers"))
+    #     module = dev_drivers.fl2k import cohi_playrecworker
+
+    #     try:
+    #         # create path <directory>.<module>
+    #         full_module_path = f"{directory}.{module}"
+    #         # Importmodule dynamically
+    #         imported_module = importlib.import_module(full_module_path)
+    #         imported_modules[module] = imported_module
+    #         logger.debug(f"dynamic import: Successfully imported {module} from {full_module_path}.")
+    #         #print(f"Successfully imported {module} from {full_module_path}.")
+    #     except ModuleNotFoundError as e:
+    #         print(f"dynamic import Error importing {module} from {directory}: {e}")
+    #         logger.debug(f"dynamic import: Error importing {module} from {directory}: {e}")
 
 
 
@@ -1809,7 +1878,9 @@ class playrec_v(QObject):
         #     print("playrec recorderbutton: no rec path defined")
         #     ##TODO TODO TODO: recording path abfragen
         #     return False
-        self.playrec_c.stemlabcontrol.set_rec()
+        errorstate, value = self.playrec_c.stemlabcontrol.set_rec()
+        if errorstate:
+            self.playrec_c.errorhandler(value)
         self.m["modality"] = "rec"
         self.gui.checkBox_UTC.setEnabled(False)
         # if self.gui.radioButton_timeract.isChecked():
