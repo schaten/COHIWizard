@@ -412,6 +412,7 @@ class playrec_m(QObject):
         self.logger.debug('Init logger in playrec  reached')
         self.mdl["devicelist"] = os.listdir(os.path.join(os.getcwd(), "dev_drivers"))
         self.mdl["SDRcontrol"] = None
+        self.mdl["device_ID_dict"] = {}
         #os.path.isdir(os.getcwd)
 
 class playrec_c(QObject):
@@ -457,15 +458,19 @@ class playrec_c(QObject):
         :return: errorstate, value
         :rtype: bool, str
         """
+        device_ID_dict =self.stemlabcontrol.identify()
+
         errorstate = False
         value = ""
         self.m["errorf"] = False
         if self.m["ifreq"] < 0 or self.m["ifreq"] > 62500000:
+        #TODO Device replace by: if self.m["ifreq"] < 0 or self.m["ifreq"] > device_ID_dict["max_IFREQ"]:
             value = "center frequency not in range (0 - 62500000) \
                       after _lo\n Probably not a COHIRADIA File"
             errorstate = True
 
         if self.m["irate"] not in self.m["rates"]:
+        #TODO Device replace by: if self.m["irate"] not in device_ID_dict["rates"]:
             value = "The sample rate of this file is inappropriate for the STEMLAB!\n\
             Probably it is not a COHIRADIA File. \n \n \
             PLEASE USE THE 'Resample' TAB TO CREATE A PLAYABLE FILE ! \n\n \
@@ -664,8 +669,8 @@ class playrec_c(QObject):
 # instead of self.stemlabcontrol --> self.SDRcontrol
 # instead of class playrec_worker --> class cohi_playrecworker
         #TODO TODO TODO: check ob diese Implementierung nun die stemlab-Workerfunktionen richtig bedient
-        #self.playrec_tworker = playrec_worker(self.stemlabcontrol)
-        self.playrec_tworker = getattr(self.m["imported_device_modules"][self.m["currentSDRindex"]],'playrec_worker')(self.stemlabcontrol)
+        self.playrec_tworker = playrec_worker(self.stemlabcontrol)
+        #self.playrec_tworker = getattr(self.m["imported_device_modules"][self.m["currentSDRindex"]],'playrec_worker')(self.stemlabcontrol)
 ######################  END: change for general devicedrivers
 
         self.playrec_tworker.moveToThread(self.playthread)
@@ -1286,7 +1291,7 @@ class playrec_v(QObject):
                     self.m["currentSDRindex"] = ix
         self.gui.comboBox_stemlab.setCurrentIndex(self.m["currentSDRindex"])
         #instantiate stemlab control
-        #self.playrec_c.instantiate_SDRcontrol(self.m["currentSDRindex"])
+        self.playrec_c.instantiate_SDRcontrol(self.m["currentSDRindex"])
         # now self.m["SDRcontrol"] is the same as stemlab_control
             #cohi_playrecworker
             #from dev_drivers.fl2k import cohi_playrecworker
@@ -1349,8 +1354,112 @@ class playrec_v(QObject):
     #         logger.debug(f"dynamic import: Error importing {module} from {directory}: {e}")
 
     def sdrdevice_changehandler(self):
+        QTimer.singleShot(0, self.process_combobox_change)
+
+    def playgroup_activate(self,value):
+        """activates or inactivates GUI elements of the Playback functions based on
+        value (True,False)
+        
+        :param: value: True or False
+        :type: bool
+        ...
+        :raises: none
+        ...
+        :return: none
+        """
+        self.gui.pushButton_Play.setEnabled(value)
+        self.gui.pushButton_REW.setEnabled(value)
+        self.gui.pushButton_FF.setEnabled(value)
+        self.gui.pushButton_Loop.setEnabled(value)
+        self.gui.pushButton_adv1byte.setEnabled(value)
+
+    def recordinggroup_activate(self,value):
+        """activates or inactivates GUI elements of the Recording functions based on
+        value (True,False)
+        
+        :param: value: True or False
+        :type: bool
+        ...
+        :raises: none
+        ...
+        :return: none
+        """
+        self.gui.comboBox_playrec_targetSR.setEnabled(value)
+        self.gui.lineEdit_playrec_LO.setEnabled(value)
+        self.gui.comboBox_playrec_targetSR_2.setEnabled(value)
+        self.gui.lineEdit_LO_bias.setEnabled(value)
+        self.gui.playrec_RECLENGTH_timeEdit.setEnabled(value)
+        self.gui.pushButton_REC.setEnabled(value)
+        self.gui.playrec_radioButton_RECAUTOSTART.setEnabled(value)
+        self.gui.playrec_RECSTART_dateTimeEdit.setEnabled(value)
+        self.gui.label_BW_2.setEnabled(value)
+        self.gui.label_BW.setEnabled(value)
+        self.gui.label_LO.setEnabled(value)
+        self.gui.lineEdit_LO_bias.setEnabled(value)
+        self.gui.playrec_label_RECSTART.setEnabled(value)
+        self.gui.playrec_label_REC_duration.setEnabled(value)
+        self.gui.label_35.setEnabled(value)
+
+    def process_combobox_change(self):
+        """handles change of SDR device in combobox
+        (1) sets currentSDRindex to the index of the selected device
+        (2) instantiates the SDR control object
+        (3) identifies the device
+        :param: none
+        :type: none
+        ...
+        :raises: none
+        ...
+        :return: errorstate, value; in case of error, value contains error message, else device ID dict
+        :rtype: bool, str
+        """
+        errorstate = False
+        value = ""
         self.logger.debug("sdrdevice_changehandler")
         self.m["currentSDRindex"] = self.gui.comboBox_stemlab.currentIndex()
+        #comboBox_stemlab = self.playrec_c.instantiate_SDRcontrol(self.m["currentSDRindex"])
+        if self.m["currentSDRindex"] < 0:
+            return(errorstate, value)   
+
+        try:
+            self.playrec_c.instantiate_SDRcontrol(self.m["currentSDRindex"])
+            self.m["device_ID_dict"] = self.playrec_c.stemlabcontrol.identify()
+            error = False
+            value = self.m["device_ID_dict"]
+            if not self.m["device_ID_dict"]["TX"]:
+                self.playgroup_activate(False)
+            else:
+                self.playgroup_activate(True)
+            if not self.m["device_ID_dict"]["RX"]:
+                self.recordinggroup_activate(False)
+            else:
+                self.recordinggroup_activate(True)
+            if self.m["device_ID_dict"]["connection_type"] == "USB":
+                self.gui.lineEdit_IPAddress.setEnabled(False)
+                self.gui.pushButton_IP.setEnabled(False)
+                #self.gui.lineEdit_IPAddress.setReadOnly(True)
+            elif self.m["device_ID_dict"]["connection_type"] == "ethernet":
+                self.gui.lineEdit_IPAddress.setEnabled(True)
+                self.gui.pushButton_IP.setEnabled(True)
+                #TODO: in later implementations write host address to device driver SDRcontrol file
+                self.gui.lineEdit_IPAddress.setText(self.m["HostAddress"])
+                #self.gui.lineEdit_IPAddress.setReadOnly(False)
+            elif self.m["device_ID_dict"]["connection_type"] == "USB_Vethernet":
+                self.gui.lineEdit_IPAddress.setEnabled(False)
+                self.gui.pushButton_IP.setEnabled(False)
+                self.gui.lineEdit_IPAddress.setText("127.0.0.1")
+                #self.gui.lineEdit_IPAddress.setReadOnly(False)
+            else:
+                errorstate = True
+                value = f"unknown connection type in SDR device driver: {self.m["device_ID_dict"]["connection_type"]}"
+
+        except:
+            self.logger.error("sdrdevice_changehandler: cannot identify SDR device")    
+            errorstate = True
+            value = "cannot identify SDR device"
+            return(errorstate, value)
+        return(errorstate, value) 
+
 
     def preset_SR_LO(self):
         text = self.gui.comboBox_playrec_targetSR_2.currentText()

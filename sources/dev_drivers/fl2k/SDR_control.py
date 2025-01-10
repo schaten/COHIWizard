@@ -14,7 +14,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from scipy import signal as sig
 
-class SDRControl(QObject):
+class SDR_control(QObject):
     """     Class for general SDR ssh connection, server start and stop,
     data stream socket control and shutdown of the SDR
     some methods emit a pyqtSignal(str) named SigMessage(messagestring) with argument messagestring 
@@ -40,6 +40,35 @@ class SDRControl(QObject):
         super().__init__(*args, **kwargs)
         # self.HostAddress = self.get_HostAddress()
         # print(f"init stemlabcontrol Hostaddress: {self.HostAddress}")
+
+
+    def identify(self):
+        """return important device characteristics:
+        (1) allowed samplingrates as a dict: if discrete: give values, if continuous: give lower and upper bound
+        (2) rate_type: discrete or continuous
+        (3) RX, TX, or RX & TX
+        (3) device name
+        (4) device ID
+        (5) max_IFREQ
+        (6) min IFREQ
+        (7) connection type: ethernet, USB, USB_Vethernet
+        
+        : param: none
+
+        : return: device_ID_dict
+        : rtype: dict
+        """
+        device_ID_dict = {"rates": {10000:0, 100000000:1},
+                          "ryte_type": "continuous",
+                          "RX": False,
+                          "TX": True,
+                          "device_name": "fl2k",
+                          "device_ID": 1,
+                          "max_IFREQ": 100000000,
+                          "min_IFREQ": 0,
+                          "connection_type": "USB_Vethernet"}
+        #connection type USB_Vethernet is virtual, as the device in reality is USB but communication occurs via TCP to IP 127.0.0.1
+        return(device_ID_dict)
 
     def set_play(self):
         self.modality = "play"

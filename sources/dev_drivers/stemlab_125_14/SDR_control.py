@@ -44,6 +44,34 @@ class SDR_control(QObject):
         # self.HostAddress = self.get_HostAddress()
         # print(f"init stemlabcontrol Hostaddress: {self.HostAddress}")
 
+    def identify(self):
+        """return important device characteristics:
+        (1) allowed samplingrates as a dict: if discrete: give values, if continuous: give lower and upper bound
+        (2) rate_type: discrete or continuous
+        (3) RX, TX, or RX & TX
+        (3) device name
+        (4) device ID
+        (5) max_IFREQ
+        (6) min IFREQ
+        (7) connection type: ethernet or USB
+        
+        : param: none
+
+        : return: device_ID_dict
+        : rtype: dict
+        """
+        device_ID_dict = {"rates": {20000:0, 50000:1, 100000:2, 250000:3, 
+                      500000:4, 1250000:5, 2500000:6},
+                          "ryte_type": "discrete",
+                          "RX": True,
+                          "TX": True,
+                          "device_name": "STEMlab 125-14",
+                          "device_ID": 0,
+                          "max_IFREQ": 62500000,
+                          "min_IFREQ": 0,
+                          "connection_type": "ethernet"}
+        return(device_ID_dict)
+
     def set_play(self):
         self.modality = "play"
         errorstate = False
