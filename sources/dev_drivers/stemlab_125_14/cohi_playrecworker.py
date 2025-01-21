@@ -6,31 +6,31 @@ Created on Feb 24 2024
 #from pickle import FALSE, TRUE #intrinsic
 import time
 #from datetime import timedelta
-from socket import socket, AF_INET, SOCK_STREAM
+#from socket import socket, AF_INET, SOCK_STREAM
 from struct import unpack
 import numpy as np
-import os
-import pytz
-from pathlib import Path
-from PyQt5 import QtWidgets, QtGui
+# import os
+# import pytz
+# from pathlib import Path
+# from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
-from PyQt5 import QtGui
-#from scipy import signal as sig
-import yaml
-import shutil
-import pyqtgraph as pg
-import logging
-import subprocess
-from auxiliaries import auxiliaries as auxi
-from auxiliaries import WAVheader_tools
-from datetime import datetime
-import datetime as ndatetime
-from player import stemlab_control
+# from PyQt5 import QtGui
+# #from scipy import signal as sig
+# import yaml
+# import shutil
+# import pyqtgraph as pg
+# import logging
+# import subprocess
+# from auxiliaries import auxiliaries as auxi
+# from auxiliaries import WAVheader_tools
+# from datetime import datetime
+# import datetime as ndatetime
+# from player import stemlab_control
 
 class playrec_worker(QObject):
-    """ worker class for data streaming thread from PC to a SDR device
+    """ worker class for data streaming thread from PC to STEMLAB
     object for playback and recording thread
     :param : no regular parameters; as this is a thread worker communication occurs via
         __slots__: Dictionary with entries:
@@ -50,7 +50,7 @@ class playrec_worker(QObject):
         :rtype: none
     """
 
-    __slots__ = ["filename", "timescaler", "TEST", "pause", "fileHandle", "data", "gain" ,"formattag" ,"datablocksize","fileclose"]
+    __slots__ = ["filename", "timescaler", "TEST", "pause", "fileHandle", "data", "gain" ,"formattag" ,"datablocksize","fileclose","configparameters"]
 
     SigFinished = pyqtSignal()
     SigIncrementCurTime = pyqtSignal()
@@ -58,7 +58,7 @@ class playrec_worker(QObject):
     SigError = pyqtSignal(str)
     SigNextfile = pyqtSignal(str)
 
-    def __init__(self, *args,**kwargs):
+    def __init__(self, stemlabcontrolinst,*args,**kwargs):
 
         super().__init__(*args, **kwargs)
         self.stopix = False
@@ -66,8 +66,7 @@ class playrec_worker(QObject):
         self.JUNKSIZE = 2048*4
         self.DATABLOCKSIZE = 1024*4
         self.mutex = QMutex()
-        if len(args) > 0: #TODO: check for more general formulation
-            self.stemlabcontrol = args[0]
+        self.stemlabcontrol = stemlabcontrolinst
 
     def set_filename(self,_value):
         self.__slots__[0] = _value
@@ -109,172 +108,10 @@ class playrec_worker(QObject):
         return(self.__slots__[9])
     def set_fileclose(self,_value):
         self.__slots__[9] = _value
-
-    #besser: fl2k_tcp Server starten, der lauscht dannStandardmäßig lauscht fl2k_tcp.exe auf Port 1234. Sie können mit der Option -p den Port ändern.
-    #fl2k_tcp.exe -s 20000000 -d 0
-
-    def send_data_over_tcp(file_path, host="127.0.0.1", port=1234, block_size=1024 * 1024):
-        """
-        Liest 16-Bit-Integer-Daten aus einer Datei, wandelt sie in 8-Bit signed um,
-        und sendet sie blockweise über TCP an fl2k_tcp.
-
-        :param file_path: Pfad zur Eingabedatei mit 16-Bit-Integer-Daten.
-        :param host: IP-Adresse des fl2k_tcp-Servers (Standard: localhost).
-        :param port: Port des fl2k_tcp-Servers (Standard: 1234).
-        :param block_size: Größe der Blöcke (in Bytes), die gesendet werden.
-        """
-        # Verbindung zum fl2k_tcp-Server herstellen
-        with socket(AF_INET, SOCK_STREAM) as sock:
-            sock.connect((host, port))
-            print(f"Verbunden mit fl2k_tcp auf {host}:{port}")
-
-            with open(file_path, "rb") as f:
-                while True:
-                    # Blockweise Daten auslesen
-                    data = f.read(block_size)
-                    if not data:  # Datei zu Ende gelesen
-                        break
-                    
-                    # 16-Bit-Daten in numpy-Array laden
-                    int16_data = np.frombuffer(data, dtype=np.int16)
-                    
-                    # Umwandlung in 8-Bit signed (clipping bei Überläufen)
-                    int8_data = np.clip(int16_data / 256, -128, 127).astype(np.int8)
-                    
-                    # Daten über TCP senden
-                    sock.sendall(int8_data.tobytes())
-                    print(f"{len(int8_data)} Bytes gesendet")
-
-            print("Datenübertragung abgeschlossen.")
-
-    # if __name__ == "__main__":
-    #     # Beispielaufruf
-    #     input_file = "input_data.bin"  # Ersetzen Sie dies durch den Pfad zu Ihrer Eingabedatei
-    #     send_data_over_tcp(input_file)
-
-
-            # Man wird das Treiberprogramms fl2k_tcp nehmen können.
-            # Ähnlich dem Stemlab kann man hier eine IP und einen Port angeben.
-
-            # "fl2k_tcp, a spectrum client for FL2K VGA dongles\n\n"
-            # "Usage:\t[-a server address]\n"
-            # "\t[-d device index (default: 0)]\n"
-            # "\t[-p port (default: 1234)]\n"
-            # "\t[-s samplerate in Hz (default: 100 MS/s)]\n"
-            # "\t[-b number of buffers (default: 4)]\n"
-
-            # Bei mir läuft der D\A Wandler über den lokalen USB Bus, daher muss ich die Daten an den lokalen Recher der immer die IP 127.0.0.1 hat senden. Bei der Samplerate wähle ich 10000000 (10MS/s) da 100 MS/s meinen PC überlastet. Mit 10MS/s kommt man bis 5 MHz. Für Aufnahmen des 49m Bandes müsste ich einen höheren Eintrag wählen aber auch das geht. Für Langwelle und Mittelwelle reichen 10MS/s aus. Werte Unter 10 MS/s gibt es nur och einen krummen was beim Resampling womöglich zuviele Zwischenrechnungen verursacht.
-            # Das Resampling und verschieben auf die Bandmitte was Gnu Radio macht müsste das Cohiradia Programm selbst erledigen.
-            # Eine Datenkonvertierung und Aussteuerung auf 8 Bit Wertebereich ebenfalls. Auch das wird im Moment in Gnu Radio erledigt.
-
-
-    def check_fl2k_devices():
-        """
-        Führt fl2k_probe aus und prüft, ob FL2K-Geräte angeschlossen sind.
-        Gibt eine Liste der erkannten Geräte zurück.
-        """
-        try:
-            # fl2k_probe ausführen und Ausgabe erfassen
-            result = subprocess.run(
-                ["fl2k_probe"], capture_output=True, text=True, check=True
-            )
-            output = result.stdout
-            
-            # Geräte aus der Ausgabe extrahieren
-            if "Found 0 devices" in output:
-                return []  # Keine Geräte gefunden
-            else:
-                devices = []
-                for line in output.splitlines():
-                    if line.startswith("Device"):
-                        devices.append(line.strip())
-                return devices
-        
-        except FileNotFoundError:
-            raise RuntimeError("fl2k_probe wurde nicht gefunden. Ist es installiert?")
-        except subprocess.CalledProcessError as e:
-            raise RuntimeError(f"fl2k_probe Fehler: {e.stderr.strip()}")
-
-# if __name__ == "__main__":
-#     devices = check_fl2k_devices()
-#     if devices:
-#         print(f"Gefundene Geräte: {devices}")
-#     else:
-#         print("Keine FL2K-Geräte gefunden.")
-
-#WINDOWS VARIANTE über stdin funktioniert nur, wenn eine RAMdisk eingerichtet ist, bei LINUX ist das wurscht
-    def process_and_send_fl2k(file_path, block_size=1024 * 1024):
-        """
-        Liest 16-Bit-Integer-Daten aus einer Datei, wandelt sie in 8-Bit-signed um,
-        und sendet sie blockweise an fl2k-file über stdin.
-
-        :param file_path: Pfad zur Eingabedatei mit 16-Bit-Integer-Daten.
-        :param block_size: Größe der Blöcke (in Bytes), die verarbeitet werden.
-        """
-        # Öffnen der Datei
-        with open(file_path, "rb") as f:
-            while True:
-                # Blockweise Daten auslesen
-                data = f.read(block_size)
-                if not data:  # Datei zu Ende gelesen
-                    break
-                
-                # 16-Bit-Daten in numpy-Array laden
-                int16_data = np.frombuffer(data, dtype=np.int16)
-                
-                # Umwandlung in 8-Bit signed (clipping bei Überläufen)
-                int8_data = np.clip(int16_data / 256, -128, 127).astype(np.int8)
-                
-                # fl2k-file über stdin aufrufen
-                #TODO: take sampling rate from configparams currently read by  
-                process = subprocess.Popen(
-                    ["fl2k-file.exe", "-s", "20000000", "-"],  # '-' bedeutet stdin
-                    stdin=subprocess.PIPE
-                )
-                
-                # Daten in den stdin-Stream schreiben
-                process.stdin.write(int8_data.tobytes())
-                process.stdin.close()
-                
-                # Warten, bis fl2k-file beendet ist
-                process.wait()
-
-            #LINUX VARIANTE
-
-    def process_and_send_fl2k_lx(file_path, block_size=1024 * 1024):
-        """
-        Liest 16-Bit-Integer-Daten aus einer Datei, wandelt sie in 8-Bit-signed um,
-        und sendet sie blockweise an fl2k-file über stdin.
-
-        :param file_path: Pfad zur Eingabedatei mit 16-Bit-Integer-Daten.
-        :param block_size: Größe der Blöcke (in Bytes), die verarbeitet werden.
-        """
-        # Öffnen der Datei
-        with open(file_path, "rb") as f:
-            while True:
-                # Blockweise Daten auslesen
-                data = f.read(block_size)
-                if not data:  # Datei zu Ende gelesen
-                    break
-                
-                # 16-Bit-Daten in numpy-Array laden
-                int16_data = np.frombuffer(data, dtype=np.int16)
-                
-                # Umwandlung in 8-Bit signed (clipping bei Überläufen)
-                int8_data = np.clip(int16_data / 256, -128, 127).astype(np.int8)
-                
-                # fl2k-file über stdin aufrufen
-                process = subprocess.Popen(
-                    ["fl2k-file", "-s", "20000000", "-"],  # '-' bedeutet stdin
-                    stdin=subprocess.PIPE
-                )
-                
-                # Daten in den stdin-Stream schreiben
-                process.stdin.write(int8_data.tobytes())
-                process.stdin.close()
-                
-                # Warten, bis fl2k-file beendet ist
-                process.wait()
+    def get_configparameters(self):
+        return(self.__slots__[10])
+    def set_configparameters(self,_value):
+        self.__slots__[10] = _value
 
     def play_loop_filelist(self):
         """
@@ -296,6 +133,8 @@ class playrec_worker(QObject):
         __slots__[6]: gain, scaling factor for playback
         __slots__[7]: formatlist: [formattag blockalign bitpsample]
         __slots__[8]: datablocksize
+        __slots__[9]: file_close
+        __slots__[10]: sampling_parameters
         """
         #print("reached playloopthread")
         filenames = self.get_filename()
@@ -336,11 +175,9 @@ class playrec_worker(QObject):
                 if not TEST:
                     if not self.get_pause():
                         try:
-                            # self.stemlabcontrol.data_sock.send(
-                            #                         gain*data[0:size].astype(np.float32)
-                            #                         /normfactor)  # send next DATABLOCKSIZE samples
-                            pass
-                            #TODO: new sending routine via tcp
+                            self.stemlabcontrol.data_sock.send(
+                                                    gain*data[0:size].astype(np.float32)
+                                                    /normfactor)  # send next DATABLOCKSIZE samples
                         except BlockingIOError:
                             print("Blocking data socket error in playloop worker")
                             time.sleep(0.1)
@@ -438,7 +275,7 @@ class playrec_worker(QObject):
        
     def rec_loop(self):
         """
-        worker loop for receiving data from SDR server if applicable
+        worker loop for receiving data from STEMLAB server
         data is written to file
         loop runs until EOF or interruption by stopping
         loop cannot be paused
@@ -468,9 +305,9 @@ class playrec_worker(QObject):
         size2G = 2**31
         self.stopix = False
         filename = self.get_filename()
-        timescaler = self.get_timescaler()
-        RECSEC = timescaler*2 #TODO only true for complex 32 format (2x i16); in case of format change this has to be adapted acc to Bytes per sample (nBytesAlign)
-        TEST = self.get_TEST()
+        self.timescaler = self.get_timescaler()
+        RECSEC = self.timescaler*2 #TODO only true for complex 32 format (2x i16); in case of format change this has to be adapted acc to Bytes per sample (nBytesAlign)
+        self.TEST = self.get_TEST()
         #TODO: self.fmtscl = self.get_formattag() #scaler for data format        
         fileHandle = open(filename, 'ab') #TODO check if append mode is appropriate
         #print(f"filehandle for set_4: {fileHandle} of file {filename} ")
@@ -484,20 +321,19 @@ class playrec_worker(QObject):
         else:
             size = 1
         self.set_data((data[0:size//4] * 32767).astype(np.int16))        
-        #junkspersecond = timescaler / (self.JUNKSIZE)
+        #junkspersecond = self.timescaler / (self.JUNKSIZE)
         self.count = 0
         readbytes = 0
         totbytes = 0
         while size > 0 and self.stopix is False:
-            if TEST is False:
+            if self.TEST is False:
                 self.mutex.lock()             
                 fileHandle.write((data[0:size//4] * 32767).astype(np.int16))
                 # size is the number of bytes received per read operation
                 # from the socket; e.g. DATABLOCKSIZE samples have
                 # DATABLOCKSIZE*8 bytes, the data buffer is specified
                 # for DATABLOCKSIZE float32 elements, i.e. 4 bit words
-                #size = self.stemlabcontrol.data_sock.recv_into(data)
-                size = 0 #TODO: replace by recording command if appropriate
+                size = self.stemlabcontrol.data_sock.recv_into(data)
                 if size >= self.BUFFERFULL:
                     #self.SigBufferOverflow.emit()
                     pass
@@ -531,4 +367,3 @@ class playrec_worker(QObject):
                 self.mutex.unlock()
                 time.sleep(0.1)
         self.SigFinished.emit()
-

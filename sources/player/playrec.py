@@ -463,19 +463,30 @@ class playrec_c(QObject):
         errorstate = False
         value = ""
         self.m["errorf"] = False
-        if self.m["ifreq"] < 0 or self.m["ifreq"] > 62500000:
+        if self.m["ifreq"] < device_ID_dict["min_IFREQ"] or self.m["ifreq"] > device_ID_dict["max_IFREQ"]:
         #TODO Device replace by: if self.m["ifreq"] < 0 or self.m["ifreq"] > device_ID_dict["max_IFREQ"]:
             value = "center frequency not in range (0 - 62500000) \
                       after _lo\n Probably not a COHIRADIA File"
             errorstate = True
-
-        if self.m["irate"] not in self.m["rates"]:
-        #TODO Device replace by: if self.m["irate"] not in device_ID_dict["rates"]:
-            value = "The sample rate of this file is inappropriate for the STEMLAB!\n\
-            Probably it is not a COHIRADIA File. \n \n \
-            PLEASE USE THE 'Resample' TAB TO CREATE A PLAYABLE FILE ! \n\n \
-            SR must be in the set: 20000, 50000, 100000, 250000, 500000, 1250000, 2500000"
+        if device_ID_dict["rate_type"] == "discrete":
+            if self.m["irate"] not in device_ID_dict["rates"]:
+            #TODO Device replace by: if self.m["irate"] not in device_ID_dict["rates"]:
+                value = "The sample rate of this file is inappropriate for the STEMLAB!\n\
+                Probably it is not a COHIRADIA File. \n \n \
+                PLEASE USE THE 'Resample' TAB TO CREATE A PLAYABLE FILE ! \n\n \
+                SR must be in the set: 20000, 50000, 100000, 250000, 500000, 1250000, 2500000"
+                errorstate = True
+        elif device_ID_dict["rate_type"] == "continuous":
+            if self.m["irate"] < list(device_ID_dict["rates"].keys())[0] or self.m["irate"] > list(device_ID_dict["rates"].keys())[1]:
+            #TODO Device replace by: if self.m["irate"] < device_ID_dict["rates"][0] or self.m["irate"] > device_ID_dict["rates"][1]:
+                value = "The sample rate of this file is inappropriate for the STEMLAB!\n\
+                Probably it is not a COHIRADIA File. \n \n \
+                PLEASE USE THE 'Resample' TAB TO CREATE A PLAYABLE FILE ! \n\n \
+                SR must be in the interval: (20000 - 100000000)"
+                errorstate = True
+        else:
             errorstate = True
+            value = f"Error in device identification, please check device driver SDR_control.py, rate type = {device_ID_dict['rate_type']}"
 
         if self.m["icorr"] < -100 or self.m["icorr"] > 100:
             value = "frequency correction min ppm must be in \
@@ -563,10 +574,12 @@ class playrec_c(QObject):
                 break 
 
         # start server unless already started
+        self.m["rates"] = self.m["device_ID_dict"]["rates"]
+        
         self.m["sdr_configparams"] = {"ifreq":self.m["ifreq"], "irate":self.m["irate"],
                 "rates": self.m["rates"], "icorr":self.m["icorr"],
                 "HostAddress":self.m["HostAddress"], "LO_offset":self.m["LO_offset"]}
-
+        
     ######################  TODO: change for general devicedrivers
         # call respective driver here:
 
@@ -576,10 +589,14 @@ class playrec_c(QObject):
         # statt stemlabcontrol wird eine generelle Instanz SDRcontrol  gestartet
 
         if self.m["TEST"] is False:
-            if not self.stemlabcontrol.sdrserverstart(self.m["sdr_configparams"]): #TODO TODO TODO: errorhandling: generate errormsg in function instead of True/False
+            errorstate, process = self.stemlabcontrol.sdrserverstart(self.m["sdr_configparams"])
+            time.sleep(5)
+            #stdout, stderr = process.communicate()
+            #print(stderr.decode())
+            if errorstate: #TODO TODO TODO: errorhandling: generate errormsg in function instead of True/False
                 #self.SigRelay.emit("cexex_playrec",["reset_GUI",0]) #TODO remove after tests
                 self.SigRelay.emit("cexex_playrec",["reset_playerbuttongroup",0])
-                errorstate = True
+                #errorstate = True
                 value = "SDR Server could not be started, please check if STEMLAB is connected correctly."
                 return(errorstate,value)
             self.logger.info(f'play_manager configparams: {self.m["sdr_configparams"]}')
@@ -669,8 +686,8 @@ class playrec_c(QObject):
 # instead of self.stemlabcontrol --> self.SDRcontrol
 # instead of class playrec_worker --> class cohi_playrecworker
         #TODO TODO TODO: check ob diese Implementierung nun die stemlab-Workerfunktionen richtig bedient
-        self.playrec_tworker = playrec_worker(self.stemlabcontrol)
-        #self.playrec_tworker = getattr(self.m["imported_device_modules"][self.m["currentSDRindex"]],'playrec_worker')(self.stemlabcontrol)
+        #self.playrec_tworker = playrec_worker(self.stemlabcontrol)
+        self.playrec_tworker = getattr(self.m["imported_device_modules"][self.m["currentSDRindex"]],'playrec_worker')(self.stemlabcontrol)
 ######################  END: change for general devicedrivers
 
         self.playrec_tworker.moveToThread(self.playthread)
@@ -679,6 +696,8 @@ class playrec_c(QObject):
         self.playrec_tworker.set_pause(False)
         #self.playrec_tworker.set_modality(self.m["modality"])
         self.playrec_tworker.set_gain(self.m["gain"])
+        ################## TODO CHECK: was changed for general devicedrivers
+        self.playrec_tworker.set_configparameters(self.m["sdr_configparams"]) # = {"ifreq":self.m["ifreq"], "irate":self.m["irate"],"rates": self.m["rates"], "icorr":self.m["icorr"],"HostAddress":self.m["HostAddress"], "LO_offset":self.m["LO_offset"]}
         self.logger.debug("set tworker gain to: %f",self.m["gain"])
         #print(f"gain: {self.m['gain']}")
         format = [self.m["wavheader"]["wFormatTag"], self.m["wavheader"]['nBlockAlign'], self.m["wavheader"]['nBitsPerSample']]
@@ -1424,7 +1443,7 @@ class playrec_v(QObject):
         try:
             self.playrec_c.instantiate_SDRcontrol(self.m["currentSDRindex"])
             self.m["device_ID_dict"] = self.playrec_c.stemlabcontrol.identify()
-            error = False
+            errorstate = False
             value = self.m["device_ID_dict"]
             if not self.m["device_ID_dict"]["TX"]:
                 self.playgroup_activate(False)
@@ -1458,6 +1477,7 @@ class playrec_v(QObject):
             errorstate = True
             value = "cannot identify SDR device"
             return(errorstate, value)
+        self.m["HostAddress"] = self.gui.lineEdit_IPAddress.text()
         return(errorstate, value) 
 
 
@@ -1594,7 +1614,8 @@ class playrec_v(QObject):
         """
         self.gui.checkBox_UTC.clicked.connect(self.toggleUTC)
         self.gui.checkBox_TESTMODE.clicked.connect(self.toggleTEST)
-        self.gui.lineEdit_IPAddress.setText(self.m["metadata"]["STM_IP_address"])
+        self.m["HostAddress"] = self.gui.lineEdit_IPAddress.text()
+        #self.gui.lineEdit_IPAddress.setText(self.m["metadata"]["STM_IP_address"])
         self.logger.debug(f"update filename in display: {self.m['my_filename']}")
         self.gui.label_Filename_Player.setText(self.m["my_filename"] + self.m["ext"])
 

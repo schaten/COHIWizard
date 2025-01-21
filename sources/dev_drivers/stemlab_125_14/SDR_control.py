@@ -62,7 +62,7 @@ class SDR_control(QObject):
         """
         device_ID_dict = {"rates": {20000:0, 50000:1, 100000:2, 250000:3, 
                       500000:4, 1250000:5, 2500000:6},
-                          "ryte_type": "discrete",
+                          "rate_type": "discrete",
                           "RX": True,
                           "TX": True,
                           "device_name": "STEMlab 125-14",
@@ -210,20 +210,22 @@ class SDR_control(QObject):
         Stop potentially running server instance before so as to prevent
         undefined communication
         '''
-
+        errorstate = False
+        value = ["",None]
         # TODO: future versions could send diagnostic output to status message indicator
         shcomm = []
         shcomm.append('/bin/bash /sdrstop.sh &')
         shcomm.append('/bin/bash /sdrstart.sh &')
         # connect to remote server via ssh
         if self.startssh(configparams) is False:
-            return False
+            value[0] = "SDR Server could not be started, please check if STEMLAB is connected correctly."
+            return(errorstate, value)
         self.sdrserverstop()  #TODO ?is this necessary ?
         time.sleep(0.2)     # wait state for letting the server react before it is being accessed; issue after tetst unter LINUX Debian 12 
         self.sshsendcommandseq(shcomm)
         time.sleep(0.2)     # wait state for letting the server react before it is being accessed; issue after tetst unter LINUX Debian 12
         self.SigMessage.emit("transmit ssh command for ssh start")
-        return True
+        return(errorstate, value)
 
     def sdrserverstop(self):
         '''

@@ -12,7 +12,9 @@ import numpy as np
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
+import os
 from scipy import signal as sig
+import subprocess
 
 class SDR_control(QObject):
     """     Class for general SDR ssh connection, server start and stop,
@@ -58,8 +60,8 @@ class SDR_control(QObject):
         : return: device_ID_dict
         : rtype: dict
         """
-        device_ID_dict = {"rates": {10000:0, 100000000:1},
-                          "ryte_type": "continuous",
+        device_ID_dict = {"rates": {10000000:0, 20000000:1, 30000000:2, 40000000:3, 50000000:4, 100000000:5},
+                          "rate_type": "discrete",
                           "RX": False,
                           "TX": True,
                           "device_name": "fl2k",
@@ -79,8 +81,8 @@ class SDR_control(QObject):
 
     def set_rec(self):
         self.modality = "rec"
-        errorstate = False
-        value = ""
+        errorstate = True
+        value = "cannot record, no RX mode available in this device"
         # if no rec mode available, return error and respective message
         return(errorstate, value)
 
@@ -110,6 +112,15 @@ class SDR_control(QObject):
         icorr = configparams["icorr"]
         LO_offset = configparams["LO_offset"]
         value = [ifreq, irate, rates, icorr, LO_offset]
+        self.data_sock = socket(AF_INET, SOCK_STREAM)
+        self.data_sock.settimeout(5)
+        try:
+            self.data_sock.connect((configparams["HostAddress"], 25000))
+            value = self.data_sock
+        except:  #TODO: replace errormessages by parameterized signals connected to errorbox-calls, par = errormessage
+            self.SigError.emit("Cannot establish socket connection for streaming to the STEMLAB")
+            return False
+
         if (self.modality != "play") and (self.modality != "rec"):
             errormessage = "Error , self.modality must be rec or play"
             self.SigError.emit(errormessage)
@@ -121,9 +132,8 @@ class SDR_control(QObject):
 
     def startssh(self,configparams):
         '''
-        login to Host and start ssh session with SDR    
+        DUMMY, not used in fl2k    
         '''
-
         errorstate = False
         value = ""
         # start SDR server here (e.g. fl2k_tcp)
@@ -131,18 +141,10 @@ class SDR_control(QObject):
 
     def sshsendcommandseq(self, shcomm):
         '''
-        send ssh command string sequence via command string list shcomm
+        DUMMY, not used in fl2k
         '''
-        count = 0
-        while (count < len(shcomm)):  #TODO REM FIN check list, only diagnostic    TODO: rewrite loop more pythonian
-            try:
-                self.ssh.exec_command(shcomm[count])
-            except:
-                print("stemlab control sshsendcommandseq, command cannot be sent")
-            count = count + 1
-            time.sleep(0.1)
-        self.SigMessage.emit("ssh command sent")
-
+        return
+    
     def sdrserverstart(self,configparams):
         '''
         Purpose: start server on the SDR if this applies.
@@ -150,8 +152,30 @@ class SDR_control(QObject):
         undefined communication
         '''
         errorstate = False
-        value = ""
-        # start SDR server here (e.g. fl2k_tcp)
+        value = ["",None]
+        fl2kpath = os.path.join(os.getcwd(), "dev_drivers", "fl2k", "osmo-fl2k-64bit-20250105")
+        #testpath = os.path.join(os.getcwd(), "dev_drivers", "fl2k", "osmo-fl2k-64bit-20250105")
+        #fl2kpath = os.path.join(os.getcwd(), "dev_drivers/fl2k/osmo-fl2k-64bit-20250105/fl2k_tcp")
+
+        #fl2k_command = [os.path.join(fl2kpath, "fl2k_tcp"), "-h"] # for TEST only
+
+        fl2k_command = [os.path.join(fl2kpath, "fl2k_tcp"), " -a 127.0.0.1 -p 1234 -s 10000000"]
+        #fl2k_command = [os.path.join(fl2kpath, "fl2k_tcp"), "-a 127.0.0.1 -p 1234 -s " , str(configparams["irate"])]
+        self.process = subprocess.Popen(fl2k_command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell = True)
+        if not self.process.poll() == None:
+            errorstate = True
+            value[0] = "fl2k_tcp cannot be started, please check if device is connected !"
+            self.SigError.emit(value[0])
+            return(errorstate, value)
+        # stdout, stderr = self.process.communicate()
+        # stderr.decode() # enthält alle Infos
+        #process.terminate
+        value[0] = "__process"
+        value[1] = self.process
+
+        #match1 = re.search(r"Failed to resolve", stderr.decode())
+        #match2 = re.search(r"Error opening input file", stderr.decode())
+
         return(errorstate, value)
 
     def sdrserverstop(self):
@@ -160,15 +184,25 @@ class SDR_control(QObject):
         '''
         errorstate = False
         value = ""
+        try:
+            self.process.terminate
+        except:
+            errorstate = True
+            value = "no process to be terminated"
+            return(errorstate, value)
+        while self.process.poll() == None:
+            print("waiting for fl2k_tcp to terminate")
+            time.sleep(1)
+        stdout, stderr = self.process.communicate()
+        print(stderr.decode()) # print exit info
         # start SDR server here (e.g. fl2k_tcp)
         return(errorstate, value)
         
 
     def RPShutdown(self,configparams):
         '''
-        Purpose: Shutdown the OS on the SDR if applicable
+        not applicable for fl2k
         '''
         errorstate = False
         value = ""
-        # start SDR server here (e.g. fl2k_tcp)
         return(errorstate, value)

@@ -704,6 +704,7 @@ class res_workers(QObject):
     def soxworker_terminate(self):
         self.stopix = True
 
+
     def LO_shifter_worker(self):
         self.stopix = False
         t_DATABLOCKSIZE = 1024*4*256
@@ -728,7 +729,6 @@ class res_workers(QObject):
         expected_filesize = self.get_expfs()
         readsegmentfn = self.get_readsegment()
         centershift = self.get_centershift()
-        #print(f"centershift: <<<<<<<<<<<<<<<<<<<<<<<{centershift}>>>>>>>>>>>>>>>>>")
         sBPS = self.get_sBPS()
         tBPS = self.get_tBPS()
         wFormatTag = self.get_wFormatTag()
@@ -738,18 +738,10 @@ class res_workers(QObject):
         #TODO: replace following by new readsegment call
         #ret = readsegmentfn(position,DATABLOCKSIZE) #TODO: transfer to auxiliary block
         #TODO: , define new readsegment-function, generalize to tBPS rather than 32 bit
-
-        #readsegment_new(self,filepath,position,readoffset,DATABLOCKSIZE,sBPS,tBPS,wFormatTag)
-        sSR = self.get_sSR()
-        # print(f"LOshifter worker sSR: {sSR} sBPS: {sBPS} expfilesz: {expected_filesize}")
-        # print(f"LOshifter worker souce: {sourcefilename} target: {targetfilename} ")
-        # print(f"LOshifter worker centershift: {centershift} readoffset: {readoffset} ")
-  
+        sSR = self.get_sSR()  
         dt = 1/sSR
         segment_tstart = 0
-        #print(f"LOshifter worker targetfilename: {targetfilename}, exp filesize: {expected_filesize}")
-        #print(expected_filesize)
-        #try to calculate optimum data-blocksize fpr best phase transition between chuncks
+        #try to calculate optimum data-blocksize for best phase transition between chuncks
         psc_locker = False
         DATABLOCKSIZE = t_DATABLOCKSIZE
         if centershift > 1e-5:
@@ -759,7 +751,7 @@ class res_workers(QObject):
             rangestart = int(rangestop - max(1,np.floor(10000/x)))
             for k in range(rangestart, rangestop):  # Testen verschiedener k-Werte
                 m = round(k * x)  # number of datapoints for k periods = total number of datapoints
-                #target: test conditio for k-values near max datablock size
+                #target: test condition for k-values near max datablock size
                 #dtatblocksize = 2*m = 2*k*x; m =ca DATABLOCKSIZE --> k = m/x, endk = DATABLOCKSIZE/2/x
                 #k range = np.floor(DATABLOCKSIZE/2/x) - 1000
                 #m = k*x is the number of samples needed for being sSR a near integer multiple of the centershift period
@@ -838,9 +830,7 @@ class res_workers(QObject):
                 if self.stopix is True:
                     break
         else:
-            #print("LOshift worker: target file has not been found")
             print(f"LOshift worker:ERROR: no file {targetfilename} created")
-            #print("success")
             time.sleep(0.1)
         source_fileHandle.close()    
         target_fileHandle.close()
