@@ -53,7 +53,8 @@ class SDR_control(QObject):
         (4) device ID
         (5) max_IFREQ
         (6) min IFREQ
-        (7) connection type: ethernet, USB, USB_Vethernet
+        (7) possible resolutions (bits): list
+        (8) connection type: ethernet, USB, USB_Vethernet
         
         : param: none
 
