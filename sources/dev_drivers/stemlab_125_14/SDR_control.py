@@ -69,6 +69,7 @@ class SDR_control(QObject):
                           "device_ID": 0,
                           "max_IFREQ": 62500000,
                           "min_IFREQ": 0,
+                          "resolutions": [16, 24, 32],
                           "connection_type": "ethernet"}
         return(device_ID_dict)
 

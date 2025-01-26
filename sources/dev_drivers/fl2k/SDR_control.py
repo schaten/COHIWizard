@@ -68,6 +68,7 @@ class SDR_control(QObject):
                           "device_ID": 1,
                           "max_IFREQ": 100000000,
                           "min_IFREQ": 0,
+                          "resolutions": [8],
                           "connection_type": "USB_Vethernet"}
         #connection type USB_Vethernet is virtual, as the device in reality is USB but communication occurs via TCP to IP 127.0.0.1
         return(device_ID_dict)
@@ -103,32 +104,33 @@ class SDR_control(QObject):
         '''
         errorstate = False
         value = ""
-        print(f'configparams ifreq: {configparams["ifreq"]} , HostAddress: {configparams["HostAddress"]}')
-        print(f'configparams irate: {configparams["irate"]} , icorr: {configparams["icorr"]}')
-        print(f'configparams rates: {configparams["rates"]} , LO_offset: {configparams["LO_offset"]}')
-        ifreq = configparams["ifreq"]
-        irate = configparams["irate"]
-        rates = configparams["rates"]
-        icorr = configparams["icorr"]
-        LO_offset = configparams["LO_offset"]
-        value = [ifreq, irate, rates, icorr, LO_offset]
-        self.data_sock = socket(AF_INET, SOCK_STREAM)
-        self.data_sock.settimeout(5)
-        try:
-            self.data_sock.connect((configparams["HostAddress"], 25000))
-            value = self.data_sock
-        except:  #TODO: replace errormessages by parameterized signals connected to errorbox-calls, par = errormessage
-            self.SigError.emit("Cannot establish socket connection for streaming to the STEMLAB")
-            return False
+        return(errorstate,value)
+        # print(f'configparams ifreq: {configparams["ifreq"]} , HostAddress: {configparams["HostAddress"]}')
+        # print(f'configparams irate: {configparams["irate"]} , icorr: {configparams["icorr"]}')
+        # print(f'configparams rates: {configparams["rates"]} , LO_offset: {configparams["LO_offset"]}')
+        # ifreq = configparams["ifreq"]
+        # irate = configparams["irate"]
+        # rates = configparams["rates"]
+        # icorr = configparams["icorr"]
+        # LO_offset = configparams["LO_offset"]
+        # value = [ifreq, irate, rates, icorr, LO_offset]
+        # self.data_sock = socket(AF_INET, SOCK_STREAM)
+        # self.data_sock.settimeout(5)
+        # try:
+        #     self.data_sock.connect((configparams["HostAddress"], 25000))
+        #     value = self.data_sock
+        # except:  #TODO: replace errormessages by parameterized signals connected to errorbox-calls, par = errormessage
+        #     self.SigError.emit("Cannot establish socket connection for streaming to the STEMLAB")
+        #     return False
 
-        if (self.modality != "play") and (self.modality != "rec"):
-            errormessage = "Error , self.modality must be rec or play"
-            self.SigError.emit(errormessage)
-            errorstate = True
-            value = errormessage
-            return(errorstate, value)
-        self.SigMessage.emit("socket started")
-        return (errorstate, value)
+        # if (self.modality != "play") and (self.modality != "rec"):
+        #     errormessage = "Error , self.modality must be rec or play"
+        #     self.SigError.emit(errormessage)
+        #     errorstate = True
+        #     value = errormessage
+        #     return(errorstate, value)
+        # self.SigMessage.emit("socket started")
+        # return (errorstate, value)
 
     def startssh(self,configparams):
         '''
@@ -153,30 +155,31 @@ class SDR_control(QObject):
         '''
         errorstate = False
         value = ["",None]
-        fl2kpath = os.path.join(os.getcwd(), "dev_drivers", "fl2k", "osmo-fl2k-64bit-20250105")
-        #testpath = os.path.join(os.getcwd(), "dev_drivers", "fl2k", "osmo-fl2k-64bit-20250105")
-        #fl2kpath = os.path.join(os.getcwd(), "dev_drivers/fl2k/osmo-fl2k-64bit-20250105/fl2k_tcp")
+        return(errorstate,value)
+        # fl2kpath = os.path.join(os.getcwd(), "dev_drivers", "fl2k", "osmo-fl2k-64bit-20250105")
+        # #testpath = os.path.join(os.getcwd(), "dev_drivers", "fl2k", "osmo-fl2k-64bit-20250105")
+        # #fl2kpath = os.path.join(os.getcwd(), "dev_drivers/fl2k/osmo-fl2k-64bit-20250105/fl2k_tcp")
 
-        #fl2k_command = [os.path.join(fl2kpath, "fl2k_tcp"), "-h"] # for TEST only
+        # #fl2k_command = [os.path.join(fl2kpath, "fl2k_tcp"), "-h"] # for TEST only
 
-        fl2k_command = [os.path.join(fl2kpath, "fl2k_tcp"), " -a 127.0.0.1 -p 1234 -s 10000000"]
-        #fl2k_command = [os.path.join(fl2kpath, "fl2k_tcp"), "-a 127.0.0.1 -p 1234 -s " , str(configparams["irate"])]
-        self.process = subprocess.Popen(fl2k_command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell = True)
-        if not self.process.poll() == None:
-            errorstate = True
-            value[0] = "fl2k_tcp cannot be started, please check if device is connected !"
-            self.SigError.emit(value[0])
-            return(errorstate, value)
-        # stdout, stderr = self.process.communicate()
-        # stderr.decode() # enthält alle Infos
-        #process.terminate
-        value[0] = "__process"
-        value[1] = self.process
+        # fl2k_command = [os.path.join(fl2kpath, "fl2k_tcp"), " -a 127.0.0.1 -p 1234 -s 10000000"]
+        # #fl2k_command = [os.path.join(fl2kpath, "fl2k_tcp"), "-a 127.0.0.1 -p 1234 -s " , str(configparams["irate"])]
+        # self.process = subprocess.Popen(fl2k_command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell = True)
+        # if not self.process.poll() == None:
+        #     errorstate = True
+        #     value[0] = "fl2k_tcp cannot be started, please check if device is connected !"
+        #     self.SigError.emit(value[0])
+        #     return(errorstate, value)
+        # # stdout, stderr = self.process.communicate()
+        # # stderr.decode() # enthält alle Infos
+        # #process.terminate
+        # value[0] = "__process"
+        # value[1] = self.process
 
-        #match1 = re.search(r"Failed to resolve", stderr.decode())
-        #match2 = re.search(r"Error opening input file", stderr.decode())
+        # #match1 = re.search(r"Failed to resolve", stderr.decode())
+        # #match2 = re.search(r"Error opening input file", stderr.decode())
 
-        return(errorstate, value)
+        # return(errorstate, value)
 
     def sdrserverstop(self):
         '''
@@ -184,19 +187,20 @@ class SDR_control(QObject):
         '''
         errorstate = False
         value = ""
-        try:
-            self.process.terminate
-        except:
-            errorstate = True
-            value = "no process to be terminated"
-            return(errorstate, value)
-        while self.process.poll() == None:
-            print("waiting for fl2k_tcp to terminate")
-            time.sleep(1)
-        stdout, stderr = self.process.communicate()
-        print(stderr.decode()) # print exit info
-        # start SDR server here (e.g. fl2k_tcp)
-        return(errorstate, value)
+        return(errorstate,value)
+        # try:
+        #     self.process.terminate
+        # except:
+        #     errorstate = True
+        #     value = "no process to be terminated"
+        #     return(errorstate, value)
+        # while self.process.poll() == None:
+        #     print("waiting for fl2k_tcp to terminate")
+        #     time.sleep(1)
+        # stdout, stderr = self.process.communicate()
+        # print(stderr.decode()) # print exit info
+        # # start SDR server here (e.g. fl2k_tcp)
+        # return(errorstate, value)
         
 
     def RPShutdown(self,configparams):

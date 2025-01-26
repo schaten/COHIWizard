@@ -667,14 +667,19 @@ class playrec_c(QObject):
         """        
         errorstate = False
         value = ""
+        device_ID_dict =self.stemlabcontrol.identify()
+        device_ID_dict ["resolutions"]
         #print("file opened in playloop thread starter")
-        if self.m["wavheader"]['nBitsPerSample'] == 16 or self.m["wavheader"]['nBitsPerSample'] == 24 or self.m["wavheader"]['nBitsPerSample'] == 32:
+        if self.m["wavheader"]['nBitsPerSample'] in device_ID_dict ["resolutions"]:
+        #if self.m["wavheader"]['nBitsPerSample'] == 16 or self.m["wavheader"]['nBitsPerSample'] == 24 or self.m["wavheader"]['nBitsPerSample'] == 32:
             pass
             #TODO: Anpassen an andere Fileformate, Einbau von Positionen 
+        # elif self.m["wavheader"]['nBitsPerSample'] == 8: #TODO TODO: specify supported bitdepth in driver specification
+        #     print("8 bit file, cannot be played with stemlab")
         else:
             #auxi.standard_errorbox("dataformat not supported, only 16, 24 and 32 bits per sample are possible")
             errorstate = True
-            value = "dataformat not supported, only 16, 24 and 32 bits per sample are possible"
+            value = f"dataformat not supported, only {device_ID_dict ["resolutions"]} bits per sample are possible"
             return(errorstate,value)
         self.m["timescaler"] = self.m["wavheader"]['nSamplesPerSec']*self.m["wavheader"]['nBlockAlign']
         #TODO TODO TODO: generate list of playlengths in case of nextfile-chain !
@@ -920,11 +925,11 @@ class playrec_c(QObject):
             return
         #TODO: check why this sequence incl file close needs to be outside the playthred worker; causes some problems
         
-        prfilehandle = self.playrec_tworker.get_fileHandle() ###TODO TODO TODO: obsolete, file is closed by tworker
+        #prfilehandle = self.playrec_tworker.get_fileHandle() ###TODO TODO TODO: obsolete, file is closed by tworker
         self.playthread.quit()
         self.playthread.wait()
         time.sleep(0.05)
-        prfilehandle.close() ###TODO TODO TODO: obsolete, file is closed by tworker
+        #prfilehandle.close() ###TODO TODO TODO: obsolete, file is closed by tworker
         self.m["fileopened"] = False #OBSOLETE ?
         #self.SigRelay.emit("cm_all_",["fileopened",False]) ####TODO geht nicht
         self.m["wavheader"]['nextfilename'] = self.m["wavheader"]['nextfilename'].rstrip() ###TODO TODO TODO: obsolete, file is closed by tworker
