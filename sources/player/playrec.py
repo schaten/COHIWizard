@@ -464,25 +464,21 @@ class playrec_c(QObject):
         value = ""
         self.m["errorf"] = False
         if self.m["ifreq"] < device_ID_dict["min_IFREQ"] or self.m["ifreq"] > device_ID_dict["max_IFREQ"]:
-        #TODO Device replace by: if self.m["ifreq"] < 0 or self.m["ifreq"] > device_ID_dict["max_IFREQ"]:
-            value = "center frequency not in range (0 - 62500000) \
-                      after _lo\n Probably not a COHIRADIA File"
+        #TODO CHECK CHECK CHECK:
+            value = "center frequency not in range " + str(device_ID_dict["min_IFREQ"]) + " - " + str(device_ID_dict["max_IFREQ"]) + "\n \n Please check if it is an SDR wav File (not audio) and what TX device it is meant for."
             errorstate = True
         if device_ID_dict["rate_type"] == "discrete":
             if self.m["irate"] not in device_ID_dict["rates"]:
             #TODO Device replace by: if self.m["irate"] not in device_ID_dict["rates"]:
-                value = "The sample rate of this file is inappropriate for the STEMLAB!\n\
-                Probably it is not a COHIRADIA File. \n \n \
-                PLEASE USE THE 'Resample' TAB TO CREATE A PLAYABLE FILE ! \n\n \
-                SR must be in the set: 20000, 50000, 100000, 250000, 500000, 1250000, 2500000"
+                value = "The sample rate of this file is inappropriate for the device " + device_ID_dict["device_name"] + "\n \n Please check if it is an SDR wav File (not audio) and what TX device it is meant for. \n \n" + \
+                "YOU MAY USE THE 'Resample' TAB TO CREATE A PLAYABLE FILE ! \n \n " + \
+                "SR must be in the set " + str(list(device_ID_dict["rates"].keys()))
                 errorstate = True
         elif device_ID_dict["rate_type"] == "continuous":
             if self.m["irate"] < list(device_ID_dict["rates"].keys())[0] or self.m["irate"] > list(device_ID_dict["rates"].keys())[1]:
-            #TODO Device replace by: if self.m["irate"] < device_ID_dict["rates"][0] or self.m["irate"] > device_ID_dict["rates"][1]:
-                value = "The sample rate of this file is inappropriate for the STEMLAB!\n\
-                Probably it is not a COHIRADIA File. \n \n \
-                PLEASE USE THE 'Resample' TAB TO CREATE A PLAYABLE FILE ! \n\n \
-                SR must be in the interval: (20000 - 100000000)"
+                value = "The sample rate of this file is inappropriate for the device " + device_ID_dict["device_name"] + "\n \n Please check if it is an SDR wav File (not audio) and what TX device it is meant for. \n \n" + \
+                "YOU MAY USE THE 'Resample' TAB TO CREATE A PLAYABLE FILE ! \n\n" + \
+                "SR must be in the interval:" + list(device_ID_dict["rates"].keys())[0] + " - " + list(device_ID_dict["rates"].keys())[1]
                 errorstate = True
         else:
             errorstate = True

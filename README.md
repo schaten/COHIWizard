@@ -1,5 +1,7 @@
 # COHIWizard
 
+This branch is experimental and under continuous development. When downloading and running the code, several issues may arise. We recommend to use branch cohiwizard-v1.3 for stable operation.
+
 COHIWizard is an application which allows for playback, recording, analysis and processing of broadband RF signals when using a [STEMLAB125-14](https://redpitaya.com/de/stemlab-125-14/) by Red Pitaya . Main purpose is archiving AM radio bands like LW, MW, SW, VLF in the context of [COHIRADIA](https://www.radiomuseum.org/dsp_cohiradia.cfm) but other purposes can be thought of. While recording the data is stored in IQ data files with 32 bit per sample (2 x 16 bits complex) and carries an extended wav-header in the standard format used for most software defined radios (SDR). 
 
 Appropriate recordings can be played back on historic Radio receivers with external antenna jack and all transmitters active at the time of the recording can then be tuned through and listened to on the radio. Detailed information for installation, hardware setup and an archive with many recordings from 2006 on can be found on [COHIRADIA](https://www.radiomuseum.org/dsp_cohiradia.cfm).
@@ -26,3 +28,4 @@ Appropriate recordings can be played back on historic Radio receivers with exter
 SDR_COHIWizard.py starts up a GUI with a recorder/player and various utilities for e.g. visualization of the spectra, resampling, annotation (beta version) and editing of wav-headers.
 
 When using a local git you can also access the branch 1.3 which is currently experimental and contains the version currently under development.
+Please refer to the README in this branch to install version 1.3 correctly (other requirements.txt and other Python-version: 3.13)
