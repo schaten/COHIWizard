@@ -686,7 +686,7 @@ class core_v(QObject):
         curix = self.gui.playrec_comboBox_startuptab.currentIndex()
         print(f"startuptab set: {curix}")
         #write to yaml
-        self.m["metadata"]["startup_tab"] = str(curix)
+        self.m["metadata"]["startup_tab"] = str(curix) 
         stream = open("config_wizard.yaml", "w")
         yaml.dump(self.m["metadata"], stream)
         stream.close()

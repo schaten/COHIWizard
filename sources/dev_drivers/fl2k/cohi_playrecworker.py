@@ -10,6 +10,7 @@ from socket import socket, AF_INET, SOCK_STREAM
 from struct import unpack
 import numpy as np
 import os
+import psutil
 import subprocess
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
@@ -47,16 +48,30 @@ class playrec_worker(QObject):
     SigError = pyqtSignal(str)
     SigNextfile = pyqtSignal(str)
 
-    def __init__(self, *args,**kwargs):
+    # def __init__(self, *args,**kwargs):
+
+    #     super().__init__(*args, **kwargs)
+    #     self.stopix = False
+    #     #self.pausestate = False
+    #     self.DATABLOCKSIZE = 1024*4*256
+    #     #self.JUNKSIZE = 2*self.DATABLOCKSIZE
+    #     self.JUNKSIZE = self.DATABLOCKSIZE
+    #     self.mutex = QMutex()
+    #     # if len(args) > 0: #TODO: check for more general formulation
+    #     #     self.stemlabcontrol = args[0]
+
+    def __init__(self, stemlabcontrolinst,*args,**kwargs):
 
         super().__init__(*args, **kwargs)
         self.stopix = False
         #self.pausestate = False
-        self.DATABLOCKSIZE = 1024*4*256
-        self.JUNKSIZE = 2*self.DATABLOCKSIZE
+        #self.JUNKSIZE = 2048*4
+        self.DATABLOCKSIZE = 1024*1*256
+        self.DATASHOWSIZE = 1024
+        self.JUNKSIZE = self.DATABLOCKSIZE
         self.mutex = QMutex()
-        if len(args) > 0: #TODO: check for more general formulation
-            self.stemlabcontrol = args[0]
+        self.stemlabcontrol = stemlabcontrolinst
+
 
     def set_filename(self,_value):
         self.__slots__[0] = _value
@@ -215,137 +230,109 @@ class playrec_worker(QObject):
         """
         #print("reached playloopthread")
         filenames = self.get_filename()
-        timescaler = self.get_timescaler()
+        timescaler = self.get_timescaler() #bytes per second
         TEST = self.get_TEST()
         gain = self.get_gain()
         #TODO: self.fmtscl = self.__slots__[7] #scaler for data format      ? not used so far  
         self.stopix = False
         self.set_fileclose(False)
         configuration = self.get_configparameters() # = {"ifreq":self.m["ifreq"], "irate":self.m["irate"],"rates": self.m["rates"], "icorr":self.m["icorr"],"HostAddress":self.m["HostAddress"], "LO_offset":self.m["LO_offset"]}
-        sSR = configuration["irate"] #TODO TODO TODO: check if correctly scaled (true frequ in S/s, nod kS/s)
+        sampling_rate = configuration["irate"] #TODO TODO TODO: check if correctly scaled (true frequ in S/s, not kS/s)
         lo_shift = configuration["LO_offset"] #TODO check if this is really the LO frequency !!!
         # start fl2k_file with reading from stdin
         #TODO TODO: target samplingrate von aussen übernehm,en
-        sampling_rate = 10000000
+        print(f"play_loop_filelist, sampling_rate: {sampling_rate}")
+        #sampling_rate = sSR
         fl2k_file_path = os.path.join(os.getcwd(),"dev_drivers/fl2k/osmo-fl2k-64bit-20250105", "fl2k_file.exe")
-        print(f"cohi_playrecworker fl2k_file_path exists: {os.path.exists(fl2k_file_path)}")
-        try:
+        #print(f"cohi_playrecworker fl2k_file_path exists: {os.path.exists(fl2k_file_path)}")
+        if not TEST:
+            if os.name.find("posix") >= 0:
+                try:
+                    process = subprocess.Popen(
+                        ["fl2k_file", "-s", str(sampling_rate), "-"],
+                        stdin=subprocess.PIPE,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        bufsize=0
+                    )
+                except FileNotFoundError:
+                    self.SigError.emit(f"Input file not found")
+                    self.SigFinished.emit()
+                    return()
+                except subprocess.SubprocessError as e:
+                    self.SigError.emit(f"Error when executing fl2k_file: {e}")
+                    self.SigFinished.emit()
+                    return()
+                except Exception as e:
+                    self.SigError.emit(f"Unexpected error: {e}")
+                    print("unexpected error in play_loop_filelist for fl2k")
+                    self.SigFinished.emit()
+                    return()
+            else:
 
-            process = subprocess.Popen(
-                [fl2k_file_path, "-s", str(sampling_rate), "-"],
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                bufsize=0
-            )
+                try:
+                    process = subprocess.Popen(
+                        [fl2k_file_path, "-s", str(sampling_rate), "-r", "0", "-"],
+                        stdin=subprocess.PIPE,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        bufsize=0
+                    )
 
-        except FileNotFoundError:
-            self.SigError.emit(f"Input file not found")
-            self.SigFinished.emit()
-            return()
-        except subprocess.SubprocessError as e:
-            self.SigError.emit(f"Error when executing fl2k_file: {e}")
-            self.SigFinished.emit()
-            return()
-        except Exception as e:
-            self.SigError.emit(f"Unexpected error: {e}")
-            print("unexpected error in play_loop_filelist for fl2k")
-            self.SigFinished.emit()
-            return()
+                except FileNotFoundError:
+                    self.SigError.emit(f"Input file not found")
+                    self.SigFinished.emit()
+                    return()
+                except subprocess.SubprocessError as e:
+                    self.SigError.emit(f"Error when executing fl2k_file: {e}")
+                    self.SigFinished.emit()
+                    return()
+                except Exception as e:
+                    self.SigError.emit(f"Unexpected error: {e}")
+                    print("unexpected error in play_loop_filelist for fl2k")
+                    self.SigFinished.emit()
+                    return()
+            psutil.Process(process.pid).nice(psutil.IDLE_PRIORITY_CLASS)
+        else:
+            print("fl2k worker TEST condition , no fl2k_file process started <<<<<<<<<<<<<<<<")
 
         for ix,filename in enumerate(filenames):
             fileHandle = open(filename, 'rb')
             self.SigNextfile.emit(filename)
-            #print(f"filehandle for set_4: {fileHandle} of file {filename} ")
             self.set_fileHandle(fileHandle)
             format = self.get_formattag()
-            ################# for testing here one could start a direct streaming to fl2k_file ############################
-
-            #TEST: stream_to_fl2k_file(input_file, sampling_rate, fl2k_file_path="fl2k_file", buffer_size=data_blocksize)
-
-            ######################## start streaming plus loshift plus resampling ############################
-            #check fast_sine_check, psc locker !!!
-            #errorstate, value = self.fastsine_check(lo_shift,sSR,self.DATABLOCKSIZE)
-            #psc_locker = value[0]
-            #data_blocksize = value[1] 
             data_blocksize = self.DATABLOCKSIZE
             self.set_datablocksize(data_blocksize)
-            #print(f"Filehandle :{fileHandle}")
             fileHandle.seek(216, 1)
             data = np.empty(data_blocksize, dtype=np.int8)
-            # if format[2] == 16:
-            #     data = np.empty(data_blocksize, dtype=np.int16)
-            # else:
-            #     data = np.empty(data_blocksize, dtype=np.float32) #TODO: check if true for 32-bit wavs wie Gianni's
-            #print(f"playloop: BitspSample: {format[2]}; wFormatTag: {format[0]}; Align: {format[1]}")
             if format[0] == 1:
                 normfactor = int(2**int(format[2]-1))-1
             else:
                 normfactor = 1
-            # if format[2] == 16 or format[2] == 32:
-            #     size = fileHandle.readinto(data)
-            # elif format[2] == 24:
-            #     data = self.read24(format,data,fileHandle,data_blocksize)
-            #     size = len(data)
             size = fileHandle.readinto(data)
-            print(f"data fetched, size = {size}")
+            #print(f"data fetched, size = {size}")
             self.set_data(data)
-            print(f"filehandle: {fileHandle}")
+            #print(f"filehandle: {fileHandle}")
             junkspersecond = timescaler / self.JUNKSIZE
             count = 0
             # print(f"Junkspersec:{junkspersecond}")
-            dt = 1/sSR
+            dt = 1/sampling_rate
             segment_tstart = 0
             while size > 0 and not self.stopix:
+                #reftime = time.time() ###DISTINCT
                 if not TEST:
                     if not self.get_pause():
                         try:
                             #scale data with gain and normfactor
                             aux1 = gain*data[0:size]/normfactor
-                            # #####################################################
-                            # aux2 = 1*aux1 #TODO TODO TODO: resample to 10MS/s 
-                            # #####################################################
-                            # ld = len(aux2)  #TODO ??? /2 ???
-                            # aux3 = np.empty(ld, dtype=np.float32)
-                            # if abs(lo_shift) > 1e-5:  #if frequency shift is needed
-                            #     #splt into re and im
-                            #     #rp = aux1[0:ld-1:2]
-                            #     #ip = aux1[1:ld:2]
-                            #     y = aux2[0:ld-1:2] +1j*aux2[1:ld:2]        
-                            #     tsus = np.arange(segment_tstart, segment_tstart+len(y)*dt, dt)[:len(y)]
-                            #     segment_tstart = tsus[len(tsus)-1] + dt
-                            #     # try to calculate this vector only once and measure time #TODO TODO TODO: implement accelerator for single calculation of phasescaler
-                            #     if not psc_locker:
-                            #         phasescaler = np.exp(2*np.pi*1j*lo_shift*tsus)
-                            #     elif first_lock_pass:
-                            #         print("psc_locker, only one template loaded")
-                            #         phasescaler = np.exp(2*np.pi*1j*lo_shift*tsus)
-                            #         first_lock_pass = False
-                            #     #multiply complex with exp(1j*w_LO*t)
-                            #     ys = np.multiply(y,phasescaler)
-                            #     #TODO TODO TODO: check if necessary if afterwards resampling is done; maybe can be done in 2 separate channels
-                            #     aux3[0:ld:2] = (np.copy(np.real(ys)))
-                            #     aux3[1:ld:2] = (np.copy(np.imag(ys)))  
-                            # else:   #if no frequency shift, just copy data to temp file as they are
-                            #     aux3 = np.copy(ys)
-                            #####################################################
-                            #aux3 = 1*aux2 #wron here: resample to 10MS/s 
-                            #####################################################
                             # Skalieren, damit die Werte in den Bereich von int8 passen (-128 bis 127)
                             scaled_array = np.clip(150*aux1, -128, 127)
-                            print(f"scaled array, max: {max(scaled_array)}, max(aux1): {max(aux1)}")
-                            print(f"aux1[100:150]: {aux1[100:150]}")
-                            print(f"data[100:150]: {data[100:150]}")
-                            print(f"scaled_array[100:150]: {scaled_array[100:150]}")
-                            ####TODO TODO TODO AGC block
-                            # Casten zu int8
-                            aux4 = scaled_array.astype(np.int8) #TODO TODO TODO: check correct scaling or do AGC
+                            #print("send junk to fl2k_file")
                             #write aux4 to fl2k_file via stdin
-                            process.stdin.write(aux4)
+                            process.stdin.write(scaled_array.astype(np.int8))
                             process.stdin.flush()
-                            print("written to stdin")
+                            #print("written to stdin")
                             # gain*data[0:size].astype(np.int8)
-                            ###########################################TODO: new sending routine via fl2k_file
                         except BlockingIOError:
                             print("Blocking data socket error in playloop worker")
                             time.sleep(0.1)
@@ -368,98 +355,90 @@ class playrec_worker(QObject):
                             self.SigFinished.emit()
                             time.sleep(0.1)
                             return
-                        # if format[2] == 16 or format[2] == 32:
-                        #     size = fileHandle.readinto(data)
-                        # elif format[2] == 24:
-                        #     data = self.read24(format,data,fileHandle,data_blocksize)
-                        #     size = len(data)
-                        #  read next data_blocksize samples
-                        print("fetch next data")
-                        print(f"filehandle: {fileHandle}")
+                        QThread.usleep(30) #sleep 30 us for keeping main GUI responsive
                         size = fileHandle.readinto(data)
-                        print(f"data fetched, size = {size}")
+                        #print(f"data fetched, size = {size}")
                         count += 1
                         if count > junkspersecond:
-                            print("increment emit")
+                            cv = np.zeros(2*self.DATASHOWSIZE)
+                            cv[0:2*self.DATASHOWSIZE-1:2] = data[0:self.DATASHOWSIZE] #write only real part
+                            self.set_data(cv)
+                            #print(f"DATASHOWSIZE: {self.DATASHOWSIZE}")
+                            #print("increment emit, modified")
+                            #TODO TODO TODO inactivated:check for timing !!!
                             self.SigIncrementCurTime.emit()
+                            #Dieser Aufruf blockiert das weitere Streaming immer für einige Zeit
                             count = 0
-                            #self.mutex.lock()
                             gain = self.get_gain()
-                            #print(f"diagnostic: gain in worker: {gain}")
-                            self.set_data(data)
-                            #self.mutex.unlock()
+                            #self.set_data(data)
                     else:
-                        #print("Pause, do not do anything")
-                        print("sleep a while")
+                        #print("sleep a while")
+                        process.stdin.flush()
                         time.sleep(0.1)
                         if self.stopix is True:
                             break
                 else:
                     if not self.get_pause():
                         print(" SDR_control fl2k test reached")
-                        # if format[2] == 16 or format[2] == 32:
-                        #     size = fileHandle.readinto(data)
-                        # elif format[2] == 24:
-                        #     data = self.read24(format,data,fileHandle,data_blocksize)
-                        #     size = len(data)
                         size = fileHandle.readinto(data)
-                        #print(f"size read: {size}")
-                        #print(data[1:10])
-                        #size = fileHandle.readinto(data)
-                        time.sleep(0.0001)
-                        #  read next 2048 bytes
+                        #print("sleep a bit ##########################")
+                        #time.sleep(0.0001)
+                        #i reality: 
+                        time.sleep(self.DATABLOCKSIZE/timescaler)
+                        #QThread.usleep(30)
+                        #  read next junk
                         count += 1
                         if count > junkspersecond and size > 0:
-                            #print('timeincrement reached')
+                            self.set_data(data[0:self.DATASHOWSIZE-1])
+                            #print(f"DATASHOWSIZE: {self.DATASHOWSIZE}")
                             self.SigIncrementCurTime.emit()
                             gain = self.get_gain()
-                            #print(f"diagnostic: gain in worker: {gain}")
-                            #print(f"maximum: {np.max(data)}")
-                            #self.set_data(gain*data)
-                            self.set_data(data)
                             count = 0
                     else:
                         time.sleep(1)
                         if self.stopix is True:
                             break
+                #proc_time = time.time() - reftime ###DISTINCT
+                #print(f"process time: {proc_time}")       ###DISTINCT          
         print("close file ")
         self.set_fileclose(True)
         fileHandle.close()
-            #self.set_fileclose(True)
-        #print('worker  thread finished')
-        # terminate fl2k_file process and wait for actual termination
-        process.stdin.close()
-        process.terminate
-        while process.poll() == None:
 
-            print("poll and close")
-            time.sleep(1)
-        print("close process ")
-        
-        stdout, stderr = process.communicate() ### TODO TODO TODO: Timeout ???
-        # Report result
-        print("cohi_playrecworker: fl2k_file output:")
-        print(stdout.decode())
-        if stderr:
-            print("cohi_playrecworker: fl2k_file errors:")
-            self.SigError.emit(f"error when terminating fl2k_file: {stderr.decode()}")
+        if not TEST:
+            # terminate fl2k_file process and wait for actual termination
+            process.stdin.close()
+            process.terminate
+            while process.poll() == None:
+
+                print("poll and close")
+                QThread.msleep(1)
+                #time.sleep(1)
+            print("close process ")
+            
+            stdout, stderr = process.communicate() ### TODO TODO TODO: Timeout ???
+            # Report result
+            print("cohi_playrecworker: fl2k_file output:")
+            print(stdout.decode())
+            if stderr:
+                print("cohi_playrecworker: fl2k_file errors:")
+                self.SigError.emit(f"error when terminating fl2k_file: {stderr.decode()}")
         self.SigFinished.emit()
-        #print("SigFinished from playloop emitted")
+        return()
 
-    def fastsine_check(self,loshift,sSR,t_DATABLOCKSIZE):
+    def fastsine_check(self,loshift,sampling_rate,t_DATABLOCKSIZE):
         """check if fast sine calculation is possible and return optimized blocksize
 
         :param loshift: _description_
         :type loshift: _type_
-        :param sSR: _description_
-        :type sSR: _type_
+        :param sampling_rate: _description_
+        :type sampling_rate: _type_
         """
         errorstate = False
         value = None
         #t_DATABLOCKSIZE = 1024*4*256 #specify as constant elsewhere
         psc_locker = False
         DATABLOCKSIZE = t_DATABLOCKSIZE
-        x = sSR/loshift # number of datapoints per period of centershifte
+        x = sampling_rate/loshift # number of datapoints per period of centershifte
         found_m = False
         rangestop = int(np.floor(DATABLOCKSIZE/2/x))
         rangestart = int(rangestop - max(1,np.floor(10000/x)))
@@ -468,7 +447,7 @@ class playrec_worker(QObject):
             #target: test condition for k-values near max datablock size
             #dtatblocksize = 2*m = 2*k*x; m =ca DATABLOCKSIZE --> k = m/x, endk = DATABLOCKSIZE/2/x
             #k range = np.floor(DATABLOCKSIZE/2/x) - 1000
-            #m = k*x is the number of samples needed for being sSR a near integer multiple of the centershift period
+            #m = k*x is the number of samples needed for being sampling_rate a near integer multiple of the centershift period
             product = m / x # total number of periods
             rounded_product = round(product, 3) # deviation of rounded # periods from integer
             if abs(rounded_product - round(rounded_product)) <= 0.01:
@@ -640,3 +619,286 @@ class playrec_worker(QObject):
 #                 # Warten, bis fl2k-file beendet ist
 #                 process.wait()
 
+#OLD VERSION !
+    # def play_loop_filelist(self):
+    #     """
+    #     worker loop for sending data to STEMLAB server
+    #     data format i16; 2xi16 complex; FormatTag 1
+    #     sends signals:     
+    #         SigFinished = pyqtSignal()
+    #         SigIncrementCurTime = pyqtSignal()
+    #         SigBufferOverflow = pyqtSignal()
+
+    #     :param : no regular parameters; as this is a thread worker communication occurs via
+    #     class slots __slots__[i], i = 0...8
+    #     __slots__[0]: filename = complete file path pathname/filename Type: list
+    #     __slots__[1]: timescaler = bytes per second  TODO: rescaling to samples per second would probably be more logical, Type int
+    #     __slots__[2]: TEST = flag for test mode Type: bool
+    #     __slots__[3]: pause : if True then do not send data; Boolean
+    #     __slots__[4]: filehandle: returns current filehandle to main thread methods on request 
+    #     __slots__[5]: data segment to be returned every second
+    #     __slots__[6]: gain, scaling factor for playback
+    #     __slots__[7]: formatlist: [formattag blockalign bitpsample]
+    #     __slots__[9]: file_close
+    #     __slots__[10]: sampling_parameters
+    #     """
+    #     #print("reached playloopthread")
+    #     filenames = self.get_filename()
+    #     timescaler = self.get_timescaler()
+    #     TEST = self.get_TEST()
+    #     gain = self.get_gain()
+    #     #TODO: self.fmtscl = self.__slots__[7] #scaler for data format      ? not used so far  
+    #     self.stopix = False
+    #     self.set_fileclose(False)
+    #     configuration = self.get_configparameters() # = {"ifreq":self.m["ifreq"], "irate":self.m["irate"],"rates": self.m["rates"], "icorr":self.m["icorr"],"HostAddress":self.m["HostAddress"], "LO_offset":self.m["LO_offset"]}
+    #     sSR = configuration["irate"] #TODO TODO TODO: check if correctly scaled (true frequ in S/s, nod kS/s)
+    #     lo_shift = configuration["LO_offset"] #TODO check if this is really the LO frequency !!!
+    #     # start fl2k_file with reading from stdin
+    #     #TODO TODO: target samplingrate von aussen übernehm,en
+    #     sampling_rate = 10000000
+    #     fl2k_file_path = os.path.join(os.getcwd(),"dev_drivers/fl2k/osmo-fl2k-64bit-20250105", "fl2k_file.exe")
+    #     print(f"cohi_playrecworker fl2k_file_path exists: {os.path.exists(fl2k_file_path)}")
+    #     if os.name.find("posix") >= 0:
+    #         try:
+    #             process = subprocess.Popen(
+    #                 ["fl2k_file", "-s", str(sampling_rate), "-"],
+    #                 stdin=subprocess.PIPE,
+    #                 stdout=subprocess.PIPE,
+    #                 stderr=subprocess.PIPE,
+    #                 bufsize=0
+    #             )
+    #         except FileNotFoundError:
+    #             self.SigError.emit(f"Input file not found")
+    #             self.SigFinished.emit()
+    #             return()
+    #         except subprocess.SubprocessError as e:
+    #             self.SigError.emit(f"Error when executing fl2k_file: {e}")
+    #             self.SigFinished.emit()
+    #             return()
+    #         except Exception as e:
+    #             self.SigError.emit(f"Unexpected error: {e}")
+    #             print("unexpected error in play_loop_filelist for fl2k")
+    #             self.SigFinished.emit()
+    #             return()
+    #     else:
+
+    #         try:
+    #             process = subprocess.Popen(
+    #                 [fl2k_file_path, "-s", str(sampling_rate), "-r", "0", "-"],
+    #                 stdin=subprocess.PIPE,
+    #                 stdout=subprocess.PIPE,
+    #                 stderr=subprocess.PIPE,
+    #                 bufsize=0
+    #             )
+
+    #         except FileNotFoundError:
+    #             self.SigError.emit(f"Input file not found")
+    #             self.SigFinished.emit()
+    #             return()
+    #         except subprocess.SubprocessError as e:
+    #             self.SigError.emit(f"Error when executing fl2k_file: {e}")
+    #             self.SigFinished.emit()
+    #             return()
+    #         except Exception as e:
+    #             self.SigError.emit(f"Unexpected error: {e}")
+    #             print("unexpected error in play_loop_filelist for fl2k")
+    #             self.SigFinished.emit()
+    #             return()
+
+    #     for ix,filename in enumerate(filenames):
+    #         fileHandle = open(filename, 'rb')
+    #         self.SigNextfile.emit(filename)
+    #         #print(f"filehandle for set_4: {fileHandle} of file {filename} ")
+    #         self.set_fileHandle(fileHandle)
+    #         format = self.get_formattag()
+    #         ################# for testing here one could start a direct streaming to fl2k_file ############################
+
+    #         #TEST: stream_to_fl2k_file(input_file, sampling_rate, fl2k_file_path="fl2k_file", buffer_size=data_blocksize)
+
+    #         ######################## start streaming plus loshift plus resampling ############################
+    #         #check fast_sine_check, psc locker !!!
+    #         #errorstate, value = self.fastsine_check(lo_shift,sSR,self.DATABLOCKSIZE)
+    #         #psc_locker = value[0]
+    #         #data_blocksize = value[1] 
+    #         data_blocksize = self.DATABLOCKSIZE
+    #         self.set_datablocksize(data_blocksize)
+    #         #print(f"Filehandle :{fileHandle}")
+    #         fileHandle.seek(216, 1)
+    #         data = np.empty(data_blocksize, dtype=np.int8)
+    #         # if format[2] == 16:
+    #         #     data = np.empty(data_blocksize, dtype=np.int16)
+    #         # else:
+    #         #     data = np.empty(data_blocksize, dtype=np.float32) #TODO: check if true for 32-bit wavs wie Gianni's
+    #         #print(f"playloop: BitspSample: {format[2]}; wFormatTag: {format[0]}; Align: {format[1]}")
+    #         if format[0] == 1:
+    #             normfactor = int(2**int(format[2]-1))-1
+    #         else:
+    #             normfactor = 1
+    #         # if format[2] == 16 or format[2] == 32:
+    #         #     size = fileHandle.readinto(data)
+    #         # elif format[2] == 24:
+    #         #     data = self.read24(format,data,fileHandle,data_blocksize)
+    #         #     size = len(data)
+    #         size = fileHandle.readinto(data)
+    #         print(f"data fetched, size = {size}")
+    #         self.set_data(data)
+    #         print(f"filehandle: {fileHandle}")
+    #         junkspersecond = timescaler / self.JUNKSIZE
+    #         count = 0
+    #         # print(f"Junkspersec:{junkspersecond}")
+    #         dt = 1/sSR
+    #         segment_tstart = 0
+    #         while size > 0 and not self.stopix:
+    #             reftime = time.time()
+    #             if not TEST:
+    #                 if not self.get_pause():
+    #                     try:
+    #                         #scale data with gain and normfactor
+    #                         aux1 = gain*data[0:size]/normfactor
+    #                         # #####################################################
+    #                         # aux2 = 1*aux1 #TODO TODO TODO: resample to 10MS/s 
+    #                         # #####################################################
+    #                         # ld = len(aux2)  #TODO ??? /2 ???
+    #                         # aux3 = np.empty(ld, dtype=np.float32)
+    #                         # if abs(lo_shift) > 1e-5:  #if frequency shift is needed
+    #                         #     #splt into re and im
+    #                         #     #rp = aux1[0:ld-1:2]
+    #                         #     #ip = aux1[1:ld:2]
+    #                         #     y = aux2[0:ld-1:2] +1j*aux2[1:ld:2]        
+    #                         #     tsus = np.arange(segment_tstart, segment_tstart+len(y)*dt, dt)[:len(y)]
+    #                         #     segment_tstart = tsus[len(tsus)-1] + dt
+    #                         #     # try to calculate this vector only once and measure time #TODO TODO TODO: implement accelerator for single calculation of phasescaler
+    #                         #     if not psc_locker:
+    #                         #         phasescaler = np.exp(2*np.pi*1j*lo_shift*tsus)
+    #                         #     elif first_lock_pass:
+    #                         #         print("psc_locker, only one template loaded")
+    #                         #         phasescaler = np.exp(2*np.pi*1j*lo_shift*tsus)
+    #                         #         first_lock_pass = False
+    #                         #     #multiply complex with exp(1j*w_LO*t)
+    #                         #     ys = np.multiply(y,phasescaler)
+    #                         #     #TODO TODO TODO: check if necessary if afterwards resampling is done; maybe can be done in 2 separate channels
+    #                         #     aux3[0:ld:2] = (np.copy(np.real(ys)))
+    #                         #     aux3[1:ld:2] = (np.copy(np.imag(ys)))  
+    #                         # else:   #if no frequency shift, just copy data to temp file as they are
+    #                         #     aux3 = np.copy(ys)
+    #                         #####################################################
+    #                         #aux3 = 1*aux2 #wron here: resample to 10MS/s 
+    #                         #####################################################
+    #                         # Skalieren, damit die Werte in den Bereich von int8 passen (-128 bis 127)
+    #                         scaled_array = np.clip(150*aux1, -128, 127)
+    #                         print("send junk to fl2k_file")
+    #                         # print(f"scaled array, max: {max(scaled_array)}, max(aux1): {max(aux1)}")
+    #                         # print(f"aux1[100:150]: {aux1[100:150]}")
+    #                         # print(f"data[100:150]: {data[100:150]}")
+    #                         # print(f"scaled_array[100:150]: {scaled_array[100:150]}")
+    #                         ####TODO TODO TODO AGC block
+    #                         # Casten zu int8
+    #                         #aux4 = scaled_array.astype(np.int8) #TODO TODO TODO: check correct scaling or do AGC
+    #                         #write aux4 to fl2k_file via stdin
+    #                         process.stdin.write(scaled_array.astype(np.int8))
+    #                         process.stdin.flush()
+    #                         print("written to stdin")
+    #                         # gain*data[0:size].astype(np.int8)
+    #                         ###########################################TODO: new sending routine via fl2k_file
+    #                     except BlockingIOError:
+    #                         print("Blocking data socket error in playloop worker")
+    #                         time.sleep(0.1)
+    #                         self.SigError.emit("Blocking data socket error in playloop worker")
+    #                         self.SigFinished.emit()
+    #                         time.sleep(0.1)
+    #                         return
+    #                     except ConnectionResetError:
+    #                         print("Diagnostic Message: Connection data socket error in playloop worker")
+    #                         time.sleep(0.1)
+    #                         self.SigError.emit("Diagnostic Message: Connection data socket error in playloop worker")
+    #                         self.SigFinished.emit()
+    #                         time.sleep(0.1)
+    #                         return
+    #                     except Exception as e:
+    #                         print("Class e type error  data socket error in playloop worker")
+    #                         print(e)
+    #                         time.sleep(0.1)
+    #                         self.SigError.emit(f"Diagnostic Message: Error in playloop worker: {str(e)}")
+    #                         self.SigFinished.emit()
+    #                         time.sleep(0.1)
+    #                         return
+    #                     # if format[2] == 16 or format[2] == 32:
+    #                     #     size = fileHandle.readinto(data)
+    #                     # elif format[2] == 24:
+    #                     #     data = self.read24(format,data,fileHandle,data_blocksize)
+    #                     #     size = len(data)
+    #                     #  read next data_blocksize samples
+    #                     #print("fetch next data")
+    #                     #print(f"filehandle: {fileHandle}")
+    #                     size = fileHandle.readinto(data)
+    #                     print(f"data fetched, size = {size}")
+    #                     count += 1
+    #                     if count > junkspersecond:
+    #                         print("increment emit, modified")
+    #                         #TODO TODO TODO inactivated:check for timing !!!self.SigIncrementCurTime.emit()
+    #                         #Dieser Aufruf blockiert das weitere Streaming immer für einige Zeit
+    #                         count = 0
+    #                         #self.mutex.lock()
+    #                         gain = self.get_gain()
+    #                         #print(f"diagnostic: gain in worker: {gain}")
+    #                         self.set_data(data)
+    #                         #self.mutex.unlock()
+    #                 else:
+    #                     #print("Pause, do not do anything")
+    #                     print("sleep a while")
+    #                     time.sleep(0.1)
+    #                     if self.stopix is True:
+    #                         break
+    #             else:
+    #                 if not self.get_pause():
+    #                     print(" SDR_control fl2k test reached")
+    #                     # if format[2] == 16 or format[2] == 32:
+    #                     #     size = fileHandle.readinto(data)
+    #                     # elif format[2] == 24:
+    #                     #     data = self.read24(format,data,fileHandle,data_blocksize)
+    #                     #     size = len(data)
+    #                     size = fileHandle.readinto(data)
+    #                     #print(f"size read: {size}")
+    #                     #print(data[1:10])
+    #                     #size = fileHandle.readinto(data)
+    #                     time.sleep(0.0001)
+    #                     #  read next 2048 bytes
+    #                     count += 1
+    #                     if count > junkspersecond and size > 0:
+    #                         #print('timeincrement reached')
+    #                         self.SigIncrementCurTime.emit()
+    #                         gain = self.get_gain()
+    #                         #print(f"diagnostic: gain in worker: {gain}")
+    #                         #print(f"maximum: {np.max(data)}")
+    #                         #self.set_data(gain*data)
+    #                         self.set_data(data)
+    #                         count = 0
+    #                 else:
+    #                     time.sleep(1)
+    #                     if self.stopix is True:
+    #                         break
+    #             proc_time = time.time() - reftime
+    #             print(f"process time: {proc_time}")                
+    #     print("close file ")
+    #     self.set_fileclose(True)
+    #     fileHandle.close()
+    #         #self.set_fileclose(True)
+    #     #print('worker  thread finished')
+    #     # terminate fl2k_file process and wait for actual termination
+    #     process.stdin.close()
+    #     process.terminate
+    #     while process.poll() == None:
+
+    #         print("poll and close")
+    #         time.sleep(1)
+    #     print("close process ")
+        
+    #     stdout, stderr = process.communicate() ### TODO TODO TODO: Timeout ???
+    #     # Report result
+    #     print("cohi_playrecworker: fl2k_file output:")
+    #     print(stdout.decode())
+    #     if stderr:
+    #         print("cohi_playrecworker: fl2k_file errors:")
+    #         self.SigError.emit(f"error when terminating fl2k_file: {stderr.decode()}")
+    #     self.SigFinished.emit()
+    #     #print("SigFinished from playloop emitted")
