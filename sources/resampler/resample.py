@@ -595,13 +595,30 @@ class res_workers(QObject):
         print("********__________sox_worker as sox_writer started")
         self.stopix = False
         soxstring = self.get_soxstring()
+        #print(f"soxstring: {soxstring}")
         #self.ret = subprocess.Popen(soxstring, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell = True, start_new_session=True)
-        self.ret = subprocess.Popen(soxstring, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell = True)
+        if soxstring.find("ffmpeg") > 0:
+            print("############### using ffmpeg as ultrafast resampler #####################")
+            try:
+                self.ret = subprocess.Popen(soxstring, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
+            except FileNotFoundError:
+                print(f"Input file not found")
+            except subprocess.SubprocessError as e:
+                print(f"Error when executing fl2k_file: {e}")
+            except Exception as e:
+                print(f"Unexpected error: {e}")
+        else:
+            print("using sox as resampler")
+            self.ret = subprocess.Popen(soxstring, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell = True)
+
+
+        # stdout, stderr = self.ret.communicate()
+        # print(f"errormessages: <<<<<<<<<   {stderr.decode()}")
+
         #self.logger.debug(f"********__________sox_worker as sox_writer started, process nr: {self.ret}")
-        print(f" ________ sox worker poll at init: poll: {self.ret.poll()}")
+        print(f" ________ resampler executable poll at init: poll: {self.ret.poll()}")
         self.set_ret(self.ret)
         time.sleep(1)
-        #print(f"sox return value: {process}")
         #print(f"sox return value: {self.ret}")
         targetfilename = self.get_tfname()
         expected_filesize = self.get_expfs()
@@ -609,12 +626,12 @@ class res_workers(QObject):
         #print(expected_filesize)
         #self.SigStarted.emit()
         #extract process id of running sox process
-        self.mutex.lock()
-        tlr = subprocess.run('tasklist /NH | findstr /B /I sox', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell = True)
-        output_lines = tlr.stdout.decode('cp1252').splitlines()
-        pids = [line.split()[1] for line in output_lines]        
+        #self.mutex.lock()
+        #tlr = subprocess.run('tasklist /NH | findstr /B /I sox', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell = True)
+        #output_lines = tlr.stdout.decode('cp1252').splitlines()
+        #pids = [line.split()[1] for line in output_lines]        
         #print(f"________ sox writer process ids: {pids}")
-        self.mutex.unlock()
+        #self.mutex.unlock()
         if os.path.exists(targetfilename) == True:
             #print("soxwriter: temp file has been created")
             file_stats = os.stat(targetfilename)
@@ -643,7 +660,7 @@ class res_workers(QObject):
                     file_stats = os.stat(targetfilename)
                     rf = np.floor(100*file_stats.st_size/expected_filesize)
                     if np.isnan(rf):
-                        #print("soxwriter ERROR ________________soxwriter progress exception, set progress zero")
+                        print("soxwriter ERROR ________________soxwriter progress exception, set progress zero")
                         rel_finish = int(5)
                     else:
                         rel_finish = int(rf)
@@ -655,13 +672,13 @@ class res_workers(QObject):
                         progress = 5
                         self.set_progress(progress)
                         self.SigPupdate.emit()
-                    #print(f"relative filesize in %: {progress}")
+                    print(f"relative filesize in %: {progress}")
                     if progress - progress_old > 5:
                         #self.mutex.lock()
                         progress_old = progress
                         self.set_progress(progress)
                         self.SigPupdate.emit()
-                        #print("NOW UPDATE STATUSBAR#############################################################################")
+                        print("NOW UPDATE STATUSBAR#############################################################################")
                         #self.mutex.unlock()
                 except:
                     #self.logger.debug("********__________ soxwriter_ temp file not found, proceeding without progress update")
@@ -1326,10 +1343,13 @@ class resample_c(QObject):
         if self.m['wFormatTag'] == 1:
             if  self.m["sBPS"] > 8:
                 wFormatTag_TYPE = "signed-integer"
+                ffmpeg_type = "s"+str(self.m["sBPS"]) + "le"
             else:
                 wFormatTag_TYPE = "unsigned-integer"
+                ffmpeg_type = "u8"
         elif self.m['wFormatTag']  == 3:
             wFormatTag_TYPE = "floating-point"
+            ffmpeg_type = "f" + str(self.m["sBPS"]) + "le"
         else:
             auxi.standard_errorbox("wFormatTag is neither 1 nor 3; unsupported Format, this file cannot be processed")
             return False
@@ -1339,8 +1359,14 @@ class resample_c(QObject):
             sox_filetype = 'raw'
         else:
             sox_filetype = 'wav'
-        #soxstring = 'sox --norm=-3 -e ' + wFormatTag_TYPE + ' -t  ' + sox_filetype + ' -r ' + str(self.m["sSR"]) + ' -b '+ str(self.m["sBPS"]) + ' -c 2 ' + '"' + source_fn  + '"' + ' -e signed-integer -t raw -r ' + str(int(tSR)) + ' -b ' + str(self.m["tBPS"]) + ' -c 2 '  + '"' + target_fn  + '"' 
-        soxstring = 'sox -e ' + wFormatTag_TYPE + ' -t  ' + sox_filetype + ' -r ' + str(self.m["sSR"]) + ' -b '+ str(self.m["sBPS"]) + ' -c 2 ' + '"' + source_fn  + '"' + ' -e signed-integer -t raw -r ' + str(int(tSR)) + ' -b ' + str(self.m["tBPS"]) + ' -c 2 '  + '"' + target_fn  + '"' + ' gain ' + str(self.m["resampling_gain"])
+        print(f">>>>>>>>oooooooooo   --> ffmpeg format type: {ffmpeg_type}")
+        #obsolete: soxstring = 'sox --norm=-3 -e ' + wFormatTag_TYPE + ' -t  ' + sox_filetype + ' -r ' + str(self.m["sSR"]) + ' -b '+ str(self.m["sBPS"]) + ' -c 2 ' + '"' + source_fn  + '"' + ' -e signed-integer -t raw -r ' + str(int(tSR)) + ' -b ' + str(self.m["tBPS"]) + ' -c 2 '  + '"' + target_fn  + '"' 
+        #TODO TODO TODO: generalize ffmpeg command for all filetypes
+        #soxstring = 'sox -e ' + wFormatTag_TYPE + ' -t  ' + sox_filetype + ' -r ' + str(self.m["sSR"]) + ' -b '+ str(self.m["sBPS"]) + ' -c 2 ' + '"' + source_fn  + '"' + ' -e signed-integer -t raw -r ' + str(int(tSR)) + ' -b ' + str(self.m["tBPS"]) + ' -c 2 '  + '"' + target_fn  + '"' + ' gain ' + str(self.m["resampling_gain"])
+        soxstring = 'ffmpeg -y -f '+ ffmpeg_type +' -ar ' + str(self.m["sSR"]) + ' -ac 2 -i '  + source_fn  + ' -af ' + '"aresample=resampler=soxr"' + ' -f s16le -ar ' + str(int(tSR))  + ' ' + target_fn 
+        ################ end TODO ##################
+
+
 
         # Versuch einer Bandpassfilterung
         # aktuell nur für positive Frequenzen möglich (also >= centerfreq)
