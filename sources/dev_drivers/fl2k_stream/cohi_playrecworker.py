@@ -374,19 +374,9 @@ class playrec_worker(QObject):
                 if not TEST:
                     if not self.get_pause():
                         try:
-                            #scale data with gain and normfactor
+                            #TODO: AGC pending
                             aux1 = gain*data[0:size]
-                            # # Skalieren, damit die Werte in den Bereich von int8 passen (-128 bis 127)
-                            #scaled_array = np.clip(aux1, -128, 127)
-                            # #print("send junk to fl2k_file")
-                            # #write aux4 to fl2k_file via stdin
-                            # process.stdin.write(scaled_array.astype(np.int8))
-                            # process.stdin.flush()
-                            # #print("written to stdin")
-                            # # gain*data[0:size].astype(np.int8)
-                            #aux1.astype('<i2').tobytes()
                             ffmpeg_process.stdin.write(aux1.astype(np.int16))
-                            #ffmpeg_process.stdin.write(aux1.astype('<i2').tobytes())
                             ffmpeg_process.stdin.flush()
                         except BlockingIOError:
                             print("Blocking data socket error in playloop worker")
@@ -428,7 +418,11 @@ class playrec_worker(QObject):
                             #self.set_data(data)
                     else:
                         #print("sleep a while")
-                        process.stdin.flush()
+                        aux1 = 0*data[0:size]
+                        ffmpeg_process.stdin.write(aux1.astype(np.int16))
+                        ffmpeg_process.stdin.flush()
+                        #TODO: send a Null string to fl2k
+                        #fl2k_process.stdin.flush()
                         time.sleep(0.1)
                         if self.stopix is True:
                             break
