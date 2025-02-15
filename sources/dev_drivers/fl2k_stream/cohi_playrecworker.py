@@ -66,7 +66,7 @@ class playrec_worker(QObject):
         self.stopix = False
         #self.pausestate = False
         #self.JUNKSIZE = 2048*4
-        self.DATABLOCKSIZE = 1024*16*256
+        self.DATABLOCKSIZE = 1024*4*256
         self.DATASHOWSIZE = 1024
         self.JUNKSIZE = self.DATABLOCKSIZE*2
         self.mutex = QMutex()
@@ -238,11 +238,14 @@ class playrec_worker(QObject):
         self.set_fileclose(False)
         configuration = self.get_configparameters() # = {"ifreq":self.m["ifreq"], "irate":self.m["irate"],"rates": self.m["rates"], "icorr":self.m["icorr"],"HostAddress":self.m["HostAddress"], "LO_offset":self.m["LO_offset"]}
         sampling_rate = configuration["irate"]
-        lo_shift = configuration["ifreq"] - configuration["LO_offset"]
+        lo_shift = configuration["ifreq"]# - configuration["LO_offset"]
         Nopt = 0 #Number for gettig a close to integer delay before rounding
         delay = int(np.round(((1+4*Nopt)*sampling_rate/4/lo_shift)))
-        delay = 1/lo_shift/4*1000
-        print(f"################>>>>>>>>>>>>>>>> delay: {delay} lo_shift: {lo_shift}, sampling_rate: {sampling_rate}")
+        tSR = 10000000*(1 + np.floor((lo_shift+sampling_rate/2)*4/10000000))
+        tSR = min(100000000,tSR)
+        a = (np.tan(np.pi * lo_shift / tSR) - 1) / (np.tan(np.pi * lo_shift / tSR) + 1)
+        #delay = 1/lo_shift/4*1000
+        print(f"################>>>>>>>>>>>>>>>> lo_shift: {lo_shift}, sampling_rate: {sampling_rate}, a: {a}, tSR: {tSR}")
 
         # start fl2k_file with reading from stdin
         #TODO TODO: target samplingrate von aussen übernehm,en
@@ -251,10 +254,65 @@ class playrec_worker(QObject):
         fl2k_file_path = os.path.join(os.getcwd(),"dev_drivers/fl2k/osmo-fl2k-64bit-20250105", "fl2k_file.exe")
         #print(f"cohi_playrecworker fl2k_file_path exists: {os.path.exists(fl2k_file_path)}")
         if not TEST:
+            #Start ffmpeg Process:
+            try:
+                # ffmpeg_cmd = [
+                # "ffmpeg", "-y", "-loglevel", "error", "-hide_banner",  
+                # "-f", "s16le", "-ar", str(sampling_rate), "-ac", "2", "-i", "-",  # Lese von stdin
+                # "-filter_complex",
+                # "[0:a]aresample=osr=10000000,channelsplit=channel_layout=stereo [FL][FR];"
+                # "[FL]adelay=" + str(delay)+ "[re];"
+                # "[FR]anull[im_delayed];"
+                # "sine=frequency=" + str(lo_shift) + ":sample_rate=10000000[sine_base];"
+                # "[sine_base]anull[sine_sin];"
+                # "[sine_sin]volume=volume=-1[sine_cos];"
+                # "[re][sine_cos]amultiply[mod_re];"
+                # "[im_delayed][sine_sin]amultiply[mod_im];"
+                # "[mod_im]volume=volume=-200[inv_im];"
+                # "[mod_re]volume=volume=200[ampl_re];"
+                # "[ampl_re][inv_im]amix=inputs=2:duration=shortest[mixed];"
+                # "[mixed]anull[out]",
+                # "-map", "[out]", "-c:a", "pcm_s8", "-f", "caf", "-"
+                # ]
+                ffmpeg_cmd = [
+                "ffmpeg", "-y", "-loglevel", "error", "-hide_banner",  
+                "-f", "s16le", "-ar", str(sampling_rate), "-ac", "2", "-i", "-",  # Lese von stdin
+                "-filter_complex",
+                "[0:a]aresample=osr=" + str(tSR) + ",channelsplit=channel_layout=stereo [re][im];"
+                "sine=frequency=" + str(lo_shift) + ":sample_rate="  + str(tSR) + "[sine_base];"
+                "[sine_base] asplit=2[sine_sin1][sine_sin2];"
+                "[sine_sin2]biquad=b0=" + str(a) + ":b1=1:b2=0:a0=1:a1=" + str(a) + ":a2=0[sine_cos];"
+                "[re][sine_cos]amultiply[mod_re];"
+                "[im][sine_sin1]amultiply[mod_im];"
+                "[mod_im]volume=volume=200[part_im];"
+                "[mod_re]volume=volume=200[part_re];"
+                "[part_re][part_im]amix=inputs=2:duration=shortest[out]",
+                "-map", "[out]", "-c:a", "pcm_s8", "-f", "caf", "-"
+                ]                #                "-map", "[out]", "-c:a", "pcm_s8", "-f", "cav", "-"
+
+                print(f"ffmpeg_command: {ffmpeg_cmd}")
+                # Prozess starten
+                ffmpeg_process = subprocess.Popen(ffmpeg_cmd, 
+                    stdin=subprocess.PIPE, 
+                    stdout=subprocess.PIPE, 
+                    stderr=subprocess.PIPE
+                )
+
+            except FileNotFoundError:
+                print(f"Input file not found")
+                return()
+            except subprocess.SubprocessError as e:
+                print(f"Error when executing fl2k_file: {e}")
+                return()    
+            except Exception as e:
+                print(f"Unexpected error: {e}")
+                return()    
+            psutil.Process(ffmpeg_process.pid).nice(psutil.IDLE_PRIORITY_CLASS)
+
             if os.name.find("posix") >= 0:
                 try:
                     process = subprocess.Popen(
-                        ["fl2k_file", "-s", str(sampling_rate), "-"],
+                        ["fl2k_file", "-s", str(tSR), "-"],
                         stdin=subprocess.PIPE,
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE,
@@ -274,52 +332,11 @@ class playrec_worker(QObject):
                     self.SigFinished.emit()
                     return()
             else:
-                ###################
-                #Starte ffmpeg Prozess:
-                try:
-
-                    ffmpeg_cmd = [
-                    "ffmpeg", "-y", "-loglevel", "error", "-hide_banner",  
-                    "-f", "s16le", "-ar", str(sampling_rate), "-ac", "2", "-i", "-",  # Lese von stdin
-                    "-filter_complex",
-                    "[0:a]aresample=osr=10000000,channelsplit=channel_layout=stereo [FL][FR];"
-                    "[FL]adelay=" + str(delay)+ "[re];"
-                    "[FR]anull[im_delayed];"
-                    "sine=frequency=" + str(lo_shift) + ":sample_rate=10000000[sine_base];"
-                    "[sine_base]anull[sine_sin];"
-                    "[sine_sin]volume=volume=-1[sine_cos];"
-                    "[re][sine_cos]amultiply[mod_re];"
-                    "[im_delayed][sine_sin]amultiply[mod_im];"
-                    "[mod_im]volume=volume=-200[inv_im];"
-                    "[mod_re]volume=volume=200[ampl_re];"
-                    "[ampl_re][inv_im]amix=inputs=2:duration=shortest[mixed];"
-                    "[mixed]anull[out]",
-                    "-map", "[out]", "-c:a", "pcm_s8", "-f", "caf", "-"
-                    ]
-
-                    print(f"ffmpeg_command: {ffmpeg_cmd}")
-                    # Prozess starten
-                    ffmpeg_process = subprocess.Popen(ffmpeg_cmd, 
-                        stdin=subprocess.PIPE, 
-                        stdout=subprocess.PIPE, 
-                        stderr=subprocess.PIPE
-                    )
-
-                except FileNotFoundError:
-                    print(f"Input file not found")
-                    return()
-                except subprocess.SubprocessError as e:
-                    print(f"Error when executing fl2k_file: {e}")
-                    return()    
-                except Exception as e:
-                    print(f"Unexpected error: {e}")
-                    return()    
-                psutil.Process(ffmpeg_process.pid).nice(psutil.IDLE_PRIORITY_CLASS)
 
                 # Starten von fl2k_file mit den entsprechenden Parametern
                 try:
                     fl2k_process = subprocess.Popen(
-                        [fl2k_file_path, "-s", "10000000", "-r", "0", "-"],
+                        [fl2k_file_path, "-s", str(tSR), "-r", "0", "-"],
                         stdin=ffmpeg_process.stdout,  # Hier kommt der FFmpeg-Stream an
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE

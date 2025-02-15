@@ -343,9 +343,8 @@ class view_spectra_v(QObject):
             print(f'Clicked at x={x}, y={y}')
 
     #@njit
-    def ann_spectrum(self,dummy,data):      #TODO: This is a controller method, should be transferred to an annotation module
+    def ann_spectrum(self,dummy,data,displaymode = "complex"):      #TODO: This is a controller method, should be transferred to an annotation module
         """
-        CONTROLLER
         generate a single spectrum from complex data
         scale x-axis as frequencies in the recorded AM band
         scale y-axis in dB
@@ -370,19 +369,27 @@ class view_spectra_v(QObject):
                 - databasel: The baseline data used in the filtering process.type: float32
         :rtype: dict
         """
+        #print(f">>>>>>>>> @@@@@@@@@@@@ displaymode = : {displaymode}")
         self.logger.debug("view_spectra ann_spectum reached")
         st = time.time()
+        if self.m["wavheader"]["nChannels"] == 1:
+            print(f"display real spectrum")
+            spr = np.abs(np.fft.fft(data))
+            N = len(spr)
+            spr = np.fft.fftshift(spr)/N
+            freq = np.linspace(-self.m["wavheader"]['nSamplesPerSec']/2,self.m["wavheader"]['nSamplesPerSec']/2,N)
+        else:
         # extract imaginary and real parts from complex data 
-        realindex = np.arange(0,self.DATABLOCKSIZE,2)
-        imagindex = np.arange(1,self.DATABLOCKSIZE,2)
-        #calculate spectrum and shift/rescale appropriately
-        spr = np.abs(np.fft.fft((data[realindex]+1j*data[imagindex])))
-        N = len(spr)
-        spr = np.fft.fftshift(spr)/N
-        flo = self.m["wavheader"]['centerfreq'] - self.m["wavheader"]['nSamplesPerSec']/2
-        fup = self.m["wavheader"]['centerfreq'] + self.m["wavheader"]['nSamplesPerSec']/2
-        freq0 = np.linspace(0,self.m["wavheader"]['nSamplesPerSec'],N)
-        freq = freq0 + flo
+            realindex = np.arange(0,self.DATABLOCKSIZE,2)
+            imagindex = np.arange(1,self.DATABLOCKSIZE,2)
+            #calculate spectrum and shift/rescale appropriately
+            spr = np.abs(np.fft.fft((data[realindex]+1j*data[imagindex])))
+            N = len(spr)
+            spr = np.fft.fftshift(spr)/N
+            flo = self.m["wavheader"]['centerfreq'] - self.m["wavheader"]['nSamplesPerSec']/2
+            fup = self.m["wavheader"]['centerfreq'] + self.m["wavheader"]['nSamplesPerSec']/2
+            freq0 = np.linspace(0,self.m["wavheader"]['nSamplesPerSec'],N)
+            freq = freq0 + flo
         datax = freq
         datay = 20*np.log10(spr)
         # filter out all data below the baseline; baseline = moving median
