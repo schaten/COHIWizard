@@ -48,18 +48,6 @@ class playrec_worker(QObject):
     SigError = pyqtSignal(str)
     SigNextfile = pyqtSignal(str)
 
-    # def __init__(self, *args,**kwargs):
-
-    #     super().__init__(*args, **kwargs)
-    #     self.stopix = False
-    #     #self.pausestate = False
-    #     self.DATABLOCKSIZE = 1024*4*256
-    #     #self.JUNKSIZE = 2*self.DATABLOCKSIZE
-    #     self.JUNKSIZE = self.DATABLOCKSIZE
-    #     self.mutex = QMutex()
-    #     # if len(args) > 0: #TODO: check for more general formulation
-    #     #     self.stemlabcontrol = args[0]
-
     def __init__(self, stemlabcontrolinst,*args,**kwargs):
 
         super().__init__(*args, **kwargs)
@@ -190,20 +178,6 @@ class playrec_worker(QObject):
 
             print("Datenübertragung abgeschlossen.")
 
-            # Man wird das Treiberprogramms fl2k_tcp nehmen können.
-            # Ähnlich dem Stemlab kann man hier eine IP und einen Port angeben.
-
-            # "fl2k_tcp, a spectrum client for FL2K VGA dongles\n\n"
-            # "Usage:\t[-a server address]\n"
-            # "\t[-d device index (default: 0)]\n"
-            # "\t[-p port (default: 1234)]\n"
-            # "\t[-s samplerate in Hz (default: 100 MS/s)]\n"
-            # "\t[-b number of buffers (default: 4)]\n"
-
-            # Bei mir läuft der D\A Wandler über den lokalen USB Bus, daher muss ich die Daten an den lokalen Recher der immer die IP 127.0.0.1 hat senden. Bei der Samplerate wähle ich 10000000 (10MS/s) da 100 MS/s meinen PC überlastet. Mit 10MS/s kommt man bis 5 MHz. Für Aufnahmen des 49m Bandes müsste ich einen höheren Eintrag wählen aber auch das geht. Für Langwelle und Mittelwelle reichen 10MS/s aus. Werte Unter 10 MS/s gibt es nur och einen krummen was beim Resampling womöglich zuviele Zwischenrechnungen verursacht.
-            # Das Resampling und verschieben auf die Bandmitte was Gnu Radio macht müsste das Cohiradia Programm selbst erledigen.
-            # Eine Datenkonvertierung und Aussteuerung auf 8 Bit Wertebereich ebenfalls. Auch das wird im Moment in Gnu Radio erledigt.
-
 
 
     def play_loop_filelist(self):
@@ -245,35 +219,17 @@ class playrec_worker(QObject):
         tSR = min(100000000,tSR)
         a = (np.tan(np.pi * lo_shift / tSR) - 1) / (np.tan(np.pi * lo_shift / tSR) + 1)
         #delay = 1/lo_shift/4*1000
-        print(f"################>>>>>>>>>>>>>>>> lo_shift: {lo_shift}, sampling_rate: {sampling_rate}, a: {a}, tSR: {tSR}")
+        #print(f"################>>>>>>>>>>>>>>>> lo_shift: {lo_shift}, sampling_rate: {sampling_rate}, a: {a}, tSR: {tSR}")
 
         # start fl2k_file with reading from stdin
         #TODO TODO: target samplingrate von aussen übernehm,en
-        print(f"play_loop_filelist, sampling_rate: {sampling_rate}")
+        #print(f"play_loop_filelist, sampling_rate: {sampling_rate}")
         #sampling_rate = sSR
         fl2k_file_path = os.path.join(os.getcwd(),"dev_drivers/fl2k/osmo-fl2k-64bit-20250105", "fl2k_file.exe")
         #print(f"cohi_playrecworker fl2k_file_path exists: {os.path.exists(fl2k_file_path)}")
         if not TEST:
             #Start ffmpeg Process:
             try:
-                # ffmpeg_cmd = [
-                # "ffmpeg", "-y", "-loglevel", "error", "-hide_banner",  
-                # "-f", "s16le", "-ar", str(sampling_rate), "-ac", "2", "-i", "-",  # Lese von stdin
-                # "-filter_complex",
-                # "[0:a]aresample=osr=10000000,channelsplit=channel_layout=stereo [FL][FR];"
-                # "[FL]adelay=" + str(delay)+ "[re];"
-                # "[FR]anull[im_delayed];"
-                # "sine=frequency=" + str(lo_shift) + ":sample_rate=10000000[sine_base];"
-                # "[sine_base]anull[sine_sin];"
-                # "[sine_sin]volume=volume=-1[sine_cos];"
-                # "[re][sine_cos]amultiply[mod_re];"
-                # "[im_delayed][sine_sin]amultiply[mod_im];"
-                # "[mod_im]volume=volume=-200[inv_im];"
-                # "[mod_re]volume=volume=200[ampl_re];"
-                # "[ampl_re][inv_im]amix=inputs=2:duration=shortest[mixed];"
-                # "[mixed]anull[out]",
-                # "-map", "[out]", "-c:a", "pcm_s8", "-f", "caf", "-"
-                # ]
                 ffmpeg_cmd = [
                 "ffmpeg", "-y", "-loglevel", "error", "-hide_banner",  
                 "-f", "s16le", "-ar", str(sampling_rate), "-ac", "2", "-i", "-",  # Lese von stdin
@@ -290,7 +246,7 @@ class playrec_worker(QObject):
                 "-map", "[out]", "-c:a", "pcm_s8", "-f", "caf", "-"
                 ]                #                "-map", "[out]", "-c:a", "pcm_s8", "-f", "cav", "-"
 
-                print(f"ffmpeg_command: {ffmpeg_cmd}")
+                #print(f"ffmpeg_command: {ffmpeg_cmd}")
                 # Prozess starten
                 ffmpeg_process = subprocess.Popen(ffmpeg_cmd, 
                     stdin=subprocess.PIPE, 
@@ -365,7 +321,7 @@ class playrec_worker(QObject):
             self.set_datablocksize(data_blocksize)
             fileHandle.seek(216, 1)
 
-            print(f"<<<<<<<<<<<<< oooooo >>>>>>>>>>>> format: {format}")
+            #print(f"<<<<<<<<<<<<< oooooo >>>>>>>>>>>> format: {format}")
             if format[2] == 16:
                 data = np.empty(self.DATABLOCKSIZE, dtype=np.int16)
             else:
@@ -484,20 +440,6 @@ class playrec_worker(QObject):
                 print("fl2k_file errors:")
                 print(stderr.decode())
 
-            # while process.poll() == None:
-
-            #     print("poll and close")
-            #     QThread.msleep(1)
-            #     #time.sleep(1)
-            # print("close process ")
-            
-            # stdout, stderr = process.communicate() ### TODO TODO TODO: Timeout ???
-            # # Report result
-            # print("cohi_playrecworker: fl2k_file output:")
-            # print(stdout.decode())
-            # if stderr:
-            #     print("cohi_playrecworker: fl2k_file errors:")
-            #     self.SigError.emit(f"error when terminating fl2k_file: {stderr.decode()}")
         self.SigFinished.emit()
         return()
 

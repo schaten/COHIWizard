@@ -1352,6 +1352,7 @@ class resample_c(QObject):
             wFormatTag_TYPE = "floating-point"
             ffmpeg_type = "f" + str(self.m["sBPS"]) + "le"
         else:
+            
             auxi.standard_errorbox("wFormatTag is neither 1 nor 3; unsupported Format, this file cannot be processed")
             return False
 
