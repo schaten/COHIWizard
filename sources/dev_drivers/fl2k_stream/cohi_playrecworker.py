@@ -110,8 +110,7 @@ class playrec_worker(QObject):
 
     def send_data_over_tcp(file_path, host="127.0.0.1", port=1234, block_size=1024 * 1024):
         """
-        Liest 16-Bit-Integer-Daten aus einer Datei, wandelt sie in 8-Bit signed um,
-        und sendet sie blockweise über TCP an fl2k_tcp, falls dieser gestartet ist
+        NOT COMPLETED NOT TESTED, only template for further development if wanted
 
         :param file_path: Pfad zur Eingabedatei mit 16-Bit-Integer-Daten.
         :param host: IP-Adresse des fl2k_tcp-Servers (Standard: localhost).
@@ -146,8 +145,7 @@ class playrec_worker(QObject):
 
     def send_data_over_tcp(file_path, host="127.0.0.1", port=1234, block_size=1024 * 1024):
         """
-        Liest 16-Bit-Integer-Daten aus einer Datei, wandelt sie in 8-Bit signed um,
-        und sendet sie blockweise über TCP an fl2k_tcp, falls dieser gestartet ist
+        NOT COMPLETED NOT TESTED, only template for further development if wanted
 
         :param file_path: Pfad zur Eingabedatei mit 16-Bit-Integer-Daten.
         :param host: IP-Adresse des fl2k_tcp-Servers (Standard: localhost).
@@ -263,17 +261,22 @@ class playrec_worker(QObject):
             except Exception as e:
                 print(f"Unexpected error: {e}")
                 return()    
-            psutil.Process(ffmpeg_process.pid).nice(psutil.IDLE_PRIORITY_CLASS)
+            
+            if os.name.find("posix") >= 0:
+                pass
+            else:
+                psutil.Process(ffmpeg_process.pid).nice(psutil.IDLE_PRIORITY_CLASS)
+                pass
 
             if os.name.find("posix") >= 0:
                 try:
-                    process = subprocess.Popen(
-                        ["fl2k_file", "-s", str(tSR), "-"],
-                        stdin=subprocess.PIPE,
+                    fl2k_process = subprocess.Popen(
+                        ["fl2k_file", "-s", str(tSR), "-r", "0", "-"],
+                        stdin=ffmpeg_process.stdout,  # Hier kommt der FFmpeg-Stream an
                         stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                        bufsize=0
+                        stderr=subprocess.PIPE
                     )
+                    
                 except FileNotFoundError:
                     self.SigError.emit(f"Input file not found")
                     self.SigFinished.emit()
@@ -321,12 +324,12 @@ class playrec_worker(QObject):
             self.set_datablocksize(data_blocksize)
             fileHandle.seek(216, 1)
 
-            #print(f"<<<<<<<<<<<<< oooooo >>>>>>>>>>>> format: {format}")
+            print(f"<<<<<<<<<<<<< oooooo >>>>>>>>>>>> format: {format}")
             if format[2] == 16:
                 data = np.empty(self.DATABLOCKSIZE, dtype=np.int16)
             else:
                 data = np.empty(self.DATABLOCKSIZE, dtype=np.float32) #TODO: check if true for 32-bit wavs wie Gianni's
-            #print(f"playloop: BitspSample: {format[2]}; wFormatTag: {format[0]}; Align: {format[1]}")
+            print(f"playloop: BitspSample: {format[2]}; wFormatTag: {format[0]}; Align: {format[1]}")
             if format[0] == 1:
                 normfactor = int(2**int(format[2]-1))-1
             else:

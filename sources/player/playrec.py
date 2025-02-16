@@ -1296,16 +1296,16 @@ class playrec_v(QObject):
         #self.mdl["devicelist"] = os.listdir(os.path.join(os.getcwd(), "dev_drivers"))
 
         auxl = len(self.m["devicelist"])
-        for ix, cf in enumerate(self.m["devicelist"][0:auxl-1]):
+        for ix, cf in enumerate(self.m["devicelist"][0:auxl]):
             if not cf.find("__") == 0:
                 self.gui.comboBox_stemlab.addItem(str(cf))
                 #import playrec_worker classes
                 full_module_path = f"dev_drivers.{cf}.cohi_playrecworker"
                 #module_path = os.path.join("dev_drivers",cf)
                 #full_module_path = f"{module_path}.cohi_playrecworker"
-                print(f"vvvvvvvvvvvvvvvvvvvvvvvvvvv    full_module_path: {full_module_path}")
+                #print(f"vvvvvvvvvvvvvvvvvvvvvvvvvvv    full_module_path: {full_module_path}")
                 self.m["imported_device_modules"].append(importlib.import_module(full_module_path))
-                print(f"vvvvvvvvvvvvvvvvvvvvvvvvvvv    imported device module: {self.m['imported_device_modules']}")
+                #print(f"vvvvvvvvvvvvvvvvvvvvvvvvvvv    imported device module: {self.m['imported_device_modules']}")
                 # import SDRcontrol classes
                 full_module_path = f"dev_drivers.{cf}.SDR_control"
                 self.m["imported_sdr_controllers"].append(importlib.import_module(full_module_path))
