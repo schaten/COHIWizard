@@ -644,6 +644,7 @@ class playrec_c(QObject):
             self.logger.error(str(value))
             self.cb_Butt_STOP()
 
+        
     def play_tstarter(self):
         """_start playback via data stream to STEMLAB sdr server
         starts thread 'playthread' for data streaming to the STEMLAB
@@ -688,6 +689,8 @@ class playrec_c(QObject):
 # instead of class playrec_worker --> class cohi_playrecworker
         #TODO TODO TODO: check ob diese Implementierung nun die stemlab-Workerfunktionen richtig bedient
         #self.playrec_tworker = playrec_worker(self.stemlabcontrol)
+
+        
         self.playrec_tworker = getattr(self.m["imported_device_modules"][self.m["currentSDRindex"]],'playrec_worker')(self.stemlabcontrol)
 ######################  END: change for general devicedrivers
 

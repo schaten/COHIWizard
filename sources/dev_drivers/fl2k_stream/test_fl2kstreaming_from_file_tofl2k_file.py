@@ -81,6 +81,13 @@ def stream_to_fl2k_file(input_file, target_sampling_rate, buffer_size=4096, fl2k
             stderr=subprocess.PIPE
         )
 
+        # fl2k_process = subprocess.Popen(
+        #     [fl2k_file_path, "-s", str(tSR), "-r", "0", "-"],
+        #     stdin=subprocess.PIPE,  # Hier kommt der FFmpeg-Stream an
+        #     stdout=subprocess.PIPE,
+        #     stderr=subprocess.PIPE
+        # )
+
     except FileNotFoundError:
         print(f"Input file not found")
         return()

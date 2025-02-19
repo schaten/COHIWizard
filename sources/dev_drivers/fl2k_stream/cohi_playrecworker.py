@@ -106,78 +106,6 @@ class playrec_worker(QObject):
     def set_configparameters(self,_value):
         self.__slots__[10] = _value
 
-
-
-    def send_data_over_tcp(file_path, host="127.0.0.1", port=1234, block_size=1024 * 1024):
-        """
-        NOT COMPLETED NOT TESTED, only template for further development if wanted
-
-        :param file_path: Pfad zur Eingabedatei mit 16-Bit-Integer-Daten.
-        :param host: IP-Adresse des fl2k_tcp-Servers (Standard: localhost).
-        :param port: Port des fl2k_tcp-Servers (Standard: 1234).
-        :param block_size: Größe der Blöcke (in Bytes), die gesendet werden.
-        """
-        # Verbindung zum fl2k_tcp-Server herstellen
-        with socket(AF_INET, SOCK_STREAM) as sock:
-            sock.connect((host, port))
-            print(f"Verbunden mit fl2k_tcp auf {host}:{port}")
-
-            with open(file_path, "rb") as f:
-                while True:
-                    # Blockweise Daten auslesen
-                    data = f.read(block_size)
-                    if not data:  # Datei zu Ende gelesen
-                        break
-                    
-                    # 16-Bit-Daten in numpy-Array laden
-                    int16_data = np.frombuffer(data, dtype=np.int16)
-                    
-                    # Umwandlung in 8-Bit signed (clipping bei Überläufen)
-                    int8_data = np.clip(int16_data / 256, -128, 127).astype(np.int8)
-                    
-                    # Daten über TCP senden
-                    sock.sendall(int8_data.tobytes())
-                    print(f"{len(int8_data)} Bytes gesendet")
-
-            print("Datenübertragung abgeschlossen.")
-
-
-
-    def send_data_over_tcp(file_path, host="127.0.0.1", port=1234, block_size=1024 * 1024):
-        """
-        NOT COMPLETED NOT TESTED, only template for further development if wanted
-
-        :param file_path: Pfad zur Eingabedatei mit 16-Bit-Integer-Daten.
-        :param host: IP-Adresse des fl2k_tcp-Servers (Standard: localhost).
-        :param port: Port des fl2k_tcp-Servers (Standard: 1234).
-        :param block_size: Größe der Blöcke (in Bytes), die gesendet werden.
-        """
-        # Verbindung zum fl2k_tcp-Server herstellen
-        with socket(AF_INET, SOCK_STREAM) as sock:
-            sock.connect((host, port))
-            print(f"Verbunden mit fl2k_tcp auf {host}:{port}")
-
-            with open(file_path, "rb") as f:
-                while True:
-                    # Blockweise Daten auslesen
-                    data = f.read(block_size)
-                    if not data:  # Datei zu Ende gelesen
-                        break
-                    
-                    # 16-Bit-Daten in numpy-Array laden
-                    int16_data = np.frombuffer(data, dtype=np.int16)
-                    
-                    # Umwandlung in 8-Bit signed (clipping bei Überläufen)
-                    int8_data = np.clip(int16_data / 256, -128, 127).astype(np.int8)
-                    
-                    # Daten über TCP senden
-                    sock.sendall(int8_data.tobytes())
-                    print(f"{len(int8_data)} Bytes gesendet")
-
-            print("Datenübertragung abgeschlossen.")
-
-
-
     def play_loop_filelist(self):
         """
         worker loop for sending data to STEMLAB server
@@ -216,15 +144,20 @@ class playrec_worker(QObject):
         tSR = 10000000*(1 + np.floor((lo_shift+sampling_rate/2)*4/10000000))
         tSR = min(100000000,tSR)
         a = (np.tan(np.pi * lo_shift / tSR) - 1) / (np.tan(np.pi * lo_shift / tSR) + 1)
-        #delay = 1/lo_shift/4*1000
-        #print(f"################>>>>>>>>>>>>>>>> lo_shift: {lo_shift}, sampling_rate: {sampling_rate}, a: {a}, tSR: {tSR}")
-
-        # start fl2k_file with reading from stdin
-        #TODO TODO: target samplingrate von aussen übernehm,en
-        #print(f"play_loop_filelist, sampling_rate: {sampling_rate}")
-        #sampling_rate = sSR
         fl2k_file_path = os.path.join(os.getcwd(),"dev_drivers/fl2k/osmo-fl2k-64bit-20250105", "fl2k_file.exe")
         #print(f"cohi_playrecworker fl2k_file_path exists: {os.path.exists(fl2k_file_path)}")
+        print("checking for fl2k")
+        self.mutex.lock()
+        errorstate, value = self.check_ready_fl2k()
+        if errorstate:
+            print("no fl2k present")
+            self.SigError.emit(value)
+            self.SigFinished.emit()
+            return()
+        else:
+            print("fl2k ready")
+        self.mutex.unlock()
+
         if not TEST:
             #Start ffmpeg Process:
             try:
@@ -343,9 +276,19 @@ class playrec_worker(QObject):
             junkspersecond = timescaler / self.JUNKSIZE
             count = 0
             # print(f"Junkspersec:{junkspersecond}")
-            dt = 1/sampling_rate
-            segment_tstart = 0
+
             while size > 0 and not self.stopix:
+                self.mutex.lock()
+                print("####### check pipe #########")
+                if ffmpeg_process.poll() != None:
+                    self.SigError.emit(f"ffmpeg process terminated unexpectedly, pipe broken")
+                    print("Error: ffmpeg process terminated")
+                    break
+                if fl2k_process.poll() != None:
+                    self.SigError.emit(f"fl2k process terminated unexpectedly, pipe broken; Please check if the USB-VGA dongle is connected")
+                    print("Error: fl2k process terminated")
+                    break
+                self.mutex.unlock()
                 #reftime = time.time() ###DISTINCT
                 if not TEST:
                     if not self.get_pause():
@@ -376,8 +319,9 @@ class playrec_worker(QObject):
                             self.SigFinished.emit()
                             time.sleep(0.1)
                             return
-                        QThread.usleep(30) #sleep 30 us for keeping main GUI responsive
+                        QThread.usleep(5) #sleep 5 us for keeping main GUI responsive
                         size = fileHandle.readinto(data)
+                        
                         #print(f"data fetched, size = {size}")
                         count += 1
                         if count > junkspersecond:
@@ -385,20 +329,13 @@ class playrec_worker(QObject):
                             cv[0:2*self.DATASHOWSIZE-1:2] = data[0:self.DATASHOWSIZE] #write only real part
                             self.set_data(cv)
                             #print(f"DATASHOWSIZE: {self.DATASHOWSIZE}")
-                            #print("increment emit, modified")
-                            #TODO TODO TODO inactivated:check for timing !!!
                             self.SigIncrementCurTime.emit()
-                            #Dieser Aufruf blockiert das weitere Streaming immer für einige Zeit
                             count = 0
                             gain = self.get_gain()
-                            #self.set_data(data)
                     else:
-                        #print("sleep a while")
                         aux1 = 0*data[0:size]
                         ffmpeg_process.stdin.write(aux1.astype(np.int16))
                         ffmpeg_process.stdin.flush()
-                        #TODO: send a Null string to fl2k
-                        #fl2k_process.stdin.flush()
                         time.sleep(0.1)
                         if self.stopix is True:
                             break
@@ -406,9 +343,6 @@ class playrec_worker(QObject):
                     if not self.get_pause():
                         print(" SDR_control fl2k test reached")
                         size = fileHandle.readinto(data)
-                        #print("sleep a bit ##########################")
-                        #time.sleep(0.0001)
-                        #i reality: 
                         time.sleep(self.DATABLOCKSIZE/timescaler)
                         #QThread.usleep(30)
                         #  read next junk
@@ -445,6 +379,138 @@ class playrec_worker(QObject):
 
         self.SigFinished.emit()
         return()
+
+
+    def check_ready_fl2k(self):
+        """check if fl2k device is connected and ready for use
+        """
+        errorstate = False
+        value = ""
+        tSR = 10000000
+        if os.name.find("posix") >= 0:
+            try:
+                fl2k_process = subprocess.Popen(
+                    ["fl2k_file", "-s", str(tSR), "-r", "0", "-"],
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE
+                )
+                
+            except FileNotFoundError:
+                value = (f"Input file not found")
+                errorstate = True
+                return(errorstate, value)
+            except subprocess.SubprocessError as e:
+                value = (f"Error when executing fl2k_file: {e}")
+                errorstate = True
+                return(errorstate, value)
+            except Exception as e:
+                value = (f"unexpected error in play_loop_filelist for fl2k {e}")
+                errorstate = True
+                return(errorstate, value)    
+        else:
+            print("check_ready_fl2k: WINDOWS: try popen fl2k")
+            try:
+                fl2k_file_path = os.path.join(os.getcwd(),"dev_drivers/fl2k/osmo-fl2k-64bit-20250105", "fl2k_file.exe")
+                fl2k_process = subprocess.Popen(
+                    [fl2k_file_path, "-s", str(tSR), "-r", "0", "-"],
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE
+                )
+
+            except FileNotFoundError:
+                value = (f"Input file not found")
+                errorstate = True
+                return(errorstate, value)
+            except subprocess.SubprocessError as e:
+                value = (f"Error when executing fl2k_file: {e}")
+                errorstate = True
+                return(errorstate, value)
+            except Exception as e:
+                value = (f"unexpected error in play_loop_filelist for fl2k {e}")
+                errorstate = True
+                return(errorstate, value)
+        time.sleep(0.2)
+        print(f"check_ready_fl2k: poll: {fl2k_process.poll()}")
+        if fl2k_process.poll() != None:
+            errorstate = True
+            value = "check_ready_fl2k: fl2k device not ready"
+        else:
+            value = "check_ready_fl2k: fl2k device ready"
+            fl2k_process.terminate()
+            fl2k_process.wait()
+        return(errorstate, value)
+
+
+    def send_data_over_tcp(file_path, host="127.0.0.1", port=1234, block_size=1024 * 1024):
+        """
+        NOT COMPLETED NOT TESTED, only template for further development if wanted
+
+        :param file_path: Pfad zur Eingabedatei mit 16-Bit-Integer-Daten.
+        :param host: IP-Adresse des fl2k_tcp-Servers (Standard: localhost).
+        :param port: Port des fl2k_tcp-Servers (Standard: 1234).
+        :param block_size: Größe der Blöcke (in Bytes), die gesendet werden.
+        """
+        # Verbindung zum fl2k_tcp-Server herstellen
+        with socket(AF_INET, SOCK_STREAM) as sock:
+            sock.connect((host, port))
+            print(f"Verbunden mit fl2k_tcp auf {host}:{port}")
+
+            with open(file_path, "rb") as f:
+                while True:
+                    # Blockweise Daten auslesen
+                    data = f.read(block_size)
+                    if not data:  # Datei zu Ende gelesen
+                        break
+                    
+                    # 16-Bit-Daten in numpy-Array laden
+                    int16_data = np.frombuffer(data, dtype=np.int16)
+                    
+                    # Umwandlung in 8-Bit signed (clipping bei Überläufen)
+                    int8_data = np.clip(int16_data / 256, -128, 127).astype(np.int8)
+                    
+                    # Daten über TCP senden
+                    sock.sendall(int8_data.tobytes())
+                    print(f"{len(int8_data)} Bytes gesendet")
+
+            print("Datenübertragung abgeschlossen.")
+
+
+
+    def send_data_over_tcp(file_path, host="127.0.0.1", port=1234, block_size=1024 * 1024):
+        """
+        NOT COMPLETED NOT TESTED, only template for further development if wanted
+
+        :param file_path: Pfad zur Eingabedatei mit 16-Bit-Integer-Daten.
+        :param host: IP-Adresse des fl2k_tcp-Servers (Standard: localhost).
+        :param port: Port des fl2k_tcp-Servers (Standard: 1234).
+        :param block_size: Größe der Blöcke (in Bytes), die gesendet werden.
+        """
+        # Verbindung zum fl2k_tcp-Server herstellen
+        with socket(AF_INET, SOCK_STREAM) as sock:
+            sock.connect((host, port))
+            print(f"Verbunden mit fl2k_tcp auf {host}:{port}")
+
+            with open(file_path, "rb") as f:
+                while True:
+                    # Blockweise Daten auslesen
+                    data = f.read(block_size)
+                    if not data:  # Datei zu Ende gelesen
+                        break
+                    
+                    # 16-Bit-Daten in numpy-Array laden
+                    int16_data = np.frombuffer(data, dtype=np.int16)
+                    
+                    # Umwandlung in 8-Bit signed (clipping bei Überläufen)
+                    int8_data = np.clip(int16_data / 256, -128, 127).astype(np.int8)
+                    
+                    # Daten über TCP senden
+                    sock.sendall(int8_data.tobytes())
+                    print(f"{len(int8_data)} Bytes gesendet")
+
+            print("Datenübertragung abgeschlossen.")
+
 
     def fastsine_check(self,loshift,sampling_rate,t_DATABLOCKSIZE):
         """check if fast sine calculation is possible and return optimized blocksize
