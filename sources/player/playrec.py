@@ -1476,6 +1476,9 @@ class playrec_v(QObject):
                 self.gui.pushButton_IP.setEnabled(False)
                 self.gui.lineEdit_IPAddress.setText("127.0.0.1")
                 #self.gui.lineEdit_IPAddress.setReadOnly(False)
+            elif self.m["device_ID_dict"]["device_name"] == "DONOTUSE":
+                errorstate = True
+                value = f"THIS DEVICE DRIVER IS NOT YET AVAILABLE (still under development)"                                          
             else:
                 errorstate = True
                 value = f"unknown connection type in SDR device driver: {self.m["device_ID_dict"]["connection_type"]}"

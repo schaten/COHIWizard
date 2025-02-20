@@ -598,7 +598,6 @@ class res_workers(QObject):
         #print(f"soxstring: {soxstring}")
         #self.ret = subprocess.Popen(soxstring, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell = True, start_new_session=True)
         if soxstring.find("ffmpeg") > 0:
-
             print("############### using ffmpeg as ultrafast resampler #####################")
             try:
                 self.ret = subprocess.Popen(soxstring, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
@@ -612,27 +611,12 @@ class res_workers(QObject):
             print("using sox as resampler")
             self.ret = subprocess.Popen(soxstring, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell = True)
 
-
-        # stdout, stderr = self.ret.communicate()
-        # print(f"errormessages: <<<<<<<<<   {stderr.decode()}")
-
-        #self.logger.debug(f"********__________sox_worker as sox_writer started, process nr: {self.ret}")
         print(f" ________ resampler executable poll at init: poll: {self.ret.poll()}")
         self.set_ret(self.ret)
         time.sleep(1)
         #print(f"sox return value: {self.ret}")
         targetfilename = self.get_tfname()
         expected_filesize = self.get_expfs()
-        #print(f"soxwriter targetfilename: {targetfilename}, exp filesize: {expected_filesize}")
-        #print(expected_filesize)
-        #self.SigStarted.emit()
-        #extract process id of running sox process
-        #self.mutex.lock()
-        #tlr = subprocess.run('tasklist /NH | findstr /B /I sox', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell = True)
-        #output_lines = tlr.stdout.decode('cp1252').splitlines()
-        #pids = [line.split()[1] for line in output_lines]        
-        #print(f"________ sox writer process ids: {pids}")
-        #self.mutex.unlock()
         if os.path.exists(targetfilename) == True:
             #print("soxwriter: temp file has been created")
             file_stats = os.stat(targetfilename)
@@ -708,12 +692,6 @@ class res_workers(QObject):
         #print("soxwriter: success")
         time.sleep(0.5)
 
-        # filterByPid = "PID eq %s" % pid
-        # pidStr = str(pid)
-        # commandArguments = ['cmd', '/c', "tasklist", "/FI", filterByPid, "|", "findstr",  pidStr ]
-
-
-        #print("#############sox_worker wait for termination of sox")
         if self.ret.poll() is None:
             stdout, stderr = self.ret.communicate()
         #self.logger.debug("********__________    sox_worker as sox_writer finished      ##############")
@@ -788,10 +766,6 @@ class res_workers(QObject):
                 print("LOshifter cannot find optimum DATABLOCKSIZE for acceleration, turn to slow mode")
         else:
             print(f"LOshifter: no shifting required, no blocksize optimization, just copy, startoffset = {readoffset + startoffset}")
-        # ###TODO TODO TODO: remove !
-        #DATABLOCKSIZE = t_DATABLOCKSIZE
-        # print(f"LOshifter: final DATABLOCKSIZE: {DATABLOCKSIZE}")
-        #psc_locker = False
         ret = readsegmentfn(self,sourcefilename,position,readoffset,DATABLOCKSIZE,sBPS,32,wFormatTag)
         
         if os.path.exists(targetfilename) == True:
@@ -1181,48 +1155,7 @@ class resample_c(QObject):
             startcutoffset = int(self.m["start_trim"].seconds*self.m["sSR"]*self.m["s_wavheader"]['nBlockAlign'])
             self.logger.debug(f'LOshifter: set starttrim = {self.m["start_trim"]} seconds to {startcutoffset} bytes ')
         #TODO: revert CUTPROJECT end
-############################################# TEST SEQUENCE FOR LOSHIFT prescaler 
-        # import matplotlib.pyplot as plt
-        # t_DATABLOCKSIZE = 1024*4*256
-        # sSR = self.m["sSR"]
-        # centershift = self.m["fshift"]
-        # x = sSR/centershift # number of datapoints per period of centershifte
-        # found_m = False
-        # DATABLOCKSIZE = t_DATABLOCKSIZE
-        # rangestop = int(np.floor(DATABLOCKSIZE/2/x))
-        # rangestart = int(rangestop - max(1,np.floor(1000/x)))
-        # for k in range(rangestart, rangestop):  # Testen verschiedener k-Werte
-        #     m = round(k * x)  # number of datapoints for k periods = total number of datapoints
-        #     #target: test conditio for k-values near max datablock size
-        #     #dtatblocksize = 2*m = 2*k*x; m =ca DATABLOCKSIZE --> k = m/x, endk = DATABLOCKSIZE/2/x
-        #     #k range = np.floor(DATABLOCKSIZE/2/x) - 1000
-        #     #m = k*x is the number of samples needed for being sSR a near integer multiple of the centershift period
-        #     product = m / x # total number of periods
-        #     rounded_product = round(product, 3) # deviation of rounded # periods from integer
-        #     if abs(rounded_product - round(rounded_product)) <= 0.01:
-        #         found_m = True
-        #         break
-        # if found_m and (2*m < t_DATABLOCKSIZE) and (m > 0):
-        #     DATABLOCKSIZE = int(m*2)
-        #     psc_locker = True
-        #     print(f"LOshifter: set fixed phasescaler for acceleration, turn to fast mode, m = {m}, psc_locker: {psc_locker}, DATABLOCKSIZE: {DATABLOCKSIZE}")
-        # else:
-        #     print("LOshifter cannot find optimum DATABLOCKSIZE for acceleration, turn to slow mode")
-        # ret = auxi.readsegment_new(self,source_fn,0,self.m["readoffset"],DATABLOCKSIZE,self.m["sBPS"],32,self.m["wFormatTag"])
-        # ld = len(ret["data"])  #TODO: remove and replace [0:ld:2] by [0::2]
-        # if abs(centershift) > 1e-5:
-        #     #print("LOworker shifting active")
-        #     rp = ret["data"][0:ld-1:2]
-        #     ip = ret["data"][1:ld:2]
-        #     y = rp +1j*ip        
-        # dt = 1/sSR
-        # tsus = np.arange(0, len(y)*dt, dt)[:len(y)]
-        # #segment_tstart = tsus[len(tsus)-1] + dt
-        # # try to calculate this vector only once and measure time #TODO TODO TODO: implement accelerator for single calculation of phasescaler
-        # phasescaler = np.exp(2*np.pi*1j*centershift*tsus)
-        # plt.plot(tsus[-300:],np.real(phasescaler[-300:]),marker='o')
-        # plt.show()
-############################################
+
 
         self.LOsh_worker.set_starttrim(startcutoffset)
         self.LOsh_worker.set_ret("")
@@ -1310,11 +1243,9 @@ class resample_c(QObject):
             pass
         #TODO: activate signalling method, but no success so far: schedule_objdict["signal"]["cancel"].emit()
 
-
-
     def resample(self):
-        """_generate soxstring from parameters
-            configurates and starts sox execution thread
+        """_generate ffmpeg string (== soxstring) from parameters
+            configurates and starts ffmpeg execution thread
             generates wavheader for the target file to be generated            
             gui: reference to main window object (WizardGUI)
             target_fn: target filename
@@ -1341,19 +1272,178 @@ class resample_c(QObject):
         target_fn = self.m["target_fn"]  #TODO: define im GUI_Hauptprogramm bzw. im scheduler
         tSR = self.m["tSR"]  #TODO: define im GUI_Hauptprogramm bzw. im scheduler
         self.m["progress_source"] = "sox"  #TODO: solve double function in better datacommunication structure
-        if self.m['wFormatTag'] == 1:
+
+        if self.m['wFormatTag'] == 1: #PCM
             if  self.m["sBPS"] > 8:
                 wFormatTag_TYPE = "signed-integer"
                 ffmpeg_type = "s"+str(self.m["sBPS"]) + "le"
-            else:
+            elif self.m["sBPS"] == 8:
                 wFormatTag_TYPE = "unsigned-integer"
                 ffmpeg_type = "u8"
+            else:
+                #TODO: implement standard error pipeline
+                auxi.standard_errorbox(f"Wav format {wFormatTag_TYPE} together with {str(self.m["sBPS"])} is not supported, this file cannot be processed")
+                return False
+
         elif self.m['wFormatTag']  == 3:
             wFormatTag_TYPE = "floating-point"
-            ffmpeg_type = "f" + str(self.m["sBPS"]) + "le"
+            if  (self.m["sBPS"]) == 16 or self.m["sBPS"] == 32:
+                ffmpeg_type = "f" + str(self.m["sBPS"]) + "le"
+            else:
+                #TODO: implement standard error pipeline
+                auxi.standard_errorbox(f"Wav format {wFormatTag_TYPE} together with {str(self.m["sBPS"])} is not supported, this file cannot be processed")
+                return False
         else:
+            #TODO: implement standard error pipeline
+            auxi.standard_errorbox(f"Wav header FormatTag {self.m['wFormatTag']} is neither 1 nor 3; unsupported format, this file cannot be processed")
+            return False
+
+        #generate target file format string for ffmpeg
+
+        if self.m['tFormatTag'] == 1: #PCM
+            if  self.m["tBPS"] > 8:
+                tFormatTag_TYPE = "signed-integer"
+                ffmpeg_target_type = "s"+str(self.m["tBPS"]) + "le"
+            elif self.m["tBPS"] == 8:
+                tFormatTag_TYPE = "unsigned-integer"
+                ffmpeg_target_type = "u8"
+            else:
+                #TODO: implement standard error pipeline
+                auxi.standard_errorbox(f"target Wav format {tFormatTag_TYPE} together with {str(self.m["tBPS"])} is not supported, this file cannot be processed")
+                return False
+        elif self.m['tFormatTag']  == 3:
+            tFormatTag_TYPE = "floating-point"
+            if  (self.m["tBPS"]) == 16 or self.m["tBPS"] == 32:
+                ffmpeg_target_type = "f" + str(self.m["tBPS"]) + "le"
+            else:
+                #TODO: implement standard error pipeline
+                auxi.standard_errorbox(f"Wav format {tFormatTag_TYPE} together with {str(self.m["tBPS"])} is not supported, this file cannot be processed")
+                return False
+        else:
+            #TODO: implement standard error pipeline
+            auxi.standard_errorbox(f"Wav header FormatTag {self.m['tFormatTag']} is neither 1 nor 3; unsupported format, this file cannot be processed")
+            return False
+
+
+
+        #TODO implement resampling of raw files
+        my_filename, filetype = os.path.splitext(os.path.basename(source_fn))
+        if filetype == '.dat':
+            sox_filetype = 'raw'
+        else:
+            sox_filetype = 'wav'
+
+        print(f">>>>>>>>oooooooooo   --> ffmpeg source format type: {ffmpeg_type}, target type: {ffmpeg_target_type}")
+        self.logger.debug(f">>>>>>>>oooooooooo   --> ffmpeg source format type: {ffmpeg_type}, target type: {ffmpeg_target_type}")
+
+        #obsolete: soxstring = 'sox --norm=-3 -e ' + wFormatTag_TYPE + ' -t  ' + sox_filetype + ' -r ' + str(self.m["sSR"]) + ' -b '+ str(self.m["sBPS"]) + ' -c 2 ' + '"' + source_fn  + '"' + ' -e signed-integer -t raw -r ' + str(int(tSR)) + ' -b ' + str(self.m["tBPS"]) + ' -c 2 '  + '"' + target_fn  + '"' 
+        #TODO TODO TODO: generalize ffmpeg command for all filetypes
+        #soxstring = 'sox -e ' + wFormatTag_TYPE + ' -t  ' + sox_filetype + ' -r ' + str(self.m["sSR"]) + ' -b '+ str(self.m["sBPS"]) + ' -c 2 ' + '"' + source_fn  + '"' + ' -e signed-integer -t raw -r ' + str(int(tSR)) + ' -b ' + str(self.m["tBPS"]) + ' -c 2 '  + '"' + target_fn  + '"' + ' gain ' + str(self.m["resampling_gain"])
+        # if self.m["sBPS"] == 24:
+        #     soxstring = 'ffmpeg -y -skip_initial_bytes 212 -f '+ ffmpeg_type +' -ar ' + str(self.m["sSR"]) + ' -ac 2 -i "'  + source_fn  + '" -af ' + '"aresample=resampler=soxr"' + ' -f s16le -ar ' + str(int(tSR))  + ' "' + target_fn + '"'
+        # else:
+        #     soxstring = 'ffmpeg -y -f '+ ffmpeg_type +' -ar ' + str(self.m["sSR"]) + ' -ac 2 -i "'  + source_fn  + '" -af ' + '"aresample=resampler=soxr"' + ' -f s16le -ar ' + str(int(tSR))  + ' "' + target_fn + '"'
+
+        if self.m["actionlabel"] == "TYPE MATCH": #only recode between f32 and target SR
+            #soxstring = 'ffmpeg -y -f f32le -ar ' + str(self.m["sSR"]) + ' -ac 2 -i ' + source_fn + ' -af "volume=normalize" -f ' + ffmpeg_target_type + ' ' + target_fn
+            soxstring = 'ffmpeg -y -f f32le -ar ' + str(self.m["sSR"]) + ' -ac 2 -i ' + source_fn + ' -f ' + ffmpeg_target_type + ' ' + target_fn
+        else: # true resampling
+            if self.m["sBPS"] == 24: #only valid for wav files
+                soxstring = 'ffmpeg -y -skip_initial_bytes 212 -f '+ ffmpeg_type +' -ar ' + str(self.m["sSR"]) + ' -ac 2 -i "'  + source_fn  + '" -af ' + '"aresample=resampler=soxr, volume=' + str(self.m["resampling_gain"]) + 'dB"' + ' -f ' + ffmpeg_target_type + ' -ar ' + str(int(tSR))  + ' "' + target_fn + '"'
+            else:
+                soxstring = 'ffmpeg -y -f '+ ffmpeg_type +' -ar ' + str(self.m["sSR"]) + ' -ac 2 -i "'  + source_fn  + '" -af ' + '"aresample=resampler=soxr, volume=' + str(self.m["resampling_gain"]) + 'dB"' + ' -f ' + ffmpeg_target_type + ' -ar ' + str(int(tSR))  + ' "' + target_fn + '"'
             
-            auxi.standard_errorbox("wFormatTag is neither 1 nor 3; unsupported Format, this file cannot be processed")
+        self.logger.debug(f"method resample: <<<<resampler: soxstring: {soxstring}")
+        expected_filesize = self.m["t_filesize"]
+        if self.checkdiskspace(expected_filesize, self.m["temp_directory"]) is False:
+            return False
+
+        self.m["res_blinkstate"] = True
+        self.m["blinking"] = True
+        self.m["progress_source"] = "sox" #TODO rename sox reference to something more general: worker ?????
+
+        self.logger.debug("method resample: set flags just before soxthread")
+        self.soxthread = QThread(parent = self)
+        self.sox_worker = res_workers()
+
+        self.sox_worker.moveToThread(self.soxthread)
+        self.sox_worker.set_soxstring(soxstring)
+        self.sox_worker.set_ret("")
+        self.sox_worker.set_logger(self.logger)
+        self.sox_worker.set_tfname(target_fn )
+        self.sox_worker.set_expfs(expected_filesize)
+        self.soxthread.started.connect(self.sox_worker.sox_writer)
+        ###############################
+        schedule_objdict["signal"]["cancel"].connect(lambda: self.sox_worker.soxworker_terminate())
+
+        self.Sigincrscheduler.connect(self.res_scheduler)
+        self.sox_worker.SigSoxerror.connect(self.Soxerrorhandler)
+        self.sox_worker.SigPupdate.connect(self.PupdateSignalHandler)
+        self.sox_worker.SigFinished.connect(self.soxthread.quit)
+        self.sox_worker.SigFinished.connect(self.sox_worker.deleteLater)
+        self.soxthread.finished.connect(self.soxthread.deleteLater)
+        self.soxthread.finished.connect(lambda: self.cleanup())
+
+        self.m["calling_worker"] = self.sox_worker 
+        self.logger.debug("################ method resample:soxthread starting now ###########################")
+        self.soxthread.start()
+        if self.soxthread.isRunning():
+            self.logger.debug("################ method resample:soxthread started")
+        time.sleep(1) # wait state so that the soxworker has already opened the file
+        self.logger.debug("############### method resample: resampler 1s sleep phase over")
+        self.logger.debug("############### method resample: about to leave resample = soxworker starter")
+        #self.sys_state.set_status(self.m)
+
+    def upsample_ffmpeg(self):
+        """_generate ffmpeg string from parameters
+            configurates and starts ffmpeg execution thread
+            generates wavheader for the target file to be generated            
+            gui: reference to main window object (WizardGUI)
+            target_fn: target filename
+            source_fn: source filename
+            s_wavheader: same type as wavheader produced by SDR_wavheadertools
+            tSR: target sampling rate in S/s
+            tLO: target center freqiency in Hz
+            sys_state: communication dictionary of data class status; accessed only by get and set methods
+        :param: none
+        :type: none
+        ...
+        :raises
+        ...
+        :return: target_fn
+        :rtype: string
+        """
+        schedule_objdict = self.m["schedule_objdict"]
+        schedule_objdict["signal"]["resample"].disconnect(schedule_objdict["connect"]["resample"])
+
+        source_fn = self.m["source_fn"]  #TODO: define im GUI_Hauptprogramm bzw. im scheduler
+        target_fn = self.m["target_fn"]  #TODO: define im GUI_Hauptprogramm bzw. im scheduler
+        tSR = self.m["tSR"]  #TODO: define im GUI_Hauptprogramm bzw. im scheduler
+        self.m["progress_source"] = "sox"  #TODO: solve double function in better datacommunication structure
+
+        if self.m['wFormatTag'] == 1: #PCM
+            if  self.m["sBPS"] > 8:
+                wFormatTag_TYPE = "signed-integer"
+                ffmpeg_type = "s"+str(self.m["sBPS"]) + "le"
+            elif self.m["sBPS"] == 8:
+                wFormatTag_TYPE = "unsigned-integer"
+                ffmpeg_type = "u8"
+            else:
+                #TODO: implement standard error pipeline
+                auxi.standard_errorbox(f"Wav format {wFormatTag_TYPE} together with {str(self.m["sBPS"])} is not supported, this file cannot be processed")
+                return False
+
+        elif self.m['wFormatTag']  == 3:
+            wFormatTag_TYPE = "floating-point"
+            if  (self.m["sBPS"]) == 16 or self.m["sBPS"] == 32:
+                ffmpeg_type = "f" + str(self.m["sBPS"]) + "le"
+            else:
+                #TODO: implement standard error pipeline
+                auxi.standard_errorbox(f"Wav format {wFormatTag_TYPE} together with {str(self.m["sBPS"])} is not supported, this file cannot be processed")
+                return False
+        else:
+            #TODO: implement standard error pipeline
+            auxi.standard_errorbox(f"Wav header FormatTag {self.m['wFormatTag']} is neither 1 nor 3; unsupported format, this file cannot be processed")
             return False
 
         my_filename, filetype = os.path.splitext(os.path.basename(source_fn))
@@ -1362,15 +1452,31 @@ class resample_c(QObject):
         else:
             sox_filetype = 'wav'
         print(f">>>>>>>>oooooooooo   --> ffmpeg format type: {ffmpeg_type}")
-        #obsolete: soxstring = 'sox --norm=-3 -e ' + wFormatTag_TYPE + ' -t  ' + sox_filetype + ' -r ' + str(self.m["sSR"]) + ' -b '+ str(self.m["sBPS"]) + ' -c 2 ' + '"' + source_fn  + '"' + ' -e signed-integer -t raw -r ' + str(int(tSR)) + ' -b ' + str(self.m["tBPS"]) + ' -c 2 '  + '"' + target_fn  + '"' 
-        #TODO TODO TODO: generalize ffmpeg command for all filetypes
-        #soxstring = 'sox -e ' + wFormatTag_TYPE + ' -t  ' + sox_filetype + ' -r ' + str(self.m["sSR"]) + ' -b '+ str(self.m["sBPS"]) + ' -c 2 ' + '"' + source_fn  + '"' + ' -e signed-integer -t raw -r ' + str(int(tSR)) + ' -b ' + str(self.m["tBPS"]) + ' -c 2 '  + '"' + target_fn  + '"' + ' gain ' + str(self.m["resampling_gain"])
         if self.m["sBPS"] == 24:
             soxstring = 'ffmpeg -y -skip_initial_bytes 212 -f '+ ffmpeg_type +' -ar ' + str(self.m["sSR"]) + ' -ac 2 -i "'  + source_fn  + '" -af ' + '"aresample=resampler=soxr"' + ' -f s16le -ar ' + str(int(tSR))  + ' "' + target_fn + '"'
         else:
             soxstring = 'ffmpeg -y -f '+ ffmpeg_type +' -ar ' + str(self.m["sSR"]) + ' -ac 2 -i "'  + source_fn  + '" -af ' + '"aresample=resampler=soxr"' + ' -f s16le -ar ' + str(int(tSR))  + ' "' + target_fn + '"'
         ################ end TODO ##################
         #Überprüfen on Leerzeichen in den Filenamen, diese können nicht bearbeitet werden
+
+        # lo_shift = self.m["fshift"]  #TODO: define im GUI_Hauptprogramm bzw. im scheduler
+        # a = (np.tan(np.pi * lo_shift / tSR) - 1) / (np.tan(np.pi * lo_shift / tSR) + 1)
+
+        # ffmpeg_cmd = [
+        # "ffmpeg", "-y",   
+        # "-f", ffmpeg_type, "-ar", str(self.m["sSR"]), "-ac", "2", "-i", source_fn,
+        # "-filter_complex",
+        # "[0:a]aresample==resampler=soxr" + str(tSR) + ",channelsplit=channel_layout=stereo [re][im];"
+        # "sine=frequency=" + str(lo_shift) + ":sample_rate="  + str(tSR) + "[sine_base];"
+        # "[sine_base] asplit=2[sine_sin1][sine_sin2];"
+        # "[sine_sin2]biquad=b0=" + str(a) + ":b1=1:b2=0:a0=1:a1=" + str(a) + ":a2=0[sine_cos];"
+        # "[re][sine_cos]amultiply[mod_re];"
+        # "[im][sine_sin1]amultiply[mod_im];"
+        # "[mod_im]volume=volume=200[part_im];"
+        # "[mod_re]volume=volume=200[part_re];"
+        # "[part_re][part_im]amix=inputs=2:duration=shortest[out]",
+        # "-map", "[out]", "-c:a", "pcm_s8", "-f", "caf", "-"
+        # ]
 
 
         # Versuch einer Bandpassfilterung
@@ -1589,15 +1695,7 @@ class resample_c(QObject):
         :param: none
         :return: none
         """
-        #TODO: check if logsox.txt file contains error message
-        #if yes: terminate running schedule and print error message
 
-        
-
-
-        #system_state = self.sys_state.get_status()
-                            ###################AKTUELLER HALTEPUNKT
-        #gui = self.sys_state["gui_reference"]
         cnt = self.m["r_sch_counter"]
         sch = self.m["res_schedule"]
             
@@ -1609,7 +1707,6 @@ class resample_c(QObject):
             #TODO: besser: cnt auf length(sch) setzen
             self.logger.debug(f"emergency exit, length (sch) = {len(sch)}")
             cnt = len(sch) - 1
-            #sch[cnt]["action"] = 'terminate'#Obsolete, remove after tests
 
         self.Sigincrscheduler.disconnect(self.res_scheduler)##############TODOTODOTODO
         self.logger.debug("res_scheduler: reached scheduler")
@@ -1623,6 +1720,7 @@ class resample_c(QObject):
         self.m["tBPS"] = sch[cnt]["tBPS"]
         self.m["sfilesize"] = sch[cnt]["s_filesize"]
         self.m["wFormatTag"] = sch[cnt]["wFormatTag"]
+        self.m["tFormatTag"] = sch[cnt]["tFormatTag"]
         self.m["t_filesize"] = sch[cnt]["t_filesize"]
         self.m["target_fn"] = self.m["temp_directory"] + "/temp_" + str(cnt) + '.dat' #<<< NEW vs LOshifter : filename automatism
 
@@ -1660,20 +1758,9 @@ class resample_c(QObject):
             # self.SigUpdateOtherGUIs.emit()
             self.m["actionlabelbg"] = "lightgray"
             self.m["label36Font"] = 12
-            #gui.ui.label_36.setStyleSheet("background-color: lightgray") #TODO: shift to a resample.view method, treat in a different manner
-            #gui.ui.label_36.setFont(QFont('arial',12)) #TODO: shift to a resample.view method, treat in a different manner
-            #setze Signal ab, das GUI Update auslöst:
-            #TODO: lade das letzte resampelte File ?? aber erst wenn ganze eventloop abgearbeitet
-            #self.m["f1"] = self.m["new_name"] #TODO: CHEKC TESTEN 17-12-2023
-            #self.SigUpdateGUI.connect(self.update_GUI) #TODO: check gui reference
-            #self.SigUpdateGUI.emit("terminate") #TODO:  check gui reference
             time.sleep(0.01)
             #TODO TODO: check change 14-12-2023: self.SigUpdateGUI.disconnect(self.update_GUI) #TODO:  check gui reference
             self.SigActivateOtherTabs.emit("Resample","activate",[]) #TODO: why is that necessary ?
-            #gui.activate_tabs(["View_Spectra","Annotate","Resample","YAML_editor","WAV_header","Player"])  #TODO: organiz in different manner; this class needs not know about other tabs !
-            #Therefore send a signal Siginactivate_except("resample") with the parameter indicating which tab should not be inactivated
-            #The inactivation of the rest should be done by core.view
-            #self.sys_state.set_status(system_state)
             #TODO: lösche alle temp files, die evt hängengeblieben sind (garbage collection)'
             #temppath = os.getcwd() #TODO: check change on 12-01-2024
             temppath = self.m["temp_directory"]
@@ -1687,26 +1774,24 @@ class resample_c(QObject):
             #self.SigTerminate_Finished.connect(gui.cb_resample_new)  # TODO: muss resample_v.cb_resample_new sein
             self.SigTerminate_Finished.connect(self.m["_ref_cb_resample"])
             self.SigTerminate_Finished.emit() #general signal for e.g. cb_resampler
-            #    gui.activate_tabs(["View_Spectra","Annotate","Resample","YAML_editor","WAV_header","Player"]) #TODO: organiz in different manner; this class needs not know about other tabs !
-            #Therefore send a signal Siginactivate_except("resample") with the parameter indicating which tab should not be inactivated
-            #The inactivation of the rest should be done by core.view
             return
 
-        #self.sys_state.set_status(system_state)
-
         if sch[cnt]["action"].find('resample') == 0:
-            self.logger.debug("res_scheduler: : resample rechaed, emit signal resample")
+            self.logger.debug("res_scheduler: : resample reached, emit signal resample")
             schedule_objdict["signal"]["resample"].connect(schedule_objdict["connect"]["resample"])
             schedule_objdict["signal"]["resample"].emit()
             time.sleep(0.01)
-            #schedule_objdict["signal"]["resample"].disconnect(schedule_objdict["connect"]["resample"])
-            pass
+
+        if sch[cnt]["action"].find('resample_and_LOshift') == 0:
+            self.logger.debug("res_scheduler: : upsample reached, emit signal upsample")
+            schedule_objdict["signal"]["resample"].connect(schedule_objdict["connect"]["upsample"])
+            schedule_objdict["signal"]["upsample"].emit()
+            time.sleep(0.01)
+
+            #sch_m1["actionlabel"] = "UPSAMPLE"
+
         if sch[cnt]["action"].find('accomplish') == 0:
             #self.logger.debug("res_scheduler: accomplish rechaed, emit signal accomplish")
-            #self.SigSyncTabs.emit(["resample","resample","u","label36text",'FINALIZE'])
-
-            #gui.ui.label_36.setText('FINALIZE') #TODO: shift to a resample.view method, treat in a different manner: model variable change and then update signal
-            #self.sys_state.set_status(self.m) #TODO: shift to a resample.view method, treat in a different manner: model variable change and then update signal
             #TODO: gleicher Aufruf wie in 'resample':
             self.logger.debug("res_scheduler accomplish reached")
             schedule_objdict["signal"]["accomplish"].connect(schedule_objdict["connect"]["accomplish"])
@@ -1733,7 +1818,6 @@ class resample_c(QObject):
         """
         self.logger.debug("start define resampling schedule A, no LOshift, pure resampling")
 
-        #system_state = self.sys_state.get_status()
         self.m["r_sch_counter"] = 0
         target_SR = self.m["target_SR"] 
         target_LO = self.m["target_LO"]
@@ -1756,6 +1840,7 @@ class resample_c(QObject):
         sch1["s_filesize"] = (file_stats.st_size - self.m["readoffset"])
         sch1["t_filesize"] = np.ceil(sch1["s_filesize"]*sch1["tSR"]/sch1["sSR"]*sch1["tBPS"]/sch1["sBPS"])
         sch1["wFormatTag"] = wavheader['wFormatTag'] #source formattag; no previous LOshifter,thus Format of sourcefile
+        sch1["tFormatTag"] = 1 #target formattag; the next operation requires PCM #TODO: expand to selectable target format
 
         schedule.append(sch1)
         sch2 = {}
@@ -1769,6 +1854,8 @@ class resample_c(QObject):
         sch2["s_filesize"] = 0 #Dummy , plays no role in terminate
         sch2["t_filesize"] = 0 #Dummy , plays no role in terminate
         sch2["wFormatTag"] = 1 #source formattag
+        sch2["tFormatTag"] = 1 #target formattag; the next operation requires PCM #TODO: expand to selectable target format
+
         schedule.append(sch2)
         sch3 = {}
         sch3["action"] = "terminate"
@@ -1781,10 +1868,10 @@ class resample_c(QObject):
         sch3["s_filesize"] = 0 #Dummy , plays no role in terminate
         sch3["t_filesize"] = 0 #Dummy , plays no role in terminate
         sch3["wFormatTag"] = 1 #source formattag
+        sch3["tFormatTag"] = 1 #target formattag; the next operation requires PCM #TODO: expand to selectable target format
         schedule.append(sch3)
 
         self.m["res_schedule"] = schedule
-        #self.sys_state.set_status(system_state)
 
     def schedule_B(self):
         """_definition of schedule for  resampling with previous LO shift
@@ -1798,8 +1885,6 @@ class resample_c(QObject):
         :rtype: none
         """
         self.logger.debug("start define resampling schedule B, with LOshift")
-
-        #system_state = self.sys_state.get_status()
         self.m["r_sch_counter"] = 0
         target_SR = self.m["target_SR"] 
         target_LO = self.m["target_LO"]
@@ -1815,7 +1900,8 @@ class resample_c(QObject):
         sch0["sBPS"] = wavheader['nBitsPerSample']
         sch0["tBPS"] = 32 # TODO check if this should be always so: always defined so for LOshifter
         sch0["wFormatTag"] = wavheader['wFormatTag']
-        sch0["s_filesize"] = wavheader['filesize'] 
+        sch0["tFormatTag"] = 3 #target formattag; the previous LOshifter has produced 32bit IEEE float 32
+        sch0["s_filesize"] = wavheader['filesize']
         #file_stats = os.stat(self.m["f1"]) #TODO: replace by line below
         file_stats = os.stat(self.m["f1"])
         sch0["s_filesize"] = (file_stats.st_size - self.m["readoffset"])
@@ -1834,6 +1920,7 @@ class resample_c(QObject):
         sch1["s_filesize"] = sch0["t_filesize"]
         sch1["t_filesize"] = sch1["s_filesize"]*sch1["tSR"]/sch1["sSR"]*sch1["tBPS"]/sch1["sBPS"]
         sch1["wFormatTag"] = 3 #source formattag; the previous LOshifter has produced 32bit IEEE float 32
+        sch1["tFormatTag"] = 1 #target formattag; the next operation requires PCM #TODO: expand to selectable target format
 
         schedule.append(sch1)
         sch2 = {}
@@ -1847,6 +1934,8 @@ class resample_c(QObject):
         sch2["s_filesize"] = 0 #Dummy , plays no role in terminate
         sch2["t_filesize"] = 0 #Dummy , plays no role in terminate
         sch2["wFormatTag"] = 1 #source formattag
+        sch2["tFormatTag"] = 1 #target formattag; the next operation requires PCM #TODO: expand to selectable target format
+
         schedule.append(sch2)
         sch3 = {}
         sch3["action"] = "terminate"
@@ -1859,14 +1948,15 @@ class resample_c(QObject):
         sch3["s_filesize"] = 0 #Dummy , plays no role in terminate
         sch3["t_filesize"] = 0 #Dummy , plays no role in terminate
         sch3["wFormatTag"] = 1 #source formattag
+        sch3["tFormatTag"] = 1 #target formattag; the next operation requires PCM #TODO: expand to selectable target format
+
         schedule.append(sch3)
 
         self.m["res_schedule"] = schedule
-        #self.sys_state.set_status(system_state)
 
     def schedule_B24(self):
         """_definition of schedule for  resampling with previous LO shift
-        do not use for files with BPS = 24bit; use version schedule_B24(self) in that case
+        and for files with BPS = 24bit
         :param: none, communication only via self.m
         :type: none
         ...
@@ -1877,7 +1967,6 @@ class resample_c(QObject):
         """
         self.logger.debug("start define resampling schedule B24, 24bit LOSHift with resampling")
 
-        #system_state = self.sys_state.get_status()
         self.m["r_sch_counter"] = 0
         target_SR = self.m["target_SR"] 
         target_LO = self.m["target_LO"]
@@ -1901,6 +1990,8 @@ class resample_c(QObject):
 
         sch_m1["t_filesize"] = np.ceil(sch_m1["s_filesize"]*sch_m1["tSR"]/sch_m1["sSR"]*sch_m1["tBPS"]/sch_m1["sBPS"])
         sch_m1["wFormatTag"] = wavheader['wFormatTag'] #source formattag; no previous LOshifter,thus Format of sourcefile
+        sch_m1["tFormatTag"] = 1 #target formattag; the next LOshifter expects PCM
+
         schedule.append(sch_m1)
 
         sch0 = {}
@@ -1911,7 +2002,8 @@ class resample_c(QObject):
         sch0["tSR"] = sch0["sSR"]
         sch0["sBPS"] = 32
         sch0["tBPS"] = 32 # TODO check if this should be always so: always defined so for LOshifter
-        sch0["wFormatTag"] = 1 #the previus resampler has produced integer values, resmpler prod always signed-integer
+        sch0["wFormatTag"] = 1 #the previus resampler has produced PCM, resmpler prod always signed-integer
+        sch0["tFormatTag"] = 3 #target formattag; the next operation expects 32bit IEEE float 32
         sch0["s_filesize"] = sch_m1["t_filesize"] 
         sch0["t_filesize"] = sch0["s_filesize"]*sch0["tSR"]/sch0["sSR"]*sch0["tBPS"]/sch0["sBPS"]
         schedule.append(sch0)
@@ -1919,7 +2011,7 @@ class resample_c(QObject):
         sch1 = {}
         sch1["action"] = "resample"
         sch1["blinkstate"] = True
-        sch1["actionlabel"] = "RESAMPLE F"
+        sch1["actionlabel"] = "TYPE MATCH"
         sch1["sSR"] = sch0["tSR"]
         sch1["tSR"] = sch1["sSR"] # float(target_SR)*1000
         sch1["tBPS"] = 16   #TODO: tBPS flexibel halten !
@@ -1927,6 +2019,7 @@ class resample_c(QObject):
         sch1["s_filesize"] = sch0["t_filesize"]
         sch1["t_filesize"] = sch1["s_filesize"]*sch1["tSR"]/sch1["sSR"]*sch1["tBPS"]/sch1["sBPS"]
         sch1["wFormatTag"] = 3 #source formattag; the previous LOshifter has produced 32bit IEEE float 32
+        sch1["tFormatTag"] = 1 #current target format is PCM # TODO: extend to IEEE for custom output formats
 
         schedule.append(sch1)
         sch2 = {}
@@ -1940,6 +2033,8 @@ class resample_c(QObject):
         sch2["s_filesize"] = 0 #Dummy , plays no role in terminate
         sch2["t_filesize"] = 0 #Dummy , plays no role in terminate
         sch2["wFormatTag"] = 1 #source formattag
+        sch2["tFormatTag"] = 1 #target formattag; the next operation requires PCM #TODO: expand to selectable target format
+
         schedule.append(sch2)
         sch3 = {}
         sch3["action"] = "terminate"
@@ -1952,10 +2047,80 @@ class resample_c(QObject):
         sch3["s_filesize"] = 0 #Dummy , plays no role in terminate
         sch3["t_filesize"] = 0 #Dummy , plays no role in terminate
         sch3["wFormatTag"] = 1 #source formattag
+        sch3["tFormatTag"] = 1 #target formattag; the next operation requires PCM #TODO: expand to selectable target format
+
         schedule.append(sch3)
         self.m["res_schedule"] = schedule
-        #self.sys_state.set_status(system_state)
 
+
+    def schedule_B_UP(self):
+        """_definition of schedule for full ffmpeg upsampling and LOshifting data, i.e. 
+        with one single ffmpeg command
+        :param: none, communication only via self.m
+        :type: none
+        ...
+        :raises none
+        ...
+        :return: none
+        :rtype: none
+        """
+        self.logger.debug("start define resampling schedule B24, 24bit LOSHift with resampling")
+
+        self.m["r_sch_counter"] = 0
+        target_SR = self.m["target_SR"] 
+        target_LO = self.m["target_LO"]
+        schedule = []
+
+        wavheader = self.m['s_wavheader']
+
+        sch_m1 = {}
+        sch_m1["action"] = "resample_and_LOshift"
+        sch_m1["blinkstate"] = True
+        sch_m1["actionlabel"] = "UPSAMPLE"
+        sch_m1["sSR"] = wavheader['nSamplesPerSec'] 
+        sch_m1["tSR"] = float(target_SR)*1000  # sch_m1["sSR"]
+        sch_m1["sBPS"] = wavheader['nBitsPerSample']
+        sch_m1["tBPS"] = 16 # TODO check if this should be always so: may be generalized to other output formats
+        sch_m1["wFormatTag"] = wavheader['wFormatTag']
+        sch_m1["s_filesize"] = wavheader['filesize']
+        #file_stats = os.stat(self.m["f1"]) #TODO remove line below
+        file_stats = os.stat(self.m["f1"])
+        sch_m1["s_filesize"] = (file_stats.st_size - self.m["readoffset"])
+        sch_m1["t_filesize"] = np.ceil(sch_m1["s_filesize"]*sch_m1["tSR"]/sch_m1["sSR"]*sch_m1["tBPS"]/sch_m1["sBPS"])
+        sch_m1["wFormatTag"] = wavheader['wFormatTag'] #source formattag; no previous LOshifter,thus Format of sourcefile
+        sch_m1["tFormatTag"] = 1 #TODO: currently PCM, but may be generalized to other output formats
+
+        schedule.append(sch_m1)
+
+        sch2 = {}
+        sch2["action"] = "accomplish"
+        sch2["blinkstate"] = False
+        sch2["actionlabel"] = "ACCOMPLISH"
+        sch2["sSR"] = float(target_SR)*1000 
+        sch2["tSR"] = float(target_SR)*1000
+        sch2["sBPS"] = 16 #Dummy , plays no role in terminate
+        sch2["tBPS"] = 16 #Dummy , plays no role in terminate
+        sch2["s_filesize"] = 0 #Dummy , plays no role in terminate
+        sch2["t_filesize"] = 0 #Dummy , plays no role in terminate
+        sch2["wFormatTag"] = 1 #source formattag
+        sch2["tFormatTag"] = 1 #target formattag; the next operation requires PCM #TODO: expand to selectable target format
+
+        schedule.append(sch2)
+        sch3 = {}
+        sch3["action"] = "terminate"
+        sch3["blinkstate"] = False
+        sch3["actionlabel"] = ""
+        sch3["sSR"] = float(target_SR)*1000
+        sch3["tSR"] = float(target_SR)*1000
+        sch3["sBPS"] = 16 #Dummy , plays no role in terminate
+        sch3["tBPS"] = 16 #Dummy , plays no role in terminate
+        sch3["s_filesize"] = 0 #Dummy , plays no role in terminate
+        sch3["t_filesize"] = 0 #Dummy , plays no role in terminate
+        sch3["wFormatTag"] = 1 #source formattag
+        sch3["tFormatTag"] = 1 #target formattag; the next operation requires PCM #TODO: expand to selectable target format
+
+        schedule.append(sch3)
+        self.m["res_schedule"] = schedule
 
 class resample_v(QObject):
     """_view methods for resampling module
@@ -2048,6 +2213,7 @@ class resample_v(QObject):
         schedule_objdict = {}
         schedule_objdict["signal"] = {}
         schedule_objdict["signal"]["resample"] = resample_c.SigResample
+        
         schedule_objdict["signal"]["accomplish"] = resample_c.SigAccomplish
         schedule_objdict["signal"]["LOshift"] = resample_c.SigLOshift
         #schedule_objdict["signal"]["updateGUI"] = resample_c.SigUpdateGUI
@@ -2968,15 +3134,21 @@ class resample_v(QObject):
         #gui = system_state["gui_reference"]
         gain = self.gui.lineEdit_resample_Gain.text()
         numeraltest = True
-        #TODO: check for negative sign
-        if not gain.replace(".", "").isnumeric():
-            numeraltest = False
-        #gain = gain.replace(".", "")
-        # if not gain[1:].isdigit():
+        # try:
+        #     float(gain)  # Oder int(s) für ganze Zahlen
+        #     numeraltest = True
+        # except ValueError:
         #     numeraltest = False
-        if numeraltest == False:
-            auxi.standard_errorbox("invalid characters, must be numeric float value !")
-            return False
+
+        # #TODO: check for negative sign
+        # if not gain.replace(".", "").isnumeric():
+        #     numeraltest = False
+        # #gain = gain.replace(".", "")
+        # # if not gain[1:].isdigit():
+        # #     numeraltest = False
+        # if numeraltest == False:
+        #     auxi.standard_errorbox("invalid characters, must be numeric float value !")
+        #     return False
         try:
             fgain = float(gain)
         except TypeError:

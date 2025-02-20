@@ -797,7 +797,6 @@ class core_v(QObject):
             auxi.standard_infobox("dat file cannot be resampled. If you wish to resample, please convert to wav file first (Tab WAV Header)")
         else:
             self.wavheader = WAVheader_tools.get_sdruno_header(self,self.m["f1"])
-            
             if self.wavheader != False:
                 pass
             else:

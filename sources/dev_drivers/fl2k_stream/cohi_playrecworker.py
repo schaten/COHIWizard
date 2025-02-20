@@ -54,9 +54,9 @@ class playrec_worker(QObject):
         self.stopix = False
         #self.pausestate = False
         #self.JUNKSIZE = 2048*4
-        self.DATABLOCKSIZE = 1024*4*256
+        self.DATABLOCKSIZE = 1024*64
         self.DATASHOWSIZE = 1024
-        self.JUNKSIZE = self.DATABLOCKSIZE*2
+        self.JUNKSIZE = self.DATABLOCKSIZE/2
         self.mutex = QMutex()
         self.stemlabcontrol = stemlabcontrolinst
 
@@ -130,7 +130,7 @@ class playrec_worker(QObject):
         """
         #print("reached playloopthread")
         filenames = self.get_filename()
-        timescaler = self.get_timescaler() #bytes per second
+        #timescaler = self.get_timescaler() #bytes per second
         TEST = self.get_TEST()
         gain = self.get_gain()
         #TODO: self.fmtscl = self.__slots__[7] #scaler for data format      ? not used so far  
@@ -140,9 +140,10 @@ class playrec_worker(QObject):
         sampling_rate = configuration["irate"]
         lo_shift = configuration["ifreq"]# - configuration["LO_offset"]
         Nopt = 0 #Number for gettig a close to integer delay before rounding
-        delay = int(np.round(((1+4*Nopt)*sampling_rate/4/lo_shift)))
+        #delay = int(np.round(((1+4*Nopt)*sampling_rate/4/lo_shift)))
         tSR = 10000000*(1 + np.floor((lo_shift+sampling_rate/2)*4/10000000))
         tSR = min(100000000,tSR)
+        format = self.get_formattag()
         a = (np.tan(np.pi * lo_shift / tSR) - 1) / (np.tan(np.pi * lo_shift / tSR) + 1)
         fl2k_file_path = os.path.join(os.getcwd(),"dev_drivers/fl2k/osmo-fl2k-64bit-20250105", "fl2k_file.exe")
         #print(f"cohi_playrecworker fl2k_file_path exists: {os.path.exists(fl2k_file_path)}")
@@ -157,13 +158,38 @@ class playrec_worker(QObject):
         else:
             print("fl2k ready")
         self.mutex.unlock()
+        if format[0] == 1:  #PCM
+            if format[2] == 16:
+                formatstring = "s16le"
+                timescaler = sampling_rate * 4
+            elif format[2] == 24:   #24 bit PCM
+                formatstring = "s24le"
+                timescaler = sampling_rate * 6
+            elif format[2] == 32:
+                formatstring = "s32le"  #32 bit PCM 
+                timescaler = sampling_rate * 8
+            else:
+                self.SigError.emit(f"Format not supported: {format[2]}")
+                self.SigFinished.emit()
+                return()
+        else: #IEEE float   
+            if format[2] == 32:
+                formatstring = "f32le"
+                timescaler = sampling_rate * 8
+            elif format[2] == 16:   #16 bit float
+                formatstring = "f16le"
+                timescaler = sampling_rate * 4
+            else:
+                self.SigError.emit(f"Format not supported: {format[2]}")
+                self.SigFinished.emit()
+                return()
 
         if not TEST:
             #Start ffmpeg Process:
             try:
                 ffmpeg_cmd = [
                 "ffmpeg", "-y", "-loglevel", "error", "-hide_banner",  
-                "-f", "s16le", "-ar", str(sampling_rate), "-ac", "2", "-i", "-",  # Lese von stdin
+                "-f", formatstring, "-ar", str(sampling_rate), "-ac", "2", "-i", "-",  # Lese von stdin
                 "-filter_complex",
                 "[0:a]aresample=osr=" + str(tSR) + ",channelsplit=channel_layout=stereo [re][im];"
                 "sine=frequency=" + str(lo_shift) + ":sample_rate="  + str(tSR) + "[sine_base];"
@@ -171,13 +197,13 @@ class playrec_worker(QObject):
                 "[sine_sin2]biquad=b0=" + str(a) + ":b1=1:b2=0:a0=1:a1=" + str(a) + ":a2=0[sine_cos];"
                 "[re][sine_cos]amultiply[mod_re];"
                 "[im][sine_sin1]amultiply[mod_im];"
-                "[mod_im]volume=volume=200[part_im];"
-                "[mod_re]volume=volume=200[part_re];"
+                "[mod_im]volume=volume=2[part_im];"
+                "[mod_re]volume=volume=2[part_re];"
                 "[part_re][part_im]amix=inputs=2:duration=shortest[out]",
                 "-map", "[out]", "-c:a", "pcm_s8", "-f", "caf", "-"
                 ]                #                "-map", "[out]", "-c:a", "pcm_s8", "-f", "cav", "-"
 
-                #print(f"ffmpeg_command: {ffmpeg_cmd}")
+                print(f"ffmpeg_command: {ffmpeg_cmd}")
                 # Prozess starten
                 ffmpeg_process = subprocess.Popen(ffmpeg_cmd, 
                     stdin=subprocess.PIPE, 
@@ -198,7 +224,7 @@ class playrec_worker(QObject):
             if os.name.find("posix") >= 0:
                 pass
             else:
-                psutil.Process(ffmpeg_process.pid).nice(psutil.IDLE_PRIORITY_CLASS)
+                #psutil.Process(ffmpeg_process.pid).nice(psutil.IDLE_PRIORITY_CLASS)
                 pass
 
             if os.name.find("posix") >= 0:
@@ -243,7 +269,7 @@ class playrec_worker(QObject):
                 except Exception as e:
                     print(f"Unexpected error: {e}")
                     return()
-                psutil.Process(fl2k_process.pid).nice(psutil.IDLE_PRIORITY_CLASS)
+                #psutil.Process(fl2k_process.pid).nice(psutil.IDLE_PRIORITY_CLASS)
 
         else:
             print("fl2k worker TEST condition , no fl2k_file process started <<<<<<<<<<<<<<<<")
@@ -258,10 +284,17 @@ class playrec_worker(QObject):
             fileHandle.seek(216, 1)
 
             print(f"<<<<<<<<<<<<< oooooo >>>>>>>>>>>> format: {format}")
-            if format[2] == 16:
-                data = np.empty(self.DATABLOCKSIZE, dtype=np.int16)
+            if format[0] == 1: #PCM              
+                if format[2] == 16:
+                    data = np.empty(self.DATABLOCKSIZE, dtype=np.int16)
+                elif format[2] == 32:
+                    data = np.empty(self.DATABLOCKSIZE, dtype=np.int32)
             else:
-                data = np.empty(self.DATABLOCKSIZE, dtype=np.float32) #TODO: check if true for 32-bit wavs wie Gianni's
+                if format[2] == 16:
+                    data = np.empty(self.DATABLOCKSIZE, dtype=np.float16)
+                elif format[2] == 32:
+                    data = np.empty(self.DATABLOCKSIZE, dtype=np.float32) #TODO: check if true for 32-bit wavs wie Gianni's
+
             print(f"playloop: BitspSample: {format[2]}; wFormatTag: {format[0]}; Align: {format[1]}")
             if format[0] == 1:
                 normfactor = int(2**int(format[2]-1))-1
@@ -269,11 +302,11 @@ class playrec_worker(QObject):
                 normfactor = 1
             if format[2] == 16 or format[2] == 32:
                 size = fileHandle.readinto(data)
-            elif format[2] == 24:
+            elif format[2] == 24: #TODO: not yet supported or tested
                 data = self.read24(format,data,fileHandle)
                 size = len(data)
             self.set_data(data)
-            junkspersecond = timescaler / self.JUNKSIZE
+            junkspersecond = sampling_rate / self.JUNKSIZE
             count = 0
             # print(f"Junkspersec:{junkspersecond}")
 
@@ -295,7 +328,15 @@ class playrec_worker(QObject):
                         try:
                             #TODO: AGC pending
                             aux1 = gain*data[0:size]
-                            ffmpeg_process.stdin.write(aux1.astype(np.int16))
+                            if formatstring == "s16le":
+                                ffmpeg_process.stdin.write(aux1.astype(np.int16))
+                            elif formatstring == "s32le":
+                                ffmpeg_process.stdin.write(aux1.astype(np.int32))
+                            elif formatstring == "f32le":
+                                ffmpeg_process.stdin.write(aux1.astype(np.float32))
+                            else :   #16 bit float	
+                                ffmpeg_process.stdin.write(aux1.astype(np.float16))
+
                             ffmpeg_process.stdin.flush()
                         except BlockingIOError:
                             print("Blocking data socket error in playloop worker")
@@ -319,6 +360,14 @@ class playrec_worker(QObject):
                             self.SigFinished.emit()
                             time.sleep(0.1)
                             return
+                        except BrokenPipeError:
+                            time.sleep(0.1)
+                            self.SigError.emit(f"Broken Pipe: FFMPEG-Prozess beendet oder Pipe geschlossen. Neustart erforderlich.")
+                            self.SigFinished.emit()
+                            time.sleep(0.1)
+                            print("FFMPEG-Prozess beendet oder Pipe geschlossen. Neustart erforderlich.")
+                            return
+
                         QThread.usleep(5) #sleep 5 us for keeping main GUI responsive
                         size = fileHandle.readinto(data)
                         
@@ -334,7 +383,8 @@ class playrec_worker(QObject):
                             gain = self.get_gain()
                     else:
                         aux1 = 0*data[0:size]
-                        ffmpeg_process.stdin.write(aux1.astype(np.int16))
+                        #ffmpeg_process.stdin.write(aux1.astype(np.int16))
+                        ffmpeg_process.stdin.write(aux1)
                         ffmpeg_process.stdin.flush()
                         time.sleep(0.1)
                         if self.stopix is True:
@@ -343,7 +393,7 @@ class playrec_worker(QObject):
                     if not self.get_pause():
                         print(" SDR_control fl2k test reached")
                         size = fileHandle.readinto(data)
-                        time.sleep(self.DATABLOCKSIZE/timescaler)
+                        time.sleep(self.DATABLOCKSIZE/2/sampling_rate)
                         #QThread.usleep(30)
                         #  read next junk
                         count += 1
