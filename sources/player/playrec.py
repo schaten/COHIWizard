@@ -489,6 +489,11 @@ class playrec_c(QObject):
                       the interval (-100 - 100) after _c \n \
                       Probably not a COHIRADIA File "
             errorstate = True
+
+        if self.m["device_ID_dict"]["device_name"] == "DONOTUSE":
+            errorstate = True
+            value = f"THIS DEVICE DRIVER IS NOT YET AVAILABLE (still under development)"  
+
         return(errorstate, value)
         
     def stemlabcontrol_errorhandler(self,errorstring):
@@ -1316,6 +1321,7 @@ class playrec_v(QObject):
                 #set SDR choice combobox to stemlab 125-14
                 if cf.find("stemlab_125_14") == 0:
                     self.m["currentSDRindex"] = ix
+                    self.m["standardSDRindex"] = ix
         self.gui.comboBox_stemlab.setCurrentIndex(self.m["currentSDRindex"])
         #instantiate stemlab control
         self.playrec_c.instantiate_SDRcontrol(self.m["currentSDRindex"])
@@ -1453,6 +1459,7 @@ class playrec_v(QObject):
             self.m["device_ID_dict"] = self.playrec_c.stemlabcontrol.identify()
             errorstate = False
             value = self.m["device_ID_dict"]
+ 
             if not self.m["device_ID_dict"]["TX"]:
                 self.playgroup_activate(False)
             else:
@@ -1476,9 +1483,7 @@ class playrec_v(QObject):
                 self.gui.pushButton_IP.setEnabled(False)
                 self.gui.lineEdit_IPAddress.setText("127.0.0.1")
                 #self.gui.lineEdit_IPAddress.setReadOnly(False)
-            elif self.m["device_ID_dict"]["device_name"] == "DONOTUSE":
-                errorstate = True
-                value = f"THIS DEVICE DRIVER IS NOT YET AVAILABLE (still under development)"                                          
+                                       
             else:
                 errorstate = True
                 value = f"unknown connection type in SDR device driver: {self.m["device_ID_dict"]["connection_type"]}"
@@ -1489,6 +1494,12 @@ class playrec_v(QObject):
             value = "cannot identify SDR device"
             return(errorstate, value)
         self.m["HostAddress"] = self.gui.lineEdit_IPAddress.text()
+        if self.m["device_ID_dict"]["device_name"] == "DONOTUSE":
+            errorstate = True
+            value = f"THIS DEVICE DRIVER IS NOT YET AVAILABLE (still under development)"  
+        if errorstate:
+            auxi.standard_errorbox(value) #TODO TODO TODO: good errorhandling with errorstate, value; errorhandler
+            self.gui.comboBox_stemlab.setCurrentIndex(self.m["standardSDRindex"])
         return(errorstate, value) 
 
 

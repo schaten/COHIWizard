@@ -113,6 +113,13 @@ class playrec_worker(QObject):
     def set_configparameters(self,_value):
         self.__slots__[10] = _value
 
+    def smallest_above_x(numbers, x):
+        # Filtern der Werte, die größer als x sind
+        above_x = [num for num in numbers if num > x]
+        
+        # Falls keine gültigen Werte vorhanden sind, None zurückgeben
+        return min(above_x) if above_x else None
+
     def play_loop_filelist(self):
         """
         worker loop for sending data to STEMLAB server
@@ -152,7 +159,8 @@ class playrec_worker(QObject):
 
         rates = [20000, 50000, 100000, 250000, 500000, 1250000, 2500000]
 
-
+        self.smallest_above_x(rates, sampling_rate)
+        
         for ix,filename in enumerate(filenames):
             fileHandle = open(filename, 'rb')
             self.SigNextfile.emit(filename)

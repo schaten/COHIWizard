@@ -312,7 +312,7 @@ class playrec_worker(QObject):
 
             while size > 0 and not self.stopix:
                 self.mutex.lock()
-                print("####### check pipe #########")
+                #print("####### check pipe #########")
                 if ffmpeg_process.poll() != None:
                     self.SigError.emit(f"ffmpeg process terminated unexpectedly, pipe broken")
                     print("Error: ffmpeg process terminated")
