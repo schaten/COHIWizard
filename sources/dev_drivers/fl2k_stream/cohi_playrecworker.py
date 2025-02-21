@@ -362,9 +362,9 @@ class playrec_worker(QObject):
                         size = fileHandle.readinto(data)
                         count += 1
                         if count > junkspersecond:
-                            cv = np.zeros(2*self.DATASHOWSIZE)
-                            cv[0:2*self.DATASHOWSIZE-1:2] = data[0:self.DATASHOWSIZE] #write only real part
-                            self.set_data(cv)
+                            #cv = np.zeros(2*self.DATASHOWSIZE)
+                            #cv[0:2*self.DATASHOWSIZE-1:2] = data[0:self.DATASHOWSIZE] #write only real part
+                            self.set_data(data[0:self.DATASHOWSIZE])
                             self.SigIncrementCurTime.emit()
                             count = 0
                             gain = self.get_gain()
