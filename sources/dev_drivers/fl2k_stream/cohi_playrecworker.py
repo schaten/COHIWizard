@@ -10,6 +10,7 @@ from socket import socket, AF_INET, SOCK_STREAM
 from struct import unpack
 import numpy as np
 import os
+import signal 
 import psutil
 import subprocess
 from PyQt5.QtWidgets import *
@@ -52,7 +53,7 @@ class playrec_worker(QObject):
 
         super().__init__(*args, **kwargs)
         self.stopix = False
-        self.DATABLOCKSIZE = 1024*16
+        self.DATABLOCKSIZE = 1024*32
         self.DATASHOWSIZE = 1024
         self.JUNKSIZE = self.DATABLOCKSIZE/2
         self.mutex = QMutex()
@@ -139,15 +140,17 @@ class playrec_worker(QObject):
         format = self.get_formattag()
         a = (np.tan(np.pi * lo_shift / tSR) - 1) / (np.tan(np.pi * lo_shift / tSR) + 1)
         fl2k_file_path = os.path.join(os.getcwd(),"dev_drivers/fl2k/osmo-fl2k-64bit-20250105", "fl2k_file.exe")
-        #print("checking for fl2k")
-        self.mutex.lock()
+        print("checking for fl2k")
+        #self.mutex.lock()
         errorstate, value = self.check_ready_fl2k()
-        if errorstate:
-            print("no fl2k present")
-            self.SigError.emit(value)
-            self.SigFinished.emit()
-            return()
-        self.mutex.unlock()
+        print("MUTEX")
+        # if errorstate:
+        #     print("no fl2k present")
+        #     self.SigError.emit(value)
+        #     self.SigFinished.emit()
+        #     return()
+        #self.mutex.unlock()
+        print("past MUTEX")
         if format[0] == 1:  #PCM
             if format[2] == 16:
                 formatstring = "s16le"
@@ -265,7 +268,7 @@ class playrec_worker(QObject):
         else:
             print("fl2k worker TEST condition , no fl2k_file process started <<<<<<<<<<<<<<<<")
 
-        #print(f"<<<<<<<<<<<<< oooooo >>>>>>>>>>>> format: {format}")
+        print(f"<<<<<<<<<<<<< oooooo >>>>>>>>>>>> format: {format}")
         if format[0] == 1: #PCM              
             if format[2] == 16:
                 data = np.empty(self.DATABLOCKSIZE, dtype=np.int16)
@@ -277,7 +280,7 @@ class playrec_worker(QObject):
             elif format[2] == 32:
                 data = np.empty(self.DATABLOCKSIZE, dtype=np.float32) #TODO: check if true for 32-bit wavs wie Gianni's
 
-        #print(f"playloop: BitspSample: {format[2]}; wFormatTag: {format[0]}; Align: {format[1]}")
+        print(f"playloop: BitspSample: {format[2]}; wFormatTag: {format[0]}; Align: {format[1]}")
 
         for ix,filename in enumerate(filenames):
             fileHandle = open(filename, 'rb')
@@ -418,13 +421,14 @@ class playrec_worker(QObject):
         errorstate = False
         value = ""
         tSR = 10000000
-        if os.name.find("posix") >= 0:
+        if os.name.find("posix") >= 0:#["fl2k_file", "-s", str(tSR), "-r", "0", "-"],
             try:
                 fl2k_process = subprocess.Popen(
                     ["fl2k_file", "-s", str(tSR), "-r", "0", "-"],
                     stdin=subprocess.PIPE,
                     stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE
+                    stderr=subprocess.PIPE,
+                    preexec_fn=os.setsid
                 )
                 
             except FileNotFoundError:
@@ -447,7 +451,8 @@ class playrec_worker(QObject):
                     [fl2k_file_path, "-s", str(tSR), "-r", "0", "-"],
                     stdin=subprocess.PIPE,
                     stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE
+                    stderr=subprocess.PIPE,
+                    creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
                 )
 
             except FileNotFoundError:
@@ -468,9 +473,26 @@ class playrec_worker(QObject):
             errorstate = True
             value = "check_ready_fl2k: fl2k device not ready"
         else:
+            print("fl2k_file is ready, terminate test process")
             value = "check_ready_fl2k: fl2k device ready"
+
             fl2k_process.terminate()
-            fl2k_process.wait()
+            try:
+                fl2k_process.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                print("Process did not terminate, forcefully killing it")
+                if os.name == "posix":
+                    os.killpg(os.getpgid(fl2k_process.pid), signal.SIGKILL)  # Linux/macOS
+                else:
+                    fl2k_process.kill()  # Windows
+
+            # Ensure the process is reaped properly
+            try:
+                fl2k_process.wait()
+            except Exception as e:
+                print(f"Error during wait(): {e}")
+
+        print("leave check_ready_fl2k")
         return(errorstate, value)
 
     def stop_loop(self):

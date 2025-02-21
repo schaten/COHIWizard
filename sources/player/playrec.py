@@ -1299,12 +1299,12 @@ class playrec_v(QObject):
         self.gui.playrec_RECSTART_dateTimeEdit.setDateTime(datetime.now())
         self.gui.playrec_radioButton_RECAUTOSTART.clicked.connect(self.toggleRecAutostart)
         self.gui.label_Filename_Player.setText('')
-        self.gui.comboBox_stemlab.currentIndexChanged.connect(self.sdrdevice_changehandler)
+
         self.gui.comboBox_stemlab.clear()
         #self.mdl["devicelist"] = os.listdir(os.path.join(os.getcwd(), "dev_drivers"))
-
+        boxix = 0
         auxl = len(self.m["devicelist"])
-        for ix, cf in enumerate(self.m["devicelist"][0:auxl]):
+        for ix, cf in enumerate(self.m["devicelist"]):
             if not cf.find("__") == 0:
                 self.gui.comboBox_stemlab.addItem(str(cf))
                 #import playrec_worker classes
@@ -1320,11 +1320,15 @@ class playrec_v(QObject):
                 #text = self.gui.comboBox_playrec_targetSR_2.currentText()
                 #set SDR choice combobox to stemlab 125-14
                 if cf.find("stemlab_125_14") == 0:
-                    self.m["currentSDRindex"] = ix
-                    self.m["standardSDRindex"] = ix
+                    self.m["currentSDRindex"] = boxix
+                    self.m["standardSDRindex"] = boxix
+                boxix += 1
         self.gui.comboBox_stemlab.setCurrentIndex(self.m["currentSDRindex"])
+
         #instantiate stemlab control
-        self.playrec_c.instantiate_SDRcontrol(self.m["currentSDRindex"])
+        #self.playrec_c.instantiate_SDRcontrol(self.m["currentSDRindex"])
+        self.gui.comboBox_stemlab.currentIndexChanged.connect(self.sdrdevice_changehandler)
+        self.sdrdevice_changehandler()
         # now self.m["SDRcontrol"] is the same as stemlab_control
             #cohi_playrecworker
             #from dev_drivers.fl2k import cohi_playrecworker

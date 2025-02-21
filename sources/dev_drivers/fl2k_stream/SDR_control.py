@@ -65,7 +65,7 @@ class SDR_control(QObject):
                           "rate_type": "continuous",
                           "RX": False,
                           "TX": True,
-                          "device_name": "fl2k",
+                          "device_name": "fl2k_stream",
                           "device_ID": 1,
                           "max_IFREQ": 100000000,
                           "min_IFREQ": 0,
