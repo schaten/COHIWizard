@@ -22,19 +22,7 @@ from matplotlib.patches import Rectangle
 from auxiliaries import auxiliaries as auxi
 from auxiliaries import WAVheader_tools
 
-#import auxiliaries as auxi
 
-#setKeyboardTracking(False)
-
-#TODO: define class resample_model()
-#transfer most of 'system_state'  and respective class instance gui_state to internal dictionary 
-#with the name mdl
-#instead of         
-#    system_state = self.sys_state.get_status()
-#    self.sys_state.set_status(system_state)
-#
-# in __init__(self, gui, model) of view and controller: self.mdl = model.mdl   
-# calling only as self.mdl
 class resample_m(QObject):
     __slots__ = ["None"]
     SigModelXXX = pyqtSignal()
