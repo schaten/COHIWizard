@@ -719,9 +719,6 @@ class res_workers(QObject):
         #position = 0 #TODO TODO TODO for start cut: check new implementation after 15-07-2024
         position = startoffset
         #print(f"LOS Worker position: {position}")
-        #TODO: replace following by new readsegment call
-        #ret = readsegmentfn(position,DATABLOCKSIZE) #TODO: transfer to auxiliary block
-        #TODO: , define new readsegment-function, generalize to tBPS rather than 32 bit
         sSR = self.get_sSR()  
         dt = 1/sSR
         segment_tstart = 0
@@ -883,10 +880,6 @@ class resample_c(QObject):
         self.TEST = True
         LOvars = {}
         self.set_LOvars(LOvars)
-        #self.sys_state = wsys.status()   ###TEST 09-01-2024
-        #self.sys_state = gui_state  ###TEST 09-01-2024
-        #self.system_state = self.sys_state.get_status()
-        #self.SigProgress.connect(lambda: resample_v.updateprogress_resampling(self))#TODO: untersuchen, ob Abonnieren besser vom GUI aus geschehen soll
         self.MAX_TARGETFILE_SIZE = 2 * 1024**3 #2GB max output filesize
         self.m["resampling_gain"] = 0
         self.m["last_system_time"] = time.time()

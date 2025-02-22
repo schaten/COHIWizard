@@ -53,7 +53,7 @@ class playrec_worker(QObject):
 
         super().__init__(*args, **kwargs)
         self.stopix = False
-        self.DATABLOCKSIZE = 1024*32
+        self.DATABLOCKSIZE = 1024*48
         self.DATASHOWSIZE = 1024
         self.JUNKSIZE = self.DATABLOCKSIZE/2
         self.mutex = QMutex()
@@ -154,10 +154,14 @@ class playrec_worker(QObject):
         if format[0] == 1:  #PCM
             if format[2] == 16:
                 formatstring = "s16le"
+                preset_volume = 2
             elif format[2] == 24:   #24 bit PCM
+                formatstring = "f32le"
                 formatstring = "s24le"
+                preset_volume = 20
             elif format[2] == 32:
                 formatstring = "s32le"  #32 bit PCM 
+                preset_volume = 2
             else:
                 self.SigError.emit(f"Format not supported: {format[2]}")
                 self.SigFinished.emit()
@@ -165,8 +169,10 @@ class playrec_worker(QObject):
         else: #IEEE float   
             if format[2] == 32:
                 formatstring = "f32le"
+                preset_volume = 2
             elif format[2] == 16:   #16 bit float
                 formatstring = "f16le"
+                preset_volume = 2
             else:
                 self.SigError.emit(f"Format not supported: {format[2]}")
                 self.SigFinished.emit()
@@ -174,6 +180,7 @@ class playrec_worker(QObject):
 
         if not TEST:
             #Start ffmpeg Process:
+            #preset_volume = 2
             try:
                 ffmpeg_cmd = [
                 "ffmpeg", "-y", "-loglevel", "error", "-hide_banner",  
@@ -185,8 +192,8 @@ class playrec_worker(QObject):
                 "[sine_sin2]biquad=b0=" + str(a) + ":b1=1:b2=0:a0=1:a1=" + str(a) + ":a2=0[sine_cos];"
                 "[re][sine_cos]amultiply[mod_re];"
                 "[im][sine_sin1]amultiply[mod_im];"
-                "[mod_im]volume=volume=2[part_im];"
-                "[mod_re]volume=volume=2[part_re];"
+                "[mod_im]volume=volume=" + str(preset_volume) + "[part_im];"
+                "[mod_re]volume=volume=" + str(preset_volume) + "[part_re];"
                 "[part_re][part_im]amix=inputs=2:duration=shortest[out]",
                 "-map", "[out]", "-c:a", "pcm_s8", "-f", "caf", "-"
                 ]
@@ -273,17 +280,29 @@ class playrec_worker(QObject):
             if format[2] == 16:
                 data = np.empty(self.DATABLOCKSIZE, dtype=np.int16)
             elif format[2] == 32:
-                data = np.empty(self.DATABLOCKSIZE, dtype=np.int32)
+                data = np.empty(self.DATABLOCKSIZE, dtype=np.float32)
+            elif format[2] == 24:
+                data = np.empty(self.DATABLOCKSIZE, dtype=np.float32)
         else:
             if format[2] == 16:
                 data = np.empty(self.DATABLOCKSIZE, dtype=np.float16)
             elif format[2] == 32:
                 data = np.empty(self.DATABLOCKSIZE, dtype=np.float32) #TODO: check if true for 32-bit wavs wie Gianni's
-
+            elif format[2] == 24:
+                data = np.empty(self.DATABLOCKSIZE, dtype=np.float32)
         print(f"playloop: BitspSample: {format[2]}; wFormatTag: {format[0]}; Align: {format[1]}")
 
         for ix,filename in enumerate(filenames):
             fileHandle = open(filename, 'rb')
+            if format[2] == 24:
+                fileHandle.seek(212, 1)
+                print(f"set read offset to 24 bit 216")
+                #fileHandle.seek(bit24offset, 1)
+            else:
+                fileHandle.seek(216, 1)
+            count = 0
+
+            #fileHandle.seek(212)
 
             if format[0] == 1:
                 normfactor = int(2**int(format[2]-1))-1
@@ -292,42 +311,60 @@ class playrec_worker(QObject):
             if format[2] == 16 or format[2] == 32:
                 size = fileHandle.readinto(data)
             elif format[2] == 24: #TODO: not yet supported or tested
-                data = self.read24(format,data,fileHandle)
+                #data = self.read_24bit_block_np(fileHandle, self.DATABLOCKSIZE)
+                data = fileHandle.read(self.DATABLOCKSIZE * 3)
+                #data = self.read24(format,data,fileHandle,self.DATABLOCKSIZE)
+                #print(f"datasample read24 200 - 220: {data[200:220]}")
                 size = len(data)
-            self.set_data(data)
+                if format[2] == 24:
+                    print(f"++++++ DATASHOWSIZE: {self.DATASHOWSIZE} len(showdata):   {len(data[0:int(6*np.floor(self.DATASHOWSIZE/6))])}")
+                    showdata = self.convert24_32(data[5:int(6*np.floor(self.DATASHOWSIZE/6))+5])
+                    if not np.isnan(showdata).any():
+                        self.set_data(showdata)
+                    else:
+                        print("############# NaN NaN NaN NaN in showdata ################")
+                else:
+                    self.set_data(data[0:self.DATASHOWSIZE])
+            #self.set_data(data)
             junkspersecond = sampling_rate / self.JUNKSIZE
             self.SigNextfile.emit(filename)
+            true_filesize = os.stat(filename).st_size
+            bit24offset = int(true_filesize - int(np.floor(true_filesize/6))*6)
+            print(f"24 bit fileoffset calculated from end {bit24offset} <----------------------------")
             self.set_fileHandle(fileHandle)
             format = self.get_formattag()
             data_blocksize = self.DATABLOCKSIZE
             self.set_datablocksize(data_blocksize)
-            fileHandle.seek(216, 1)
-            count = 0
 
             while size > 0 and not self.stopix:
-                self.mutex.lock()
-                if ffmpeg_process.poll() != None:
-                    self.SigError.emit(f"ffmpeg process terminated unexpectedly, pipe broken")
-                    print("Error: ffmpeg process terminated")
-                    break
-                if fl2k_process.poll() != None:
-                    self.SigError.emit(f"fl2k process terminated unexpectedly, pipe broken; Please check if the USB-VGA dongle is connected")
-                    print("Error: fl2k process terminated")
-                    break
-                self.mutex.unlock()
-                #reftime = time.time() ###DISTINCT
                 if not TEST:
+                    self.mutex.lock()
+                    if ffmpeg_process.poll() != None:
+                        self.SigError.emit(f"ffmpeg process terminated unexpectedly, pipe broken")
+                        print("Error: ffmpeg process terminated")
+                        break
+                    if fl2k_process.poll() != None:
+                        self.SigError.emit(f"fl2k process terminated unexpectedly, pipe broken; Please check if the USB-VGA dongle is connected")
+                        print("Error: fl2k process terminated")
+                        break
+                    self.mutex.unlock()
                     if not self.get_pause():
                         try:
                             #TODO: AGC pending
-                            aux1 = gain*data[0:size]
+                            
                             if formatstring == "s16le":
+                                aux1 = gain*data[0:size]
                                 ffmpeg_process.stdin.write(aux1.astype(np.int16))
                             elif formatstring == "s32le":
+                                aux1 = gain*data[0:size]
                                 ffmpeg_process.stdin.write(aux1.astype(np.int32))
                             elif formatstring == "f32le":
+                                aux1 = gain*data[0:size]
                                 ffmpeg_process.stdin.write(aux1.astype(np.float32))
+                            elif formatstring == "s24le":
+                                ffmpeg_process.stdin.write(data)
                             else :   #16 bit float	
+                                aux1 = gain*data[0:size]
                                 ffmpeg_process.stdin.write(aux1.astype(np.float16))
 
                             ffmpeg_process.stdin.flush()
@@ -362,12 +399,27 @@ class playrec_worker(QObject):
                             return
 
                         QThread.usleep(1) #sleep 5 us for keeping main GUI responsive
-                        size = fileHandle.readinto(data)
+                        if format[2] == 24:
+                            data = fileHandle.read(self.DATABLOCKSIZE * 3)
+                            #data = self.read_24bit_block_np(fileHandle, self.DATABLOCKSIZE)
+                            #print(f"datasample read24 200 - 220: {data[200:220]}, type(data: {type(data)})")
+                            size = len(data)
+                        else:
+                            size = fileHandle.readinto(data)
+
                         count += 1
                         if count > junkspersecond:
                             #cv = np.zeros(2*self.DATASHOWSIZE)
                             #cv[0:2*self.DATASHOWSIZE-1:2] = data[0:self.DATASHOWSIZE] #write only real part
-                            self.set_data(data[0:self.DATASHOWSIZE])
+                            if format[2] == 24:
+                                print(f"++++++ DATASHOWSIZE: {self.DATASHOWSIZE} len(showdata):   {len(data[0:int(6*np.floor(self.DATASHOWSIZE/6))])}")
+                                showdata = self.convert24_32(data[5:int(6*np.floor(self.DATASHOWSIZE/6))+5])
+                                if not np.isnan(showdata).any():
+                                    self.set_data(showdata)
+                                else:
+                                    print("############# NaN NaN NaN NaN in showdata ################")
+                            else:
+                                self.set_data(data[0:self.DATASHOWSIZE])
                             self.SigIncrementCurTime.emit()
                             count = 0
                             gain = self.get_gain()
@@ -381,11 +433,25 @@ class playrec_worker(QObject):
                 else:
                     if not self.get_pause():
                         print(" SDR_control fl2k test reached")
-                        size = fileHandle.readinto(data)
+                        if format[2] == 24:
+                            data = fileHandle.read(self.DATABLOCKSIZE * 3)
+                            #data = self.read_24bit_block_np(fileHandle, self.DATABLOCKSIZE)
+                            #print(f"datasample read24 200 - 220: {data[200:220]}, type(data: {type(data)})")
+                            size = len(data)
+                        else:
+                            size = fileHandle.readinto(data)
                         time.sleep(self.DATABLOCKSIZE/2/sampling_rate)
                         count += 1
                         if count > junkspersecond and size > 0:
-                            self.set_data(data[0:self.DATASHOWSIZE-1])
+                            if format[2] == 24:
+                                print(f"++++++ DATASHOWSIZE: {self.DATASHOWSIZE} len(showdata):   {len(data[0:int(6*np.ceil(self.DATASHOWSIZE/6))])}")
+                                showdata = self.convert24_32(data[0:int(6*np.ceil(self.DATASHOWSIZE/6))])
+                                if not np.isnan(showdata).any():
+                                    self.set_data(showdata)
+                                else:
+                                    print("############# NaN NaN NaN NaN in showdata ################")
+                            else:
+                                self.set_data(data[0:self.DATASHOWSIZE])
                             self.SigIncrementCurTime.emit()
                             gain = self.get_gain()
                             count = 0
@@ -498,17 +564,55 @@ class playrec_worker(QObject):
     def stop_loop(self):
         self.stopix = True
 
+    def read_24bit_block_np(self, file, blocksize):
+        """read BLOCKSIZE 24-Bit-Samples and returns as float32"""
+        raw_data = file.read(blocksize * 3)  # 3 Bytes pro Sample
+        if len(raw_data) < 3:
+            return np.array([], dtype=np.int32)  # Leeres Array bei Dateiende
+        # Bytes als numpy array laden (dtype uint8)
+        raw_array = np.frombuffer(raw_data, dtype=np.uint8)
+        # Zu 24-Bit Werten umformen
+        raw_array = raw_array.reshape(-1, 3)  # Jede Zeile = ein Sample [b1, b2, b3]
+        # 24-Bit Little Endian zu 32-Bit signed konvertieren
+        samples = raw_array[:, 0] | (raw_array[:, 1] << 8) | (raw_array[:, 2] << 16)
+        # Vorzeichenkorrektur für negative Werte
+        samples = samples.astype(np.int32)  # Umwandlung in 32-Bit Signed Integer
+        samples[samples >= (1 << 23)] -= (1 << 24)  # Negative Werte korrigieren
+        samples = samples.astype(np.float32)# / (1 << 23) # auf Wertebereich +/- 1 reskalieren
+        return samples
+    
+    def convert24_32(self,raw_data):
+        "convert raw 24 bit binary array to 32 float array"
+        if len(raw_data) < 3:
+            return np.array([], dtype=np.int32)  # Leeres Array bei Dateiende
+        # Bytes als numpy array laden (dtype uint8)
+        raw_array = np.frombuffer(raw_data, dtype=np.uint8)
+        # Zu 24-Bit Werten umformen
+        raw_array = raw_array.reshape(-1, 3)  # Jede Zeile = ein Sample [b1, b2, b3]
+        # 24-Bit Little Endian zu 32-Bit signed konvertieren
+        samples = raw_array[:, 0] | (raw_array[:, 1] << 8) | (raw_array[:, 2] << 16)
+        # Vorzeichenkorrektur für negative Werte
+        samples = samples.astype(np.int32)  # Umwandlung in 32-Bit Signed Integer
+        samples[samples >= (1 << 23)] -= (1 << 24)  # Negative Werte korrigieren
+        samples = samples.astype(np.float32) *256# / (1 << 23) # auf Wertebereich +/- 1 reskalieren
+        return samples
+
+
+
     def read24(self,format,data,filehandle,data_blocksize):
        """probably not applicable"""
        for lauf in range(0,data_blocksize):
+        print(f"datasample read24: size(data): {len(data)} blocksize: {data_blocksize}")
         d = filehandle.read(3)
         if d == None:
+            print(f"datasample read24: ERROR data empty")
             data = []
         else:
             dataraw = unpack('<%ul' % 1 ,d + (b'\x00' if d[2] < 128 else b'\xff'))
             #formatlist: [formattag blockalign bitpsample]
             if format[0] == 1:
                 data[lauf] = np.float32(dataraw[0]/8388608)
+                print(f"dataraw: {dataraw[0]} lauf: {lauf}")
             else:
                 data[lauf] = dataraw[0]
         return data

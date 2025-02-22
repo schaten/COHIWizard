@@ -674,7 +674,8 @@ class playrec_c(QObject):
         #print("file opened in playloop thread starter")
         if self.m["wavheader"]['nBitsPerSample'] in device_ID_dict ["resolutions"]:
         #if self.m["wavheader"]['nBitsPerSample'] == 16 or self.m["wavheader"]['nBitsPerSample'] == 24 or self.m["wavheader"]['nBitsPerSample'] == 32:
-            pass
+            if self.m["wavheader"]['nBitsPerSample'] == 24:
+                auxi.standard_infobox("In 24 bit mode the volume control probably does not work !")
             #TODO: Anpassen an andere Fileformate, Einbau von Positionen 
         # elif self.m["wavheader"]['nBitsPerSample'] == 8: #TODO TODO: specify supported bitdepth in driver specification
         #     print("8 bit file, cannot be played with stemlab")
@@ -683,6 +684,7 @@ class playrec_c(QObject):
             errorstate = True
             value = f"dataformat not supported, only {device_ID_dict ["resolutions"]} bits per sample are possible"
             return(errorstate,value)
+                
         self.m["timescaler"] = self.m["wavheader"]['nSamplesPerSec']*self.m["wavheader"]['nBlockAlign']
         #TODO TODO TODO: generate list of playlengths in case of nextfile-chain !
         true_filesize = os.path.getsize(self.m["f1"]) ########
@@ -1463,7 +1465,7 @@ class playrec_v(QObject):
             self.m["device_ID_dict"] = self.playrec_c.stemlabcontrol.identify()
             errorstate = False
             value = self.m["device_ID_dict"]
- 
+
             if not self.m["device_ID_dict"]["TX"]:
                 self.playgroup_activate(False)
             else:
