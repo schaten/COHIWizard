@@ -53,9 +53,9 @@ class playrec_worker(QObject):
 
         super().__init__(*args, **kwargs)
         self.stopix = False
-        self.DATABLOCKSIZE = 1024*48
+        self.DATABLOCKSIZE_BASIC = 1024*64
         self.DATASHOWSIZE = 1024
-        self.JUNKSIZE = self.DATABLOCKSIZE/2
+        
         self.mutex = QMutex()
         self.stemlabcontrol = stemlabcontrolinst
 
@@ -278,20 +278,26 @@ class playrec_worker(QObject):
         print(f"<<<<<<<<<<<<< oooooo >>>>>>>>>>>> format: {format}")
         if format[0] == 1: #PCM              
             if format[2] == 16:
+                self.DATABLOCKSIZE = self.DATABLOCKSIZE_BASIC
                 data = np.empty(self.DATABLOCKSIZE, dtype=np.int16)
             elif format[2] == 32:
+                self.DATABLOCKSIZE = self.DATABLOCKSIZE_BASIC
                 data = np.empty(self.DATABLOCKSIZE, dtype=np.float32)
             elif format[2] == 24:
+                self.DATABLOCKSIZE = 1024*48
                 data = np.empty(self.DATABLOCKSIZE, dtype=np.float32)
         else:
             if format[2] == 16:
+                self.DATABLOCKSIZE = self.DATABLOCKSIZE_BASIC
                 data = np.empty(self.DATABLOCKSIZE, dtype=np.float16)
             elif format[2] == 32:
+                self.DATABLOCKSIZE = self.DATABLOCKSIZE_BASIC
                 data = np.empty(self.DATABLOCKSIZE, dtype=np.float32) #TODO: check if true for 32-bit wavs wie Gianni's
             elif format[2] == 24:
+                self.DATABLOCKSIZE = 1024*48
                 data = np.empty(self.DATABLOCKSIZE, dtype=np.float32)
         print(f"playloop: BitspSample: {format[2]}; wFormatTag: {format[0]}; Align: {format[1]}")
-
+        self.JUNKSIZE = self.DATABLOCKSIZE/2
         for ix,filename in enumerate(filenames):
             fileHandle = open(filename, 'rb')
             if format[2] == 24:

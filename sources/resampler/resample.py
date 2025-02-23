@@ -585,10 +585,10 @@ class res_workers(QObject):
         soxstring = self.get_soxstring()
         #print(f"soxstring: {soxstring}")
         #self.ret = subprocess.Popen(soxstring, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell = True, start_new_session=True)
-        if soxstring.find("ffmpeg") > 0:
+        if soxstring.find("ffmpeg") >= 0:
             print("############### using ffmpeg as ultrafast resampler #####################")
             try:
-                self.ret = subprocess.Popen(soxstring, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
+                self.ret = subprocess.Popen(soxstring, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell = True)
             except FileNotFoundError:
                 print(f"Input file not found")
             except subprocess.SubprocessError as e:
@@ -1324,17 +1324,20 @@ class resample_c(QObject):
         #     soxstring = 'ffmpeg -y -skip_initial_bytes 212 -f '+ ffmpeg_type +' -ar ' + str(self.m["sSR"]) + ' -ac 2 -i "'  + source_fn  + '" -af ' + '"aresample=resampler=soxr"' + ' -f s16le -ar ' + str(int(tSR))  + ' "' + target_fn + '"'
         # else:
         #     soxstring = 'ffmpeg -y -f '+ ffmpeg_type +' -ar ' + str(self.m["sSR"]) + ' -ac 2 -i "'  + source_fn  + '" -af ' + '"aresample=resampler=soxr"' + ' -f s16le -ar ' + str(int(tSR))  + ' "' + target_fn + '"'
-
+        if source_fn.find(" ") >= 0:
+            auxi.standard_errorbox("file path contains empty spaces in name; currently such names cannot be processed by the resampler ; Please remove all spaces from the pathname/filename")
+            return(False)
         if self.m["actionlabel"] == "TYPE MATCH": #only recode between f32 and target SR
             #soxstring = 'ffmpeg -y -f f32le -ar ' + str(self.m["sSR"]) + ' -ac 2 -i ' + source_fn + ' -af "volume=normalize" -f ' + ffmpeg_target_type + ' ' + target_fn
-            soxstring = 'ffmpeg -y -f f32le -ar ' + str(self.m["sSR"]) + ' -ac 2 -i ' + source_fn + ' -f ' + ffmpeg_target_type + ' ' + target_fn
+            soxstring = 'ffmpeg -y -f f32le -ar ' + str(self.m["sSR"]) + ' -ac 2 -i  ' + source_fn + ' -f ' + ffmpeg_target_type + ' ' + target_fn
         else: # true resampling
             if self.m["sBPS"] == 24: #only valid for wav files
-                soxstring = 'ffmpeg -y -skip_initial_bytes 212 -f '+ ffmpeg_type +' -ar ' + str(self.m["sSR"]) + ' -ac 2 -i "'  + source_fn  + '" -af ' + '"aresample=resampler=soxr, volume=' + str(self.m["resampling_gain"]) + 'dB"' + ' -f ' + ffmpeg_target_type + ' -ar ' + str(int(tSR))  + ' "' + target_fn + '"'
+                soxstring = 'ffmpeg -y -skip_initial_bytes 212 -f '+ ffmpeg_type +' -ar ' + str(self.m["sSR"]) + ' -ac 2 -i '  + source_fn  + ' -af ' + '"aresample=resampler=soxr, volume=' + str(self.m["resampling_gain"]) + 'dB"' + ' -f ' + ffmpeg_target_type + ' -ar ' + str(int(tSR))  + ' ' + target_fn
             else:
-                soxstring = 'ffmpeg -y -f '+ ffmpeg_type +' -ar ' + str(self.m["sSR"]) + ' -ac 2 -i "'  + source_fn  + '" -af ' + '"aresample=resampler=soxr, volume=' + str(self.m["resampling_gain"]) + 'dB"' + ' -f ' + ffmpeg_target_type + ' -ar ' + str(int(tSR))  + ' "' + target_fn + '"'
-            
+                soxstring = 'ffmpeg -y -f '+ ffmpeg_type +' -ar ' + str(self.m["sSR"]) + ' -ac 2 -i '  + source_fn  + ' -af ' + '"aresample=resampler=soxr, volume=' + str(self.m["resampling_gain"]) + 'dB"' + ' -f ' + ffmpeg_target_type + ' -ar ' + str(int(tSR)) + ' ' + target_fn
+        print(f"exist input file {os.path.exists(source_fn)}, target file: {os.path.exists(target_fn)}")
         self.logger.debug(f"method resample: <<<<resampler: soxstring: {soxstring}")
+        
         expected_filesize = self.m["t_filesize"]
         if self.checkdiskspace(expected_filesize, self.m["temp_directory"]) is False:
             return False
