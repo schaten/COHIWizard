@@ -202,7 +202,6 @@ class view_spectra_v(QObject):
         if _value is False:
             self.logger.debug("view spectra: INACTIVATE LOGGING")
             self.logger.setLevel(logging.ERROR)
-            self.logger.debug("view spectra: INACTIVATE LOGGING after NOTSET")
         else:
             self.logger.debug("view spectra: REACTIVATE LOGGING")
             self.logger.setLevel(logging.DEBUG)

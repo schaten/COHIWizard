@@ -1,17 +1,17 @@
-#Version 1.3.0
+#Version 2.0.0
 # -*- coding: utf-8 -*-logfile
 # for redirecting all print messages to logfile : activate sys.stdout = self.logfile at the end of __init__
 #install Windows exe with: pyinstaller --icon=COHIWizard_ico4.ico –F COHIWizard.py
 # For reducing to RFCorder: disable all modules except resample in the config_modules.yaml file
 #
 #Important: When re-translating the Core-UI from QTdesigner to py-File, run the method 'core/autocorrect_ui_file.py'.
-    #otherwise there will be a line 'from file import File' which cannot be found by Python. As a consequence
-    #the line self.menubar = QtWidgets.QMenuBar(File) must be replaced by self.menubar = QtWidgets.QMenuBar(MainWindow)
-    #In addition the icons for the buttons cannot be found unless their paths are set correctly in teh widget file.
+#otherwise there will be a line 'from file import File' which cannot be found by Python. As a consequence
+#the line self.menubar = QtWidgets.QMenuBar(File) must be replaced by self.menubar = QtWidgets.QMenuBar(MainWindow)
+#In addition the icons for the buttons cannot be found unless their paths are set correctly in the widget file.
 
 
 """
-Created on 20-1-2024
+Created on 20-1-2025
 #@author: scharfetter_admin
 
 Core code with the purpose to 
@@ -211,19 +211,13 @@ class core_v(QObject):
     :param: none
     :type: QObject
     """
-    #SigGUIReset = pyqtSignal()
-    SigUpdateOtherGUIs = pyqtSignal()
-    """
-    :TODO: check if this signal is ever used !
-    """
+    SigUpdateOtherGUIs = pyqtSignal()     #TODO: check if this signal is ever used ! is connected but never emitted
     SigRelay = pyqtSignal(str,object)
-    """signal for relaying data and messages to other module's rxhandler method; emitted as SigRelay(_key,_value)
-
-    :param: _key
-    :type: str
-    :param: _value
-    :type: object 
-    """
+    #signal for relaying data and messages to other module's rxhandler method; emitted as SigRelay(_key,_value)
+    #:param: _key
+    #:type: str
+    #:param: _value
+    #:type: object 
 
     def __init__(self, gui, core_c, core_m):
         super().__init__()
@@ -231,12 +225,10 @@ class core_v(QObject):
         self.m = core_m.mdl
         self.core_c = core_c
         self.bps = ['16', '24', '32'] #TODO:future system state
-        self.standardLO = 1100 #TODO:future system state
+        self.standardLO = 1125 #TODO:future system state
         self.annotationdir_prefix = 'ANN_' #TODO:future system state
-        #self.m["recording_path"] =""
         default_recordingpath = os.path.join(self.m["rootpath"], "out")
         if not os.path.exists(default_recordingpath):
-            # Verzeichnis erstellen
             os.makedirs(default_recordingpath)
         self.m["recording_path"] = default_recordingpath
         print(f"initialize recording path to {default_recordingpath}")
@@ -284,17 +276,13 @@ class core_v(QObject):
             self.m["metadata"] = {"last_path": self.standardpath}
             self.m["metadata"]["rootpath"] = os.getcwd()
             self.m["metadata"]["STM_IP_address"] = "000.000.000.000"
+            #TODO TODO TODO: this is not a general approach for the case this version is deprecated
             self.m["metadata"]["ffmpeg_path"] = os.path.join(self.m["rootpath"],"ffmpeg-7.1-essentials_build")
             if not os.path.exists(default_recordingpath):
-                # Verzeichnis erstellen
                 os.makedirs(default_recordingpath)
             default_recordingpath = os.path.join(self.m["rootpath"],"out")
             self.m["metadata"]["recording_path"] = os.path.join(self.m["metadata"]["rootpath"], "out")
-
             auxi.standard_infobox("configuration file does not yet exist, a basic file will be generated. Please configure the STEMLAB IP address before using the Player")
-
-            
-            #self.m["metadata"]["recording_path"] = self.m["recording_path"]
             stream = open("config_wizard.yaml", "w")
             yaml.dump(self.m["metadata"], stream)
             stream.close()
@@ -310,7 +298,6 @@ class core_v(QObject):
         # Create a custom logger
         # set level of Root-Logger to DEBUG
         logging.getLogger().setLevel(logging.DEBUG)
-        # Erstelle einen Logger mit dem Modul- oder Skriptnamen
         self.logger = logging.getLogger(__name__)
         # Create handlers
         warning_handler = logging.StreamHandler()
@@ -325,6 +312,7 @@ class core_v(QObject):
         # Add handlers to the logger
         self.logger.addHandler(warning_handler)
         self.logger.addHandler(debug_handler)
+        #TODO TODO TODO: remove after sox is not used any more
         #check if sox is installed so as to throw an error message on resampling, if not
         self.soxlink = "https://sourceforge.net/projects/sox/files/sox/14.4.2/"
         self.soxlink_altern = "https://sourceforge.net/projects/sox"
@@ -342,9 +330,9 @@ class core_v(QObject):
         #self.core_c.SigRelay.connect(self.SigRelay.emit)        
         self.core_c.SigRelay.connect(self.rxhandler)
         #self.core_c.recording_path_checker()
+        #self.gui.playrec_radioButtonpushButton_write_logfile.clicked.connect(self.togglelogfilehandler)
+        #self.gui.playrec_radioButtonpushButton_write_logfile.setChecked(True)
         ###TODO: re-organize, there should be no access to gui elements of other modules
-        self.gui.playrec_radioButtonpushButton_write_logfile.clicked.connect(self.togglelogfilehandler)
-        self.gui.playrec_radioButtonpushButton_write_logfile.setChecked(True)
         self.gui.playrec_pushButton_recordingpath.clicked.connect(self.core_c.recording_path_setter)
         self.updateConfigElements()
         self.timethread = QThread()
@@ -442,13 +430,13 @@ class core_v(QObject):
         pass
 
 
-    def togglelogfilehandler(self):
-        if self.gui.playrec_radioButtonpushButton_write_logfile.isChecked():  #TODO TODO: should be task of the playrec module ??
-            self.logger.setLevel(logging.NOTSET)
-            self.SigRelay.emit("cexex_all_",["logfilehandler",False])
-        else:
-            self.logger.setLevel(logging.DEBUG)
-            self.SigRelay.emit("cexex_all_",["logfilehandler",True])
+    # def togglelogfilehandler(self):
+    #     if self.gui.playrec_radioButtonpushButton_write_logfile.isChecked():  #TODO TODO: should be task of the playrec module ??
+    #         self.logger.setLevel(logging.NOTSET)
+    #         self.SigRelay.emit("cexex_all_",["logfilehandler",False])
+    #     else:
+    #         self.logger.setLevel(logging.DEBUG)
+    #         self.SigRelay.emit("cexex_all_",["logfilehandler",True])
 
 
     def updateGUIelements(self):

@@ -13,7 +13,7 @@ import datetime as ndatetime
 import matplotlib.pyplot as plt
 #import pyfda.pyfdax
 from auxiliaries import auxiliaries as auxi
-from auxiliaries import ffmpeg_installtools as ffinst
+#from auxiliaries import ffmpeg_installtools as ffinst
 import logging
 import yaml
 import copy
@@ -1170,10 +1170,10 @@ class synthesizer_v(QObject):
 
 
     def clear_project(self):
-        errorstatus, value = self.checkffmpeg_install()
-        if errorstatus:
-            self.errorhandler("NOCLEAR" + value)
-            return
+        #errorstatus, value = self.checkffmpeg_install()
+        # if errorstatus:
+        #     self.errorhandler("NOCLEAR" + value)
+        #     return
         self.m3uflag = False
         #self.init_synthesizer_ui()
         self.reinitialize_gui()
@@ -2858,8 +2858,9 @@ class synthesizer_v(QObject):
             if  _value[0].find("timertick") == 0:
                 if not self.m["ffmpeg_autocheck"]:
                     #print(f"timertick: value of self.m['ffmpeg_autocheck'] {self.m["ffmpeg_autocheck"]}")
-                    self.m["ffmpeg_autocheck"] = True
-                    self.checkffmpeg_install()
+                    #self.m["ffmpeg_autocheck"] = True
+                    #self.checkffmpeg_install()
+                    pass
 
                 #print(f"timertick: value of self.m['ffmpeg_autocheck'] {self.m["ffmpeg_autocheck"]}")
                 if self.syntesisrunning:

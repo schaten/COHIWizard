@@ -135,7 +135,7 @@ class playrec_worker(QObject):
         configuration = self.get_configparameters() # = {"ifreq":self.m["ifreq"], "irate":self.m["irate"],"rates": self.m["rates"], "icorr":self.m["icorr"],"HostAddress":self.m["HostAddress"], "LO_offset":self.m["LO_offset"]}
         sampling_rate = configuration["irate"]
         lo_shift = configuration["ifreq"]# - configuration["LO_offset"]
-        tSR = 10000000*(1 + np.floor((lo_shift+sampling_rate/2)*4/10000000)) #TODO: investigate more thoroughly and optimize !
+        tSR = 10000000*(1 + np.floor((lo_shift+sampling_rate/2)*2/10000000)) #TODO: investigate more thoroughly and optimize !
         tSR = min(100000000,tSR)
         format = self.get_formattag()
         a = (np.tan(np.pi * lo_shift / tSR) - 1) / (np.tan(np.pi * lo_shift / tSR) + 1)
