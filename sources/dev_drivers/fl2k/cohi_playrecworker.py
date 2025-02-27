@@ -47,6 +47,7 @@ class playrec_worker(QObject):
     SigBufferOverflow = pyqtSignal()
     SigError = pyqtSignal(str)
     SigNextfile = pyqtSignal(str)
+    SigInfomessage = pyqtSignal(str)
 
     # def __init__(self, *args,**kwargs):
 

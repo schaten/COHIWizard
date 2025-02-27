@@ -277,7 +277,7 @@ class core_v(QObject):
             self.m["metadata"]["rootpath"] = os.getcwd()
             self.m["metadata"]["STM_IP_address"] = "000.000.000.000"
             #TODO TODO TODO: this is not a general approach for the case this version is deprecated
-            self.m["metadata"]["ffmpeg_path"] = os.path.join(self.m["rootpath"],"ffmpeg-7.1-essentials_build")
+            self.m["metadata"]["ffmpeg_path"] = os.path.join(self.m["rootpath"],"ffmpeg-7.1-essentials_build/bin")
             if not os.path.exists(default_recordingpath):
                 os.makedirs(default_recordingpath)
             default_recordingpath = os.path.join(self.m["rootpath"],"out")
@@ -312,20 +312,20 @@ class core_v(QObject):
         # Add handlers to the logger
         self.logger.addHandler(warning_handler)
         self.logger.addHandler(debug_handler)
-        #TODO TODO TODO: remove after sox is not used any more
+        #TODO TODO TODO: remove after sox is not used any more 24-02-2025
         #check if sox is installed so as to throw an error message on resampling, if not
-        self.soxlink = "https://sourceforge.net/projects/sox/files/sox/14.4.2/"
-        self.soxlink_altern = "https://sourceforge.net/projects/sox"
-        self.soxnotexist = False
-        try:
-            subproc3 = subprocess.run('sox -h', stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True, check=True)
-        except subprocess.CalledProcessError as ex:
-            #print("sox FAIL")
-            self.logger.error("sox FAIL")
-            print(ex.stderr, file=sys.stderr, end='', flush=True)
-            print(ex.stdout, file=sys.stdout, end='', flush=True)
-            if len(ex.stderr) > 0: 
-                self.soxnotexist = True
+        # self.soxlink = "https://sourceforge.net/projects/sox/files/sox/14.4.2/"
+        # self.soxlink_altern = "https://sourceforge.net/projects/sox"
+        # self.soxnotexist = False
+        # try:
+        #     subproc3 = subprocess.run('sox -h', stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True, check=True)
+        # except subprocess.CalledProcessError as ex:
+        #     #print("sox FAIL")
+        #     self.logger.error("sox FAIL")
+        #     print(ex.stderr, file=sys.stderr, end='', flush=True)
+        #     print(ex.stdout, file=sys.stdout, end='', flush=True)
+        #     if len(ex.stderr) > 0: 
+        #         self.soxnotexist = True
         self.logger.info("core_v Init logger in core reached")
         #self.core_c.SigRelay.connect(self.SigRelay.emit)        
         self.core_c.SigRelay.connect(self.rxhandler)
@@ -429,7 +429,7 @@ class core_v(QObject):
         self.SigRelay.emit("cm_all_",self.m["rootpath"])
         pass
 
-
+    # TODO: Obsolete, delete after tests 24-02-2025
     # def togglelogfilehandler(self):
     #     if self.gui.playrec_radioButtonpushButton_write_logfile.isChecked():  #TODO TODO: should be task of the playrec module ??
     #         self.logger.setLevel(logging.NOTSET)
@@ -865,10 +865,9 @@ class core_v(QObject):
         #TODO TODO TODO: track multiple calls of plot_spectrum: is that really necessary on each fileopen ? 
         return True
 
-    def dat_extractinfo4wavheader(self): #TODO: muss in den controller !
+    def dat_extractinfo4wavheader(self): #TODO: should be shifted to the controller !
         #TODO: erkennt COHIRADIA Namenskonvention nicht, wenn vor den _lo_r_c literalen noch andere _# Felder existieren.  shift to controller module
         """ 
-        CONTROLLER !!!!!!!!!!!!!!!!
         extract control parameters from dat and raw files if existent (COHIRADIA nameconvention)
         and generates standard wavheader
         check for consistency with COHIRADIA file name convention

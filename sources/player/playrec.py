@@ -121,9 +121,12 @@ class playrec_c(QObject):
         except:
             self.m["rootpath"] = os.getcwd()
         try:
+            #search for ffmpeg path in metadata; if not found the install checker will be called
+            #TODO This is a weak point: in case the ffmpeg path is not in the config yaml, the auto-install procedure will be called
+            #TODO: this should be changed to a more general solution
             self.m["ffmpeg_path"] = self.m["metadata"]["ffmpeg_path"]
         except:
-            self.m["ffmpeg_path"] = ""
+            self.m["ffmpeg_path"] = os.path.join(os.getcwd(),"ffmpeg-7.1-essentials_build","bin")
 
         self.m["ffmpeg_autocheck"] = False
         #self.checkffmpeg_install()
@@ -160,6 +163,7 @@ class playrec_c(QObject):
         value = None
         errorstatus, value = ffinst.is_ffmpeg_installed(self.m["ffmpeg_path"]) 
         if not errorstatus:
+            #returns new installpath for ffmpeg
             self.m["ffmpeg_path"] = value
             errorstatus = False
             value = ""
@@ -169,12 +173,15 @@ class playrec_c(QObject):
             self.logger.debug("try to install ffmpeg")
             errorstatus, value = self.ffmpeg_install_handler()
             if errorstatus:
+                #installation failure
                 self.SigActivateOtherTabs.emit("Player","inactivate",["View Spectra","Wavheader Editor", "Annotator","Yaml Editor"])
                 #self.activate_control_elements(False)
                 self.errorhandler("NOCLEAR \n" + value)
             else:
-                ffmpeg_exepath = value[0]
+                #ffmpeg_exepath = value[0]
+                #return new installpath for ffmpeg
                 self.m["ffmpeg_path"] = value[1]
+            #save ffmpeg path in configuration yaml
             self.m["metadata"]["ffmpeg_path"] = self.m["ffmpeg_path"]
             stream = open("config_wizard.yaml", "w")
             yaml.dump(self.m["metadata"], stream)
@@ -256,7 +263,7 @@ class playrec_c(QObject):
             if self.m["irate"] < list(device_ID_dict["rates"].keys())[0] or self.m["irate"] > list(device_ID_dict["rates"].keys())[1]:
                 value = "The sample rate of this file is inappropriate for the device " + device_ID_dict["device_name"] + "\n \n Please check if it is an SDR wav File (not audio) and what TX device it is meant for. \n \n" + \
                 "YOU MAY USE THE 'Resample' TAB TO CREATE A PLAYABLE FILE ! \n\n" + \
-                "SR must be in the interval:" + list(device_ID_dict["rates"].keys())[0] + " - " + list(device_ID_dict["rates"].keys())[1]
+                "SR must be in the interval:" + str(list(device_ID_dict["rates"].keys())[0]) + " - " + str(list(device_ID_dict["rates"].keys())[1])
                 errorstate = True
         else:
             errorstate = True
@@ -505,6 +512,7 @@ class playrec_c(QObject):
             self.playthread.started.connect(self.playrec_tworker.rec_loop)
 
         self.playrec_tworker.SigFinished.connect(self.EOF_manager)
+        self.playrec_tworker.SigInfomessage.connect(self.infosigmanager)
         self.playrec_tworker.SigFinished.connect(self.recloopmanager)
         self.playrec_tworker.SigError.connect(self.errorsigmanager)
         self.playrec_tworker.SigNextfile.connect(self.nextfilemanager)
@@ -548,6 +556,10 @@ class playrec_c(QObject):
         self.SigRelay.emit("cexex_playrec",["updatecurtime",0])
         self.SigRelay.emit("cexex_playrec",["showFilename", filename])
         
+
+    def infosigmanager(self,message):
+        auxi.standard_infobox(message)
+        print(message)
 
     def errorsigmanager(self,message):
         auxi.standard_errorbox(message)
@@ -1534,7 +1546,8 @@ class playrec_v(QObject):
                 #print(f"left updatecurtime call @ {evaltime}")
                 #print(f"UPDATECURTIME: {_value[1]}")
             if  _value[0].find("showRFdata") == 0:
-                self.showRFdata()
+                if self.gui.core_checkBox_show_spectrum.isChecked():
+                    self.showRFdata()
             if  _value[0].find("showFilename") == 0:
                 self.gui.label_Filename_Player.setText(Path(_value[1]).name)
             if  _value[0].find("listhighlighter") == 0:

@@ -39,6 +39,9 @@ class resample_m(QObject):
         self.mdl["ext"] = ""
         self.mdl["fileopened"] = False
         self.mdl["fshift"] = 0
+        self.mdl["prefix_custom"] = False
+        self.mdl["prefix_lock"] = False
+        self.mdl["resampler_run"] = False
         self.mdl["MAX_GAP"] = 300 #max time gap in seconds between subsequent recordings for merging in resampler
         # Create a custom logger
         logging.getLogger().setLevel(logging.DEBUG)
@@ -73,7 +76,7 @@ class res_workers(QObject):
     :param : no regular parameters; as this is a thread worker communication occurs via
         __slots__: Dictionary with entries:
         __slots__[0]: soxstring Type: str
-        __slots__[1]: return string from sox execution, type : str
+        __slots__[1]: return string from ffmpeg execution, type : str
     '''
     :raises [ErrorType]: none
     '''
@@ -317,7 +320,7 @@ class res_workers(QObject):
                                 WRITEGAP = False
                             else:
                                 WRITEGAP = False
-                                print(f"*********------------------>>>>>GAPFILLER>>>>>> len(data_chunk): {len(data_chunk)} CHECK IF MULTIPLE of 4 ")
+                                #print(f"*********------------------>>>>>GAPFILLER>>>>>> len(data_chunk): {len(data_chunk)} CHECK IF MULTIPLE of 4 ")
                                 self.logger.debug(f"GAPFILLER in file {input_file} len(data_chunk): {len(data_chunk)} check if multiple of 4")
                                 if gap_bytes % 4> 0:                #TODO: replace by nBlockAlign in further implementations for potential cases of higher resolution
                                     #print(f"*********------------------>>>>>GAPFILLER ERRORS>>>>>> len(data_chunk): {len(data_chunk)} NOT of 4 ")
@@ -585,7 +588,7 @@ class res_workers(QObject):
         soxstring = self.get_soxstring()
         #print(f"soxstring: {soxstring}")
         #self.ret = subprocess.Popen(soxstring, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell = True, start_new_session=True)
-        if soxstring.find("ffmpeg") >= 0:
+        if soxstring.find("ffmpeg") >= 0: # TODO: Obsolete, delete after tests 24-02-2025
             print("############### using ffmpeg as ultrafast resampler #####################")
             try:
                 self.ret = subprocess.Popen(soxstring, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell = True)
@@ -596,13 +599,12 @@ class res_workers(QObject):
             except Exception as e:
                 print(f"Unexpected error: {e}")
         else:
-            print("using sox as resampler")
+            print("using sox as resampler")  # TODO: Obsolete, delete after tests 24-02-2025
             self.ret = subprocess.Popen(soxstring, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell = True)
 
         print(f" ________ resampler executable poll at init: poll: {self.ret.poll()}")
         self.set_ret(self.ret)
         time.sleep(1)
-        #print(f"sox return value: {self.ret}")
         targetfilename = self.get_tfname()
         expected_filesize = self.get_expfs()
         if os.path.exists(targetfilename) == True:
@@ -621,13 +623,11 @@ class res_workers(QObject):
             #Bedingung: Delta size 
             #print(f"soxwriter: initial ret.poll output (sox acive on None ?): {self.ret.poll()}")
 
-            while (file_stats.st_size < (expected_filesize)) and (loop_ix < 20) and (self.stopix is False):  #HACK TODO: analyze why expected filesize is by > 1000 smaller than the one produced by sox 
+            while (file_stats.st_size < (expected_filesize)) and (loop_ix < 4) and (self.stopix is False):  #HACK TODO: analyze why expected filesize is by > 1000 smaller than the one produced by sox 
                 delta = file_stats.st_size - expected_filesize
-                # if sox has finished but expected filesize is not reached, wait 20 cycles and then terminate
+                # if ffmpeg has finished but expected filesize is not reached, wait 4 cycles and then terminate
                 if (deltaold == delta) and file_stats.st_size >0:
                     loop_ix += 1
-                    #print(f"soxwriter: ret.poll output (sox acive ?): {self.ret.poll()}")
-                    #print(f"soxloop deltacount (break at 20): {loop_ix}")
                 deltaold = delta
                 try:
                     file_stats = os.stat(targetfilename)
@@ -651,7 +651,7 @@ class res_workers(QObject):
                         progress_old = progress
                         self.set_progress(progress)
                         self.SigPupdate.emit()
-                        print("NOW UPDATE STATUSBAR#############################################################################")
+                        #print("NOW UPDATE STATUSBAR#############################################################################")
                         #self.mutex.unlock()
                 except:
                     #self.logger.debug("********__________ soxwriter_ temp file not found, proceeding without progress update")
@@ -668,10 +668,10 @@ class res_workers(QObject):
                         # Terminate the process and its children
                         for child in children:
                             child.terminate()
-                        print(f" poll: {self.ret.poll()}")
+                        #print(f" poll: {self.ret.poll()}")
                         self.mutex.unlock()
                         parent.wait(timeout=5)
-                        print(f" poll: {self.ret.poll()}")
+                        #print(f" poll: {self.ret.poll()}")
                     #self.logger.debug("********__________soxwriter: terminate sox process on cancel")
 
         else:
@@ -1027,7 +1027,7 @@ class resample_c(QObject):
             #self.m["emergency_stop"] = False
             self.m["clearlist"] = True
             #print("resampler sox_cleanup after cancel and emergency stop")
-            self.logger.debug("resampler cleanup after cancel and emergency stop, trigger = either sox or LOSHifter")
+            self.logger.debug("resampler cleanup after cancel and emergency stop, trigger = either ffmpeg or LOSHifter")
             self.SigUpdateGUIelements.emit()
             self.m["progress_source"] = "normal"
             self.m["progress"] = 0
@@ -1047,7 +1047,7 @@ class resample_c(QObject):
             #TODO TODO TODO: close and cleanup all temporary files in /out and /temp
 
         else:
-            self.logger.debug("cleanup: increment scheduler , NO emergency stop, tiggered either by sox or LOSHifter")
+            self.logger.debug("cleanup: increment scheduler , NO emergency stop, tiggered either by ffmpeg or LOSHifter")
             self.Sigincrscheduler.emit()
         #print("########Cleanup finished")
 
@@ -1210,7 +1210,7 @@ class resample_c(QObject):
         try:
             self.sox_worker.soxworker_terminate()
         except:
-            self.logger.debug("cancel resampling: sox worker could not be terminated, prob. not sox process")
+            self.logger.debug("cancel resampling: sox worker could not be terminated, prob. not ffmpeg process")
             pass
         try:
             self.LOsh_worker.soxworker_terminate()
@@ -1314,9 +1314,10 @@ class resample_c(QObject):
         else:
             sox_filetype = 'wav'
 
-        print(f">>>>>>>>oooooooooo   --> ffmpeg source format type: {ffmpeg_type}, target type: {ffmpeg_target_type}")
+        #print(f">>>>>>>>oooooooooo   --> ffmpeg source format type: {ffmpeg_type}, target type: {ffmpeg_target_type}")
         self.logger.debug(f">>>>>>>>oooooooooo   --> ffmpeg source format type: {ffmpeg_type}, target type: {ffmpeg_target_type}")
 
+        # TODO: Obsolete, delete after tests 24-02-2025
         #obsolete: soxstring = 'sox --norm=-3 -e ' + wFormatTag_TYPE + ' -t  ' + sox_filetype + ' -r ' + str(self.m["sSR"]) + ' -b '+ str(self.m["sBPS"]) + ' -c 2 ' + '"' + source_fn  + '"' + ' -e signed-integer -t raw -r ' + str(int(tSR)) + ' -b ' + str(self.m["tBPS"]) + ' -c 2 '  + '"' + target_fn  + '"' 
         #TODO TODO TODO: generalize ffmpeg command for all filetypes
         #soxstring = 'sox -e ' + wFormatTag_TYPE + ' -t  ' + sox_filetype + ' -r ' + str(self.m["sSR"]) + ' -b '+ str(self.m["sBPS"]) + ' -c 2 ' + '"' + source_fn  + '"' + ' -e signed-integer -t raw -r ' + str(int(tSR)) + ' -b ' + str(self.m["tBPS"]) + ' -c 2 '  + '"' + target_fn  + '"' + ' gain ' + str(self.m["resampling_gain"])
@@ -1335,7 +1336,7 @@ class resample_c(QObject):
                 soxstring = 'ffmpeg -y -skip_initial_bytes 212 -f '+ ffmpeg_type +' -ar ' + str(self.m["sSR"]) + ' -ac 2 -i '  + source_fn  + ' -af ' + '"aresample=resampler=soxr, volume=' + str(self.m["resampling_gain"]) + 'dB"' + ' -f ' + ffmpeg_target_type + ' -ar ' + str(int(tSR))  + ' ' + target_fn
             else:
                 soxstring = 'ffmpeg -y -f '+ ffmpeg_type +' -ar ' + str(self.m["sSR"]) + ' -ac 2 -i '  + source_fn  + ' -af ' + '"aresample=resampler=soxr, volume=' + str(self.m["resampling_gain"]) + 'dB"' + ' -f ' + ffmpeg_target_type + ' -ar ' + str(int(tSR)) + ' ' + target_fn
-        print(f"exist input file {os.path.exists(source_fn)}, target file: {os.path.exists(target_fn)}")
+        #print(f"exist input file {os.path.exists(source_fn)}, target file: {os.path.exists(target_fn)}")
         self.logger.debug(f"method resample: <<<<resampler: soxstring: {soxstring}")
         
         expected_filesize = self.m["t_filesize"]
@@ -1435,7 +1436,7 @@ class resample_c(QObject):
             sox_filetype = 'raw'
         else:
             sox_filetype = 'wav'
-        print(f">>>>>>>>oooooooooo   --> ffmpeg format type: {ffmpeg_type}")
+        #print(f">>>>>>>>oooooooooo   --> ffmpeg format type: {ffmpeg_type}")
         if self.m["sBPS"] == 24:
             soxstring = 'ffmpeg -y -skip_initial_bytes 212 -f '+ ffmpeg_type +' -ar ' + str(self.m["sSR"]) + ' -ac 2 -i "'  + source_fn  + '" -af ' + '"aresample=resampler=soxr"' + ' -f s16le -ar ' + str(int(tSR))  + ' "' + target_fn + '"'
         else:
@@ -1560,14 +1561,14 @@ class resample_c(QObject):
         self.logger.debug(f"soxerrorhandler errorstring: {errorstring}")
         #self.sys_state.set_status(self.m)
         self.Sigincrscheduler.emit()
-        auxi.standard_errorbox("Error produced by SOX, probably due to inconsistent cutting times; process terminated")
+        auxi.standard_errorbox("Error produced by ffmpeg, probably due to inconsistent cutting times; process terminated")
         #TODO: push GUI into a safe state: leave scheduler process and reset GUI, resample_c GUI 
         
         
     def accomplish_resampling(self):
-        """_after sox-resampling a wav_fileheader is inserted into the resampled dat-File.
+        """_after resampling a wav_fileheader is inserted into the resampled dat-File.
         Afterwards temporary files are removed
-        this method is called via a signal from the scheduler after finishing a resampling process with sox
+        this method is called via a signal from the scheduler after finishing a resampling process with ffmpeg
         communication occurs only via state variables, as this function is called asynchronously on signal emission
                 self.m["tgt_wavheader"]: wavheader to be inserted
                 self.m["new_name"]: name to which the temporary targetfile (targetfilename) should be renamed after processing
@@ -1754,6 +1755,7 @@ class resample_c(QObject):
                         os.remove(x)
                     except:
                         self.logger.debug("res_scheduler terminate: file access to temp file refused")
+
             self.SigUpdateGUIelements.emit()
             #self.SigTerminate_Finished.connect(gui.cb_resample_new)  # TODO: muss resample_v.cb_resample_new sein
             self.SigTerminate_Finished.connect(self.m["_ref_cb_resample"])
@@ -2177,22 +2179,23 @@ class resample_v(QObject):
         self.resample_c.SigResampGUIReset.connect(self.reset_resamp_GUI_elemets)
         self.resample_c.SigUpdateGUIelements.connect(self.updateGUIelements)
         self.gui.pushButton_resample_GainOnly.setEnabled(False)
+        # TODO: OBSOLETE: sox is not used any more dur to ffmpeg
         #check if sox is installed so as to throw an error message on resampling, if not
-        self.soxlink = "https://sourceforge.net/projects/sox/files/sox/14.4.2/"
-        self.soxlink_altern = "https://sourceforge.net/projects/sox"
-        self.soxnotexist = False
+        # self.soxlink = "https://sourceforge.net/projects/sox/files/sox/14.4.2/"
+        # self.soxlink_altern = "https://sourceforge.net/projects/sox"
+        # self.soxnotexist = False
 
 
 
-        try:
-            subproc3 = subprocess.run('sox -h', stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True, check=True)
-        except subprocess.CalledProcessError as ex:
-            #print("sox FAIL")
-            self.logger.error("sox FAIL")
-            print(ex.stderr, file=sys.stderr, end='', flush=True)
-            #print(ex.stdout, file=sys.stdout, end='', flush=True)
-            if len(ex.stderr) > 0: 
-                self.soxnotexist = True
+        # try:
+        #     subproc3 = subprocess.run('sox -h', stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True, check=True)
+        # except subprocess.CalledProcessError as ex:
+        #     #print("sox FAIL")
+        #     self.logger.error("sox FAIL")
+        #     print(ex.stderr, file=sys.stderr, end='', flush=True)
+        #     #print(ex.stdout, file=sys.stdout, end='', flush=True)
+        #     if len(ex.stderr) > 0: 
+        #         self.soxnotexist = True
 
         schedule_objdict = {}
         schedule_objdict["signal"] = {}
@@ -2370,6 +2373,9 @@ class resample_v(QObject):
             self.ui.listWidget_playlist_2.itemChanged.disconnect(self.reslist_update) #?redundant? is called in cb_resample
         except:
             pass
+        self.m["prefix_custom"] = False
+        self.m["prefix_lock"] = False # Set after first iteration in resample loop
+        self.m["resampler_run"] = True
         self.cb_resample()
         #self.gui.radioButton_advanced_sampling.setChecked(False)
 
@@ -2476,6 +2482,7 @@ class resample_v(QObject):
         self.m["emergency_stop"] = False
         self.m["fshift"] = 0
         self.logger.debug("reset_GUI, emergency stop = False")
+        #print("RESET GUI")
         #self.updateGUIelements()
         self.cref["ax"].clear()
         self.cref["canvas"].draw()
@@ -2494,6 +2501,10 @@ class resample_v(QObject):
         self.gui.label_36.setStyleSheet("background-color: lightgray")
         self.gui.radioButton_advanced_sampling.setChecked(False)
         self.gui.checkBox_Cut.setChecked(False)
+        self.m["prefix_custom"] = False
+        self.m["prefix_lock"] = False 
+        self.m["resampler_run"] = False
+
 
     def addplaylistitem(self):
         item = QtWidgets.QListWidgetItem()
@@ -2536,25 +2547,6 @@ class resample_v(QObject):
         return(self.__slots__[0])
 
 
-    # def update_GUI(self,_key): #TODO TODO: is this method still needed ? reorganize. gui-calls should be avoided, better only signalling and gui must call the routenes itself
-    #     #print(" res_updateGUI: new updateGUI in resampler module reached")
-    #     self.logger.debug(" res_updateGUI: new updateGUI in resampler module reached")
-    #     self.SigUpdateGUI.disconnect(self.update_GUI)
-    #     if _key.find("reset") == 0:
-    #         #print("resampler reset all checked elements")
-    #         self.logger.debug("resampler reset all checked elements")
-    #         self.reset_resamp_GUI_elemets()
-    #         self.gui.lineEdit_resample_targetnameprefix.setEnabled(True) #TODO: shift to a resample.view method        
-    #     if _key.find("terminate") == 0:
-    #         #print("termination GUI update not yet defined")
-    #         self.logger.debug("termination GUI update not yet defined")
-    #     if _key.find("ext_update") == 0:
-    #         #update resampler gui with all elements
-    #         #TODO: fetch model values and re-fill all tab fields
-    #         pass
-    #     #other key possible: "none"
-    #     time.sleep(1)
-    #     self.SigUpdateGUI.connect(self.update_GUI)
 
     def reslist_update(self): #TODO: list is only updated up to the just before list change dragged item,
         """
@@ -2573,7 +2565,10 @@ class resample_v(QObject):
         :return: none
         :rtype: none
         """
-        self.gui.listWidget_playlist_2.itemChanged.disconnect(self.reslist_update)
+        try:
+            self.gui.listWidget_playlist_2.itemChanged.disconnect(self.reslist_update)
+        except:
+            pass
         #print("#######!!!!!!!!!!!!!!    reslist_update !!!!!!!! ############")
         #print("reslist_update: resampling list updated")  
         self.logger.debug("reslist_update: resampling list updated")
@@ -2597,20 +2592,15 @@ class resample_v(QObject):
             #TODO: revert for CUTPROJECT end
             reslist.append(item.text())
         self.m["reslist"] = reslist
+        if not self.m["resampler_run"]:
+            self.gui.lineEdit_resample_targetnameprefix.setText(self.m["reslist"][0])
         #print(f"reslist_update:reslist: {reslist}")
         self.logger.debug("reslist_update:reslist: %s", reslist)
-        #system_state["f1"] = self.gui.my_dirname + '/' + reslist[0]  #TODO: replace by line below
         #self.m["f1"] = self.gui.my_dirname + '/' + reslist[0] #TODO: replace self.mydirname by status entry
         self.m["f1"] = self.m["my_dirname"] + '/' + reslist[0]
-        #print(f'reslist_update:cb_resample: file: {system_state["f1"]}') #TODO: replace by line below
         #print(f'reslist_update:cb_resample: file: {self.m["f1"]}')
         self.logger.debug("reslist_update:cb_resample: file:  %s", self.m["f1"] )
 
-        #self.m["wavheader"] = WAVheader_tools.get_sdruno_header(self,system_state["f1"]) #TODO: replace by line below
-        ####################PROBLEM ??????????????????????????? wavheader in core aktivieren ?
-        #self.m["wavheader"] = WAVheader_tools.get_sdruno_header(self,self.m["f1"]) #TODO: why gui wavheader ?
-
-        #self.gui.showfilename()
         ############SET CORRECT FILENAME
         self.m["ext"] = Path(self.m["f1"]).suffix
         self.m["my_filename"] = Path(self.m["f1"]).stem
@@ -2663,21 +2653,10 @@ class resample_v(QObject):
         :return: none
         :rtype: none
         """
-        #system_state = self.sys_state.get_status()
-        #gui = system_state["gui_reference"]
-        #print(f"reslist: item clicked, itemtext: {item.text()}")        
-        #system_state["f1"] = self.gui.my_dirname + '/' + item.text() #TODO: replace by line below
         self.m["f1"] = self.m["my_dirname"] + '/' + item.text() #TODO: replace self.mydirname by status entry
         self.m["my_filename"], self.m["ext"] = os.path.splitext(item.text())
-        #print(f'cb_resample: file: {system_state["f1"]}')
-        #self.m["wavheader"] = WAVheader_tools.get_sdruno_header(self,system_state["f1"]) #TODO: replace by line below
         self.m["wavheader"] = WAVheader_tools.get_sdruno_header(self,self.m["f1"])
 
-        #self.gui.showfilename()
-
-        #################TODO: implement next line newly with Relay after tarnsfer of wavedit module 
-        #self.gui.fill_wavtable()
-        ##################DONE
         self.update_resample_GUI()
         #TODO: update also spectra view
         self.SigRelay.emit("cm_all_",["my_filename",self.m["my_filename"]])
@@ -2686,10 +2665,6 @@ class resample_v(QObject):
         self.SigRelay.emit("cm_all_",["wavheader",self.m["wavheader"]])
         self.SigRelay.emit("cexex_view_spectra",["updateGUIelements",0])      ####################RELAY PATTERN############
         self.SigRelay.emit("cexex_waveditor",["updateGUIelements",0])
-
-
-        #self.plot_spectrum_resample(0)
-
         
     def toggle_mergeselectall(self):
         """
@@ -2844,7 +2819,7 @@ class resample_v(QObject):
         return(True)
 
     def updateprogress_resampling(self):
-        """_duringr sox-resampling the progress of sox resampling is indicated in the progressbar.
+        """_during ffmpeg-resampling the progress of ffmpeg resampling is indicated in the progressbar.
         The active state is indicated by blinking of the label field label_36
         this method is called via a signal from the soxwriter worker function sox_writer() repetitively every second
         communication occurs only via state variables, as this function is called asynchronously on signal emission
@@ -2852,14 +2827,11 @@ class resample_v(QObject):
         :param: none
         :type: none
         ...
-        :raises
+        :raises: none
         ...
         :return: none
         :rtype: none
         """
-        #system_state = self.sys_state.get_status()
-        #################################DO NOT REPLACE CURRENTLY !
-        #gui = system_state["gui_reference"]  #TODO: gui cannot be easily replaced by self.gui because lambda calls from the resampler controller an dworker modules 
         # refer to 'self' as another self, unclean programming ; search for solution later !!!!!!!!!!!!!!!!!
         if self.m["blinking"] is False:
             return
@@ -2872,36 +2844,21 @@ class resample_v(QObject):
         if self.m["progress_source"].find('normal') > -1:  #TODO: solve double function in better datacommunication structure
             progress = self.m["progress"]
         elif self.m["progress_source"].find('sox') > -1:
-            #change 26_11_2023: beforechange: progress = system_state["sox_worker"].get_progress() #TODO: dazu muss aber system_state["sox_worker"] erst einmal existieren 
             progress = self.m["calling_worker"].get_progress() #TODO: check wie gewährleistet (aktuell im action_method beim thread konfigurieren): dazu muss aber system_state["sox_worker"] erst einmal existieren 
         else:
-            #print("update_progress_resamping: error, progress source system flag invalid")
             self.logger.error("update_progress_resamping: error, progress source system flag invalid")
-            #self.sys_state.set_status(self.m)
             return False
-        #self.SigUpdateGUIelements.emit()
         self.m["progress"] = progress
         #self.updateGUIelements()
-        #self.gui.progressBar_resample.setProperty("value", progress)
-
-        #print(f"statusbar updater sysflags_progress_source: {progress}")
         self.m["actionlabelbg"] = "lightgray"
         self.m["label36Font"] = 12
-        #self.gui.label_36.setText(self.m["actionlabel"])
-        #self.gui.label_36.setFont(QFont('arial',12))
-        #print(f'statusbar updater actionlabel: {system_state["actionlabel"]}')
         if blink_free:
             if self.m["res_blinkstate"]:
                 self.m["actionlabelbg"] = "yellow"
-                #self.gui.label_36.setStyleSheet("background-color: yellow")
             else:
                 self.m["actionlabelbg"] = "orange"
-                #self.gui.label_36.setStyleSheet("background-color: orange")
             self.m["res_blinkstate"] = not self.m["res_blinkstate"]
         #print(f" updateprogress_resampling res blinkstate: {self.m['res_blinkstate']} color: {self.m['actionlabelbg']}")
-        #self.sys_state.set_status(system_state)
-        #self.updateGUIelements()
-        #self.SigUpdateGUIelements.emit()
 
     def update_resample_GUI(self): #wurde ins resampler-Modul verschoben
         """fills the control elements of the resample GUI with parameters from the wav header
@@ -3061,6 +3018,11 @@ class resample_v(QObject):
         self.m["actionlabelbg"] ="lightgray"
         self.m["label36Font"] = 12
         self.m["actionlabel"] = "READY"
+        self.m["prefix_custom"] = False
+        self.m["prefix_lock"] = False 
+        self.m["resampler_run"] = False
+        #print("RESET GUI ELEMENTS")
+
         self.updateGUIelements()
 
 
@@ -3145,28 +3107,17 @@ class resample_v(QObject):
             #print("resampling gain: wrong format of manual gain")
             self.logger.error("resampling gain: wrong format of manual gain")
             auxi.standard_errorbox("invalid characters, must be numeric float value !")
-            #TARGET_LO = self.m["wavheader"]['centerfreq']
             return False
         self.m["resampling_gain"] = fgain
-        #ctrlist = ["view_spectra", "resample", "u", "resampling_gain", fgain]
-        #self.SigSyncTabs.emit(ctrlist)
         self.SigRelay.emit("cm_view_spectra",["resampling_gain",fgain])   ####################RELAY PATTERN############
-        #self.sys_state.set_status(system_state)
-        #self.gui.plot_spectrum(self,0) #TODO: --> self.gui
-        #self.SigRelay.emit(self,0)
         self.SigRelay.emit("cexex_view_spectra",["plot_spectrum",0])      ####################RELAY PATTERN############
         
-        #print("emit SigRelay with 1 argument")
-        #self.SigRelay.emit(0,0)
-
         #TODO: Gain wird nicht nachgezogen: core Methode die Gain nachzieht !
         #TODO: alternativ: Gain wird als neuer Parameter bei plot spectrum eingeführt
         #TODO: Scrollbar des plot_spectrum wird aktuell mit Position nicht nachgezogen: core_methode die selbes Signal abonniert und nachzieht
 
 
     def cb_split2G_Button(self):
-        #system_state = self.sys_state.get_status()
-        #gui = system_state["gui_reference"] #TODO: --> self.gui
         self.enable_resamp_GUI_elemets(False)
 
         reslist_len = self.gui.listWidget_playlist_2.count()
@@ -3469,7 +3420,7 @@ class resample_v(QObject):
         slot method when pressing the 'resample' button. 
 
         (1) handling of errors and inconsistencies:
-            - sox not available
+            - ffmpeg not available
             - filepath not opened
             - inconsistent wav-headers in files of resampling list
             - inconsistent time information in wav headers
@@ -3521,14 +3472,6 @@ class resample_v(QObject):
             self.m["list_out_files_resampled"] = []
             self.GUI_reset_status()
             return False
-        #check for sox as a prerequisite
-        # if self.soxnotexist:
-        #     infotext = "<font size = 12> You must install sox before being able to resample; <br> Download from: <br><a href='%s'>sox version 14.2.2 </a> <br><br>Either install sox to RFCorder directory or set the system path to the sox installation directory. <br> See also RFCorder user manual; </font>" % self.soxlink
-        #     auxi.standard_errorbox(infotext)
-        #     # msg = QMessageBox()   #TODO: remove after tests 09-05-2024
-        #     # msg.information(self, 'Message', infotext, QMessageBox.Ok, QMessageBox.Ok)
-        #     # self.gui.listWidget_playlist_2.itemChanged.connect(self.reslist_update)
-        #     return False
         #check if filepath has been defined
         if not self.m["fileopened"]:
             auxi.standard_errorbox("You must open a file before resampling")
@@ -3626,6 +3569,10 @@ class resample_v(QObject):
                 #TODO TODO TODO: reset GUI and set bg of listelements from green away 
                 time.sleep(0.1)
                 # start mege2G if checked 
+                #TODO TODO TEST after 25-02-2025
+                # if self.gui.radioButton_advanced_sampling.isChecked():
+                #     self.m["basename"] = self.gui.lineEdit_resample_targetnameprefix.text()
+
                 if self.gui.checkBox_AutoMerge2G.isChecked():
                     if not self.m["emergency_stop"]: #TODO ? redundant ? has been checked earlier
                         self.m["merge2G_deleteoriginal"] = True
@@ -3655,6 +3602,7 @@ class resample_v(QObject):
                 #self.resample_c.SigTerminate_Finished.disconnect(self.cb_resample_new)
 
                 #                 self.SigUpdateOtherGUIs.emit()
+
                 self.gui.listWidget_playlist_2.itemChanged.connect(self.reslist_update)
                 #                 if not self.gui.checkBox_AutoMerge2G.isChecked():
                 #                     self.reset_GUI()
@@ -3662,7 +3610,6 @@ class resample_v(QObject):
 
         else: #file list is empty
             auxi.standard_errorbox("No files to be resampled have been selected; please drag items to the 'selected file' area")
-            #self.sys_state.set_status(system_state)
             self.gui.listWidget_playlist_2.itemChanged.connect(self.reslist_update)
             self.enable_resamp_GUI_elemets(True)
             return False
@@ -3741,7 +3688,30 @@ class resample_v(QObject):
             self.logger.debug("generate schedule for simple resampling")
 
         #generate intermediate names for the resampled files (raw size)
-        new_name = self.m["out_dirname"] + '/' + self.m["my_filename"] +'_resamp_' + str(SDRUno_suffix) + '_' + str(int(self.m["tLO"]/1000)) + 'kHz.wav'
+        #TODO TEST after 26-02-2025:
+        # Blödes Problem: Bei Serienabarbeitung bleibt immer der gleiche Name im Textfeld stehen, daher ist der prefix nur für das erste File in der Serie richtig
+        #Regel: setze zu Beginn ein Flag self.m["prefix_custom"] = False
+        #wenn das erste File in der Liste bearbeitet wird (markiert durch prefix_lock == False), und der Inhalt von lineEdit_resample_targetnameprefix
+        # von self.m["my_filename"] abweicht, setze self.m["prefix_custom"] = True
+        #wenn self.m["prefix_custom"] == True, dann wird der Inhalt von lineEdit_resample_targetnameprefix als Prefix genommen
+        #wenn self.m["prefix_custom"] == False, dann wird self.m["my_filename"] als Prefix genommen
+        #Beim letzten accomplish (ende der Listenabarbeitung), also GUI reset, wird self.m["prefix_custom"] = False gesetzt
+        time.sleep(0.1)
+        #print(f"PREFIX lock: {self.m["prefix_lock"]}, prefix_custom: {self.m["prefix_custom"]}, logic name:{Path(self.gui.lineEdit_resample_targetnameprefix.text()).stem != self.m["my_filename"]}")
+        if self.m["prefix_custom"] == False and self.m["prefix_lock"] == False and Path(self.gui.lineEdit_resample_targetnameprefix.text()).stem != self.m["my_filename"]:
+            self.m["prefix_custom"] = True
+        self.m["prefix_lock"] = True # Set after first iteration in resample loop
+
+
+        if self.m["prefix_custom"] == True:
+            name_prefix = self.gui.lineEdit_resample_targetnameprefix.text()
+            if name_prefix == "":
+                name_prefix = self.m["my_filename"]
+            new_name = self.m["out_dirname"] + '/' + name_prefix + '_' + str(SDRUno_suffix) + '_' + str(int(self.m["tLO"]/1000)) + 'kHz.wav'
+        else:
+            self.gui.lineEdit_resample_targetnameprefix.setText(self.m["my_filename"])
+            new_name = self.m["out_dirname"] + '/' + self.m["my_filename"] +'_resamp_' + str(SDRUno_suffix) + '_' + str(int(self.m["tLO"]/1000)) + 'kHz.wav'
+        ########### END TEST
         self.m["new_name"] = new_name
         self.m["list_out_files_resampled"].append(new_name)
         self.m["res_blinkstate"] = True

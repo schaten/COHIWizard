@@ -48,6 +48,7 @@ class playrec_worker(QObject):
     SigBufferOverflow = pyqtSignal()
     SigError = pyqtSignal(str)
     SigNextfile = pyqtSignal(str)
+    SigInfomessage = pyqtSignal(str)
 
     def __init__(self, stemlabcontrolinst,*args,**kwargs):
 
@@ -140,6 +141,21 @@ class playrec_worker(QObject):
         format = self.get_formattag()
         a = (np.tan(np.pi * lo_shift / tSR) - 1) / (np.tan(np.pi * lo_shift / tSR) + 1)
         fl2k_file_path = os.path.join(os.getcwd(),"dev_drivers/fl2k/osmo-fl2k-64bit-20250105", "fl2k_file.exe")
+        #TODO: check evaluation criterion if appropriate
+        stability_criterion = (np.mod(np.log2(tSR/sampling_rate),1) == 0) or sampling_rate < 500001
+        print(f"stability criterion: {stability_criterion}")
+        if not stability_criterion:
+            self.SigInfomessage.emit(f"""The ratio between target sampling rate and
+                                     source sampling rate ({tSR/sampling_rate}) is not a power of 2: 
+                                     This may cause issues with playback quality and stability. 
+                                     In case the sampling rate is > 500kS/s the playback may 
+                                     not work at all in such cases and the program may crash. 
+                                     To be on the safe side re-sample the recording to an appropriate SR so that 
+                                     The ratio between target sampling rate and 
+                                     source sampling rate ({tSR/sampling_rate}) is something like 2, 4, 8, 16, ...""")
+        # else:
+        #     self.SigInfomessage.emit("Teststring from SigInfoMessage, SR criterion is fullfilled")
+        
         print("checking for fl2k")
         #self.mutex.lock()
         errorstate, value = self.check_ready_fl2k()

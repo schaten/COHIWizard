@@ -61,7 +61,7 @@ class SDR_control(QObject):
         : return: device_ID_dict
         : rtype: dict
         """
-        device_ID_dict = {"rates": {1000:0, 100000000:1},
+        device_ID_dict = {"rates": {1000:0, 5000000:1},
                           "rate_type": "continuous",
                           "RX": False,
                           "TX": True,
