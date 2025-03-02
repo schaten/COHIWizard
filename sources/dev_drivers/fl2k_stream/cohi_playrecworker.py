@@ -220,7 +220,7 @@ class playrec_worker(QObject):
                     stdin=subprocess.PIPE, 
                     stdout=subprocess.PIPE, 
                     stderr=subprocess.PIPE,
-                    bufsize=10**6
+                    bufsize=10**8
                 )
 
             except FileNotFoundError:
@@ -246,7 +246,7 @@ class playrec_worker(QObject):
                         stdin=ffmpeg_process.stdout,  # Hier kommt der FFmpeg-Stream an
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE,
-                        bufsize=10**6
+                        bufsize=10**8
                     )
                     
                 except FileNotFoundError:
@@ -271,7 +271,7 @@ class playrec_worker(QObject):
                         stdin=ffmpeg_process.stdout,  # Hier kommt der FFmpeg-Stream an
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE,
-                        bufsize=10**6
+                        bufsize=10**8
                     )
 
                 except FileNotFoundError:

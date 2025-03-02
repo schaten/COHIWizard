@@ -9,7 +9,7 @@ from pathlib import Path, PureWindowsPath
 import datetime as ndatetime
 from datetime import timedelta
 import logging
-#import signal
+import locale
 import psutil
 import os 
 import subprocess
@@ -713,6 +713,7 @@ class res_workers(QObject):
         expected_filesize = self.get_expfs()
         readsegmentfn = self.get_readsegment()
         centershift = self.get_centershift()
+        print(f"----------->>>>>>>>>>>>>>>> centershift in LOshift worker: {centershift}")
         sBPS = self.get_sBPS()
         tBPS = self.get_tBPS()
         wFormatTag = self.get_wFormatTag()
@@ -725,16 +726,19 @@ class res_workers(QObject):
         #try to calculate optimum data-blocksize for best phase transition between chuncks
         psc_locker = False
         DATABLOCKSIZE = t_DATABLOCKSIZE
-        if centershift > 1e-5:
-            x = sSR/centershift # number of datapoints per period of centershifte
+        if abs(centershift) > 1e-5:
+            signum_x = np.sign(centershift)
+            x = sSR/abs(centershift) # number of datapoints per period of centershifte
             found_m = False
             rangestop = int(np.floor(DATABLOCKSIZE/2/x))
             rangestart = int(rangestop - max(1,np.floor(10000/x)))
-            for k in range(rangestart, rangestop):  # Testen verschiedener k-Werte
-                m = round(k * x)  # number of datapoints for k periods = total number of datapoints
+            for k in range(rangestart, rangestop):  #  k- values for which a reasonable size of the
+                #DATABLOCK can be found which contains an approximate integer number of entire 
+                #sinus periods of the LOshifter sinus
                 #target: test condition for k-values near max datablock size
                 #dtatblocksize = 2*m = 2*k*x; m =ca DATABLOCKSIZE --> k = m/x, endk = DATABLOCKSIZE/2/x
                 #k range = np.floor(DATABLOCKSIZE/2/x) - 1000
+                m = round(k * x)  # number of datapoints for k periods = total number of datapoints
                 #m = k*x is the number of samples needed for being sSR a near integer multiple of the centershift period
                 product = m / x # total number of periods
                 rounded_product = round(product, 3) # deviation of rounded # periods from integer
@@ -751,12 +755,12 @@ class res_workers(QObject):
                 print("LOshifter cannot find optimum DATABLOCKSIZE for acceleration, turn to slow mode")
         else:
             print(f"LOshifter: no shifting required, no blocksize optimization, just copy, startoffset = {readoffset + startoffset}")
+        #read DATABLOCKSIZE data points
         ret = readsegmentfn(self,sourcefilename,position,readoffset,DATABLOCKSIZE,sBPS,32,wFormatTag)
         
         if os.path.exists(targetfilename) == True:
             #print("LOshift worker: target file has been found")
             file_stats = os.stat(targetfilename)
-            progress_old = 0
             fsize_old = 0
             first_lock_pass = True
             while ret["size"] > 0:
@@ -815,7 +819,6 @@ class res_workers(QObject):
         #DIAGNOSTICS for developers:
 
         #print("######## LOSHworker: File status after close:", not os.path.exists(targetfilename))
-
         # # Prozessinformationen überprüfen
         # process = psutil.Process(os.getpid())
         # open_files = process.open_files()
@@ -1635,9 +1638,9 @@ class resample_c(QObject):
         #TODO revert end
 
         ovwrt_flag = True
-        time.sleep(1)
+        time.sleep(0.5)
         WAVheader_tools.write_sdruno_header(self,target_fn,tgt_wavheader,ovwrt_flag) ##TODO TODO TODO Linux conf: self.m["f1"],self.m["wavheader"] must be in Windows format
-        time.sleep(5)
+        time.sleep(0.5)
         #if new_name exists --> delete
         newname = self.m["new_name"]
         if os.path.exists(newname) == True:  ## TODO CHECK IF TRY
@@ -1769,6 +1772,9 @@ class resample_c(QObject):
             time.sleep(0.01)
 
         if sch[cnt]["action"].find('resample_and_LOshift') == 0:
+            ####
+            if "loshift" in sch[cnt]:
+                self.m["fshift"] = sch[cnt]["loshift"]
             self.logger.debug("res_scheduler: : upsample reached, emit signal upsample")
             schedule_objdict["signal"]["resample"].connect(schedule_objdict["connect"]["upsample"])
             schedule_objdict["signal"]["upsample"].emit()
@@ -1786,6 +1792,8 @@ class resample_c(QObject):
             #schedule_objdict["signal"]["accomplish"].disconnect(schedule_objdict["connect"]["accomplish"])
         if sch[cnt]["action"].find('LOshift') == 0:
             self.logger.debug("res_scheduler: LOshift rechaed, emit signal LOshift")
+            if "loshift" in sch[cnt]:
+                self.m["fshift"] = sch[cnt]["loshift"]
             #TODO: gleicher Aufruf wie in 'resample':
             schedule_objdict["signal"]["LOshift"].connect(schedule_objdict["connect"]["LOshift"])
             schedule_objdict["signal"]["LOshift"].emit()
@@ -2038,6 +2046,147 @@ class resample_c(QObject):
         schedule.append(sch3)
         self.m["res_schedule"] = schedule
 
+    def schedule_C(self):
+        """_definition of schedule for resampling with x% speed shift
+        do not use for files with BPS = 24bit
+        CAUTION ! ths schedule does not allow for LOshift, only speed change
+        :param: none, communication only via self.m
+        :type: none
+        ...
+        :raises none
+        ...
+        :return: none
+        :rtype: none
+        """
+        self.logger.debug("start define resampling schedule C, with speedcorr")
+        self.m["r_sch_counter"] = 0
+        #upsampling to prevent aliasing before LO upshift
+        target_SR = self.m["target_SR"]
+        target_LO = self.m["target_LO"]
+        schedule = []
+
+        wavheader = self.m['s_wavheader']
+        #upsampling to prevent aliasing before LO upshift
+
+        sch_m1 = {}
+        sch_m1["action"] = "resample"
+        sch_m1["blinkstate"] = True
+        sch_m1["actionlabel"] = "UPSAMPLE"
+        sch_m1["sSR"] = wavheader['nSamplesPerSec'] 
+        #TODO: speedfactor GUI element, valuechange handler, read and validate (isfloat etc)
+        speedfact = self.m["speedfactor"]
+        #sch_m1["tSR"] = float(target_SR)*1000  # sch_m1["sSR"]
+        # upsampler target rate = speedfactor * safety_margin (1.2) * uppermost expected frequency
+        sch_m1["tSR"] = 5*sch_m1["sSR"] #int(np.ceil(2.4*speedfact*float(sch_m1["sSR"] + wavheader['centerfreq']/2)))  # sch_m1["sSR"]
+        sch_m1["sBPS"] = wavheader['nBitsPerSample']
+        sch_m1["tBPS"] = 32
+        sch_m1["wFormatTag"] = wavheader['wFormatTag']
+        sch_m1["s_filesize"] = wavheader['filesize']
+        #file_stats = os.stat(self.m["f1"]) #TODO remove line below
+        file_stats = os.stat(self.m["f1"])
+        sch_m1["s_filesize"] = (file_stats.st_size - self.m["readoffset"])
+
+        sch_m1["t_filesize"] = np.ceil(sch_m1["s_filesize"]*sch_m1["tSR"]/sch_m1["sSR"]*sch_m1["tBPS"]/sch_m1["sBPS"])
+        sch_m1["wFormatTag"] = wavheader['wFormatTag'] #source formattag; no previous LOshifter,thus Format of sourcefile
+        sch_m1["tFormatTag"] = 1 #target formattag; the next LOshifter expects PCM
+        schedule.append(sch_m1)
+
+        # Upmixing to fLO
+        sch0 = {}
+        sch0["action"] = "LOshift"
+        sch0["blinkstate"] = True
+        sch0["actionlabel"] = "upmix LO"
+        sch0["sSR"] = sch_m1["tSR"] 
+        sch0["tSR"] = sch0["sSR"]
+        sch0["sBPS"] = 32
+        sch0["tBPS"] = 32 # TODO check if this should be always so: always defined so for LOshifter
+        sch0["wFormatTag"] = 1
+        sch0["tFormatTag"] = 3 #target formattag; the previous LOshifter has produced 32bit IEEE float 32
+        sch0["s_filesize"] = sch_m1["t_filesize"]
+        sch0["t_filesize"] = sch0["s_filesize"]*sch0["tSR"]/sch0["sSR"]*sch0["tBPS"]/sch0["sBPS"]
+        sch0["loshift"] = self.m["wavheader"]["centerfreq"] 
+        schedule.append(sch0)
+
+        #resampling tSR --> mtSR = speedfact * tSR
+        sch1 = {}
+        sch1["action"] = "resample"
+        sch1["blinkstate"] = True
+        sch1["actionlabel"] = "RSPL speed"
+        sch1["sSR"] = sch0["tSR"]
+        sch1["tSR"] = int(np.floor(sch0["tSR"]*speedfact))
+        sch1["tBPS"] = 32   #TODO: tBPS flexibel halten !
+        sch1["sBPS"] = 32
+        sch1["s_filesize"] = sch0["t_filesize"]
+        sch1["t_filesize"] = sch1["s_filesize"]*sch1["tSR"]/sch1["sSR"]*sch1["tBPS"]/sch1["sBPS"]
+        sch1["wFormatTag"] = 3 #source formattag; the previous LOshifter has produced 32bit IEEE float 32
+        sch1["tFormatTag"] = 3 #target formattag; remain in 32
+        schedule.append(sch1)
+
+        # Downmixing to baseband
+        sch2 = {}
+        sch2["action"] = "LOshift"
+        sch2["blinkstate"] = True
+        sch2["actionlabel"] = "downmix LO"
+        sch2["sSR"] = sch_m1["tSR"] 
+        sch2["tSR"] = sch2["sSR"]
+        sch2["sBPS"] = 32
+        sch2["tBPS"] = 32 # TODO check if this should be always so: always defined so for LOshifter
+        sch2["wFormatTag"] = 3 
+        sch2["tFormatTag"] = 3 #target formattag; the previous resampler has produced 32bit IEEE float 32
+        sch2["s_filesize"] = sch1["t_filesize"]
+        sch2["t_filesize"] = sch2["s_filesize"]*sch2["tSR"]/sch2["sSR"]*sch2["tBPS"]/sch2["sBPS"]
+        sch2["loshift"] = - self.m["wavheader"]["centerfreq"]
+        schedule.append(sch2)
+
+        # Downsampling by original factor from mtSR File
+
+        #resampling tSR --> mtSR
+        sch3 = {}
+        sch3["action"] = "resample"
+        sch3["blinkstate"] = True
+        sch3["actionlabel"] = "RSPL speed"
+        sch3["sSR"] = sch_m1["tSR"]
+        sch3["tSR"] = sch_m1["sSR"]
+        sch3["tBPS"] = 16   #TODO: tBPS flexibel halten !
+        sch3["sBPS"] = 32
+        sch3["s_filesize"] = sch2["t_filesize"]
+        sch3["t_filesize"] = sch3["s_filesize"]*sch3["tSR"]/sch3["sSR"]*sch3["tBPS"]/sch3["sBPS"]
+        sch3["wFormatTag"] = 3 #source formattag; the previous LOshifter has produced 32bit IEEE float 32
+        sch3["tFormatTag"] = 1 #target formattag; the next operation requires PCM #TODO: expand to selectable target format
+
+        schedule.append(sch3)
+
+        sch4 = {}
+        sch4["action"] = "accomplish"
+        sch4["blinkstate"] = False
+        sch4["actionlabel"] = "ACCOMPLISH"
+        sch4["sSR"] = sch_m1["sSR"] 
+        sch4["tSR"] = sch_m1["sSR"]
+        sch4["sBPS"] = 16 #Dummy , plays no role in terminate
+        sch4["tBPS"] = 16 #Dummy , plays no role in terminate
+        sch4["s_filesize"] = 0 #Dummy , plays no role in terminate
+        sch4["t_filesize"] = 0 #Dummy , plays no role in terminate
+        sch4["wFormatTag"] = 1 #source formattag
+        sch4["tFormatTag"] = 1 #target formattag; the next operation requires PCM #TODO: expand to selectable target format
+
+        schedule.append(sch4)
+
+        sch5 = {}
+        sch5["action"] = "terminate"
+        sch5["blinkstate"] = False
+        sch5["actionlabel"] = ""
+        sch5["sSR"] = sch_m1["sSR"]
+        sch5["tSR"] = sch_m1["sSR"]
+        sch5["sBPS"] = 16 #Dummy , plays no role in terminate
+        sch5["tBPS"] = 16 #Dummy , plays no role in terminate
+        sch5["s_filesize"] = 0 #Dummy , plays no role in terminate
+        sch5["t_filesize"] = 0 #Dummy , plays no role in terminate
+        sch5["wFormatTag"] = 1 #source formattag
+        sch5["tFormatTag"] = 1 #target formattag; the next operation requires PCM #TODO: expand to selectable target format
+
+        schedule.append(sch5)
+
+        self.m["res_schedule"] = schedule
 
     def schedule_B_UP(self):
         """_definition of schedule for full ffmpeg upsampling and LOshifting data, i.e. 
@@ -2248,10 +2397,78 @@ class resample_v(QObject):
         self.gui.checkBox_Cut.setEnabled(False)
         self.gui.pushButton_resample_correctwavheaders.clicked.connect(self.correctwavheaders)
         self.gui.pushButton_resample_correctwavheaders.setEnabled(False)
+        self.gui.checkBox_resampler_speedcorr.clicked.connect(self.toggleSpeedCorr)
+        self.gui.checkBox_resampler_speedcorr.setEnabled(True)
+        self.gui.lineEdit_resample_speedcorr.setText("0")
 
         #self.gui.checkBox_writelog.clicked.connect(self.togglelogmodus) #TODO TODO TODO: logfilemodus anders implementieren
 
         #TODO TODO TODO: mache das targetfilenameprefix KONFIGURIERBAR ???
+
+
+    def isnumeric(self,s):
+        """check if a string is numeric"""
+        # English standard: dot as decimal searator
+        locale.setlocale(locale.LC_NUMERIC, 'en_US.UTF-8')
+        try:
+            a = locale.atof(s)  # Parst eine Zahl mit englischem Format
+            return True, ""
+        except ValueError:
+            errortext = "value is not numeric"
+            return False, errortext
+
+    def validate_speedfactor(self):
+        """_validates certain parameter conditions which must be fulfilled for meaningful settings,
+        e.g. carrier distance > 2* Audio-BW_
+        :return: valid: True if all conditions met, else False
+        :rtype: boolean
+        :return: errortext: string specifying the type of violation
+        :rtype: str
+        """
+        errorstate = False
+        value = ""
+        try:
+            value = 1 - 0.01*float(self.gui.lineEdit_resample_speedcorr.text())
+        except ValueError:
+            errorstate = True
+            value = "value of Field 'Speed corr' is empty or not numeric, please fill correct value"
+            return errorstate, value
+
+        if (np.abs(value) > 99.9):# and not self.load_index: ????
+            errorstate = True
+            value = "Percentages > 99.9 are not allowed"
+        return errorstate, value
+
+
+    def get_speedfactor(self):
+        """slot function for valuechange of speed corrector field"""
+        errorstate = False
+        value = ""
+        errorstate, value = self.validate_speedfactor()
+        if errorstate:
+            return (errorstate, value)
+        else:
+            self.m["speedfactor"] = value
+
+    def toggleSpeedCorr(self):
+        if self.gui.checkBox_resampler_speedcorr.isChecked():
+            self.m["speedcorr"] = True 
+            ##TODO TODO TODO: validate speedcorr text entry
+            self.gui.lineEdit_resample_targetLO.setEnabled(False)
+            #self.gui.radioButton_advanced_sampling.setEnabled(False)
+            self.gui.pushButton_resample_split2G.setEnabled(False)
+            self.gui.pushButton_resample_correctwavheaders.setEnabled(False)
+            self.gui.lineEdit_resample_speedcorr.setEnabled(True)
+            self.gui.label_28.setEnabled(True)
+        else:
+            self.m["speedcorr"] = False
+            #self.m["speedfactor"] = 1
+            self.gui.lineEdit_resample_targetLO.setEnabled(True)
+            self.gui.pushButton_resample_split2G.setEnabled(True)
+            self.gui.pushButton_resample_correctwavheaders.setEnabled(True)
+            self.gui.lineEdit_resample_speedcorr.setEnabled(False)
+            self.gui.label_28.setEnabled(False)
+
 
     def popup(self,i):
         """
@@ -3662,30 +3879,37 @@ class resample_v(QObject):
             ####TODO CHECK !!!!!!!!!!!!!!!!!!!!! filesize wird hier falsch ermittelt, wenn rcvr files o.ä.
         #TODO TODO TODO Target LO muss bei Ändern der Listentry automatisch auf das geltende File aktualisiert werden (so wie die Cutting Time)
         #Generate schedules for the scheduler event loop
-        if abs(self.m["fshift"]) > 1e-5: #LOShift wanted
-            if self.m["wavheader"]['nBitsPerSample'] == 24:
-                self.resample_c.schedule_B24()
-                self.logger.debug("generate schedule for 24 LOshifting")
-            else:
-                if self.m["tSR"] > self.m["wavheader"]["nSamplesPerSec"]:
-                    self.logger.debug("generate schedule for 32/16 LOshifting with upsampling")
-                    self.resample_c.schedule_B24()
-                else:
-                    self.logger.debug("generate schedule for 32/16 LOshifting with downsampling")
-                    self.resample_c.schedule_B()
-        #TODO TODO TODO: CHECK and Testing 11-07-2024, if cut is wanted: schedule B !
-        #TODO TODO TODO: change start cut window entry after updating selected file list (playlist2)
-        #TODO TODO TODO: inactivate startcut window if new file is loaded (reset GUI !)
-        #BUG BUG BUG: Cutstart wird immer zurückgesetzt auf Originalwert, wenn man resample drückt.
-        #Problem mit Reaktion auf Listwidget-Updates (item dazu, item weg. item dazu geht nicht mit object call, weil auch ausgelöst, wenn man vom code aus was dazufügt)
-        #TODO: revert for CUTPROJECT
-        elif self.m["start_trim"].seconds > 1e-5:
-            self.resample_c.schedule_B()
-            self.logger.debug("generate schedule for simple resampling")
-        #TODO: revert for CUTPROJECT end
+
+        #TODO: Test schedule C after Mar 01 2025:
+        if self.m["speedcorr"]:
+            self.get_speedfactor()
+            self.resample_c.schedule_C()
+            self.logger.debug("generate schedule for speed correction")
         else:
-            self.resample_c.schedule_A()
-            self.logger.debug("generate schedule for simple resampling")
+            if abs(self.m["fshift"]) > 1e-5: #LOShift wanted
+                if self.m["wavheader"]['nBitsPerSample'] == 24:
+                    self.resample_c.schedule_B24()
+                    self.logger.debug("generate schedule for 24 LOshifting")
+                else:
+                    if self.m["tSR"] > self.m["wavheader"]["nSamplesPerSec"]:
+                        self.logger.debug("generate schedule for 32/16 LOshifting with upsampling")
+                        self.resample_c.schedule_B24()
+                    else:
+                        self.logger.debug("generate schedule for 32/16 LOshifting with downsampling")
+                        self.resample_c.schedule_B()
+            #TODO TODO TODO: CHECK and Testing 11-07-2024, if cut is wanted: schedule B !
+            #TODO TODO TODO: change start cut window entry after updating selected file list (playlist2)
+            #TODO TODO TODO: inactivate startcut window if new file is loaded (reset GUI !)
+            #BUG BUG BUG: Cutstart wird immer zurückgesetzt auf Originalwert, wenn man resample drückt.
+            #Problem mit Reaktion auf Listwidget-Updates (item dazu, item weg. item dazu geht nicht mit object call, weil auch ausgelöst, wenn man vom code aus was dazufügt)
+            #TODO: revert for CUTPROJECT
+            elif self.m["start_trim"].seconds > 1e-5:
+                self.resample_c.schedule_B()
+                self.logger.debug("generate schedule for simple resampling")
+            #TODO: revert for CUTPROJECT end
+            else:
+                self.resample_c.schedule_A()
+                self.logger.debug("generate schedule for simple resampling")
 
         #generate intermediate names for the resampled files (raw size)
         #TODO TEST after 26-02-2025:
@@ -3702,15 +3926,17 @@ class resample_v(QObject):
             self.m["prefix_custom"] = True
         self.m["prefix_lock"] = True # Set after first iteration in resample loop
 
-
         if self.m["prefix_custom"] == True:
             name_prefix = self.gui.lineEdit_resample_targetnameprefix.text()
             if name_prefix == "":
                 name_prefix = self.m["my_filename"]
             new_name = self.m["out_dirname"] + '/' + name_prefix + '_' + str(SDRUno_suffix) + '_' + str(int(self.m["tLO"]/1000)) + 'kHz.wav'
         else:
+            resamp_label = '_resamp_'
+            if self.m["speedcorr"]:
+                resamp_label += '_speedc_'
             self.gui.lineEdit_resample_targetnameprefix.setText(self.m["my_filename"])
-            new_name = self.m["out_dirname"] + '/' + self.m["my_filename"] +'_resamp_' + str(SDRUno_suffix) + '_' + str(int(self.m["tLO"]/1000)) + 'kHz.wav'
+            new_name = self.m["out_dirname"] + '/' + self.m["my_filename"] + resamp_label + str(SDRUno_suffix) + '_' + str(int(self.m["tLO"]/1000)) + 'kHz.wav'
         ########### END TEST
         self.m["new_name"] = new_name
         self.m["list_out_files_resampled"].append(new_name)
