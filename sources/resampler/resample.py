@@ -2058,6 +2058,9 @@ class resample_c(QObject):
         :return: none
         :rtype: none
         """
+        errorstate = False
+        value = ""
+
         self.logger.debug("start define resampling schedule C, with speedcorr")
         self.m["r_sch_counter"] = 0
         #upsampling to prevent aliasing before LO upshift
@@ -2066,6 +2069,7 @@ class resample_c(QObject):
         schedule = []
 
         wavheader = self.m['s_wavheader']
+        tempfilesize = 0
         #upsampling to prevent aliasing before LO upshift
 
         sch_m1 = {}
@@ -2077,7 +2081,7 @@ class resample_c(QObject):
         speedfact = self.m["speedfactor"]
         #sch_m1["tSR"] = float(target_SR)*1000  # sch_m1["sSR"]
         # upsampler target rate = speedfactor * safety_margin (1.2) * uppermost expected frequency
-        sch_m1["tSR"] = 5*sch_m1["sSR"] #int(np.ceil(2.4*speedfact*float(sch_m1["sSR"] + wavheader['centerfreq']/2)))  # sch_m1["sSR"]
+        sch_m1["tSR"] = 4*sch_m1["sSR"] #int(np.ceil(2.4*speedfact*float(sch_m1["sSR"] + wavheader['centerfreq']/2)))  # sch_m1["sSR"]
         sch_m1["sBPS"] = wavheader['nBitsPerSample']
         sch_m1["tBPS"] = 32
         sch_m1["wFormatTag"] = wavheader['wFormatTag']
@@ -2090,7 +2094,7 @@ class resample_c(QObject):
         sch_m1["wFormatTag"] = wavheader['wFormatTag'] #source formattag; no previous LOshifter,thus Format of sourcefile
         sch_m1["tFormatTag"] = 1 #target formattag; the next LOshifter expects PCM
         schedule.append(sch_m1)
-
+        tempfilesize += sch_m1["t_filesize"]    
         # Upmixing to fLO
         sch0 = {}
         sch0["action"] = "LOshift"
@@ -2187,6 +2191,10 @@ class resample_c(QObject):
         schedule.append(sch5)
 
         self.m["res_schedule"] = schedule
+        if self.checkdiskspace(1.2*tempfilesize, self.m["temp_directory"]) is False:
+            errorstate = True
+            value = "not enough diskspace for temporary files; required space = {tempfilesize} bytes"
+        return errorstate, value
 
     def schedule_B_UP(self):
         """_definition of schedule for full ffmpeg upsampling and LOshifting data, i.e. 
@@ -3883,7 +3891,10 @@ class resample_v(QObject):
         #TODO: Test schedule C after Mar 01 2025:
         if self.m["speedcorr"]:
             self.get_speedfactor()
-            self.resample_c.schedule_C()
+            errorstate, value = self.resample_c.schedule_C()
+            if errorstate:
+                self.errorhandler(value)
+                return False
             self.logger.debug("generate schedule for speed correction")
         else:
             if abs(self.m["fshift"]) > 1e-5: #LOShift wanted
