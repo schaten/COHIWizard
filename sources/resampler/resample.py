@@ -42,6 +42,7 @@ class resample_m(QObject):
         self.mdl["prefix_custom"] = False
         self.mdl["prefix_lock"] = False
         self.mdl["resampler_run"] = False
+        self.mdl["speedcorr"] = False
         self.mdl["MAX_GAP"] = 300 #max time gap in seconds between subsequent recordings for merging in resampler
         # Create a custom logger
         logging.getLogger().setLevel(logging.DEBUG)
