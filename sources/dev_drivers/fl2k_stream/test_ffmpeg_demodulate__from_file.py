@@ -28,24 +28,17 @@ def butterworth_biquad_coeffs(order, cutoff_freq, sample_rate):
     
     return biquads  # Gibt eine Liste mit zwei Tupeln zurück (jeweils eine Stufe)
 
-# **2️⃣ Festlegen der gewünschten Grenzfrequenz & Sampling-Rate**
-cutoff_freq = 4500  # 9 kHz Tiefpass
-sample_rate = 44100  # Audio-Sampling-Rate (kann auf 48kHz geändert werden)
-order = 4  # Butterworth-Filterordnung
-
-# **3️⃣ Berechnung der Filterkoeffizienten für beide Stufen**
-biquads = butterworth_biquad_coeffs(order, cutoff_freq, sample_rate)
-
-# **4️⃣ Filterkoeffizienten für FFmpeg in Variablen speichern**
-(b0_1, b1_1, b2_1, a0_1, a1_1, a2_1) = biquads[0]  # Erste Biquad-Stufe
-(b0_2, b1_2, b2_2, a0_2, a1_2, a2_2) = biquads[1]  # Zweite Biquad-Stufe
+# **2️⃣ Festlegen der gewünschten Grenzf biquads[1]  # Zweite Biquad-Stufe
 
 #TODO: replace by argparse
 format = [1, 2, 16]  # 1=PCM, 2=IEEE float, 16=16 bit, 24=24 bit, 32=32 bit
 sSR = 1250000
+sample_rate = sSR
 centerfreq = 1125000
-#fcarrier = 648000
-fcarrier = 1187999
+fcarrier = 648000
+#fcarrier = 540000
+fcarrier = 1188001
+#fcarrier = 1258000
 
 flo = fcarrier - centerfreq # consider that the complex spectrum is centered at centerfreq, so that any carrier is shifted
 tSR = sSR#10000000
@@ -54,6 +47,19 @@ input_filename = "A_gaincorrSDRuno_20220910_095058Z_1125kHz.wav"
 output_filename = "output.wav"
 in_path = os.path.join(filepath, input_filename)
 out_path = os.path.join(filepath, output_filename)
+
+#Lowpass filter
+
+cutoff_freq = 4500  # 9 kHz Tiefpass
+#sample_rate = 44100  # Audio-Sampling-Rate (kann auf 48kHz geändert werden)
+sample_rate = sSR
+order = 4  # Butterworth-Filterordnung
+# **3️⃣ Berechnung der Filterkoeffizienten für beide Stufen**
+biquads = butterworth_biquad_coeffs(order, cutoff_freq, sample_rate)
+# **4️⃣ Filterkoeffizienten für FFmpeg in Variablen speichern**
+(b0_1, b1_1, b2_1, a0_1, a1_1, a2_1) = biquads[0]  # Erste Biquad-Stufe
+(b0_2, b1_2, b2_2, a0_2, a1_2, a2_2) = biquads[1]  # Zweite Biquad-Stufe
+
 
 if format[0] == 1:  #PCM
     if format[2] == 16:
@@ -86,37 +92,89 @@ a_coeffs = [1, a]  # Denominator-Koeffizienten
 
 if flo < 0:
     signstr = ""
+    signstrim = "-"
 else:
     signstr = "-"
+    signstrim =""
+# #**FFmpeg-Kommando mit beiden Biquad-Filtern in Serie**
+# ffmpeg_cmd = [
+#     "ffmpeg", "-y", "-loglevel", "error", "-hide_banner",
+#     "-f", formatstring, "-ar", str(sSR), "-ac", "2", "-i", str(in_path),
+#     "-filter_complex",
+#     "[0:a]channelsplit=channel_layout=stereo [re][im];"
+#     "sine=frequency=" + str(abs(flo)) + ":sample_rate=" + str(sSR) + "[sine_base];"
+#     "[sine_base]asplit=2[sine_sin1][sine_sin2];"
+#     "[sine_sin2]biquad=b0=" + str(a) + ":b1=1:b2=0:a0=1:a1=" + str(a) + ":a2=0[sine_cos];"
+#     #generate real part of the mixed signal
+#     "[re][sine_cos]amultiply[mod_re_a];"
+#     "[im][sine_sin1]amultiply[mod_re_b];"
+#     "[mod_re_b]volume=volume=" + signstr + str(preset_volume) + "[scaled_inv_re_b];"
+#     "[mod_re_a]volume=volume=" + str(preset_volume) + "[scaled_re_a];"
+#     "[scaled_re_a][scaled_inv_re_b]amix=inputs=2:duration=shortest[mixed];" #caluclate real part of demodulated signal
+#     #generate imaginary part of the mixed signal
+#     # "[re][sine_sin1]amultiply[mod_im_a];"
+#     # "[im][sine_cos]amultiply[mod_im_b];"
+#     # "[cmod_im]volume=volume=" + signstr+ str(preset_volume) + "[cpart_im];"
+#     # "[cmod_re]volume=volume=-" + str(preset_volume) + "[cinv_re];"
+#     # "[cinv_re][cpart_im]amix=inputs=2:duration=shortest[cmixed];" #caluclate real part of demodulated signal
+#     # **Zwei Biquad-Filter in Serie**
+#     "[mixed]aresample=osr=44100[res_lo];"
+#     f"[res_lo]biquad=b0={b0_1}:b1={b1_1}:b2={b2_1}:a0={a0_1}:a1={a1_1}:a2={a2_1}[filtered1];"
+#     f"[filtered1]biquad=b0={b0_2}:b1={b1_2}:b2={b2_2}:a0={a0_2}:a1={a1_2}:a2={a2_2}[filtered2];"
+#     "[filtered2]pan=mono|c0=0.5*FL+0.5*FR[mono];"
+#     #"[res_lo]pan=mono|c0=0.5*FL+0.5*FR[mono];"
+#     #"[filtered1]pan=mono|c0=0.5*FL+0.5*FR[mono];"
+#     #"[mixed]anullsink;"
+#     "[mono]anull[out]",
+#     "-map", "[out]", "-c:a", "pcm_s16le", "-f", "wav", out_path
+#     #"-map", "[out]", "-c:a", "pcm_s16le", "-f", "caf", out_path
+#]
 
-# **5️⃣ FFmpeg-Kommando mit beiden Biquad-Filtern in Serie**
+preset_volume_im = preset_volume
+
 ffmpeg_cmd = [
     "ffmpeg", "-y", "-loglevel", "error", "-hide_banner",
     "-f", formatstring, "-ar", str(sSR), "-ac", "2", "-i", str(in_path),
     "-filter_complex",
     "[0:a]channelsplit=channel_layout=stereo [re][im];"
     "sine=frequency=" + str(abs(flo)) + ":sample_rate=" + str(sSR) + "[sine_base];"
-    "[sine_base]asplit=2[sine_sin1][sine_sin2];"
-    "[sine_sin2]biquad=b0=" + str(a) + ":b1=1:b2=0:a0=1:a1=" + str(a) + ":a2=0[sine_cos];"
-    "[re][sine_cos]amultiply[mod_re];"
-    "[im][sine_sin1]amultiply[mod_im];"
-    "[mod_im]volume=volume=" + signstr + str(preset_volume) + "[inv_im];"
-    "[mod_re]volume=volume=" + str(preset_volume) + "[part_re];"
-    "[part_re][inv_im]amix=inputs=2:duration=shortest[mixed];" #caluclate real part of demodulated signal
-    # complementary channel
-    # "[re][sine_sin1]amultiply[cmod_re];"
-    # "[im][sine_cos]amultiply[cmod_im];"
-    # "[cmod_im]volume=volume=" + signstr+ str(preset_volume) + "[cpart_im];"
-    # "[cmod_re]volume=volume=-" + str(preset_volume) + "[cinv_re];"
-    # "[cinv_re][cpart_im]amix=inputs=2:duration=shortest[cmixed];" #caluclate real part of demodulated signal
-    # **Zwei Biquad-Filter in Serie**
-    "[mixed]aresample=osr=44100[res_lo];"
-    f"[res_lo]biquad=b0={b0_1}:b1={b1_1}:b2={b2_1}:a0={a0_1}:a1={a1_1}:a2={a2_1}[filtered1];"
+    "[sine_base]asplit=2[rsin][rsin2];"
+    "[rsin2]biquad=b0=" + str(a) + ":b1=1:b2=0:a0=1:a1=" + str(a) + ":a2=0[rcos];"
+    #generate real part of the mixed signal
+    "[re]asplit=2[re1][re2];"
+    "[im]asplit=2[im1][im2];"
+    "[re1][rcos]amultiply[mod_re_a];"
+    "[im1][rsin]amultiply[mod_re_b];"
+    "[mod_re_b]volume=volume=" + signstr + str(preset_volume) + "[scaled_inv_re_b];"
+    "[mod_re_a]volume=volume=" + str(preset_volume) + "[scaled_re_a];"
+    "[scaled_re_a][scaled_inv_re_b]amix=inputs=2:duration=shortest[realp];" #caluclate real part of demodulated signal
+    #generate imaginary part of the mixed signal
+    "[re2][rsin]amultiply[mod_im_a];"
+    "[im2][rcos]amultiply[mod_im_b];"
+    "[mod_im_a]volume=volume=" + signstrim + str(preset_volume_im) + "[scaled_im_a];"
+    "[mod_im_b]volume=volume=" + str(preset_volume_im) + "[scaled_inv_im_b];"
+    "[scaled_im_a][scaled_inv_im_b]amix=inputs=2:duration=shortest[imagp];" #caluclate imaginary part of demodulated signal
+    f"[realp]biquad=b0={b0_1}:b1={b1_1}:b2={b2_1}:a0={a0_1}:a1={a1_1}:a2={a2_1}[filtered1];"
     f"[filtered1]biquad=b0={b0_2}:b1={b1_2}:b2={b2_2}:a0={a0_2}:a1={a1_2}:a2={a2_2}[filtered2];"
-    "[filtered2]pan=mono|c0=0.5*FL+0.5*FR[mono];"
+    "[filtered2]anull[fre];"
+    f"[imagp]biquad=b0={b0_1}:b1={b1_1}:b2={b2_1}:a0={a0_1}:a1={a1_1}:a2={a2_1}[filtered1i];"
+    f"[filtered1i]biquad=b0={b0_2}:b1={b1_2}:b2={b2_2}:a0={a0_2}:a1={a1_2}:a2={a2_2}[filtered2i];"
+    "[filtered2i]anull[fim];"
+    "[fre] aeval=val(0)*val(0) [real_sq];"
+    "[fim] aeval=val(0)*val(0) [imag_sq];"
+    "[real_sq][imag_sq] amix=inputs=2:duration=shortest [sum];"
+    "[sum] aeval=sqrt(val(0)) [envelope];"
+    # **Zwei Biquad-Filter in Serie**
+    "[envelope]aresample=osr=44100[res_e];"
+    #"[envelope]aresample=osr=44100[res_lo];"
+    # f"[res_lo]biquad=b0={b0_1}:b1={b1_1}:b2={b2_1}:a0={a0_1}:a1={a1_1}:a2={a2_1}[filtered1];"
+    # f"[filtered1]biquad=b0={b0_2}:b1={b1_2}:b2={b2_2}:a0={a0_2}:a1={a1_2}:a2={a2_2}[filtered2];"
+    # "[filtered2]pan=mono|c0=0.5*FL+0.5*FR[mono];"
     #"[res_lo]pan=mono|c0=0.5*FL+0.5*FR[mono];"
-    #"[filtered1]pan=mono|c0=0.5*FL+0.5*FR[mono];"
-    #"[mixed]anullsink;"
+    "[res_e]pan=mono|c0=0.5*FL+0.5*FR[mono];"
+    #"[envelope]anullsink;"
+    #"[real_sq]anullsink;"
+    #"[imag_sq]anullsink;"
     "[mono]anull[out]",
     "-map", "[out]", "-c:a", "pcm_s16le", "-f", "wav", out_path
     #"-map", "[out]", "-c:a", "pcm_s16le", "-f", "caf", out_path
@@ -128,7 +186,7 @@ print(" ".join(ffmpeg_cmd))  # Zum Debuggen
 
 
 
-#TODO TODO TODO: downsample result after demodulatio to 48kHz
+# #TODO TODO TODO: downsample result after demodulatio to 48kHz
 # ffmpeg_cmd = [
 # "ffmpeg", "-y", "-loglevel", "error", "-hide_banner",  
 # "-f", formatstring, "-ar", str(sSR), "-ac", "2", "-i", str(filename),
