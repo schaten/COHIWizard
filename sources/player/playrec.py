@@ -190,10 +190,10 @@ class playrec_c(QObject):
             ffmpeg_link = "https://www.ffmpeg.org/download.html"
             #ffmpeg_link = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
             #TODO TODO TODO: place this URL in a more general place like config_wizard.yaml for easy exchange
-            pathinfo = os.path.join(os.getcwd(), "ffmpeg-master-latest-win64-gpl")
+            #pathinfo = os.path.join(os.getcwd(), "ffmpeg-master-latest-win64-gpl")
             infotext = "<font size = 8> Synthesizer and resampler require ffmpeg to be installed on your computer; <br> Please install ffmpeg manually in folder  <br> ~rootpath/ffmpeg-7.1-essentials_build/ <br> Download from: <a href='%s'>ffmpeg </a> <br> <br> Synthesizer will be inactivated until ffmpeg is available. </font>" % ffmpeg_link
             self.logger.error(infotext)
-            self.logger.error(pathinfo)
+            #self.logger.error(pathinfo)
             auxi.standard_errorbox(infotext)
             #self.activate_control_elements(False)
             self.SigActivateOtherTabs.emit("Player","inactivate",["View Spectra","Wavheader Editor", "Annotator","Yaml Editor"])

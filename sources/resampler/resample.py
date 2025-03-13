@@ -15,6 +15,7 @@ import os
 import subprocess
 import re
 import shutil
+import platform
 from PyQt5 import QtWidgets
 from matplotlib.patches import Rectangle
 #from SDR_wavheadertools_v2 import WAVheader_tools
@@ -96,14 +97,9 @@ class res_workers(QObject):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        #self.sys_state = wsys.status()
-        #self.system_state = self.sys_state.get_status()
-        #gui = self.system_state["gui_reference"]
-        #self.system_state["Res_GUI_updatelabel"] = "none"
         self.stopix = False
         self.mutex = QMutex()
         self.CHUNKSIZE = int(1024**2)
-        #self.sys_state.set_status(self.system_state)
  
     def set_soxstring(self,_value):
         self.__slots__[0] = _value
@@ -606,6 +602,13 @@ class res_workers(QObject):
         print(f" ________ resampler executable poll at init: poll: {self.ret.poll()}")
         self.set_ret(self.ret)
         time.sleep(1)
+        print(f" ________ resampler executable poll after 1 s sleep: {self.ret.poll()}")
+
+        if not(self.ret.poll() is None):
+            stdout, stderr = self.ret.communicate()
+            print(f"ffmpeg process terminated, stderr:", stderr.decode())
+            print(f"ffmpeg process terminated, stdout:", stdout.decode())
+
         targetfilename = self.get_tfname()
         expected_filesize = self.get_expfs()
         if os.path.exists(targetfilename) == True:
@@ -625,6 +628,8 @@ class res_workers(QObject):
             #print(f"soxwriter: initial ret.poll output (sox acive on None ?): {self.ret.poll()}")
 
             while (file_stats.st_size < (expected_filesize)) and (loop_ix < 4) and (self.stopix is False):  #HACK TODO: analyze why expected filesize is by > 1000 smaller than the one produced by sox 
+                print(f" ________ resampler executable poll after entering while loop: {self.ret.poll()}")
+
                 delta = file_stats.st_size - expected_filesize
                 # if ffmpeg has finished but expected filesize is not reached, wait 4 cycles and then terminate
                 if (deltaold == delta) and file_stats.st_size >0:
@@ -646,6 +651,7 @@ class res_workers(QObject):
                         progress = 5
                         self.set_progress(progress)
                         self.SigPupdate.emit()
+                    print(f" check process ffmpeg status, ret.poll: {self.ret.poll()}")
                     print(f"relative filesize in %: {progress}")
                     if progress - progress_old > 5:
                         #self.mutex.lock()
@@ -999,7 +1005,6 @@ class resample_c(QObject):
         self.m["blinking"] = False
         self.SigUpdateGUIelements.emit() #TODO: replace by Relay method ?
         self.logger.debug("merge2G: set merge2G_ actionlabel and progress update params")
-        #self.sys_state.set_status(system_state)
         time.sleep(0.0001)
         self.merge2G_thread.start()
         if self.merge2G_thread.isRunning():
@@ -1123,7 +1128,6 @@ class resample_c(QObject):
         self.m["progress_source"] = "sox"  #TODO: muss geändert werden ist das überhaupt nötig ?
         self.m["res_blinkstate"] = True
         self.m["blinking"] = True
-        #self.sys_state.set_status(system_state)
         expected_filesize = self.m["t_filesize"] #TODO: check: trim length if cutstart(cutend must be subtracted ??)
         #TODO: check space available on target memory for expected_filesize
         if self.checkdiskspace(expected_filesize, self.m["temp_directory"]) is False:
@@ -1247,9 +1251,6 @@ class resample_c(QObject):
         :return: target_fn
         :rtype: string
         """
-        #TODO delete after change to model
-        #system_state = self.sys_state.get_status()        
-        #gui = self.sys_state["gui_reference"]
         schedule_objdict = self.m["schedule_objdict"]
         schedule_objdict["signal"]["resample"].disconnect(schedule_objdict["connect"]["resample"])
 
@@ -1329,20 +1330,42 @@ class resample_c(QObject):
         #     soxstring = 'ffmpeg -y -skip_initial_bytes 212 -f '+ ffmpeg_type +' -ar ' + str(self.m["sSR"]) + ' -ac 2 -i "'  + source_fn  + '" -af ' + '"aresample=resampler=soxr"' + ' -f s16le -ar ' + str(int(tSR))  + ' "' + target_fn + '"'
         # else:
         #     soxstring = 'ffmpeg -y -f '+ ffmpeg_type +' -ar ' + str(self.m["sSR"]) + ' -ac 2 -i "'  + source_fn  + '" -af ' + '"aresample=resampler=soxr"' + ' -f s16le -ar ' + str(int(tSR))  + ' "' + target_fn + '"'
+
+        ###TODO TODO TODO: build correct soxstring with correct path to ffmpeg
         if source_fn.find(" ") >= 0:
             auxi.standard_errorbox("file path contains empty spaces in name; currently such names cannot be processed by the resampler ; Please remove all spaces from the pathname/filename")
             return(False)
+        system = platform.system().lower()
+                # if os.name.find("posix") >= 0:
+                #     ffmpeg_cmd = [
+                #     "ffmpeg", "-y", "-loglevel", "error", "-hide_banner",  
+                #     ]
+                # else:
+                #     ffmpeg_cmd = [
+                #     ffmpeg_file_path, "-y", "-loglevel", "error", "-hide_banner",  
+
+        if system == "linux" >= 0:
+            ffmpeg_prefix = ""
+        elif system == "windows":
+            ffmpeg_prefix = self.m["metadata"]["ffmpeg_path"]
+
+        #ffmpeg_prefix = self.m["metadata"]["ffmpeg_path"]
+        ffmpeg_cmd = os.path.join(ffmpeg_prefix,"ffmpeg.exe")
+
+
         if self.m["actionlabel"] == "TYPE MATCH": #only recode between f32 and target SR
             #soxstring = 'ffmpeg -y -f f32le -ar ' + str(self.m["sSR"]) + ' -ac 2 -i ' + source_fn + ' -af "volume=normalize" -f ' + ffmpeg_target_type + ' ' + target_fn
-            soxstring = 'ffmpeg -y -f f32le -ar ' + str(self.m["sSR"]) + ' -ac 2 -i  ' + source_fn + ' -f ' + ffmpeg_target_type + ' ' + target_fn
+            #soxstring = 'ffmpeg -y -f f32le -ar ' + str(self.m["sSR"]) + ' -ac 2 -i  ' + source_fn + ' -f ' + ffmpeg_target_type + ' ' + target_fn
+            soxstring = ffmpeg_cmd + ' -y -f f32le -ar ' + str(self.m["sSR"]) + ' -ac 2 -i  ' + source_fn + ' -f ' + ffmpeg_target_type + ' ' + target_fn
         else: # true resampling
             if self.m["sBPS"] == 24: #only valid for wav files
-                soxstring = 'ffmpeg -y -skip_initial_bytes 212 -f '+ ffmpeg_type +' -ar ' + str(self.m["sSR"]) + ' -ac 2 -i '  + source_fn  + ' -af ' + '"aresample=resampler=soxr, volume=' + str(self.m["resampling_gain"]) + 'dB"' + ' -f ' + ffmpeg_target_type + ' -ar ' + str(int(tSR))  + ' ' + target_fn
+                #soxstring = 'ffmpeg -y -skip_initial_bytes 212 -f '+ ffmpeg_type +' -ar ' + str(self.m["sSR"]) + ' -ac 2 -i '  + source_fn  + ' -af ' + '"aresample=resampler=soxr, volume=' + str(self.m["resampling_gain"]) + 'dB"' + ' -f ' + ffmpeg_target_type + ' -ar ' + str(int(tSR))  + ' ' + target_fn
+                soxstring = ffmpeg_cmd + ' -y -skip_initial_bytes 212 -f '+ ffmpeg_type +' -ar ' + str(self.m["sSR"]) + ' -ac 2 -i '  + source_fn  + ' -af ' + '"volume=' + str(self.m["resampling_gain"]) + 'dB"' + ' -f ' + ffmpeg_target_type + ' -ar ' + str(int(tSR))  + ' ' + target_fn
             else:
-                soxstring = 'ffmpeg -y -f '+ ffmpeg_type +' -ar ' + str(self.m["sSR"]) + ' -ac 2 -i '  + source_fn  + ' -af ' + '"aresample=resampler=soxr, volume=' + str(self.m["resampling_gain"]) + 'dB"' + ' -f ' + ffmpeg_target_type + ' -ar ' + str(int(tSR)) + ' ' + target_fn
+                #soxstring = 'ffmpeg -y -f '+ ffmpeg_type +' -ar ' + str(self.m["sSR"]) + ' -ac 2 -i '  + source_fn  + ' -af ' + '"aresample=resampler=soxr, volume=' + str(self.m["resampling_gain"]) + 'dB"' + ' -f ' + ffmpeg_target_type + ' -ar ' + str(int(tSR)) + ' ' + target_fn
+                soxstring = ffmpeg_cmd + ' -y -f '+ ffmpeg_type +' -ar ' + str(self.m["sSR"]) + ' -ac 2 -i '  + source_fn  + ' -af ' + '"volume=' + str(self.m["resampling_gain"]) + 'dB"' + ' -f ' + ffmpeg_target_type + ' -ar ' + str(int(tSR)) + ' ' + target_fn
         #print(f"exist input file {os.path.exists(source_fn)}, target file: {os.path.exists(target_fn)}")
         self.logger.debug(f"method resample: <<<<resampler: soxstring: {soxstring}")
-        
         expected_filesize = self.m["t_filesize"]
         if self.checkdiskspace(expected_filesize, self.m["temp_directory"]) is False:
             return False
@@ -1434,6 +1457,15 @@ class resample_c(QObject):
             #TODO: implement standard error pipeline
             auxi.standard_errorbox(f"Wav header FormatTag {self.m['wFormatTag']} is neither 1 nor 3; unsupported format, this file cannot be processed")
             return False
+        
+        system = platform.system().lower()
+        if system == "linux" >= 0:
+            ffmpeg_prefix = ""
+        elif system == "windows":
+            ffmpeg_prefix = self.m["metadata"]["ffmpeg_path"]
+
+        #ffmpeg_prefix = self.m["metadata"]["ffmpeg_path"]
+        ffmpeg_cmd = os.path.join(ffmpeg_prefix,"ffmpeg.exe")
 
         my_filename, filetype = os.path.splitext(os.path.basename(source_fn))
         if filetype == '.dat':
@@ -1442,9 +1474,9 @@ class resample_c(QObject):
             sox_filetype = 'wav'
         #print(f">>>>>>>>oooooooooo   --> ffmpeg format type: {ffmpeg_type}")
         if self.m["sBPS"] == 24:
-            soxstring = 'ffmpeg -y -skip_initial_bytes 212 -f '+ ffmpeg_type +' -ar ' + str(self.m["sSR"]) + ' -ac 2 -i "'  + source_fn  + '" -af ' + '"aresample=resampler=soxr"' + ' -f s16le -ar ' + str(int(tSR))  + ' "' + target_fn + '"'
+            soxstring = ffmpeg_cmd + ' -y -skip_initial_bytes 212 -f '+ ffmpeg_type +' -ar ' + str(self.m["sSR"]) + ' -ac 2 -i "'  + source_fn  + '" -af ' + '"aresample=resampler=soxr"' + ' -f s16le -ar ' + str(int(tSR))  + ' "' + target_fn + '"'
         else:
-            soxstring = 'ffmpeg -y -f '+ ffmpeg_type +' -ar ' + str(self.m["sSR"]) + ' -ac 2 -i "'  + source_fn  + '" -af ' + '"aresample=resampler=soxr"' + ' -f s16le -ar ' + str(int(tSR))  + ' "' + target_fn + '"'
+            soxstring = ffmpeg_cmd + ' -y -f '+ ffmpeg_type +' -ar ' + str(self.m["sSR"]) + ' -ac 2 -i "'  + source_fn  + '" -af ' + '"aresample=resampler=soxr"' + ' -f s16le -ar ' + str(int(tSR))  + ' "' + target_fn + '"'
         ################ end TODO ##################
         #Überprüfen on Leerzeichen in den Filenamen, diese können nicht bearbeitet werden
 
@@ -1487,6 +1519,7 @@ class resample_c(QObject):
         #TODO TODO TODO: Check: starttrim is already pre-implemented in LOshifter, maybe only needs to be activated
         
         self.logger.debug(f"method resample: <<<<resampler: soxstring: {soxstring}")
+        #äself.m["ffmpeg_path"] = os.path.join(os.getcwd(),"ffmpeg-7.1-essentials_build","bin")
         expected_filesize = self.m["t_filesize"]
         if self.checkdiskspace(expected_filesize, self.m["temp_directory"]) is False:
             return False
@@ -2498,7 +2531,6 @@ class resample_v(QObject):
             ###RESET playgroup
             self.reset_playerbuttongroup()
             self.reset_LO_bias()
-            #sys_state.set_status(system_state)
             return False
         #TODO: validate reslist: check if all files are wav files and if list is not empty
         if len(self.m["reslist"]) == 0:
@@ -2856,11 +2888,9 @@ class resample_v(QObject):
         _valid,errortext = self.getCuttime()
         if not _valid:
             auxi.standard_errorbox(errortext)
-            #self.sys_state.set_status(system_state)
             return(False)
         #print("reslist_update:resampler view reslist terminated")
         self.logger.debug("reslist_update:resampler view reslist terminated")
-        #self.sys_state.set_status(system_state)
         #TODO TODO TODO: activate whole Wizard to last listentry
         item = lw.item(lw.count()-1)
         self.reslist_itemselected(item)
@@ -2951,8 +2981,6 @@ class resample_v(QObject):
         #TODO: define: ax_res, canvas_resample
         # gui.ui.lineEdit_resample_targetLO.setStyleSheet("background-color: white")
         # gui.ui.lineEdit_resample_Gain.setText('')
-        #system_state = self.sys_state.get_status()
-        #gui = system_state["gui_reference"]
         if self.m["fileopened"] == False:
             return(False)
         else:
@@ -3097,8 +3125,6 @@ class resample_v(QObject):
         :return: [ReturnDescription]
         :rtype: [ReturnType]
         """
-        #system_state = self.sys_state.get_status()
-        #gui = system_state["gui_reference"]
         #self.m["wavheader"] = WAVheader_tools.get_sdruno_header(self,self.m["f1"])
 
         self.gui.timeEdit_resample_startcut.setDateTime(self.m["wavheader"]['starttime_dt']) #TODO check access to core, necessary ?
@@ -3116,7 +3142,6 @@ class resample_v(QObject):
         #print("cb_resample reached")
         if not(self.m["wavheader"]['wFormatTag'] in [1,3]): #TODO:future system state
             auxi.standard_errorbox("wFormatTag is neither 1 nor 3; unsupported Format, this file cannot be processed")
-            #self.sys_state.set_status(system_state)
             return False
         #TODO: check if rates, irate can be deduced internally or must be imported from core
         signtab = list(np.sign(list(self.m["rates"].keys())-self.m["irate"]*np.ones(len(self.m["rates"]))))
@@ -3128,12 +3153,9 @@ class resample_v(QObject):
                 sugg_index = signtab.index(1.0) # else index of first positive outcome = index of SR slightly above irate
             except:
                 auxi.standard_errorbox("unsupported sampling rate in filename, this file cannot be processed")
-                #self.sys_state.set_status(system_state)
                 return False
         #set selection of SR to suggested value
         #self.gui.comboBox_resample_targetSR.setCurrentIndex(sugg_index)
-        #self.sys_state.set_status(system_state)
-        #print("#######!!!!!!!!!!!!!!    update resample GUI !!!!!!!! ############")
         self.logger.debug("#######!!!!!!!!!!!!!!    update resample GUI !!!!!!!! ############")
 
     def getCuttime(self):
@@ -3153,8 +3175,6 @@ class resample_v(QObject):
         :return: [ReturnDescription]
         :rtype: [ReturnType]
         """
-        #system_state = self.sys_state.get_status()
-        #gui = system_state["gui_reference"]
         startcut = self.gui.timeEdit_resample_startcut.dateTime().toPyDateTime() #datetime object
         stopcut = self.gui.timeEdit_resample_stopcut.dateTime().toPyDateTime()
 
@@ -3175,7 +3195,6 @@ class resample_v(QObject):
             return(False, f'stop cut time must be greater than or equal to {self.m["reslist_starttime2"]}')   
         #print(f"get Cuttime: cutstart datetime: {startcut} cutstop datetime: {stopcut}")
         self.logger.debug("get Cuttime: cutstart datetime: %s cutstop datetime: %s", startcut, stopcut)
-        #self.sys_state.set_status(system_state)
         return(True,"")
 
 
@@ -3189,8 +3208,6 @@ class resample_v(QObject):
         :return: [ReturnDescription]
         :rtype: [ReturnType]
         """
-        #system_state = self.sys_state.get_status()
-        #gui = system_state["gui_reference"]
         if self.gui.radioButton_advanced_sampling.isChecked():
             self.gui.listWidget_sourcelist_2.setEnabled(True)
             self.gui.listWidget_playlist_2.setEnabled(True)
@@ -3263,8 +3280,6 @@ class resample_v(QObject):
         :return: [ReturnDescription]
         :rtype: [ReturnType]
         """
-        #system_state = self.sys_state.get_status()
-        #gui = system_state["gui_reference"]
         self.gui.listWidget_sourcelist_2.setEnabled(status)
         self.gui.listWidget_playlist_2.setEnabled(status)
         #self.gui.timeEdit_resample_stopcut.setEnabled(status)
@@ -3290,8 +3305,6 @@ class resample_v(QObject):
         :rtype: [ReturnType]
         """
         self.logger.debug("resampler_module_5 toggle_gain reached")
-        #system_state = self.sys_state.get_status() #TODO: --> self.gui
-        #gui = system_state["gui_reference"]
         if self.gui.radioButton_resgain.isChecked():
             pass
             #self.m["resampling_gain"] = 0
@@ -3302,8 +3315,6 @@ class resample_v(QObject):
             #self.sys_state.set_status(system_state)
 
     def read_gain(self):
-        #system_state = self.sys_state.get_status()
-        #gui = system_state["gui_reference"]
         gain = self.gui.lineEdit_resample_Gain.text()
         numeraltest = True
         # try:
@@ -3379,8 +3390,6 @@ class resample_v(QObject):
         self.m["merge2G_gainenable"] = True
         self.m["resampling_gain"] = 0
 
-        #self.sys_state.set_status(system_state)
-        #self.resample_c.merge2G_files(reslist) #TODO: remove/restore tests: 17-01-2024
         #TODO: check new worker based implementation
         self.gui.lineEdit_resample_targetnameprefix.setEnabled(False)
         self.m["basename"] = self.gui.lineEdit_resample_targetnameprefix.text()
