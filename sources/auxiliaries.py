@@ -73,7 +73,8 @@ class ffmpeg_installtools():
         errorstatus = False
         value = ""
         os.makedirs(destination, exist_ok=True)
-        ffmpeg_url = "https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz"
+
+        ffmpeg_url = "https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-amd64-static.tar.xz"
         archive_path = os.path.join(destination, "ffmpeg.tar.xz")
         try:
             self.download_ffmpeg(ffmpeg_url, archive_path)
@@ -90,7 +91,7 @@ class ffmpeg_installtools():
             ffmpeg_path = os.path.join(destination, ffmpeg_dir)
             #self.logger.debug(f"ffmpeg unzipped successfully to {ffmpeg_path} .")
             print(f"ffmpeg unzipped successfully to {ffmpeg_path} .")
-            value = [os.path.join(ffmpeg_path, "bin", "ffmpeg.exe"), os.path.join(ffmpeg_path, "bin")]
+            value = [os.path.join(ffmpeg_path, "bin", "ffmpeg"), os.path.join(ffmpeg_path, "bin")]
         else:
             errorstatus = True
             value = "Error when unzipping ffmpeg."
@@ -105,7 +106,8 @@ class ffmpeg_installtools():
         errorstatus = False
         value = ""
         os.makedirs(destination, exist_ok=True)
-        ffmpeg_url = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
+        ffmpeg_url = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl-shared.zip"
+        #ffmpeg_url = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
         archive_path = os.path.join(destination, "ffmpeg.zip")
         #TODO TODO TODO: make progress bar
         try:

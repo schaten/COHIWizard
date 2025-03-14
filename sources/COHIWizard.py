@@ -11,8 +11,7 @@
 
 
 """
-Created on 20-1-2025
-#@author: scharfetter_admin
+#@author: Hermann Scharfetter
 
 Core code with the purpose to 
 - instantiate all GUI widgets and modules
@@ -21,10 +20,9 @@ Core code with the purpose to
 """
 import sys
 import os
-import subprocess
 import datetime as ndatetime
 from datetime import datetime
-from pathlib import Path, PureWindowsPath
+from pathlib import Path
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QMainWindow, QWidget, QApplication, QHBoxLayout, QLabel
 from PyQt5.QtCore import QTimer, QObject, QThread, pyqtSignal
@@ -277,7 +275,7 @@ class core_v(QObject):
             self.m["metadata"]["rootpath"] = os.getcwd()
             self.m["metadata"]["STM_IP_address"] = "000.000.000.000"
             #TODO TODO TODO: this is not a general approach for the case this version is deprecated
-            self.m["metadata"]["ffmpeg_path"] = os.path.join(self.m["rootpath"],"ffmpeg-7.1-essentials_build/bin")
+            self.m["metadata"]["ffmpeg_path"] = os.path.join(self.m["rootpath"],"ffmpeg-master-latest-win64-gpl-shared/bin")
             if not os.path.exists(default_recordingpath):
                 os.makedirs(default_recordingpath)
             default_recordingpath = os.path.join(self.m["rootpath"],"out")
@@ -1200,6 +1198,7 @@ if __name__ == '__main__':
     xcore_v.updateConfigElements() 
     xcore_v.SigRelay.emit("cexex_all_",["canvasbuild",gui])   # communicate reference to gui instance to all modules which instanciate a canvas with auxi.generate_canvas(self,gridref,gridc,gridt,gui)
     xcore_v.SigRelay.emit("cm_all_",xcore_v.m["rootpath"])
+    print("COHIWIzard Version 2.0.0, 14-03-2025, (C) Hermann Scharfetter")
 
     sys.exit(app.exec_())
 

@@ -141,7 +141,7 @@ class playrec_worker(QObject):
         format = self.get_formattag()
         a = (np.tan(np.pi * lo_shift / tSR) - 1) / (np.tan(np.pi * lo_shift / tSR) + 1)
         fl2k_file_path = os.path.join(os.getcwd(),"dev_drivers/fl2k/osmo-fl2k-64bit-20250105", "fl2k_file.exe")
-        ffmpeg_file_path = os.path.join(os.getcwd(),"ffmpeg-7.1-essentials_build/bin", "ffmpeg.exe")
+        ffmpeg_file_path = os.path.join(os.getcwd(),"ffmpeg-master-latest-win64-gpl-shared/bin", "ffmpeg.exe")
         #TODO: check evaluation criterion if appropriate
         stability_criterion = (np.mod(np.log2(tSR/sampling_rate),1) == 0) or sampling_rate < 500001
         print(f"stability criterion: {stability_criterion}")

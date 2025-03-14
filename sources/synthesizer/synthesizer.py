@@ -1543,7 +1543,7 @@ class synthesizer_v(QObject):
             #ffmpeg_link = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
             #TODO TODO TODO: place this URL in a more general place like config_wizard.yaml for easy exchange
             pathinfo = os.path.join(os.getcwd(), "ffmpeg-master-latest-win64-gpl")
-            infotext = "<font size = 8> Synthesizer requires ffmpeg to be installed on your computer; <br> Please install ffmpeg manually in folder  <br> ~rootpath/ffmpeg-7.1-essentials_build/ <br> Download from: <a href='%s'>ffmpeg </a> <br> <br> Synthesizer will be inactivated until ffmpeg is available. </font>" % ffmpeg_link
+            infotext = "<font size = 8> Synthesizer requires ffmpeg to be installed on your computer; <br> Please install ffmpeg manually in folder  <br> ~rootpath/Xffmpeg-master-latest-win64-gpl-shared/ <br> Download from: <a href='%s'>ffmpeg </a> <br> <br> Synthesizer will be inactivated until ffmpeg is available. Please be sure to install a version which supports soxR (compiled with libsoxr) </font>" % ffmpeg_link
             self.logger.error(infotext)
             self.logger.error(pathinfo)
             auxi.standard_errorbox(infotext)

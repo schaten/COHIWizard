@@ -126,7 +126,7 @@ class playrec_c(QObject):
             #TODO: this should be changed to a more general solution
             self.m["ffmpeg_path"] = self.m["metadata"]["ffmpeg_path"]
         except:
-            self.m["ffmpeg_path"] = os.path.join(os.getcwd(),"ffmpeg-7.1-essentials_build","bin")
+            self.m["ffmpeg_path"] = os.path.join(os.getcwd(),"ffmpeg-master-latest-win64-gpl-shared","bin")
 
         self.m["ffmpeg_autocheck"] = False
         #self.checkffmpeg_install()
@@ -191,7 +191,7 @@ class playrec_c(QObject):
             #ffmpeg_link = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
             #TODO TODO TODO: place this URL in a more general place like config_wizard.yaml for easy exchange
             #pathinfo = os.path.join(os.getcwd(), "ffmpeg-master-latest-win64-gpl")
-            infotext = "<font size = 8> Synthesizer and resampler require ffmpeg to be installed on your computer; <br> Please install ffmpeg manually in folder  <br> ~rootpath/ffmpeg-7.1-essentials_build/ <br> Download from: <a href='%s'>ffmpeg </a> <br> <br> Synthesizer will be inactivated until ffmpeg is available. </font>" % ffmpeg_link
+            infotext = "<font size = 8> Synthesizer and resampler require ffmpeg to be installed on your computer; <br> Please install ffmpeg manually in folder  <br> ~rootpath/ffmpeg-master-latest-win64-gpl-shared/ <br> Download from: <a href='%s'>ffmpeg </a> <br> <br> Synthesizer will be inactivated until ffmpeg is available. </font>" % ffmpeg_link
             self.logger.error(infotext)
             #self.logger.error(pathinfo)
             auxi.standard_errorbox(infotext)
@@ -1562,7 +1562,7 @@ class playrec_v(QObject):
                     self.blinkrec()
                 self.countdown()
                 if not self.m["ffmpeg_autocheck"]:
-                    print(f"timertick: value of self.m['ffmpeg_autocheck'] {self.m["ffmpeg_autocheck"]}")
+                    #print(f"timertick: value of self.m['ffmpeg_autocheck'] {self.m["ffmpeg_autocheck"]}")
                     self.m["ffmpeg_autocheck"] = True
                     self.playrec_c.checkffmpeg_install()
                     pass
