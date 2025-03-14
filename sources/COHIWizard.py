@@ -1185,6 +1185,7 @@ if __name__ == '__main__':
 
         for ix2 in range(len(tab_dict["list"])-1):
             tab_v[ix1].SigRelay.connect(tab_v[ix2].rxhandler)
+            
             #tab_c[ix].SigActivateOtherTabs.connect(xcore_v.setactivity_tabs)
             xcore_v.logger.debug(f' {tab_dict["list"][ix1+1] + "_v.SigRelay.connect(" + tab_dict["list"][ix2+1] + "_v.rxhandler)"}')
 
