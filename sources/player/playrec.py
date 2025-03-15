@@ -656,7 +656,10 @@ class playrec_c(QObject):
             #self.RecBitsPerSample
             creation_date = datetime.now()
             creation_date = creation_date.astimezone(pytz.utc)
-            self.DATABLOCKSIZE = playrec_worker(self).DATABLOCKSIZE
+            self.playrec_tworker = getattr(self.m["imported_device_modules"][self.m["currentSDRindex"]],'playrec_worker')(self.stemlabcontrol)
+
+            #self.DATABLOCKSIZE = playrec_worker(self).DATABLOCKSIZE
+            self.DATABLOCKSIZE = self.playrec_tworker.DATABLOCKSIZE
             #calculate expected filesize
             filesize = int(2*self.DATABLOCKSIZE*(2**31//(self.DATABLOCKSIZE*2)))
             self.m["wavheader"] = WAVheader_tools.basic_wavheader(self,self.m["icorr"],self.m["irate"],self.m["ifreq"],self.RecBitsPerSample,filesize,creation_date)

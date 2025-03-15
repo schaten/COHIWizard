@@ -601,12 +601,17 @@ class res_workers(QObject):
 
         print(f" ________ resampler executable poll at init: poll: {self.ret.poll()}")
         self.set_ret(self.ret)
-        time.sleep(1)
-        print(f" ________ resampler executable poll after 1 s sleep: {self.ret.poll()}")
-
-        if not(self.ret.poll() is None):
+        time.sleep(0.0001)
+        if not (self.ret.poll() is None):
             stdout, stderr = self.ret.communicate()
             print(f"ffmpeg process terminated, stderr:", stderr.decode())
+            print(f"ffmpeg process terminated, stdout:", stdout.decode())
+            self.SigSoxerror.emit("Please check if the ffmpeg version supports soxr !\n" + stderr.decode())
+            self.SigFinished.emit()
+        time.sleep(0.1)
+        if not(self.ret.poll() is None):
+            stdout, stderr = self.ret.communicate()
+            print(f"ffmpeg process terminated after 0.1 s sleep, stderr:", stderr.decode())
             print(f"ffmpeg process terminated, stdout:", stdout.decode())
 
         targetfilename = self.get_tfname()
@@ -1032,7 +1037,10 @@ class resample_c(QObject):
         self.SigRelay.emit("cexex_resample",["reconnect_updateGUIelements",0])
         time.sleep(1)
         if self.m["emergency_stop"]:
-            self.Sigincrscheduler.disconnect(self.res_scheduler)
+            try:
+                self.Sigincrscheduler.disconnect(self.res_scheduler)
+            except:
+                pass
             #self.m["emergency_stop"] = False
             self.m["clearlist"] = True
             #print("resampler sox_cleanup after cancel and emergency stop")
@@ -1595,7 +1603,7 @@ class resample_c(QObject):
         self.logger.debug(f"soxerrorhandler errorstring: {errorstring}")
         #self.sys_state.set_status(self.m)
         self.Sigincrscheduler.emit()
-        auxi.standard_errorbox("Error produced by ffmpeg, probably due to inconsistent cutting times; process terminated")
+        auxi.standard_errorbox(f"Error produced by ffmpeg, errormessage: {errorstring} . Please check possible inconsistencies in cutting times; process terminated")
         #TODO: push GUI into a safe state: leave scheduler process and reset GUI, resample_c GUI 
         
         
