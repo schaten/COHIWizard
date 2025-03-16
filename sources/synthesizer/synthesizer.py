@@ -1136,7 +1136,8 @@ class synthesizer_v(QObject):
             self.NOPLAYLISTUPDATE = False
 
     def customcarrier_handler(self):
-        
+        """handles further settings when custom table
+        """
         if self.gui.radiobutton_CustomCarriers.isChecked():
             self.gui.pushButton_CustomCarriers.setEnabled(True)
             #self.gui.lineEdit_carrierdistance.setEnabled(False)
@@ -1870,8 +1871,11 @@ class synthesizer_v(QObject):
             # self.m["numcarriers"] = len(self.readFileList)
             # self.freq_carriers_update(self,custom_carriers)
             # self.fc_low_update()
-            
-            self.freq_carriers_update()
+            if pr["projectdata"]["custom_carriers_active"] == 'True':
+                custom_carriers = list(map(str, self.m["carrierarray"]))
+                self.freq_carriers_update(self,custom_carriers)
+            else:
+                self.freq_carriers_update()
             self.RecBW_update("nup")
             self.LO_update("nup")
             self.carrierdistance_update("nup")
@@ -2354,12 +2358,13 @@ class synthesizer_v(QObject):
         if len(argv) > 1:
             custom_flag = True
             for x in argv[1]:
-                if self.isnumeric(x)[0]: ###########TODO: chars are a problem
-                    custom_carriers.append(float(x))
-                    self.m["carrierarray"] = custom_carriers
-                elif len(x) > 0:
-                    auxi.standard_errorbox("custom carrier table contains non-numeric values, please correct !")
-                    return False
+                if len(x) > 0:
+                    if self.isnumeric(x)[0]: ###########TODO: chars are a problem
+                        custom_carriers.append(float(x))
+                        self.m["carrierarray"] = custom_carriers
+                    elif len(x) > 0:
+                        auxi.standard_errorbox("custom carrier table contains non-numeric values, please correct !")
+                        return False
             numcar = len(custom_carriers)
             if len(self.m["carrierarray"]) > 1:
                 # determine the minimum difference between two carrier frequencies in a non-equally spaced list
@@ -2446,7 +2451,7 @@ class synthesizer_v(QObject):
                     del self.readFilePath[self.numcarriers_old - 1 - i]
 
         self.m["numcarriers"] = numcar
-
+        #### TODO TODO TODO if custom table --> custom_flag needs to be True
         if len(self.m["carrierarray"]) > 0 and custom_flag: #TODO: simplify
             pass
         else:
@@ -2646,6 +2651,7 @@ class synthesizer_v(QObject):
             print(f"argv in fc_low_update: {argv}")
             if c.find("nup") == 0:
                 return
+        #####TODO TODO TODO: check if argv necessary otherwise no custom carrier treatment
         self.freq_carriers_update()
         #print(f"carrier spacing: {self.m['fc_low']}")
 
@@ -2922,7 +2928,7 @@ class synthesizer_v(QObject):
             for row in custom_carriers:
                 print(row)
         self.freq_carriers_update(self,custom_carriers)
-        self.fc_low_update()
+        self.fc_low_update('nup')
 
     def populate_table(self, table, values):
         rows = len(values)
