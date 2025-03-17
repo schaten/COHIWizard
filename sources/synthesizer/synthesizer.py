@@ -13,7 +13,7 @@ import datetime as ndatetime
 import matplotlib.pyplot as plt
 #import pyfda.pyfdax
 from auxiliaries import auxiliaries as auxi
-from auxiliaries import ffmpeg_installtools as ffinst
+#from auxiliaries import ffmpeg_installtools as ffinst
 import logging
 import yaml
 import copy
@@ -1136,7 +1136,8 @@ class synthesizer_v(QObject):
             self.NOPLAYLISTUPDATE = False
 
     def customcarrier_handler(self):
-        
+        """handles further settings when custom table
+        """
         if self.gui.radiobutton_CustomCarriers.isChecked():
             self.gui.pushButton_CustomCarriers.setEnabled(True)
             #self.gui.lineEdit_carrierdistance.setEnabled(False)
@@ -1170,10 +1171,10 @@ class synthesizer_v(QObject):
 
 
     def clear_project(self):
-        errorstatus, value = self.checkffmpeg_install()
-        if errorstatus:
-            self.errorhandler("NOCLEAR" + value)
-            return
+        #errorstatus, value = self.checkffmpeg_install()
+        # if errorstatus:
+        #     self.errorhandler("NOCLEAR" + value)
+        #     return
         self.m3uflag = False
         #self.init_synthesizer_ui()
         self.reinitialize_gui()
@@ -1543,7 +1544,7 @@ class synthesizer_v(QObject):
             #ffmpeg_link = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
             #TODO TODO TODO: place this URL in a more general place like config_wizard.yaml for easy exchange
             pathinfo = os.path.join(os.getcwd(), "ffmpeg-master-latest-win64-gpl")
-            infotext = "<font size = 8> Synthesizer requires ffmpeg to be installed on your computer; <br> Please install ffmpeg manually in folder  <br> ~rootpath/ffmpeg-7.1-essentials_build/ <br> Download from: <a href='%s'>ffmpeg </a> <br> <br> Synthesizer will be inactivated until ffmpeg is available. </font>" % ffmpeg_link
+            infotext = "<font size = 8> Synthesizer requires ffmpeg to be installed on your computer; <br> Please install ffmpeg manually in folder  <br> ~rootpath/Xffmpeg-master-latest-win64-gpl-shared/ <br> Download from: <a href='%s'>ffmpeg </a> <br> <br> Synthesizer will be inactivated until ffmpeg is available. Please be sure to install a version which supports soxR (compiled with libsoxr) </font>" % ffmpeg_link
             self.logger.error(infotext)
             self.logger.error(pathinfo)
             auxi.standard_errorbox(infotext)
@@ -1870,8 +1871,11 @@ class synthesizer_v(QObject):
             # self.m["numcarriers"] = len(self.readFileList)
             # self.freq_carriers_update(self,custom_carriers)
             # self.fc_low_update()
-            
-            self.freq_carriers_update()
+            if pr["projectdata"]["custom_carriers_active"] == 'True':
+                custom_carriers = list(map(str, self.m["carrierarray"]))
+                self.freq_carriers_update(self,custom_carriers)
+            else:
+                self.freq_carriers_update()
             self.RecBW_update("nup")
             self.LO_update("nup")
             self.carrierdistance_update("nup")
@@ -2354,12 +2358,13 @@ class synthesizer_v(QObject):
         if len(argv) > 1:
             custom_flag = True
             for x in argv[1]:
-                if self.isnumeric(x)[0]: ###########TODO: chars are a problem
-                    custom_carriers.append(float(x))
-                    self.m["carrierarray"] = custom_carriers
-                elif len(x) > 0:
-                    auxi.standard_errorbox("custom carrier table contains non-numeric values, please correct !")
-                    return False
+                if len(x) > 0:
+                    if self.isnumeric(x)[0]: ###########TODO: chars are a problem
+                        custom_carriers.append(float(x))
+                        self.m["carrierarray"] = custom_carriers
+                    elif len(x) > 0:
+                        auxi.standard_errorbox("custom carrier table contains non-numeric values, please correct !")
+                        return False
             numcar = len(custom_carriers)
             if len(self.m["carrierarray"]) > 1:
                 # determine the minimum difference between two carrier frequencies in a non-equally spaced list
@@ -2446,7 +2451,7 @@ class synthesizer_v(QObject):
                     del self.readFilePath[self.numcarriers_old - 1 - i]
 
         self.m["numcarriers"] = numcar
-
+        #### TODO TODO TODO if custom table --> custom_flag needs to be True
         if len(self.m["carrierarray"]) > 0 and custom_flag: #TODO: simplify
             pass
         else:
@@ -2646,6 +2651,7 @@ class synthesizer_v(QObject):
             print(f"argv in fc_low_update: {argv}")
             if c.find("nup") == 0:
                 return
+        #####TODO TODO TODO: check if argv necessary otherwise no custom carrier treatment
         self.freq_carriers_update()
         #print(f"carrier spacing: {self.m['fc_low']}")
 
@@ -2858,8 +2864,9 @@ class synthesizer_v(QObject):
             if  _value[0].find("timertick") == 0:
                 if not self.m["ffmpeg_autocheck"]:
                     #print(f"timertick: value of self.m['ffmpeg_autocheck'] {self.m["ffmpeg_autocheck"]}")
-                    self.m["ffmpeg_autocheck"] = True
-                    self.checkffmpeg_install()
+                    #self.m["ffmpeg_autocheck"] = True
+                    #self.checkffmpeg_install()
+                    pass
 
                 #print(f"timertick: value of self.m['ffmpeg_autocheck'] {self.m["ffmpeg_autocheck"]}")
                 if self.syntesisrunning:
@@ -2921,7 +2928,7 @@ class synthesizer_v(QObject):
             for row in custom_carriers:
                 print(row)
         self.freq_carriers_update(self,custom_carriers)
-        self.fc_low_update()
+        self.fc_low_update('nup')
 
     def populate_table(self, table, values):
         rows = len(values)
