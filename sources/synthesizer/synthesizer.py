@@ -514,7 +514,7 @@ class modulate_worker(QObject):
 
             # Write the combined block to the current output file
             samples_to_write = len(combined_signal_block)
-
+            #TODO: not exactly closing at 2GB, this is sometimes unconvenient
             if samples_to_write + total_samples_written > max_samples_per_file:
                 # If the file exceeds 2GB, close the current file, enter the wav-header and start a new one
                 out_file.close()
