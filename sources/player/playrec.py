@@ -1111,17 +1111,20 @@ class playrec_v(QObject):
                 #module_path = os.path.join("dev_drivers",cf)
                 #full_module_path = f"{module_path}.cohi_playrecworker"
                 #print(f"vvvvvvvvvvvvvvvvvvvvvvvvvvv    full_module_path: {full_module_path}")
-                self.m["imported_device_modules"].append(importlib.import_module(full_module_path))
-                #print(f"vvvvvvvvvvvvvvvvvvvvvvvvvvv    imported device module: {self.m['imported_device_modules']}")
-                # import SDRcontrol classes
-                full_module_path = f"dev_drivers.{cf}.SDR_control"
-                self.m["imported_sdr_controllers"].append(importlib.import_module(full_module_path))
-                #text = self.gui.comboBox_playrec_targetSR_2.currentText()
-                #set SDR choice combobox to stemlab 125-14
-                if cf.find("stemlab_125_14") == 0:
-                    self.m["currentSDRindex"] = boxix
-                    self.m["standardSDRindex"] = boxix
-                boxix += 1
+                try:
+                    self.m["imported_device_modules"].append(importlib.import_module(full_module_path))
+                    #print(f"vvvvvvvvvvvvvvvvvvvvvvvvvvv    imported device module: {self.m['imported_device_modules']}")
+                    # import SDRcontrol classes
+                    full_module_path = f"dev_drivers.{cf}.SDR_control"
+                    self.m["imported_sdr_controllers"].append(importlib.import_module(full_module_path))
+                    #text = self.gui.comboBox_playrec_targetSR_2.currentText()
+                    #set SDR choice combobox to stemlab 125-14
+                    if cf.find("stemlab_125_14") == 0:
+                        self.m["currentSDRindex"] = boxix
+                        self.m["standardSDRindex"] = boxix
+                    boxix += 1
+                except:
+                    print(f"module {cf} not in driver list, will be ignored")
         self.gui.comboBox_stemlab.setCurrentIndex(self.m["currentSDRindex"])
 
         #instantiate stemlab control
