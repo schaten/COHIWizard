@@ -1199,7 +1199,7 @@ if __name__ == '__main__':
     xcore_v.updateConfigElements() 
     xcore_v.SigRelay.emit("cexex_all_",["canvasbuild",gui])   # communicate reference to gui instance to all modules which instanciate a canvas with auxi.generate_canvas(self,gridref,gridc,gridt,gui)
     xcore_v.SigRelay.emit("cm_all_",xcore_v.m["rootpath"])
-    print("COHIWIzard Version 2.0.0, 14-03-2025, (C) Hermann Scharfetter")
+    print("COHIWIzard Version 2.0.1, 31-03-2025, (C) Hermann Scharfetter")
 
     sys.exit(app.exec_())
 
