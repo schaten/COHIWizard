@@ -64,16 +64,20 @@ sSR = 1250000
 sample_rate = sSR
 #centerfreq = 1125000
 centerfreq = 1100000
+centerfreq = 1125000
 #carrierlist = [648000,657000, 738000, 1368000]
 #carrierlist = [648000, 540000, 1188000, 1251000]
 #carrierlist = [657000]
 #carrierlist = [648000]
 carrierlist = [1422250, 756250, 900250, 657250, 1262500, 549250, 882250] #1262, 882 is a reference with noise
 carrierlist = [1422250]
-gain = 50
+#carrierlist = [1089000]
+carrierlist = [1251000]
+gain = 1
 skipbytenr = 0
-#filepath = "C:/Users/scharfetter_admin/Documents/MW_Aufzeichnungen/COHIRADIA/Softwareentwicklung/COHIRADIA_RFCorder/COHIRADIA_RFCorder"
-filepath = "E:/COHIRADIA/Archiviert/unvollst_MW_30_and_31_12_2006_analogue_VR/Optional_intermediate_files/2GBSplit"
+filepath = "C:/Users/scharfetter_admin/Documents/MW_Aufzeichnungen/COHIRADIA/Softwareentwicklung/COHIRADIA_RFCorder/COHIRADIA_RFCorder"
+#filepath = "E:/COHIRADIA/Archiviert/unvollst_MW_30_and_31_12_2006_analogue_VR/Optional_intermediate_files/2GBSplit"
+#filepath = ["E:/liblice_30_03_2025"]
 #           E:\COHIRADIA\Archiviert\unvollst_MW_30_and_31_12_2006_analogue_VR\Optional_intermediate_files\2GBSplit
 #filepath = "E:/COHIRADIA/Unbearbeitet_P1/Caroline_Ross_Revenge_2025_03_09/Barteczek"
 
@@ -109,8 +113,9 @@ filepath = "E:/COHIRADIA/Archiviert/unvollst_MW_30_and_31_12_2006_analogue_VR/Op
 #filelist = ["cohiwizard_20250309_200914Z_1125kHz_cut_20250320_064118_1125kHz.wav"]
 #filelist = ["A_gaincorrSDRuno_20220910_095058Z_1125kHz.wav"]
 #filelist = ["RSP_PERS_mw241_000_20230924_211257Z_1125kHz.wav"]
-filelist = ["B2006_20210801_184741_1100kHz_10_20061230_235828_1100kHz.wav"]
-
+#filelist = ["B2006_20210801_184741_1100kHz_10_20061230_235828_1100kHz.wav"]
+filelist = ["SDRuno_20250330_203858Z_1125kHz.wav"]
+filelist = ["A_gaincorrSDRuno_20220910_095058Z_1125kHz.wav"]
 for fcarrier in carrierlist:
     deltaf = (fcarrier - centerfreq) # consider that the complex spectrum is centered at centerfreq, so that any carrier is shifted
 

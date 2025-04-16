@@ -36,6 +36,7 @@ format = [1, 2, 16]  # 1=PCM, 2=IEEE float, 16=16 bit, 24=24 bit, 32=32 bit
 sSR = 1250000
 sample_rate = sSR
 centerfreq = 1125000
+
 fcarrier = 648000
 fcarrier = 540000
 #fcarrier = 1188001
@@ -152,7 +153,8 @@ else:
         "[sine_base]asplit=2[rsin][rsin2];"
         "[rsin2]biquad=b0=" + str(a) + ":b1=1:b2=0:a0=1:a1=" + str(a) + ":a2=0[rcos];"
         "[re]anullsink;[im]anullsink;"
-        "[rsin][rcos]amerge=inputs=2,pan=stereo|c0<c0|c1<c1[out]",
+        #"[rsin][rcos]amerge=inputs=2,pan=stereo|c0<c0|c1<c1[out]",
+        "[rsin][rcos]amerge=inputs=2[out]",
         "-map", "[out]", "-c:a", "pcm_s16le", "-f", "wav", out_path
     ]
 

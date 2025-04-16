@@ -49,7 +49,7 @@ fcarrier = 1188000
 
 flo = fcarrier - centerfreq # consider that the complex spectrum is centered at centerfreq, so that any carrier is shifted
 tSR = sSR#10000000
-filepath = "C:/Users/scharfetter_admin/Documents/MW_Aufzeichnungen/COHIRADIA/Softwareentwicklung/COHIRADIA_RFCorder/COHIRADIA_RFCorder"
+filepath = "C:/Users/scharfetter_admin/Documents/COHIRADIA/Data/SDR_Testaufzeichnungen"
 input_filename = "A_gaincorrSDRuno_20220910_095058Z_1125kHz.wav"
 output_filename = "output.wav"
 in_path = os.path.join(filepath, input_filename)

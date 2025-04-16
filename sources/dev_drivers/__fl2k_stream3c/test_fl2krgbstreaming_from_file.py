@@ -73,12 +73,14 @@ def stream_to_fl2k_file(input_file, target_sampling_rate, buffer_size=4096, fl2k
 
         # Starte fl2k_rgb mit den FIFO-Dateien als Eingabe für R und G
         fl2k_proc = subprocess.Popen(
-            ["fl2k_rgb", "-d", "0", "-s", str(tSR),
+            ["fl2k_file2", "-d", "0", "-s", str(tSR),
             "-R8", "-R", fifo_r, "-G8", "-G", fifo_g, "-B8", "-B", "/dev/null"],
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
         )
+
+
     except FileNotFoundError:
         print(f"Input file not found")
         return()
@@ -123,7 +125,7 @@ def stream_to_fl2k_file(input_file, target_sampling_rate, buffer_size=4096, fl2k
                     r_data = (chunk >> 8).astype(np.uint8).tobytes()
                     #original 8 bit: g_data = (data & 0xFF).astype(np.uint8).tobytes()
                     #only 4 bit g_data = (data & 0xFF).astype(np.uint8).tobytes()
-                    g_data = (chunk & 0xC0).astype(np.uint8).tobytes() #take only 2 highest bit of LO Byte --> 10 bit effective
+                    g_data = (chunk & 0x0C).astype(np.uint8).tobytes() #take only 2 highest bit of LO Byte --> 10 bit effective
                     # Schreibe die Daten in die FIFOs
                     fr.write(r_data)
                     fg.write(g_data)
@@ -141,16 +143,18 @@ def stream_to_fl2k_file(input_file, target_sampling_rate, buffer_size=4096, fl2k
         except Exception as e:
             print(f"Ein unerwarteter Fehler ist aufgetreten: {e}")
         finally:
-            os.close(r_write)
-            os.close(g_write)
+            fl2k_proc.terminate()
+            os.remove(fifo_r)
+            os.remove(fifo_g)
 
 
     # ffmpeg_process.stdin.close()  # Wichtig: stdin schließen
     # ffmpeg_process.stdout.close()  # Falls stdout genutzt wird
     # ffmpeg_process.terminate()  # Beendet den Prozess sanft
     # ffmpeg_process.wait()  # Wartet auf das Ende
-    os.close(r_read)
-    os.close(g_read)
+    fl2k_proc.terminate()
+    os.remove(fifo_r)
+    os.remove(fifo_g)
     stdout, stderr = fl2k_proc.communicate()  # Warten, bis fl2k_file beendet ist
     # Ausgabe der Ergebnisse
     print("fl2k output:")

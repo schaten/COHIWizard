@@ -144,8 +144,64 @@ class playrec_worker(QObject):
         __slots__[9]: file_close
         __slots__[10]: sampling_parameters
         """
+
+        #######################################################
+        #
+        # TASK: read data from an audio stream from elsewhere in form of 16bit PCM audio data
+        # if mp3: read mp3 via appropriate ffmpeg command
+        # if wav: read wav via appropriate ffmpeg command
+        # if format == stereo: join the two channels to one channel
+        # if format == mono: do nothing
+        # if format == 24bit: convert to 16bit PCM
+        # if format == 32bit: convert to 16bit PCM 
+        # if format == 32bit float: convert to 16bit PCM
+        # 
+        # 
+        # ffmpeg_cmd = [
+        #     ffmpeg_file_path, "-y", "-loglevel", "error", "-hide_banner",
+        # ########################## implement correct reading format/codec, channel layout, sample rate  
+        #     "-f", formatstring, "-ar", str(sampling_rate), "-ac", "2", "-i", "-",  # Lese von PIPE, auf die der Audiostream kommt
+        #     "-filter_complex",
+        #     "[0:a]aresample=osr=" + str(tSR) + ",channelsplit=channel_layout=stereo [re][im];"   ###### Umbauen, soll nur mono-stream lesen
+        #     "sine=frequency=" + str(lo_shift) + ":sample_rate="  + str(tSR) + "[sine_base];"
+        #     "[sine_base] asplit=2[sine_sin1][sine_sin2];"
+        #     "[sine_sin2]biquad=b0=" + str(a) + ":b1=1:b2=0:a0=1:a1=" + str(a) + ":a2=0[sine_cos];"
+        #     "[re][sine_cos]amultiply[mul_re];"
+        #     "[im][sine_sin1]amultiply[mul_im];"
+        #     "[mul_re]volume=volume=" + str(modulation_factor) + "[mfre];"
+        #     "[im]volume=volume=" + str(modulation_factor) + "[mfim];"
+        #     "[mfre][sine_cos]amix=inputs=2:duration=shortest[modre];"
+        #     "[mfim][sine_sin1]amix=inputs=2:duration=shortest[modim];"
+        #     "[modre]volume=volume=" + str(pregain) + "[outre];"
+        #     "[modim]volume=volume=" + str(pregain) + "[outim];"
+        #     "-map", "[###out###]", "-c:a", "pcm_s16", "-f", "caf", "-"  ###########TODO: modify for mapping outre, outim to stereo PCM aof stdout oder out PIPE
+        #     ]
+
+            #     # Prozess starten
+            #     ffmpeg_process = subprocess.Popen(ffmpeg_cmd, 
+            #         stdin=subprocess.PIPE, 
+            #         stdout=subprocess.PIPE, 
+            #         stderr=subprocess.PIPE,
+            #         bufsize=10**8)
+            #     print(f"ffmpeg_command: {ffmpeg_cmd}")
+            # except FileNotFoundError:
+            #     print(f"Input file not found, probably ffmpeg path is wrong")
+            #     return()
+            # except subprocess.SubprocessError as e:
+            #     print(f"Error when executing fl2k_file: {e}")
+            #     return()    
+            # except Exception as e:
+            #     print(f"Unexpected error: {e}")
+            #     return()    
+            
+            # if os.name.find("posix") >= 0:
+            #     pass
+            # else:
+            #     psutil.Process(ffmpeg_process.pid).nice(psutil.HIGH_PRIORITY_CLASS)
+            #     pass
+
         #print("reached playloopthread")
-        filenames = self.get_filename()
+        filenames = self.get_filename() ######## TODO: obsolet, replace by streaming info
         timescaler = self.get_timescaler()
         TEST = self.get_TEST()
         gain = self.get_gain()
@@ -162,36 +218,47 @@ class playrec_worker(QObject):
 
         self.smallest_above_x(rates, sampling_rate)
         
-        for ix,filename in enumerate(filenames):
-            fileHandle = open(filename, 'rb')
+        for ix,filename in enumerate(filenames):  ##TODO: no loop ? or loop from m3u list ?
+            fileHandle = open(filename, 'rb') ### TODO: change to read from stream
+
             self.SigNextfile.emit(filename)
             #print(f"filehandle for set_4: {fileHandle} of file {filename} ")
-            self.set_fileHandle(fileHandle)
+            self.set_fileHandle(fileHandle) #TODO: check if this is correct or even necessary
             format = self.get_formattag()
             self.set_datablocksize(self.DATABLOCKSIZE)
             #print(f"Filehandle :{fileHandle}")
-            fileHandle.seek(216, 1)
-            if format[2] == 16:
-                data = np.empty(self.DATABLOCKSIZE, dtype=np.int16)
-            else:
-                data = np.empty(self.DATABLOCKSIZE, dtype=np.float32) #TODO: check if true for 32-bit wavs wie Gianni's
-            #print(f"playloop: BitspSample: {format[2]}; wFormatTag: {format[0]}; Align: {format[1]}")
-            if format[0] == 1:
-                normfactor = int(2**int(format[2]-1))-1
-            else:
-                normfactor = 1
-            if format[2] == 16 or format[2] == 32:
-                size = fileHandle.readinto(data)
-            elif format[2] == 24:
-                data = self.read24(format,data,fileHandle)
-                size = len(data)
-            self.set_data(data)
+            # fileHandle.seek(216, 1) TODO: modify, this should be handled automatically by ffmpeg
+            # if format[2] == 16:
+            #     data = np.empty(self.DATABLOCKSIZE, dtype=np.int16)
+            # else:
+            #     data = np.empty(self.DATABLOCKSIZE, dtype=np.float32) #TODO: check if true for 32-bit wavs wie Gianni's
+            # #print(f"playloop: BitspSample: {format[2]}; wFormatTag: {format[0]}; Align: {format[1]}")
+            # if format[0] == 1:
+            #     normfactor = int(2**int(format[2]-1))-1
+            # else:
+            #     normfactor = 1
+            # if format[2] == 16 or format[2] == 32:
+            #     size = fileHandle.readinto(data)
+            # elif format[2] == 24:
+            #     data = self.read24(format,data,fileHandle)
+            #     size = len(data)
+            # self.set_data(data)
+
+            #######
+            # TODO: 
+            #data = np.empty(self.DATABLOCKSIZE, dtype=np.int16)
+            #size = fileHandle.readinto(data) TODO: replace by read next block from the stream
+            ######
             junkspersecond = timescaler / self.JUNKSIZE
             count = 0
             # print(f"Junkspersec:{junkspersecond}")
             while size > 0 and not self.stopix:
                 if not TEST:
                     if not self.get_pause():
+                        #TODO: pass next block of stream data to ffmpeg process via stdin or named PIPE
+                        #ffmpeg_process.stdin.write(data)
+                        #ffmpeg_process.stdin.flush()  
+                        #pass ffmpeg stdout to data_sock.send
                         try:
                             self.stemlabcontrol.data_sock.send(
                                                     gain*data[0:size].astype(np.float32)

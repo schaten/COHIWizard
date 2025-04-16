@@ -637,7 +637,7 @@ class playrec_c(QObject):
 
 
     def generate_recfilename(self):
-        """generate filenae for recording file from:
+        """generate filename for recording file from:
         recording_path/cohiwizard_datestring_Ttimestring_LOfrequency.dat
         :return: False if STEMLAB socket cannot be started
                  False if playback thread cannot be started 
@@ -698,7 +698,11 @@ class playrec_c(QObject):
             wavheader_old = self.m["wavheader"]
             #print("fire up next recloop #########################")
             self.logger.debug("playrec recloopmanager fire up next recloop ")
-            self.m["f1"] = self.generate_recfilename()
+            errorstate, value = self.generate_recfilename()
+            if errorstate:
+                self.errorhandler(value)
+            else:
+                self.m["f1"] = value
             #wavheader_old['nextfilename'] = self.m["f1"]
             wavheader_old['nextfilename'] = Path(self.m["f1"]).name
             WAVheader_tools.write_sdruno_header(self,f1old,wavheader_old,self.m["ovwrt_flag"]) ##TODO TODO TODO Linux conf: self.m["f1"],self.m["wavheader"] must be in Windows format

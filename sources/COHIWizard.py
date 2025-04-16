@@ -34,6 +34,7 @@ import logging
 
 from icons import Logos
 
+
 class starter(QMainWindow):
     """instantiates the central GUI object and calls its setupUI method; type QMainwindow
 

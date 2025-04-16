@@ -37,6 +37,10 @@ audio_files = [
                 "02-filtered_B2006_20210801_184741_1100kHz_10_20061230_235828_1100kHz_demod1423.wav",
                 "06-filtered_B2006_20210801_184741_1100kHz_10_20061230_235828_1100kHz_demod550.wav",
                 ]
+audio_files = [
+                "audio1_sync.wav",
+                "audio2_sync.wav",
+                ]
 audio_data = []
 sampling_rates = []
 
@@ -97,7 +101,10 @@ else:
                     "05-filtered_B2006_20210801_184741_1100kHz_10_20061230_235828_1100kHz_demod883.wav",
                     "RAI__LMS1_sig__01-filtered_B2006_20210801_184741_1100kHz_10_20061230_235828_1100kHz_demod901.wav",
                     ]
-
+    audio_files = [
+                    "audio1_sync.wav",
+                    "audio2_sync.wav",
+                    ]
     # audio_files = [
     #                 "02-filtered_B2006_20210801_184741_1100kHz_10_20061230_235828_1100kHz_demod1423.wav",
     #                 "06-filtered_B2006_20210801_184741_1100kHz_10_20061230_235828_1100kHz_demod550.wav",
@@ -114,8 +121,8 @@ else:
     lms = pa.filters.FilterLMS(n=filter_order, mu=0.001)  # LMS-Filter mit Lernrate 0.01
     #rls = pa.filters.FilterRLS(n=filter_order, mu=0.0000001, w="random")
     # Signal in kleine Abschnitte aufteilen
-    X = pa.input_from_history(ref, filter_order)  # Erzeugt eine Matrix mit vergangenen Werten
-    d = mix [filter_order-1:]  # Zielsignal
+    X = pa.input_from_history(0.5*ref, filter_order)  # Erzeugt eine Matrix mit vergangenen Werten
+    d = 0.5*mix [filter_order-1:]  # Zielsignal
     if np.any(np.isnan(X)) or np.any(np.isinf(X)):
         print("Eingabedaten enthalten NaN oder Inf!")
     # LMS-Filter anwenden
